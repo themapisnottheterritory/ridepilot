@@ -1,4 +1,4 @@
-class CreateVehicleCapacities < ActiveRecord::Migration
+class CreateVehicleCapacities < ActiveRecord::Migration[4.2]
   def change
     create_table :vehicle_capacities do |t|
       t.references :capacity_type, index: true

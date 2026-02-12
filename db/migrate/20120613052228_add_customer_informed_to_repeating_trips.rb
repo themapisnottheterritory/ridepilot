@@ -1,4 +1,4 @@
-class AddCustomerInformedToRepeatingTrips < ActiveRecord::Migration
+class AddCustomerInformedToRepeatingTrips < ActiveRecord::Migration[4.2]
   def self.up
     add_column :repeating_trips, :customer_informed, :boolean
   end

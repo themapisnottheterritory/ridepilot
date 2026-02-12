@@ -1,4 +1,4 @@
-class AddDateIndices < ActiveRecord::Migration
+class AddDateIndices < ActiveRecord::Migration[4.2]
   def self.up
     add_index :trips, [:provider_id, :pickup_time]
     add_index :trips, [:provider_id, :appointment_time]

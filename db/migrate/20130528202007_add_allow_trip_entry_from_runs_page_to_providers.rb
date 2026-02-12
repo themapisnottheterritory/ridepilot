@@ -1,4 +1,4 @@
-class AddAllowTripEntryFromRunsPageToProviders < ActiveRecord::Migration
+class AddAllowTripEntryFromRunsPageToProviders < ActiveRecord::Migration[4.2]
   def self.up
     add_column :providers, :allow_trip_entry_from_runs_page, :boolean
   end

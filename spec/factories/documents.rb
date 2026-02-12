@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :document, aliases: [:driver_document] do
-    description { Faker::Lorem.words(2).join(' ') }
+    description { Faker::Lorem.words(number: 2).join(' ') }
     
     # Avoid using fixture_file_upload with FactoryBot and Paperclip
     # http://goo.gl/jBc5lS

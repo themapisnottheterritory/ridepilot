@@ -1,4 +1,4 @@
-class AddCabToRepeatingTrips < ActiveRecord::Migration
+class AddCabToRepeatingTrips < ActiveRecord::Migration[4.2]
   def self.up
     change_table :repeating_trips do |t|
       t.boolean :cab, :default => false

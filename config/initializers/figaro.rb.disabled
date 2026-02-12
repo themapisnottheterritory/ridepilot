@@ -1,0 +1,3 @@
+require 'figaro'
+Figaro.env.path = 'config/application.yml'
+Figaro.require_keys("SYSTEM_ADMIN_EMAIL", "SYSTEM_ADMIN_PASSWORD") unless Rails.env.test?

@@ -1,4 +1,4 @@
-class AddDefaultServiceLevelToCustomers < ActiveRecord::Migration
+class AddDefaultServiceLevelToCustomers < ActiveRecord::Migration[4.2]
   def self.up
     add_column :customers, :default_service_level, :string
   end

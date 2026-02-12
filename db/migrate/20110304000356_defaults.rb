@@ -1,4 +1,4 @@
-class Defaults < ActiveRecord::Migration
+class Defaults < ActiveRecord::Migration[4.2]
   def self.up
     change_column_default(:trips, :guest_count, 0)
     change_column_default(:trips, :attendant_count, 0)

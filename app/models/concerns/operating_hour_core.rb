@@ -69,7 +69,7 @@ module OperatingHourCore
       times =[]
       t = start_time
       while t <= end_time
-        times << t.to_s(:time_utc)
+        times << t.to_fs(:time_utc)
         t += interval
       end
       times

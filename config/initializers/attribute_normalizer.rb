@@ -12,4 +12,7 @@ AttributeNormalizer.configure do |config|
   end
 end
 
-ApplicationRecord.send :include, AttributeNormalizer
+# Include AttributeNormalizer after models are loaded (for Zeitwerk compatibility)
+Rails.application.config.to_prepare do
+  ApplicationRecord.send :include, AttributeNormalizer
+end

@@ -1,4 +1,4 @@
-class CreateRepeatingRuns < ActiveRecord::Migration
+class CreateRepeatingRuns < ActiveRecord::Migration[4.2]
   def change
     create_table :repeating_runs do |t|
       t.text :schedule_yaml

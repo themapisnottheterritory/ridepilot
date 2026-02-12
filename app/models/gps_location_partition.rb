@@ -3,7 +3,7 @@ class GpsLocationPartition < ApplicationRecord
   after_destroy :destroy_partition
 
   def self.archilve_old_data
-    min_date = Date.today - (ApplicationSetting['cad_avl.data_storage_months'] || 1).months
+    min_date = Date.today - (ApplicationSetting.cad_avl_data_storage_months || 1).months
     min_year = min_date.year 
     min_month = min_date.month
 

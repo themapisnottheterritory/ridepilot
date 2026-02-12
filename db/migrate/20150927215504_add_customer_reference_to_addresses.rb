@@ -1,4 +1,4 @@
-class AddCustomerReferenceToAddresses < ActiveRecord::Migration
+class AddCustomerReferenceToAddresses < ActiveRecord::Migration[4.2]
   def up
     add_reference :addresses, :customer, index: true
 

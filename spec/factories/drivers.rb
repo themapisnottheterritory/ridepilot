@@ -4,7 +4,7 @@ require 'faker'
 # same name, which will cause spec to fail.
 FactoryBot.define do
   factory :driver do
-    name { Faker::Lorem.words(3).join(' ') }
+    name { Faker::Lorem.words(number: 3).join(' ') }
     provider
     user
     association :address, factory: :driver_address

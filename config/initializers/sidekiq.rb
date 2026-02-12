@@ -1,10 +1,17 @@
-redis_url = ENV['REDIS_URL'] || "redis://127.0.0.1:6379/0"
-sidekiq_config = { url: redis_url }
+begin
+  require 'sidekiq'
+  
+  redis_url = ENV['REDIS_URL'] || "redis://127.0.0.1:6379/0"
+  sidekiq_config = { url: redis_url }
 
-Sidekiq.configure_server do |config|
-  config.redis = sidekiq_config
-end
+  Sidekiq.configure_server do |config|
+    config.redis = sidekiq_config
+  end
 
-Sidekiq.configure_client do |config|
-  config.redis = sidekiq_config
+  Sidekiq.configure_client do |config|
+    config.redis = sidekiq_config
+  end
+rescue LoadError => e
+  # Sidekiq not available
+  puts "Sidekiq not available: #{e.message}"
 end

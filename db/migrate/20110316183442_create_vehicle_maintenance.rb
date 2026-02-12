@@ -1,4 +1,4 @@
-class CreateVehicleMaintenance < ActiveRecord::Migration
+class CreateVehicleMaintenance < ActiveRecord::Migration[4.2]
   def self.up
     create_table :vehicle_maintenance_events do |t|
       t.integer :vehicle_id, :null => false

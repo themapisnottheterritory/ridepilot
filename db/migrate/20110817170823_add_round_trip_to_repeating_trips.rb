@@ -1,4 +1,4 @@
-class AddRoundTripToRepeatingTrips < ActiveRecord::Migration
+class AddRoundTripToRepeatingTrips < ActiveRecord::Migration[4.2]
   def self.up
     add_column :repeating_trips, :round_trip, :boolean
   end

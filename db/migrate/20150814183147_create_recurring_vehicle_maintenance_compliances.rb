@@ -1,4 +1,4 @@
-class CreateRecurringVehicleMaintenanceCompliances < ActiveRecord::Migration
+class CreateRecurringVehicleMaintenanceCompliances < ActiveRecord::Migration[4.2]
   def change
     create_table :recurring_vehicle_maintenance_compliances do |t|
       t.references :provider, index: true

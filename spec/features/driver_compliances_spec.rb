@@ -36,7 +36,7 @@ RSpec.describe "DriverCompliances" do
       end
       
       it "shows the due date of the compliance event" do
-        expect(page).to have_text @incomplete_driver_compliance.due_date.to_s(:long)
+        expect(page).to have_text @incomplete_driver_compliance.due_date.to_fs(:long)
       end
     end
 

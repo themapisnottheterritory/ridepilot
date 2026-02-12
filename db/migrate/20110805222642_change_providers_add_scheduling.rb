@@ -1,4 +1,4 @@
-class ChangeProvidersAddScheduling < ActiveRecord::Migration
+class ChangeProvidersAddScheduling < ActiveRecord::Migration[4.2]
   def self.up
     add_column :providers, :scheduling, :boolean
     Provider.all.each { |p| p.update_attribute :scheduling, true }

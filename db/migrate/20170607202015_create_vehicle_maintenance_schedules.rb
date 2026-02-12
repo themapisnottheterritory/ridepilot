@@ -1,4 +1,4 @@
-class CreateVehicleMaintenanceSchedules < ActiveRecord::Migration
+class CreateVehicleMaintenanceSchedules < ActiveRecord::Migration[4.2]
   def change
     create_table :vehicle_maintenance_schedules do |t|
       t.string :name

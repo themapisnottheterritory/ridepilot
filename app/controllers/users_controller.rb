@@ -63,7 +63,7 @@ class UsersController < ApplicationController
         #NewUserMailer.new_user_email(@user, new_password).deliver if new_user
 
         # send password reset instructions instead
-        @user.send_reset_password_instructions  if new_user
+        #@user.send_reset_password_instructions   if new_user
 
         flash.now[:notice] = "%s has been added and the instructions has been emailed" % @user.email
         redirect_to users_provider_path(@provider)

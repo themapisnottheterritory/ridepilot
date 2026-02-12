@@ -1,5 +1,5 @@
 class RepeatingTripsController < ApplicationController
-  before_action :set_trip, except: [:index, :new, :create, :clone_from_daily_run]
+  before_action :set_trip, except: [:index, :new, :create, :clone_from_daily_trip]
   authorize_resource :except=>[:show]
 
   def index

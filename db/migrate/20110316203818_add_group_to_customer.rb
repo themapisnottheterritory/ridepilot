@@ -1,4 +1,4 @@
-class AddGroupToCustomer < ActiveRecord::Migration
+class AddGroupToCustomer < ActiveRecord::Migration[4.2]
   def self.up
     change_table :customers do |t|
       t.boolean :group, :default=>false

@@ -1,18 +1,10 @@
 development:
-  adapter: redis
-  url: redis://localhost:6379/1
-
-test:
   adapter: async
 
-integration:
-  adapter: redis
-  url: <%= ENV.fetch('REDISCLOUD_URL', 'redis://localhost:6379/1') %>
-
-qa:
-  adapter: redis
-  url: <%= ENV.fetch('REDISCLOUD_URL', 'redis://localhost:6379/1') %>
+test:
+  adapter: test
 
 production:
   adapter: redis
-  url: <%= ENV.fetch('REDISCLOUD_URL', 'redis://localhost:6379/1') %>
+  url: <%= ENV.fetch("REDIS_URL") { "redis://localhost:6379/1" } %>
+  channel_prefix: ridepilot_production

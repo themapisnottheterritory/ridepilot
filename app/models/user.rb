@@ -76,7 +76,7 @@ class User < ApplicationRecord
   
   # super admin (aka system admin) is regardless of providers
   def super_admin?
-    !roles.system_admins.empty?
+    roles.system_admins.exists?
   end
 
   def admin?

@@ -1,4 +1,4 @@
-class AddFiscalYear < ActiveRecord::Migration
+class AddFiscalYear < ActiveRecord::Migration[4.2]
   def self.up
     ApplicationRecord.connection.execute "
 -- ensure that the plpgsql language exists

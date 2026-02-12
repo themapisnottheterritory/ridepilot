@@ -1,4 +1,4 @@
-class CreateEmergencyContacts < ActiveRecord::Migration
+class CreateEmergencyContacts < ActiveRecord::Migration[4.2]
   def change
     create_table :emergency_contacts do |t|
       t.references :geocoded_address

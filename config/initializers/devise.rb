@@ -1,3 +1,4 @@
+require 'devise'
 # Use this hook to configure devise mailer, warden hooks and so forth.
 # Many of these configuration options can be set straight in your model.
 Devise.setup do |config|
@@ -254,10 +255,10 @@ Devise.setup do |config|
 
   # ==> Security Extension
   # Configure security extension for devise
-  if ApplicationSetting
-    # Should the password expire (e.g 3.months)
-    config.expire_password_after = ApplicationSetting['devise.expire_password_after']
-
+  #if ApplicationSetting
+  #  # Should the password expire (e.g 3.months)
+  #  config.expire_password_after = ApplicationSetting['devise.expire_password_after']
+  #
     # Need 1 char of A-Z, a-z and 0-9
     # config.password_regex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z])/
 
@@ -266,11 +267,21 @@ Devise.setup do |config|
     # containing passwords 1, 2, 3, and 4. With a password_archiving_count of 4,
     # changing it a 5th time results in password 5 being added and password 1
     # being dropped, and thus able to be used again after 5 changes.
-    config.password_archiving_count = ApplicationSetting['devise.password_archiving_count']
+  #  config.password_archiving_count = ApplicationSetting['devise.password_archiving_count']
+  #end
+  # Deferred loading for Rails 7 Zeitwerk compatibility
+  # ApplicationSetting is not loaded during initialization
+  Rails.application.config.to_prepare do
+    if ActiveRecord::Base.connection.data_source_exists?('settings')
+      Devise.setup do |config|
+        config.expire_password_after = ApplicationSetting.devise_expire_password_after
+        config.password_archiving_count = ApplicationSetting.devise_password_archiving_count
+      end
+    end
   end
 
   # Deny old password (true, false, count)
-  config.deny_old_passwords = true
+  # config.deny_old_passwords = true #commented out by philz 4/23/25 new version of devise
 
   # enable email validation for :secure_validatable. (true, false, validation_options)
   # dependency: need an email validator like rails_email_validator

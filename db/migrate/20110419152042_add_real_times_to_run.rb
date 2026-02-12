@@ -1,4 +1,4 @@
-class AddRealTimesToRun < ActiveRecord::Migration
+class AddRealTimesToRun < ActiveRecord::Migration[4.2]
   def self.up
     rename_column :runs, :start_time, :scheduled_start_time
     rename_column :runs, :end_time, :scheduled_end_time

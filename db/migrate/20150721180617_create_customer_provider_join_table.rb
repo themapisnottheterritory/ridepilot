@@ -1,4 +1,4 @@
-class CreateCustomerProviderJoinTable < ActiveRecord::Migration
+class CreateCustomerProviderJoinTable < ActiveRecord::Migration[4.2]
   def change
     create_table :customers_providers, :id => false do |t|
         t.references :provider

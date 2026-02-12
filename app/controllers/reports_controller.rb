@@ -115,6 +115,7 @@ class ReportsController < ApplicationController
   def show
     @driver_query = Query.new :start_date => Date.today, :end_date => Date.today
     @trips_query = Query.new
+    @query = Query.new
     cab = Driver.new(:name=>"Cab")
     cab.id = -1
     all = Driver.new(:name=>"All")

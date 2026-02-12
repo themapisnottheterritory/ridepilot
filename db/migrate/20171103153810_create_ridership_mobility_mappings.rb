@@ -1,4 +1,4 @@
-class CreateRidershipMobilityMappings < ActiveRecord::Migration
+class CreateRidershipMobilityMappings < ActiveRecord::Migration[4.2]
   def change
     create_table :ridership_mobility_mappings do |t|
       t.integer :ridership_id

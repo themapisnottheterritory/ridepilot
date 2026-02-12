@@ -6,7 +6,7 @@
     <%= recurring_vehicle_maintenance_compliance.recurrence_type %>
   </td>
   <td>
-    <%= recurring_vehicle_maintenance_compliance.start_date.try(:to_s, :long) %>
+    <%= recurring_vehicle_maintenance_compliance.start_date.try(:to_fs, :long) %>
   </td>
   <td>
     <%= schedule_string recurring_vehicle_maintenance_compliance %>

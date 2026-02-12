@@ -1,4 +1,4 @@
-class AddFieldsToProviders < ActiveRecord::Migration
+class AddFieldsToProviders < ActiveRecord::Migration[4.2]
   def change
     add_column :providers, :phone_number, :string
     add_column :providers, :alt_phone_number, :string

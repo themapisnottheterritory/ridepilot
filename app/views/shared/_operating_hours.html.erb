@@ -50,7 +50,7 @@
                     <%= label_tag "start-hour-#{day_value}", "From", style: "font-weight: normal" %>
                     <select id="start-hour-<%= day_value %>" name="start_hour[<%= day_value %>]" class="form-control" <%= @readonly ? "readonly" : "" %>>
                       <% @start_hours.each do |hour| %>
-                        <option value="<%= hour %>" <%= !hours.nil? and hour == hours.start_time.try(:to_s, :time_utc) ? "selected" : "" %>>
+                        <option value="<%= hour %>" <%= !hours.nil? and hour == hours.start_time.try(:to_fs, :time_utc) ? "selected" : "" %>>
                           <%= Time.zone.parse(hour).strftime("%l:%M%P") %>
                         </option>
                       <% end %>
@@ -62,7 +62,7 @@
                     <%= label_tag "end-hour-#{day_value}", "To", style: "font-weight: normal" %>
                     <select id="end-hour-<%= day_value %>" name="end_hour[<%= day_value %>]" class="form-control" <%= @readonly ? "readonly" : "" %>>
                       <% @end_hours.each do |hour| %>
-                        <option value="<%= hour %>" <%= !hours.nil? and hour == hours.end_time.try(:to_s, :time_utc) ? "selected" : "" %>>
+                        <option value="<%= hour %>" <%= !hours.nil? and hour == hours.end_time.try(:to_fs, :time_utc) ? "selected" : "" %>>
                           <%= Time.zone.parse(hour).strftime("%l:%M%P") %>
                         </option>
                       <% end %>

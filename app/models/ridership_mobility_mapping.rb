@@ -1,6 +1,6 @@
 class RidershipMobilityMapping < ApplicationRecord
   after_initialize :set_defaults
-  belongs_to :mobility
+  belongs_to :mobility, optional: true
 
   validates :capacity, presence: true, 
                     numericality: { only_integer: true, greater_than_or_equal_to: 0 }

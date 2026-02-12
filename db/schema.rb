@@ -2,15 +2,16 @@
 # of editing this file, please use the migrations feature of Active Record to
 # incrementally modify your database, and then regenerate this schema definition.
 #
-# Note that this schema.rb definition is the authoritative source for your
-# database schema. If you need to create the application database on another
-# system, you should be using db:schema:load, not running all the migrations
-# from scratch. The latter is a flawed and unsustainable approach (the more migrations
-# you'll amass, the slower it'll run and the greater likelihood for issues).
+# This file is the source Rails uses to define your schema when running `bin/rails
+# db:schema:load`. When creating a new database, `bin/rails db:schema:load` tends to
+# be faster and is potentially less error prone than running all of your
+# migrations from scratch. Old migrations may fail to apply correctly if those
+# migrations use external dependencies or application code.
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_03_02_211128) do
+ActiveRecord::Schema[7.1].define(version: 202103162114206) do
+  create_schema "topology"
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "fuzzystrmatch"
@@ -28,8 +29,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.text "parameters"
     t.integer "recipient_id"
     t.string "recipient_type", limit: 255
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["owner_id", "owner_type"], name: "index_activities_on_owner_id_and_owner_type"
     t.index ["recipient_id", "recipient_type"], name: "index_activities_on_recipient_id_and_recipient_type"
     t.index ["trackable_id", "trackable_type"], name: "index_activities_on_trackable_id_and_trackable_type"
@@ -38,22 +39,22 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
   create_table "ada_questions", id: :serial, force: :cascade do |t|
     t.integer "provider_id"
     t.string "name", limit: 255
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["provider_id"], name: "index_ada_questions_on_provider_id"
   end
 
   create_table "address_groups", id: :serial, force: :cascade do |t|
     t.string "name", limit: 255
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
   end
 
   create_table "address_upload_flags", id: :serial, force: :cascade do |t|
     t.boolean "is_loading", default: false
     t.integer "provider_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.text "last_upload_summary"
     t.index ["provider_id"], name: "index_address_upload_flags_on_provider_id"
   end
@@ -67,8 +68,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.string "zip", limit: 255
     t.boolean "in_district"
     t.integer "provider_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.integer "lock_version", default: 0
     t.string "phone_number", limit: 255
     t.boolean "inactive", default: false
@@ -76,7 +77,7 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.geography "the_geom", limit: {:srid=>4326, :type=>"st_point", :geographic=>true}
     t.integer "trip_purpose_id"
     t.text "notes"
-    t.datetime "deleted_at"
+    t.datetime "deleted_at", precision: nil
     t.integer "customer_id"
     t.boolean "is_driver_associated", default: false
     t.boolean "is_user_associated"
@@ -93,17 +94,17 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
   create_table "addresses_customers_old", id: :serial, force: :cascade do |t|
     t.integer "customer_id"
     t.integer "address_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["address_id"], name: "index_addresses_customers_old_on_address_id"
     t.index ["customer_id"], name: "index_addresses_customers_old_on_customer_id"
   end
 
   create_table "booking_users", id: :serial, force: :cascade do |t|
     t.integer "user_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.datetime "deleted_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
+    t.datetime "deleted_at", precision: nil
     t.string "url", limit: 255
     t.uuid "token", default: -> { "uuid_generate_v4()" }
     t.index ["user_id"], name: "index_booking_users_on_user_id"
@@ -118,8 +119,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.integer "capacity_type_id"
     t.integer "capacity"
     t.integer "host_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.string "type", limit: 255
     t.index ["capacity_type_id"], name: "index_capacities_on_capacity_type_id"
     t.index ["host_id"], name: "index_capacities_on_host_id"
@@ -128,9 +129,9 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
   create_table "capacity_types", id: :serial, force: :cascade do |t|
     t.string "name", limit: 255
     t.integer "provider_id"
-    t.datetime "deleted_at"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "deleted_at", precision: nil
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["provider_id"], name: "index_capacity_types_on_provider_id"
   end
 
@@ -138,16 +139,16 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.bigint "run_id"
     t.bigint "message_id"
     t.integer "read_by_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.index ["message_id"], name: "index_chat_read_receipts_on_message_id"
     t.index ["run_id"], name: "index_chat_read_receipts_on_run_id"
   end
 
   create_table "custom_reports", id: :serial, force: :cascade do |t|
     t.string "name", limit: 255
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.boolean "redirect_to_results", default: false
     t.string "title", limit: 255
     t.string "version", limit: 255
@@ -157,8 +158,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.integer "customer_id"
     t.integer "ada_question_id"
     t.boolean "answer"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["ada_question_id"], name: "index_customer_ada_questions_on_ada_question_id"
     t.index ["customer_id"], name: "index_customer_ada_questions_on_customer_id"
   end
@@ -166,15 +167,15 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
   create_table "customer_address_types", id: :serial, force: :cascade do |t|
     t.string "name", limit: 255
     t.string "code", limit: 255
-    t.datetime "deleted_at"
+    t.datetime "deleted_at", precision: nil
   end
 
   create_table "customer_eligibilities", id: :serial, force: :cascade do |t|
     t.integer "customer_id"
     t.integer "eligibility_id"
     t.text "ineligible_reason"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.boolean "eligible"
     t.index ["customer_id"], name: "index_customer_eligibilities_on_customer_id"
     t.index ["eligibility_id"], name: "index_customer_eligibilities_on_eligibility_id"
@@ -200,8 +201,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.text "public_notes"
     t.integer "provider_id"
     t.boolean "group", default: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.integer "lock_version", default: 0
     t.boolean "medicaid_eligible"
     t.string "prime_number", limit: 255
@@ -211,7 +212,7 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.integer "service_level_id"
     t.boolean "is_elderly"
     t.string "gender", limit: 255
-    t.datetime "deleted_at"
+    t.datetime "deleted_at", precision: nil
     t.text "message"
     t.string "token", limit: 255
     t.boolean "active"
@@ -245,8 +246,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.time "end_time"
     t.integer "operatable_id"
     t.string "operatable_type", limit: 255
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.boolean "is_all_day", default: false
     t.boolean "is_unavailable", default: false
   end
@@ -261,10 +262,10 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.float "lat"
     t.float "lng"
     t.integer "device_pool_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.integer "driver_id"
-    t.datetime "posted_at"
+    t.datetime "posted_at", precision: nil
     t.integer "vehicle_id"
     t.index ["device_pool_id"], name: "index_device_pool_drivers_on_device_pool_id"
     t.index ["driver_id"], name: "index_device_pool_drivers_on_driver_id"
@@ -275,9 +276,9 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.integer "provider_id"
     t.string "name", limit: 255
     t.string "color", limit: 255
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.datetime "deleted_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
+    t.datetime "deleted_at", precision: nil
     t.index ["deleted_at"], name: "index_device_pools_on_deleted_at"
     t.index ["provider_id"], name: "index_device_pools_on_provider_id"
   end
@@ -286,8 +287,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.integer "document_id"
     t.integer "associable_id"
     t.string "associable_type", limit: 255
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["associable_id", "associable_type"], name: "index_document_associations_on_associable_id_and_associable_typ"
     t.index ["document_id", "associable_id", "associable_type"], name: "index_document_associations_document_id_associable"
     t.index ["document_id"], name: "index_document_associations_on_document_id"
@@ -300,19 +301,19 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.string "document_file_name", limit: 255
     t.string "document_content_type", limit: 255
     t.integer "document_file_size"
-    t.datetime "document_updated_at"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "document_updated_at", precision: nil
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["documentable_id", "documentable_type"], name: "index_documents_on_documentable_id_and_documentable_type"
   end
 
   create_table "donations", id: :serial, force: :cascade do |t|
-    t.datetime "date"
+    t.datetime "date", precision: nil
     t.float "amount"
     t.text "notes"
-    t.datetime "deleted_at"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "deleted_at", precision: nil
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.integer "customer_id"
     t.integer "user_id"
     t.integer "trip_id"
@@ -327,8 +328,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.text "notes"
     t.date "due_date"
     t.date "compliance_date"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.integer "recurring_driver_compliance_id"
     t.boolean "legal"
     t.integer "driver_requirement_template_id"
@@ -342,8 +343,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.string "event", limit: 255
     t.text "notes"
     t.date "event_date"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["driver_id"], name: "index_driver_histories_on_driver_id"
   end
 
@@ -351,10 +352,10 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.integer "provider_id"
     t.string "name", limit: 255
     t.boolean "legal"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.boolean "reoccuring"
-    t.datetime "deleted_at"
+    t.datetime "deleted_at", precision: nil
     t.index ["provider_id"], name: "index_driver_requirement_templates_on_provider_id"
   end
 
@@ -363,13 +364,13 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.boolean "paid"
     t.integer "provider_id"
     t.string "name", limit: 255
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.integer "lock_version", default: 0
     t.integer "user_id"
     t.string "email", limit: 255
     t.integer "address_id"
-    t.datetime "deleted_at"
+    t.datetime "deleted_at", precision: nil
     t.string "phone_number", limit: 255
     t.integer "alt_address_id"
     t.string "alt_phone_number", limit: 255
@@ -386,8 +387,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
   create_table "eligibilities", id: :serial, force: :cascade do |t|
     t.string "code", limit: 255, null: false
     t.string "description", limit: 255, null: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
   end
 
   create_table "emergency_contacts", id: :serial, force: :cascade do |t|
@@ -396,24 +397,42 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.string "name", limit: 255
     t.string "phone_number", limit: 255
     t.string "relationship", limit: 255
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.datetime "deleted_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
+    t.datetime "deleted_at", precision: nil
   end
 
   create_table "ethnicities", id: :serial, force: :cascade do |t|
     t.string "name", limit: 255
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.datetime "deleted_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
+    t.datetime "deleted_at", precision: nil
     t.index ["deleted_at"], name: "index_ethnicities_on_deleted_at"
+  end
+
+  create_table "fare_card_data", force: :cascade do |t|
+    t.bigint "fare_card_id", null: false
+    t.integer "bus_id"
+    t.string "msg_direction"
+    t.decimal "latitude"
+    t.decimal "longitude"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fare_card_id"], name: "index_fare_card_data_on_fare_card_id"
+  end
+
+  create_table "fare_cards", force: :cascade do |t|
+    t.string "card_id"
+    t.integer "customer_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "fares", force: :cascade do |t|
     t.integer "fare_type"
     t.boolean "pre_trip"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
   end
 
   create_table "field_configs", id: :serial, force: :cascade do |t|
@@ -422,8 +441,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.string "field_name", limit: 255, null: false
     t.boolean "visible", default: true
     t.boolean "required", default: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["provider_id"], name: "index_field_configs_on_provider_id"
   end
 
@@ -432,8 +451,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.integer "customer_id"
     t.string "number", limit: 255
     t.text "contact_info"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["customer_id"], name: "index_funding_authorization_numbers_on_customer_id"
     t.index ["funding_source_id"], name: "index_funding_authorization_numbers_on_funding_source_id"
   end
@@ -447,7 +466,7 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
 
   create_table "funding_sources", id: :serial, force: :cascade do |t|
     t.string "name", limit: 255
-    t.datetime "deleted_at"
+    t.datetime "deleted_at", precision: nil
     t.integer "provider_id"
     t.boolean "ntd_reportable"
     t.index ["deleted_at"], name: "index_funding_sources_on_deleted_at"
@@ -466,7 +485,7 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.float "longitude"
     t.float "bearing"
     t.float "speed"
-    t.datetime "log_time"
+    t.datetime "log_time", precision: nil
     t.integer "accuracy"
     t.bigint "provider_id"
     t.bigint "run_id"
@@ -480,8 +499,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.integer "provider_id"
     t.string "table_name", limit: 255
     t.integer "value_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["provider_id"], name: "index_hidden_lookup_table_values_on_provider_id"
   end
 
@@ -491,43 +510,92 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.string "image_file_name", limit: 255
     t.string "image_content_type", limit: 255
     t.integer "image_file_size"
-    t.datetime "image_updated_at"
+    t.datetime "image_updated_at", precision: nil
     t.index ["imageable_id", "imageable_type"], name: "index_images_on_imageable_id_and_imageable_type"
   end
 
   create_table "itineraries", id: :serial, force: :cascade do |t|
-    t.datetime "time"
-    t.datetime "eta"
+    t.datetime "time", precision: nil
+    t.datetime "eta", precision: nil
     t.integer "travel_time"
     t.integer "address_id"
     t.integer "run_id"
     t.integer "trip_id"
     t.integer "leg_flag"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.datetime "depart_time"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
+    t.datetime "depart_time", precision: nil
     t.integer "status_code"
-    t.datetime "departure_time"
-    t.datetime "arrival_time"
-    t.datetime "finish_time"
-    t.datetime "deleted_at"
+    t.datetime "departure_time", precision: nil
+    t.datetime "arrival_time", precision: nil
+    t.datetime "finish_time", precision: nil
+    t.datetime "deleted_at", precision: nil
     t.index ["address_id"], name: "index_itineraries_on_address_id"
     t.index ["run_id"], name: "index_itineraries_on_run_id"
     t.index ["trip_id"], name: "index_itineraries_on_trip_id"
   end
 
+  create_table "lite_customers", force: :cascade do |t|
+    t.string "first_name"
+    t.string "last_name"
+    t.boolean "senior"
+    t.boolean "disabled"
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.bigint "provider_id", default: 1
+    t.index ["provider_id"], name: "index_lite_customers_on_provider_id"
+  end
+
+  create_table "lite_incidental_trips", force: :cascade do |t|
+    t.date "trip_date"
+    t.integer "num_trips"
+    t.integer "total_mileage"
+    t.bigint "vehicle_id"
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.bigint "provider_id", default: 1
+    t.index ["provider_id"], name: "index_lite_incidental_trips_on_provider_id"
+    t.index ["vehicle_id"], name: "index_lite_incidental_trips_on_vehicle_id"
+  end
+
+  create_table "lite_trips", force: :cascade do |t|
+    t.date "trip_date"
+    t.integer "num_one_way_trips"
+    t.integer "num_senior_trips"
+    t.integer "num_disabled_trips"
+    t.bigint "vehicle_id"
+    t.integer "start_odometer"
+    t.integer "end_odometer"
+    t.integer "lift_odometer"
+    t.boolean "pre_trip_inspection"
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.bigint "provider_id", default: 1
+    t.index ["provider_id"], name: "index_lite_trips_on_provider_id"
+    t.index ["vehicle_id"], name: "index_lite_trips_on_vehicle_id"
+  end
+
+  create_table "lite_unique_riders", force: :cascade do |t|
+    t.integer "year"
+    t.integer "num_unique_riders"
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.bigint "provider_id", default: 1
+    t.index ["provider_id"], name: "index_lite_unique_riders_on_provider_id"
+  end
+
   create_table "locales", id: :serial, force: :cascade do |t|
     t.string "name", limit: 255
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
   end
 
   create_table "lookup_tables", id: :serial, force: :cascade do |t|
     t.string "caption", limit: 255
     t.string "name", limit: 255
     t.string "value_column_name", limit: 255
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.boolean "add_value_allowed", default: true
     t.boolean "edit_value_allowed", default: true
     t.boolean "delete_value_allowed", default: true
@@ -540,8 +608,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.text "message"
     t.bigint "provider_id"
     t.string "type"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.index ["provider_id"], name: "index_message_templates_on_provider_id"
   end
 
@@ -551,9 +619,9 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.text "body"
     t.integer "sender_id"
     t.integer "reader_id"
-    t.datetime "read_at"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "read_at", precision: nil
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.bigint "driver_id"
     t.bigint "run_id"
     t.index ["driver_id"], name: "index_messages_on_driver_id"
@@ -565,7 +633,7 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
 
   create_table "mobilities", id: :serial, force: :cascade do |t|
     t.string "name", limit: 255
-    t.datetime "deleted_at"
+    t.datetime "deleted_at", precision: nil
     t.index ["deleted_at"], name: "index_mobilities_on_deleted_at"
   end
 
@@ -574,8 +642,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.integer "volunteer_escort_hours"
     t.integer "volunteer_admin_hours"
     t.integer "provider_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.integer "lock_version", default: 0
     t.integer "funding_source_id"
     t.index ["funding_source_id"], name: "index_monthlies_on_funding_source_id"
@@ -586,7 +654,7 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.string "encrypted_password", limit: 255, null: false
     t.string "password_archivable_type", limit: 255, null: false
     t.integer "password_archivable_id", null: false
-    t.datetime "created_at"
+    t.datetime "created_at", precision: nil
     t.index ["password_archivable_type", "password_archivable_id"], name: "index_password_archivable"
   end
 
@@ -595,8 +663,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.integer "day_of_week"
     t.time "start_time"
     t.time "end_time"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.string "operatable_type", limit: 255
     t.boolean "is_all_day", default: false
     t.boolean "is_unavailable", default: false
@@ -610,8 +678,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.text "reason"
     t.integer "leavable_id"
     t.string "leavable_type", limit: 255
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["leavable_id", "leavable_type"], name: "index_planned_leaves_on_leavable_id_and_leavable_type"
   end
 
@@ -622,16 +690,16 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.string "model_name_str", limit: 255
     t.string "code_column_name", limit: 255
     t.string "description_column_name", limit: 255
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
   end
 
   create_table "provider_reports", id: :serial, force: :cascade do |t|
     t.integer "provider_id"
     t.integer "custom_report_id"
     t.boolean "inactive"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["custom_report_id"], name: "index_provider_reports_on_custom_report_id"
     t.index ["provider_id"], name: "index_provider_reports_on_provider_id"
   end
@@ -641,7 +709,7 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.string "logo_file_name", limit: 255
     t.string "logo_content_type", limit: 255
     t.integer "logo_file_size"
-    t.datetime "logo_updated_at"
+    t.datetime "logo_updated_at", precision: nil
     t.boolean "dispatch"
     t.boolean "scheduling"
     t.integer "viewport_zoom"
@@ -659,10 +727,10 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.geography "region_se_corner", limit: {:srid=>4326, :type=>"st_point", :geographic=>true}
     t.geography "viewport_center", limit: {:srid=>4326, :type=>"st_point", :geographic=>true}
     t.text "fields_required_for_run_completion"
-    t.datetime "deleted_at"
+    t.datetime "deleted_at", precision: nil
     t.integer "min_trip_time_gap_in_mins", default: 30
     t.boolean "customer_nonsharable", default: false
-    t.datetime "inactivated_date"
+    t.datetime "inactivated_date", precision: nil
     t.string "inactivated_reason", limit: 255
     t.integer "advance_day_scheduling"
     t.boolean "cab_enabled"
@@ -697,10 +765,10 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
   create_table "public_itineraries", force: :cascade do |t|
     t.bigint "run_id"
     t.bigint "itinerary_id"
-    t.datetime "eta"
+    t.datetime "eta", precision: nil
     t.integer "sequence"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.index ["itinerary_id"], name: "index_public_itineraries_on_itinerary_id"
     t.index ["run_id"], name: "index_public_itineraries_on_run_id"
   end
@@ -717,8 +785,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.string "future_start_schedule", limit: 255
     t.integer "future_start_frequency"
     t.boolean "compliance_based_scheduling", default: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["provider_id"], name: "index_recurring_driver_compliances_on_provider_id"
   end
 
@@ -736,32 +804,32 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.string "future_start_schedule", limit: 255
     t.integer "future_start_frequency"
     t.boolean "compliance_based_scheduling", default: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["provider_id"], name: "index_recurring_vehicle_maintenance_compliances_on_provider_id"
   end
 
   create_table "regions", id: :serial, force: :cascade do |t|
     t.string "name", limit: 255
     t.geography "the_geom", limit: {:srid=>4326, :type=>"st_polygon", :geographic=>true}
-    t.datetime "deleted_at"
+    t.datetime "deleted_at", precision: nil
     t.boolean "is_primary"
     t.index ["deleted_at"], name: "index_regions_on_deleted_at"
     t.index ["the_geom"], name: "index_regions_on_the_geom", using: :gist
   end
 
   create_table "repeating_itineraries", id: :serial, force: :cascade do |t|
-    t.datetime "time"
-    t.datetime "eta"
+    t.datetime "time", precision: nil
+    t.datetime "eta", precision: nil
     t.integer "travel_time"
     t.integer "address_id"
     t.integer "repeating_run_id"
     t.integer "repeating_trip_id"
     t.integer "leg_flag"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.integer "wday"
-    t.datetime "depart_time"
+    t.datetime "depart_time", precision: nil
     t.index ["address_id"], name: "index_repeating_itineraries_on_address_id"
     t.index ["repeating_run_id"], name: "index_repeating_itineraries_on_repeating_run_id"
     t.index ["repeating_trip_id"], name: "index_repeating_itineraries_on_repeating_trip_id"
@@ -771,8 +839,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.integer "repeating_run_id"
     t.integer "wday"
     t.text "manifest_order"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["repeating_run_id"], name: "index_repeating_run_manifest_orders_on_repeating_run_id"
   end
 
@@ -780,15 +848,15 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.text "schedule_yaml"
     t.string "name", limit: 255
     t.date "date"
-    t.datetime "scheduled_start_time"
-    t.datetime "scheduled_end_time"
+    t.datetime "scheduled_start_time", precision: nil
+    t.datetime "scheduled_end_time", precision: nil
     t.integer "vehicle_id"
     t.integer "driver_id"
     t.boolean "paid"
     t.integer "provider_id"
     t.integer "lock_version", default: 0
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.date "start_date"
     t.date "end_date"
     t.string "comments", limit: 255
@@ -806,8 +874,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.text "schedule_yaml"
     t.integer "provider_id"
     t.integer "customer_id"
-    t.datetime "pickup_time"
-    t.datetime "appointment_time"
+    t.datetime "pickup_time", precision: nil
+    t.datetime "appointment_time", precision: nil
     t.integer "guest_count", default: 0
     t.integer "attendant_count", default: 0
     t.integer "group_size", default: 0
@@ -817,8 +885,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.integer "funding_source_id"
     t.string "trip_purpose_old", limit: 255
     t.text "notes"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.integer "lock_version", default: 0
     t.integer "driver_id"
     t.integer "vehicle_id"
@@ -861,8 +929,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.integer "lookup_table_id"
     t.string "name", limit: 255, null: false
     t.string "title", limit: 255
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.integer "sort_order", default: 1, null: false
     t.string "value_type", limit: 255
     t.index ["filter_group_id"], name: "index_reporting_filter_fields_on_filter_group_id"
@@ -872,21 +940,21 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
 
   create_table "reporting_filter_groups", id: :serial, force: :cascade do |t|
     t.string "name", limit: 255, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
   end
 
   create_table "reporting_filter_types", id: :serial, force: :cascade do |t|
     t.string "name", limit: 255, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
   end
 
   create_table "reporting_lookup_tables", id: :serial, force: :cascade do |t|
     t.string "name", limit: 255, null: false
     t.string "display_field_name", limit: 255, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.string "id_field_name", limit: 255, default: "id", null: false
     t.string "data_access_type", limit: 255
   end
@@ -895,8 +963,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.string "name", limit: 255, null: false
     t.string "title", limit: 255
     t.integer "report_id", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.string "formatter", limit: 255
     t.integer "numeric_precision"
     t.integer "sort_order"
@@ -909,8 +977,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.string "name", limit: 255, null: false
     t.string "description", limit: 255
     t.string "data_source", limit: 255, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.string "primary_key", limit: 255, default: "id", null: false
   end
 
@@ -918,8 +986,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.integer "report_id"
     t.integer "filter_group_id"
     t.integer "sort_order", default: 1, null: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["filter_group_id"], name: "index_of_filter_group_on_specific_filter_group"
     t.index ["report_id"], name: "index_of_report_on_specific_filter_group"
   end
@@ -930,8 +998,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.integer "capacity"
     t.string "type", limit: 255
     t.integer "host_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["mobility_id"], name: "index_ridership_mobility_mappings_on_mobility_id"
   end
 
@@ -939,7 +1007,7 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.integer "user_id"
     t.integer "provider_id"
     t.integer "level"
-    t.datetime "deleted_at"
+    t.datetime "deleted_at", precision: nil
     t.index ["deleted_at"], name: "index_roles_on_deleted_at"
     t.index ["provider_id"], name: "index_roles_on_provider_id"
     t.index ["user_id"], name: "index_roles_on_user_id"
@@ -952,8 +1020,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.float "deadhead_from_garage"
     t.float "deadhead_to_garage"
     t.integer "run_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.float "passenger_miles"
     t.float "ntd_total_miles"
     t.float "ntd_total_revenue_miles"
@@ -966,8 +1034,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.bigint "run_id"
     t.bigint "vehicle_inspection_id"
     t.boolean "checked"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.index ["run_id"], name: "index_run_vehicle_inspections_on_run_id"
     t.index ["vehicle_inspection_id"], name: "index_run_vehicle_inspections_on_vehicle_inspection_id"
   end
@@ -977,21 +1045,21 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.date "date"
     t.integer "start_odometer"
     t.integer "end_odometer"
-    t.datetime "scheduled_start_time"
-    t.datetime "scheduled_end_time"
+    t.datetime "scheduled_start_time", precision: nil
+    t.datetime "scheduled_end_time", precision: nil
     t.integer "unpaid_driver_break_time"
     t.integer "vehicle_id"
     t.integer "driver_id"
     t.boolean "paid"
     t.boolean "complete"
     t.integer "provider_id"
-    t.datetime "actual_start_time"
-    t.datetime "actual_end_time"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "actual_start_time", precision: nil
+    t.datetime "actual_end_time", precision: nil
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.integer "lock_version", default: 0
     t.integer "repeating_run_id"
-    t.datetime "deleted_at"
+    t.datetime "deleted_at", precision: nil
     t.text "manifest_order"
     t.boolean "cancelled"
     t.integer "from_garage_address_id"
@@ -1000,7 +1068,7 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.string "scheduled_start_time_string", limit: 255
     t.string "scheduled_end_time_string", limit: 255
     t.text "driver_notes"
-    t.datetime "manifest_published_at"
+    t.datetime "manifest_published_at", precision: nil
     t.boolean "manifest_changed"
     t.index ["deleted_at"], name: "index_runs_on_deleted_at"
     t.index ["driver_id"], name: "index_runs_on_driver_id"
@@ -1018,17 +1086,17 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.string "name", limit: 255
     t.integer "date_range_type"
     t.text "report_params"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["custom_report_id"], name: "index_saved_custom_reports_on_custom_report_id"
     t.index ["provider_id"], name: "index_saved_custom_reports_on_provider_id"
   end
 
   create_table "service_levels", id: :serial, force: :cascade do |t|
     t.string "name", limit: 255
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.datetime "deleted_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
+    t.datetime "deleted_at", precision: nil
     t.index ["deleted_at"], name: "index_service_levels_on_deleted_at"
   end
 
@@ -1037,23 +1105,23 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.text "value"
     t.integer "thing_id"
     t.string "thing_type", limit: 30
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["thing_type", "thing_id", "var"], name: "index_settings_on_thing_type_and_thing_id_and_var", unique: true
   end
 
   create_table "translation_keys", id: :serial, force: :cascade do |t|
     t.string "name", limit: 255
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
   end
 
   create_table "translations", id: :serial, force: :cascade do |t|
     t.integer "locale_id"
     t.integer "translation_key_id"
     t.text "value"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
   end
 
   create_table "travel_time_estimates", id: false, force: :cascade do |t|
@@ -1064,27 +1132,27 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
 
   create_table "travel_trainings", id: :serial, force: :cascade do |t|
     t.integer "customer_id"
-    t.datetime "date"
+    t.datetime "date", precision: nil
     t.text "comment"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["customer_id"], name: "index_travel_trainings_on_customer_id"
   end
 
   create_table "trip_purposes", id: :serial, force: :cascade do |t|
     t.string "name", limit: 255
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.datetime "deleted_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
+    t.datetime "deleted_at", precision: nil
     t.index ["deleted_at"], name: "index_trip_purposes_on_deleted_at"
   end
 
   create_table "trip_results", id: :serial, force: :cascade do |t|
     t.string "code", limit: 255
     t.string "name", limit: 255
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.datetime "deleted_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
+    t.datetime "deleted_at", precision: nil
     t.string "description", limit: 255
     t.index ["deleted_at"], name: "index_trip_results_on_deleted_at"
   end
@@ -1092,8 +1160,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
   create_table "trips", id: :serial, force: :cascade do |t|
     t.integer "run_id"
     t.integer "customer_id"
-    t.datetime "pickup_time"
-    t.datetime "appointment_time"
+    t.datetime "pickup_time", precision: nil
+    t.datetime "appointment_time", precision: nil
     t.integer "guest_count", default: 0
     t.integer "attendant_count", default: 0
     t.integer "group_size", default: 0
@@ -1106,15 +1174,15 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.text "notes"
     t.decimal "donation_old", precision: 10, scale: 2, default: "0.0"
     t.integer "provider_id"
-    t.datetime "called_back_at"
+    t.datetime "called_back_at", precision: nil
     t.boolean "customer_informed", default: false
     t.integer "repeating_trip_id"
     t.boolean "cab", default: false
     t.boolean "cab_notified", default: false
     t.text "guests"
     t.integer "called_back_by_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.integer "lock_version", default: 0
     t.boolean "medicaid_eligible"
     t.integer "mileage"
@@ -1122,7 +1190,7 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.integer "trip_purpose_id"
     t.integer "trip_result_id"
     t.integer "service_level_id"
-    t.datetime "deleted_at"
+    t.datetime "deleted_at", precision: nil
     t.string "direction", limit: 255, default: "outbound"
     t.text "result_reason"
     t.integer "linking_trip_id"
@@ -1142,7 +1210,7 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.boolean "early_pickup_allowed"
     t.bigint "fare_id"
     t.float "fare_amount"
-    t.datetime "fare_collected_time"
+    t.datetime "fare_collected_time", precision: nil
     t.index ["called_back_by_id"], name: "index_trips_on_called_back_by_id"
     t.index ["customer_id"], name: "index_trips_on_customer_id"
     t.index ["deleted_at"], name: "index_trips_on_deleted_at"
@@ -1166,20 +1234,20 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.string "encrypted_password", limit: 255, default: "", null: false
     t.string "reset_password_token", limit: 255
     t.integer "sign_in_count", default: 0
-    t.datetime "current_sign_in_at"
-    t.datetime "last_sign_in_at"
+    t.datetime "current_sign_in_at", precision: nil
+    t.datetime "last_sign_in_at", precision: nil
     t.string "current_sign_in_ip", limit: 255
     t.string "last_sign_in_ip", limit: 255
     t.string "password_salt", limit: 255
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.integer "current_provider_id"
     t.string "unconfirmed_email", limit: 255
-    t.datetime "reset_password_sent_at"
-    t.datetime "password_changed_at"
-    t.datetime "expires_at"
+    t.datetime "reset_password_sent_at", precision: nil
+    t.datetime "password_changed_at", precision: nil
+    t.datetime "expires_at", precision: nil
     t.string "inactivation_reason", limit: 255
-    t.datetime "deleted_at"
+    t.datetime "deleted_at", precision: nil
     t.string "first_name", limit: 255
     t.string "last_name", limit: 255
     t.string "username", limit: 255
@@ -1197,8 +1265,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
 
   create_table "vehicle_capacity_configurations", id: :serial, force: :cascade do |t|
     t.integer "vehicle_type_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["vehicle_type_id"], name: "index_vehicle_capacity_configurations_on_vehicle_type_id"
   end
 
@@ -1210,18 +1278,18 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.date "compliance_date"
     t.integer "vehicle_requirement_template_id"
     t.boolean "legal"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["vehicle_id"], name: "index_vehicle_compliances_on_vehicle_id"
     t.index ["vehicle_requirement_template_id"], name: "index_vehicle_compliances_on_vehicle_requirement_template_id"
   end
 
   create_table "vehicle_inspections", force: :cascade do |t|
     t.string "description"
-    t.datetime "deleted_at"
+    t.datetime "deleted_at", precision: nil
     t.bigint "provider_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.boolean "flagged"
     t.boolean "mechanical"
     t.index ["provider_id"], name: "index_vehicle_inspections_on_provider_id"
@@ -1240,8 +1308,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.integer "due_mileage"
     t.string "due_type", limit: 255
     t.date "compliance_date"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.integer "recurring_vehicle_maintenance_compliance_id"
     t.integer "compliance_mileage"
     t.integer "vehicle_maintenance_schedule_id"
@@ -1260,16 +1328,16 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.string "vendor_name", limit: 255
     t.string "invoice_number", limit: 255
     t.decimal "invoice_amount", precision: 10, scale: 2
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.integer "lock_version", default: 0
     t.index ["vehicle_id"], name: "index_vehicle_maintenance_events_on_vehicle_id"
   end
 
   create_table "vehicle_maintenance_schedule_types", id: :serial, force: :cascade do |t|
     t.string "name", limit: 255
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.integer "provider_id"
     t.index ["provider_id"], name: "index_veh_maint_sched_type_provider_id"
   end
@@ -1278,8 +1346,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.string "name", limit: 255
     t.integer "mileage"
     t.integer "vehicle_maintenance_schedule_type_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["vehicle_maintenance_schedule_type_id"], name: "index_vehicle_maintenance_schedule_type_id"
   end
 
@@ -1288,8 +1356,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.integer "year"
     t.integer "month"
     t.integer "max_available_count"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["provider_id"], name: "index_vehicle_monthly_trackings_on_provider_id"
   end
 
@@ -1298,17 +1366,17 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.string "name", limit: 255
     t.boolean "legal"
     t.boolean "reoccuring"
-    t.datetime "deleted_at"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "deleted_at", precision: nil
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["provider_id"], name: "index_vehicle_requirement_templates_on_provider_id"
   end
 
   create_table "vehicle_types", id: :serial, force: :cascade do |t|
     t.string "name", limit: 255
     t.integer "provider_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["provider_id"], name: "index_vehicle_types_on_provider_id"
   end
 
@@ -1317,16 +1385,16 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.string "description", limit: 255
     t.text "notes"
     t.date "expiration_date"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["vehicle_id"], name: "index_vehicle_warranties_on_vehicle_id"
   end
 
   create_table "vehicle_warranty_templates", id: :serial, force: :cascade do |t|
     t.string "name", limit: 255
     t.integer "provider_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["provider_id"], name: "index_vehicle_warranty_templates_on_provider_id"
   end
 
@@ -1340,8 +1408,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.string "garaged_location", limit: 255
     t.integer "provider_id"
     t.boolean "active", default: true
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.integer "lock_version", default: 0
     t.integer "default_driver_id"
     t.boolean "reportable", default: true
@@ -1351,7 +1419,7 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.date "registration_expiration_date"
     t.integer "seating_capacity"
     t.text "accessibility_equipment"
-    t.datetime "deleted_at"
+    t.datetime "deleted_at", precision: nil
     t.integer "mobility_device_accommodations"
     t.integer "initial_mileage", default: 0
     t.integer "garage_address_id"
@@ -1375,8 +1443,8 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.integer "user_id"
     t.text "question"
     t.text "answer"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["user_id"], name: "index_verification_questions_on_user_id"
   end
 
@@ -1386,7 +1454,7 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.string "event", limit: 255, null: false
     t.string "whodunnit", limit: 255
     t.text "object"
-    t.datetime "created_at"
+    t.datetime "created_at", precision: nil
     t.text "object_changes"
     t.index ["item_type", "item_id"], name: "index_versions_on_item_type_and_item_id"
   end
@@ -1395,16 +1463,21 @@ ActiveRecord::Schema.define(version: 2019_03_02_211128) do
     t.integer "repeating_trip_id"
     t.integer "repeating_run_id"
     t.integer "wday"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["repeating_run_id"], name: "index_weekday_assignments_on_repeating_run_id"
     t.index ["repeating_trip_id"], name: "index_weekday_assignments_on_repeating_trip_id"
   end
 
   add_foreign_key "chat_read_receipts", "messages"
   add_foreign_key "chat_read_receipts", "runs"
+  add_foreign_key "fare_card_data", "fare_cards"
   add_foreign_key "gps_locations", "providers"
   add_foreign_key "gps_locations", "runs"
+  add_foreign_key "lite_customers", "providers"
+  add_foreign_key "lite_incidental_trips", "providers"
+  add_foreign_key "lite_trips", "providers"
+  add_foreign_key "lite_unique_riders", "providers"
   add_foreign_key "message_templates", "providers"
   add_foreign_key "messages", "drivers"
   add_foreign_key "messages", "runs"

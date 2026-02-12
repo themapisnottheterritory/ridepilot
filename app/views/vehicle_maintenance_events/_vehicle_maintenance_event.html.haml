@@ -1,12 +1,12 @@
 %tr{:class => "vehicle_maintenance_event-#{vehicle_maintenance_event.id}"}
   %td
     %p.form-control-static
-      = link_to vehicle_maintenance_event.service_date.try(:to_s, :long), polymorphic_path([vehicle_maintenance_event.vehicle, vehicle_maintenance_event], action: @readonly ? nil : :edit), remote: true
+      = link_to vehicle_maintenance_event.service_date.try(:to_fs, :long), polymorphic_path([vehicle_maintenance_event.vehicle, vehicle_maintenance_event], action: @readonly ? nil : :edit), remote: true
       - if vehicle_maintenance_event.documents.present?
         %i.fa.fa-paperclip{'aria-hidden' => true}
   %td
     %p.form-control-static
-      = vehicle_maintenance_event.invoice_date.try(:to_s, :long)
+      = vehicle_maintenance_event.invoice_date.try(:to_fs, :long)
   %td
     %p.form-control-static
       = vehicle_maintenance_event.odometer

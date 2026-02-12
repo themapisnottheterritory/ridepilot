@@ -1,4 +1,4 @@
-class CreateFieldConfigs < ActiveRecord::Migration
+class CreateFieldConfigs < ActiveRecord::Migration[4.2]
   def change
     create_table :field_configs do |t|
       t.references :provider, index: true, null: false

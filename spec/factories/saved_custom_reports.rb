@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :saved_custom_report do
-    name  { Faker::Lorem.words(5).join(' ') }
+    name  { Faker::Lorem.words(number: 5).join(' ') }
     custom_report 
     provider 
     date_range_type { 1 }

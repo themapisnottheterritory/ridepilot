@@ -65,6 +65,10 @@ end
     title: 'Export Trips as CSV'
   },
   {
+    name: 'ntd',
+    title: 'NTD'
+  },
+  {
     name: 'customer_receiving_trips_in_range',
     title: 'Customer Trips In Range'
   },

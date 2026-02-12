@@ -1,4 +1,4 @@
-class CreatePlannedLeaves < ActiveRecord::Migration
+class CreatePlannedLeaves < ActiveRecord::Migration[4.2]
   def change
     create_table :planned_leaves do |t|
       t.date :start_date

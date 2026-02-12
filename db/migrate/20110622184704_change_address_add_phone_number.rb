@@ -1,4 +1,4 @@
-class ChangeAddressAddPhoneNumber < ActiveRecord::Migration
+class ChangeAddressAddPhoneNumber < ActiveRecord::Migration[4.2]
   def self.up
     add_column :addresses, :phone_number, :string
   end

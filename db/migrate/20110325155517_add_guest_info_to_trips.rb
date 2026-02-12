@@ -1,4 +1,4 @@
-class AddGuestInfoToTrips < ActiveRecord::Migration
+class AddGuestInfoToTrips < ActiveRecord::Migration[4.2]
   def self.up
     change_table :trips do |t|
       t.text :guests

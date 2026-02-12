@@ -1,4 +1,4 @@
-class ChangeVehiclesAddDefaultDriverId < ActiveRecord::Migration
+class ChangeVehiclesAddDefaultDriverId < ActiveRecord::Migration[4.2]
   def self.up
     add_column :vehicles, :default_driver_id, :integer
   end

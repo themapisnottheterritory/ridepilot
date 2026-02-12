@@ -1,4 +1,4 @@
-class AddHouseKeeping < ActiveRecord::Migration
+class AddHouseKeeping < ActiveRecord::Migration[4.2]
   def self.up
     for table in [:addresses, :customers, :drivers, :monthlies, :repeating_trips, :runs, :trips, :vehicle_maintenance_events, :vehicles]
 

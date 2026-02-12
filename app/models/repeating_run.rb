@@ -30,7 +30,7 @@ class RepeatingRun < ApplicationRecord
 
   scope :active, -> { where("end_date is NULL or end_date >= ?", Date.today) }
   # a query to find repeating_runs that can be used to assign repeating_trips
-  scope :during, -> (from_time, to_time) { where("NOT (scheduled_start_time::time <= ?) OR NOT(scheduled_end_time::time <= ?)", to_time.utc.to_s(:time), from_time.utc.to_s(:time)) }
+  scope :during, -> (from_time, to_time) { where("NOT (scheduled_start_time::time <= ?) OR NOT(scheduled_end_time::time <= ?)", to_time.utc.to_fs(:time), from_time.utc.to_fs(:time)) }
   
   # Repeating Runs where schedule conflicts with another Repeating Run's schedule by DATE
   scope :conflicts_with_schedule, -> (repeating_run) do
@@ -193,11 +193,11 @@ class RepeatingRun < ApplicationRecord
           action_time = is_pickup ? a_trip.pickup_time : a_trip.appointment_time
           next unless action_time
 
-          pickup_index = index if !pickup_index && action_time.to_s(:time_utc) > trip_pickup_time.to_s(:time_utc)
+          pickup_index = index if !pickup_index && action_time.to_fs(:time_utc) > trip_pickup_time.to_fs(:time_utc)
 
           if !appt_index
             if trip_appt_time
-              appt_index = index if action_time.to_s(:time_utc) > trip_appt_time.to_s(:time_utc)
+              appt_index = index if action_time.to_fs(:time_utc) > trip_appt_time.to_fs(:time_utc)
               appt_index += 1 if pickup_index && pickup_index == appt_index
             else
               appt_index = pickup_index + 1 if pickup_index

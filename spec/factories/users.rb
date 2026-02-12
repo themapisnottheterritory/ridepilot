@@ -9,7 +9,8 @@ FactoryBot.define do
     password { 'Password#1' }
     password_confirmation {|u| u.password}
     association :current_provider, factory: :provider
-    
+    association :user_address, factory: :user_address
+
     factory :editor do
       after(:create) do |editor|
         create(:role, :user => editor, :provider => editor.current_provider, :level => 50) unless editor.roles.any?

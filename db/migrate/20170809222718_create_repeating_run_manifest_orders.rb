@@ -1,4 +1,4 @@
-class CreateRepeatingRunManifestOrders < ActiveRecord::Migration
+class CreateRepeatingRunManifestOrders < ActiveRecord::Migration[4.2]
   def change
     create_table :repeating_run_manifest_orders do |t|
       t.references :repeating_run, index: true

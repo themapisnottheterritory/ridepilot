@@ -1,4 +1,7 @@
-# Set up gems listed in the Gemfile.
-ENV['BUNDLE_GEMFILE'] ||= File.expand_path('../../Gemfile', __FILE__)
+# Ruby 3.2 compatibility: require logger before Rails
+# Logger was extracted from stdlib in Ruby 3.1+
+require 'logger'
 
-require 'bundler/setup' if File.exist?(ENV['BUNDLE_GEMFILE'])
+ENV["BUNDLE_GEMFILE"] ||= File.expand_path("../Gemfile", __dir__)
+
+require "bundler/setup" # Set up gems listed in the Gemfile.

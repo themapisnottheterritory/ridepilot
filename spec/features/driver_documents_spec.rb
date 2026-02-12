@@ -19,7 +19,7 @@ RSpec.describe "DriverDocuments" do
       end
       
       it "shows the uploaded date of the document" do
-        expect(page).to have_text @document.document_updated_at.to_s(:long)
+        expect(page).to have_text @document.document_updated_at.to_fs(:long)
       end
       
       it "shows the description of the document" do

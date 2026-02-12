@@ -14,15 +14,15 @@
   <tbody>
     <tr>
       <td><%= translate_helper("application_settings_password_archiving_count") %></td>
-      <td><%= ApplicationSetting['devise.password_archiving_count'] %></td>
+      <td><%= ApplicationSetting.devise_password_archiving_count %></td>
       <td><%= Devise.password_archiving_count %></td>
-      <td><%= ApplicationSetting['devise.password_archiving_count'] %></td>
+      <td><%= ApplicationSetting.devise_password_archiving_count %></td>
     </tr>
     <tr>
       <td><%= translate_helper("application_settings_expire_password_after") %> <sup><a href="#fn1">1</a></sup></td>
-      <td><%= (ApplicationSetting['devise.expire_password_after'] || 0).to_i / 1.day %> days</td>
+      <td><%= (ApplicationSetting.devise_expire_password_after || 0).to_i / 1.day %> days</td>
       <td><%= (Devise.expire_password_after || 0).to_i / 1.day %> days</td>
-      <td><%= (ApplicationSetting['devise.expire_password_after'] || 0).to_i / 1.day %> days</td>
+      <td><%= (ApplicationSetting.devise_expire_password_after || 0).to_i / 1.day %> days</td>
     </tr>
   </tbody>
 </table>

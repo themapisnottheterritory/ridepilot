@@ -1,4 +1,4 @@
-class AddActiveToVehicles < ActiveRecord::Migration
+class AddActiveToVehicles < ActiveRecord::Migration[4.2]
   def self.up
     change_table :vehicles do |t|
       t.boolean :active, :default=>true

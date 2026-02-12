@@ -1,5 +1,5 @@
 # Load the Rails application.
-require File.expand_path('../application', __FILE__)
+require_relative "application"
 
 Rails.application.routes.default_url_options[:host] = ENV['RIDEPILOT_HOST']
 
