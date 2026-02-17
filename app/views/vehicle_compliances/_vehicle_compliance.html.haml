@@ -1,7 +1,7 @@
 %tr{:class => "vehicle_compliance-#{vehicle_compliance.id}#{" overdue_compliance_event danger" if vehicle_compliance.overdue?}"}
   %td
     %p.form-control-static
-      = vehicle_compliance.due_date.to_s(:long)
+      = vehicle_compliance.due_date.to_fs(:long)
   %td
     %p.form-control-static
       = link_to vehicle_compliance.event, polymorphic_path([vehicle_compliance.vehicle, vehicle_compliance], action: @readonly ? nil : :edit), remote: true

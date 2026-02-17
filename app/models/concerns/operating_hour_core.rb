@@ -176,7 +176,7 @@ module OperatingHourCore
   end
 
   def enforce_hour_sanity
-    if is_regular_hours? && (start_time == end_time || (start_time > end_time && end_time.try(:to_s, :time_utc) != START_OF_DAY))
+    if is_regular_hours? && (start_time == end_time || (start_time > end_time && end_time.try(:to_fs, :time_utc) != START_OF_DAY))
       errors.add(:end_time, 'must be later than start time.')
     end
   end

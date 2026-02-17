@@ -3,8 +3,9 @@ volumes:
   postgres_data:
   redis:
 services:
-  db:    
+  db:
     image: mdillon/postgis:9.4
+    restart: unless-stopped
     volumes:      
       - postgres_data:/var/lib/postgresql/data 
     ports: 
@@ -12,6 +13,7 @@ services:
 
   redis:
     image: 'redis:7-alpine'
+    restart: unless-stopped
     volumes:
       - redis:/data
 
@@ -19,6 +21,7 @@ services:
     build:
       context: ..
       dockerfile: ./ridepilot/docker/app/Dockerfile
+    restart: unless-stopped
     depends_on:
       - db
       - redis
@@ -35,13 +38,15 @@ services:
   web:
     build:
       context: ..
-      dockerfile: ./ridepilot/docker/web/Dockerfile    
+      dockerfile: ./ridepilot/docker/web/Dockerfile
+    restart: unless-stopped
     depends_on:      
       - app    
     ports:      
       - 80:80
 
   sidekiq:
+    restart: unless-stopped
     depends_on:
       - db
       - redis
