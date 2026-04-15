@@ -1,2 +1,4 @@
+- if @message&.persisted?
+  $('.panel-body .chat').append("#{ j render 'cad/chat/details', message: @message}");
 $('textarea[name="message"]').val('');
-$(".panel-body").animate({ scrollTop: $(this).height() }, "slow");
+$(".panel-body").animate({ scrollTop: $('.panel-body')[0].scrollHeight }, "slow");

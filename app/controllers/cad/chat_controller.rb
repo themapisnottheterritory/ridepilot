@@ -14,7 +14,7 @@ module Cad
       @driver = Driver.find_by_id params[:driver_id]
       @run = Run.find_by_id params[:run_id]
       if @driver
-        RoutineMessage.create(provider_id: current_provider_id, run: @run, driver: @driver, sender: current_user, body: params[:message])
+        @message = RoutineMessage.create(provider_id: current_provider_id, run: @run, driver: @driver, sender: current_user, body: params[:message])
       end
     end
 
