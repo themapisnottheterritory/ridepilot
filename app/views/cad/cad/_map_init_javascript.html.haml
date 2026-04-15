@@ -1,0 +1,96 @@
+:ruby
+  center_lat = @provider.viewport_center ? @provider.viewport_center.y : GOOGLE_MAP_DEFAULTS[:viewport][:center_lat]
+  center_lng = @provider.viewport_center ? @provider.viewport_center.x : GOOGLE_MAP_DEFAULTS[:viewport][:center_lng]
+  zoom = @provider.viewport_zoom || GOOGLE_MAP_DEFAULTS[:viewport][:zoom] || 10
+
+  has_bounds = @provider.region_se_corner.present? && @provider.region_nw_corner.present?
+
+:javascript
+  var map;
+  var last_log_time;
+
+  // generic popup (replaces Google InfoWindow)
+  var infoPopup = L.popup({ maxWidth: 300 });
+  // track what's shown in the popup
+  infoPopup.type = null;
+  infoPopup.run_id = null;
+  infoPopup.itin_id = null;
+
+  // set up timer to update date updated time in popup
+  if(#{@is_today || false}) {
+    var timer = 0;
+    var infoUpdateTimer;
+
+    // one method to refresh map data
+    function refreshMap() {
+      last_log_time = new Date();
+      console.log('refreshing map...');
+      // refresh run list
+      var incomplete_only = !($('#all_toggle').is(":checked"));
+      reloadRuns(incomplete_only, true);
+    }
+
+    // refresh map on interval
+    function refreshMapOnInterval() {
+      setInterval(function() {
+        refreshMap();
+      }, #{ApplicationSetting.cad_avl_cad_refresh_interval_seconds || 30} * 1000);
+    }
+    refreshMapOnInterval();
+  }
+
+
+  $(function(){
+    function resizeMapContainer() {
+      // set height as: window size - (page header + footer)
+      $('#map').height($(window).height() - 100);
+    }
+
+    function resizeMap() {
+      resizeMapContainer();
+      map.invalidateSize();
+    }
+
+    function initMap() {
+      map = L.map('map', {
+        center: [#{center_lat}, #{center_lng}],
+        zoom: #{zoom}
+      });
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(map);
+
+      if(#{has_bounds || false}) {
+        var bounds = L.latLngBounds(
+          L.latLng(#{@provider.region_se_corner.try(:y) || (center_lat - 5)}, #{@provider.region_nw_corner.try(:x) || (center_lng + 5)}),
+          L.latLng(#{@provider.region_nw_corner.try(:y) || (center_lat + 5)}, #{@provider.region_se_corner.try(:x) || (center_lng - 5)})
+        );
+
+        map.fitBounds(bounds);
+      }
+
+      // init marker cluster group (replaces OverlappingMarkerSpiderfier)
+      stopMarkerCluster = L.markerClusterGroup({
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true,
+        maxClusterRadius: 30
+      });
+      map.addLayer(stopMarkerCluster);
+    }
+
+    // create map
+    resizeMapContainer();
+    initMap();
+
+    // resize map (listen to resize stop event, so no need to re-calculate size all the time before stop)
+    $(window).resize(function() {
+      clearTimeout(window.resizedFinished);
+      window.resizedFinished = setTimeout(function(){
+        resizeMap();
+      }, 250);
+    });
+  });
+

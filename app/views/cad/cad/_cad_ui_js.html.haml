@@ -1,0 +1,178 @@
+:javascript
+  var expanded_run_id;
+
+  // re-render run checkbox listing
+  function reloadRuns(incomplete_runs_only, is_refresh){
+
+    var data = {
+      is_refresh: is_refresh,
+      cad: {
+        date: "#{@cad_day}",
+        incomplete_runs_only: incomplete_runs_only,
+        expanded_run_id: expanded_run_id
+      }
+    };
+
+    $.ajax({
+      url: "#{reload_runs_cad_path}",
+      data: data
+    });
+  }
+
+   // load run data into map
+  function reloadRun(run_id, is_full_loading){
+    $.ajax({
+      url: "#{reload_run_cad_path}",
+      data: {
+        options: {
+          upcoming_path: $('#run_upcoming_path').is(':checked'),
+          prior_path: $('#run_prior_path').is(':checked'),
+          stops: $('#run_stops').is(':checked')
+        },
+        cad: {
+          run_id: run_id,
+          last_log_time: (last_log_time && !is_full_loading ? last_log_time.toISOString() : null)
+        }
+      }
+    });
+  }
+
+  // refresh run checkboxes
+  function removeRuns(run_ids) {
+    run_ids.forEach(function(run_id) {
+      removeRun(run_id);
+    });
+  }
+
+  // remove run data from map
+  function removeRun(run_id) {
+    removeVehicle(run_id);
+    removeRunStops(run_id);
+    removePriorPath(run_id);
+    removeUpcomingPath(run_id);
+  }
+
+  function getSelectedRunIds() {
+    var pre_run_ids = [];
+    $('.run_list input:checked').each(function() {
+      var run_id = $(this).data('run-id');
+
+      pre_run_ids.push(run_id);
+    });
+
+    return pre_run_ids;
+  }
+
+
+  function getAllRunIds() {
+    var run_ids = [];
+    $('.run_list input').each(function() {
+      var run_id = $(this).data('run-id');
+
+      run_ids.push(run_id);
+    });
+
+    return run_ids;
+  }
+
+  function showNoRunWarning() {
+    $('.select_all').hide();
+    if($('#all_toggle').is(":checked")) {
+      $('#no_run_warning').text('There are no runs for this day.');
+    } else {
+      $('#no_run_warning').text('There are no remaining incomplete runs for this day.');
+    }
+    $('#no_run_warning').show();
+  }
+
+  function hideNoRunWarning() {
+    $('#no_run_warning').hide();
+    $('.select_all').show();
+  }
+
+  function expandRun(run_id) {
+    collapseRun(expanded_run_id);
+
+    $.ajax({
+      url: "#{expand_run_cad_path}",
+      data: {
+        cad: {
+          run_id: run_id
+        }
+      }
+    });
+
+  }
+
+  function collapseRun(run_id) {
+    if(!run_id) {
+      return;
+    }
+
+    var run_checkbox = $('input[type=checkbox][data-run-id=' + run_id + ']');
+    run_checkbox.parents('.run_list').find('.collapse_run').replaceWith('<i class="fa fa-chevron-circle-down run_action expand_run" title="Show stops"></i>');
+    $('.run_stops').remove();
+
+    expanded_run_id = null;
+  }
+
+  function openDriverChat(run_id) {
+    window.open("#{driver_chat_path(run_id: 'xxx')}".replace('xxx', run_id), 'chat_' + run_id, "width=800, height=600");
+  }
+
+  $(document).on('click', '.expand_run', function(e) {
+    e.preventDefault();
+    var run_id = $(this).parents('.run_list').find('input[type=checkbox]').data('run-id');
+    expandRun(run_id);
+
+  });
+
+  $(document).on('click', '.collapse_run', function(e) {
+    e.preventDefault();
+    var run_id = $(this).parents('.run_list').find('input[type=checkbox]').data('run-id');
+    collapseRun(run_id);
+  });
+
+  $(document).on('click', '.zoom_to_run', function(e) {
+    e.preventDefault();
+    var run_id = $(this).parents('.run_list').find('input[type=checkbox]').data('run-id');
+    zoomToRun(run_id);
+  });
+
+  $(document).on('click', '.driver_chat', function(e) {
+    e.preventDefault();
+    var run_id = $(this).parents('.run_list').find('input[type=checkbox]').data('run-id');
+    openDriverChat(run_id);
+  });
+
+  $(document).on('mouseover', '.run_stop', function(e) {
+    e.preventDefault();
+    var lat = $(this).data('latitude');
+    var lng = $(this).data('longitude');
+    if(lat && lng) {
+      var leg_flag = $(this).data('leg-flag');
+      hoverStop(parseFloat(lat), parseFloat(lng), leg_flag);
+    }
+  });
+
+  $(document).on('mouseout', '.run_stop', function(e) {
+    e.preventDefault();
+    exitHoverStop();
+  });
+
+  $(document).on('click', '.run_stop', function(e) {
+    e.preventDefault();
+
+    if(stopHoverMarker) {
+      infoPopup.setLatLng(stopHoverMarker.getLatLng());
+      infoPopup.setContent('loading...');
+      infoPopup.openOn(map);
+    }
+
+    var itin_id = $(this).data('itinerary-id');
+    if(itin_id) {
+      requestStopInfo(itin_id);
+    }
+
+    return false;
+  });

@@ -38,6 +38,7 @@ gem 'jquery-rails'
 gem 'responders', '~> 3.0'
 # Use PostgreSQL as db for activerecord
 gem 'pg'
+gem 'mysql2', '~> 0.5'  # For direct AVL GPS reads from busavl MySQL database
 gem 'concurrent-ruby', '1.3.5'
 
 ### UI ####################################
@@ -95,8 +96,8 @@ gem 'devise-security'
 gem 'rack-cors', :require => 'rack/cors'
 # Token authentication
 gem 'simple_token_authentication', '~> 1.0'
-# API serializer
-#gem 'fast_jsonapi', github: 'Netflix/fast_jsonapi', branch: 'dev'
+# API serializer (for driver app & CAD/AVL API responses)
+gem 'fast_jsonapi', '~> 1.5'
 
 ### GEOSPATIAL ##############################
 
@@ -119,7 +120,7 @@ gem 'aws-sdk-s3', '~> 1'
 # reporting engine
 gem 'reporting', path: '../engines/reporting'
 gem 'translation_engine', path: '../engines/translation_engine'
-gem 'ridepilot_cad_avl', path: '../engines/ridepilot_cad_avl'
+# ridepilot_cad_avl engine dissolved — code migrated into main app (controllers, serializers, views)
 
 ### OTHERS ##################################
 
@@ -149,6 +150,8 @@ gem 'redis-rails'
 gem 'rubyXL'
 # Data migration
 gem 'data_migrate'
+# SMS notifications via Twilio
+gem 'twilio-ruby', '~> 7.0'
 
 group :production do
   gem 'exception_notification'

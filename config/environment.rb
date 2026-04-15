@@ -90,5 +90,6 @@ GOOGLE_MAP_DEFAULTS = {
   }
 }.freeze
 
+
 # Initialize the Rails application.
 Rails.application.initialize!

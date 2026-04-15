@@ -4,7 +4,7 @@
   <title>
     <%= content_for?(:title) ? yield(:title) : translate_helper("application_title") %>
   </title>
-  <link href="https://fonts.googleapis.com/css?family=Barlow:400,400i,600,600i,800&amp;subset=latin-ext" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,600,600i,800&amp;subset=latin-ext" rel="stylesheet">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
 
   <%= stylesheet_link_tag    'application', media: 'all' %>
@@ -78,7 +78,7 @@
         <% if show_scheduling? %><li class="vehicles"><%= link_to translate_helper("application_vehicles_link_text"), vehicles_path %></li><% end %>
         <% if show_scheduling? %><li class="reports"><%= link_to translate_helper("application_reports_link_text"), reporting.reports_path %></li><% end %>
         <% if current_provider.try(:cab_enabled?) %><li class="cab_trips"><%= link_to translate_helper("application_cabs_link_text"), cab_trips_path %></li><% end %>
-        <% if show_scheduling? %><li class="cad"><%= link_to translate_helper("application_cad_link_text"), ridepilot_cad_avl.cad_avl_path, target: :_blank %></li><% end %>
+        <% if show_scheduling? %><li class="cad"><%= link_to translate_helper("application_cad_link_text"), cad_avl_path, target: :_blank %></li><% end %>
       </ul>
     </div><!-- /.wrap -->
   </div><!-- /#crossbar -->

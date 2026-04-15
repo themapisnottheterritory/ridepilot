@@ -1,4 +1,4 @@
-class API::V1::ProvidersController < API::V1::BaseController
+class Api::V1::ProvidersController < Api::V1::BaseController
   
   def show
     provider = Provider.active.find_by_id(params[:provider_id])

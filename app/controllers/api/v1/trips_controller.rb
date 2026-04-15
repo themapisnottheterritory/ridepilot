@@ -1,4 +1,4 @@
-class API::V1::TripsController < API::V1::BaseController
+class Api::V1::TripsController < Api::V1::BaseController
   before_action :authenticate_customer
   before_action :get_trip, :validate_trip_customer_match, except: [:create]
 

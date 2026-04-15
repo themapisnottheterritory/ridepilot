@@ -1,0 +1,4 @@
+- if @vehicle_location
+  infoPopup.type = "Vehicle";
+  infoPopup.run_id = #{@vehicle_location.run_id};
+  infoPopup.setContent("#{ j render 'vehicle_info_window', location: @vehicle_location, is_real_time: true }");

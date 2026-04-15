@@ -4,7 +4,6 @@ Rails.application.routes.draw do
   scope "(:locale)", locale: TranslationEngine.available_locales do
 
     mount TranslationEngine::Engine => "/translation_engine"
-    mount RidepilotCadAvl::Engine => "/ridepilot_cad_avl"
     mount ActionCable.server => '/cable'
 
     root :to => "dispatchers#index"
@@ -118,6 +117,7 @@ Rails.application.routes.draw do
         post :change_reimbursement_rates
         post :change_scheduling
         post :change_run_tracking
+        post :change_avl_settings
         post :change_advance_day_scheduling
         post :change_eligible_age
         post :change_fields_required_for_run_completion
@@ -263,6 +263,7 @@ Rails.application.routes.draw do
         patch :assign_driver
         patch :unassign_driver
         get :update_slack_chart
+        post :optimize
       end
     end
 
@@ -377,7 +378,41 @@ Rails.application.routes.draw do
         put :destroy_value
       end
     end
+
+    # CAD/AVL dispatcher interface (formerly ridepilot_cad_avl engine)
+    get 'cad_avl' => 'cad/cad#index', as: :cad_avl
+    resource :cad, controller: 'cad/cad', only: [] do
+      collection do
+        get 'reload_runs'
+        get 'reload_run'
+        get 'load_run_stops'
+        get 'load_prior_path'
+        get 'load_upcoming_path'
+        get 'vehicle_info'
+        get 'past_location_info'
+        get 'stop_info'
+        get 'expand_run'
+        get 'zoom_to_run'
+        get 'reporting_vehicles'
+      end
+    end
+
+    get 'driver_chat' => 'cad/chat#index', as: :driver_chat
+    resource :chat, controller: 'cad/chat', only: [:create, :show] do
+      collection do
+        post 'read'
+      end
+    end
   end
+
+  # Client portal PWA (magic-link auth, no Devise)
+  scope "/my-ride" do
+    get "/",        to: "client_portal#show",    as: :client_portal
+    get "/offline", to: "client_portal#offline",  as: :client_portal_offline
+  end
+
+  # Twilio inbound SMS webhook
+  post "/twilio/sms/inbound", to: "twilio_sms#inbound"
 
   namespace :api, defaults: { format: :json } do
     namespace :v1 do
@@ -387,10 +422,56 @@ Rails.application.routes.draw do
       match "create_trip", to: "trips#create", :via => [:post, :options]
       match "cancel_trip", to: "trips#destroy", :via => [:delete, :options]
       match "trip_status", to: "trips#show", :via => [:get, :options]
+
+      # Driver tablet app API (formerly in ridepilot_cad_avl engine)
+      scope module: :driver do
+        post 'driver_sign_in' => 'driver_sessions#create'
+
+        resources :messages, only: [] do
+          collection do
+            get :driver_message_templates
+            get :chats
+            post :send_message
+            post :send_emergency_alert
+            post :read_message
+          end
+        end
+
+        get 'driver_run_data' => 'runs#driver_run_data'
+        resources :runs, only: [:index, :show] do
+          member do
+            put 'start'
+            put 'end'
+            put 'update_from_address'
+            put 'update_to_address'
+            get 'inspections'
+            get 'manifest_published_at'
+          end
+        end
+
+        get 'manifest' => 'itineraries#index'
+        resources :itineraries, only: [:index, :show, :update] do
+          member do
+            put 'depart'
+            put 'arrive'
+            put 'pickup'
+            put 'dropoff'
+            put 'noshow'
+            put 'undo'
+            put 'update_eta'
+          end
+        end
+
+        resources :trips, only: [] do
+          member do
+            put 'update_fare'
+          end
+        end
+      end
     end
 
-    namespace :v2 do 
-      get 'touch_session' => 'base#touch_session' 
+    namespace :v2 do
+      get 'touch_session' => 'base#touch_session'
       post 'sign_in' => 'sessions#create'
       delete 'sign_out' => 'sessions#destroy'
       post 'reset_password' => 'passwords#reset'

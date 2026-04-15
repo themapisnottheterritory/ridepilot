@@ -1,4 +1,4 @@
-class API::V2::BaseController < API::ApiController
+class Api::V2::BaseController < Api::ApiController
   include JsonResponseHelper::ApiErrorCatcher # Catches 500 errors and sends back JSON with headers.
   before_action :require_authentication
 
