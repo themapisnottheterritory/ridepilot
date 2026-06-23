@@ -1036,8 +1036,12 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.boolean "checked"
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
+    t.string "status", default: "ok", null: false
+    t.text "defect_note"
+    t.bigint "vehicle_inspection_report_id"
     t.index ["run_id"], name: "index_run_vehicle_inspections_on_run_id"
     t.index ["vehicle_inspection_id"], name: "index_run_vehicle_inspections_on_vehicle_inspection_id"
+    t.index ["vehicle_inspection_report_id"], name: "index_run_vehicle_inspections_on_vehicle_inspection_report_id"
   end
 
   create_table "runs", id: :serial, force: :cascade do |t|
@@ -1284,6 +1288,30 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.index ["vehicle_requirement_template_id"], name: "index_vehicle_compliances_on_vehicle_requirement_template_id"
   end
 
+  create_table "vehicle_inspection_reports", force: :cascade do |t|
+    t.bigint "run_id"
+    t.bigint "provider_id"
+    t.bigint "vehicle_id"
+    t.bigint "driver_id"
+    t.string "phase", null: false
+    t.integer "odometer"
+    t.integer "lift_cycle_count"
+    t.decimal "gallons", precision: 8, scale: 2
+    t.boolean "safe_to_operate"
+    t.boolean "has_defects", default: false, null: false
+    t.text "signature_data"
+    t.datetime "certified_at"
+    t.datetime "submitted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["driver_id"], name: "index_vehicle_inspection_reports_on_driver_id"
+    t.index ["provider_id"], name: "index_vehicle_inspection_reports_on_provider_id"
+    t.index ["run_id"], name: "index_vehicle_inspection_reports_on_run_id"
+    t.index ["submitted_at"], name: "index_vehicle_inspection_reports_on_submitted_at"
+    t.index ["vehicle_id", "phase"], name: "index_vehicle_inspection_reports_on_vehicle_id_and_phase"
+    t.index ["vehicle_id"], name: "index_vehicle_inspection_reports_on_vehicle_id"
+  end
+
   create_table "vehicle_inspections", force: :cascade do |t|
     t.string "description"
     t.datetime "deleted_at", precision: nil
@@ -1292,6 +1320,10 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.datetime "updated_at", precision: nil, null: false
     t.boolean "flagged"
     t.boolean "mechanical"
+    t.string "category"
+    t.string "phase", default: "both", null: false
+    t.integer "position"
+    t.boolean "cdl_only", default: false, null: false
     t.index ["provider_id"], name: "index_vehicle_inspections_on_provider_id"
   end
 
@@ -1482,6 +1514,11 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
   add_foreign_key "messages", "drivers"
   add_foreign_key "messages", "runs"
   add_foreign_key "run_vehicle_inspections", "runs"
+  add_foreign_key "run_vehicle_inspections", "vehicle_inspection_reports"
   add_foreign_key "run_vehicle_inspections", "vehicle_inspections"
+  add_foreign_key "vehicle_inspection_reports", "drivers"
+  add_foreign_key "vehicle_inspection_reports", "providers"
+  add_foreign_key "vehicle_inspection_reports", "runs"
+  add_foreign_key "vehicle_inspection_reports", "vehicles"
   add_foreign_key "vehicle_inspections", "providers"
 end
