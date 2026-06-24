@@ -3,6 +3,9 @@ class RunVehicleInspection < ApplicationRecord
   belongs_to :vehicle_inspection, -> { with_deleted }
   belongs_to :vehicle_inspection_report, optional: true
 
+  # DVIR step 2 — defect evidence photos (Active Storage).
+  has_many_attached :photos
+
   STATUSES = %w[ok defect na].freeze
   validates :status, inclusion: { in: STATUSES }, allow_nil: true
 
