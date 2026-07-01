@@ -451,6 +451,7 @@ Rails.application.routes.draw do
 
         # DVIR (driver vehicle inspection reports) — step 2
         get 'inspection_template' => 'inspection_reports#template'
+        get 'inspection_prior_defects' => 'inspection_reports#prior_defects'
         resources :inspection_reports, only: [:show, :create]
         post 'inspection_items/:id/photos' => 'inspection_reports#add_photo'
 

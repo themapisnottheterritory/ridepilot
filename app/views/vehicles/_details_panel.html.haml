@@ -51,6 +51,11 @@
         = f.select :is_5310_reportable, [["Yes", true], ["No", false]], {:selected => @vehicle.is_5310_reportable }, class: "form-control", disabled: @readonly
     .form-group
       .form-label
+        = f.label :air_brake, "Air brakes (DVIR)"
+      .form-field
+        = f.select :air_brake, [["Yes", true], ["No", false]], {:selected => @vehicle.air_brake }, class: "form-control", disabled: @readonly
+    .form-group
+      .form-label
         = label_tag nil, translate_helper("vehicle_form_initial_mileage")
       .form-field
         - if @vehicle.new_record?

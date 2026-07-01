@@ -1492,6 +1492,7 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.integer "vehicle_maintenance_schedule_type_id"
     t.integer "vehicle_type_id"
     t.boolean "is_5310_reportable", default: true
+    t.boolean "air_brake", default: false, null: false
     t.index ["default_driver_id"], name: "index_vehicles_on_default_driver_id"
     t.index ["deleted_at"], name: "index_vehicles_on_deleted_at"
     t.index ["garage_address_id"], name: "index_vehicles_on_garage_address_id"

@@ -26,6 +26,33 @@ class Api::V1::Driver::InspectionReportsController < Api::V1::Driver::BaseContro
     render success_response(report, include: [:run_vehicle_inspections])
   end
 
+  # GET /api/v1/inspection_prior_defects?run_id=123
+  # The most recent submitted report for this run's vehicle, with its reported
+  # defects — so the next driver can review them before operating (DVIR B2/D2).
+  # NOTE: until the Phase 2 repair/clearance lifecycle lands, "prior defects" means
+  # every defect on the last report; it'll narrow to truly-unresolved ones then.
+  def prior_defects
+    run = Run.find_by(id: params[:run_id])
+    vehicle = run&.vehicle
+    report = vehicle && VehicleInspectionReport.where(vehicle_id: vehicle.id)
+                                               .where.not(submitted_at: nil)
+                                               .recent.first
+
+    defects = report ? report.run_vehicle_inspections.defects.includes(:vehicle_inspection).map { |li|
+      insp = li.vehicle_inspection
+      { description: insp&.description, category: insp&.category,
+        defect_note: li.defect_note, photo_count: (li.photos.attached? ? li.photos.count : 0) }
+    } : []
+
+    render success_response(
+      report_id:    report&.id,
+      submitted_at: report&.submitted_at,
+      phase:        report&.phase,
+      safe_to_operate: report&.safe_to_operate,
+      defects:      defects
+    )
+  end
+
   # POST /api/v1/inspection_reports
   # Body: { inspection_report: { run_id, phase, odometer, lift_cycle_count, gallons,
   #         safe_to_operate, signature_data, certified_at },
@@ -81,10 +108,10 @@ class Api::V1::Driver::InspectionReportsController < Api::V1::Driver::BaseContro
     )
   end
 
-  # Air-brake / CDL vehicle detection. A vehicle air-brake/type flag isn't wired up
-  # yet (step 2 note in the seed), so default to excluding cdl_only items.
+  # Air-brake vehicles (≥ 26,001 lb GVWR) get the cdl_only items (Air Compressor,
+  # Air/Low-Air Warning, Slack Adjuster). Flag set on the vehicle (DVIR step 4 G1).
   def cdl_vehicle?(vehicle)
     return false if vehicle.nil?
-    vehicle.try(:cdl_required) || false
+    !!vehicle.air_brake
   end
 end

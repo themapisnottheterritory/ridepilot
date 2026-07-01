@@ -10,6 +10,11 @@ namespace :dvir do
     provider = Provider.first   # GCRPC — single provider on this instance. Adjust if needed.
     abort("Aborting: no Provider found.") unless provider
 
+    # One-time rename (Phase 1, G9): "Bloodborne Kit" -> "Biohazard Kit" so re-seeding
+    # updates the existing row in place instead of leaving a stale duplicate.
+    VehicleInspection.where(provider_id: provider.id, description: "Bloodborne Kit")
+                     .update_all(description: "Biohazard Kit")
+
     # [category, default_phase, items]
     # item = [description, opts]; opts: crit (=>flagged), mech (=>mechanical), cdl (=>cdl_only), phase (override)
     data = [
@@ -49,11 +54,12 @@ namespace :dvir do
       ["Safety", "both", [
         ["Fire Extinguisher", { crit: true }], ["Triangles", { crit: true }], ["Horn"],
         ["Back-up Alarm"], ["Oxygen Tank Straps"], ["First Aid Kit", { crit: true }],
-        ["Bloodborne Kit", { crit: true }], ["Disposal Gloves / Bags"], ["Brush"],
+        ["Biohazard Kit", { crit: true }], ["Disposal Gloves / Bags"], ["Brush"],
         ["Disinfectant"], ["Deodorizer"],
       ]],
       ["Wheelchair", "both", [
         ["Operations", { crit: true, mech: true }],
+        ["Lift / Ramp Device Inspection", { crit: true, mech: true }],
         ["Straps / Belts", { crit: true, phase: "pre" }],
         ["Stowed Securements", { crit: true, phase: "post" }],
       ]],
