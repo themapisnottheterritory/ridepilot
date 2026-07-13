@@ -24,6 +24,7 @@
         - else
           = link_to translate_helper(:change_locations), request_change_locations_run_path(@run), :remote => true, :title => "Change run start and end locations", :class => "btn action-button"
           = link_to translate_helper(:complete), complete_run_path(@run), :disabled => !@run.completable?, :title => !@run.completable? ? "Incomplete trips or missing fields" : "", :class => "btn action-button run-completion-button" if can?(:complete, @run)
+          = link_to "Optimize Route", optimize_run_path(@run), method: :post, data: { confirm: "Optimize trip order for this run?" }, class: "btn action-button", title: "Use route optimizer to reorder trips" if @run.trips.count >= 2 && can?(:update, @run)
           = link_to(translate_helper("delete"), @run, data: {:confirm => translate_helper("delete_run_confirm")}, :method => :delete, :id => 'run_delete', :class=>'btn action-button btn-danger') if !@run.new_record? && can?(:destroy, @run)
           = link_to translate_helper("edit"), edit_run_path(@run), :class=>'btn action-button' if !@run.new_record? && can?(:edit, @run)
         = link_to translate_helper(:back), (params[:from_dispatch] == 'true' ? dispatchers_path(run_id: params[:run_id]) : runs_path), class: "btn btn-default"

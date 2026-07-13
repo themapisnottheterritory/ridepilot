@@ -259,6 +259,15 @@ class RunsController < ApplicationController
     end
   end
 
+  def optimize
+    authorize! :update, @run
+    RouteOptimizeJob.perform_later(@run.id)
+    respond_to do |format|
+      format.json { render json: { status: "queued", run_id: @run.id } }
+      format.html { redirect_to run_path(@run), notice: "Route optimization queued." }
+    end
+  end
+
   def reload_drivers
     @drivers = Driver.active.where(:provider_id=>current_provider_id).default_order
     date = Date.parse(params[:date]) rescue nil
