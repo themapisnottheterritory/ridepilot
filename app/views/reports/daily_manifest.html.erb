@@ -5,21 +5,21 @@
       height: 602px;
       border: 1px solid black;
     }
-  
+
     @media print {
-      /* Unfortunately, it is still not possible for us to reasonably support 
+      /* Unfortunately, it is still not possible for us to reasonably support
        * precise printing of page-breaks across web browsers.
        */
-    
+
       .manifest-map {
         page-break-inside: avoid;
         page-break-after: always;
       }
-    
+
       .manifest-map:last-of-type {
         page-break-after: avoid;
       }
-    
+
       .manifest-break {
         page-break-after: always;
         height: 0;
@@ -36,7 +36,7 @@
 
   <h1><%= translate_helper("daily_manifest_heading") %></h1>
   <h2><%= format_date_for_daily_manifest @date %> &mdash; <%= driver.present? ? driver.user_name : translate_helper("unspecified_driver") %></h2>
-  
+
   <% if @cab_trips %>
     <div class="cab-summary">
       <h2><%= translate_helper("cab_trips") %></h2>
@@ -47,49 +47,66 @@
   <%= render 'manifest_trips', :trips => trips %>
 
   <br class="manifest-break">
-  
+
   <% if driver.present? && driver.id %>
     <div id="manifest-map-<%= driver.id %>" class="manifest-map center-block"></div>
-    
+
     <%= javascript_tag do %>
-      $(document).ready(function() {      
-        var geocoder = new google.maps.Geocoder();
-        var mapping_errors = [];
-        var markers = [];
-        $.when(
-          <% (ordered_addresses = ordered_pickup_and_dropoff_addresses(trips)).each_with_index do |address, index|  next if !address 
-            %>
-            $.Deferred(function(deferred) {
-              geocoder.geocode({address: "<%= j address.address_text %>"}, function(results, status) {
-                if (status == google.maps.GeocoderStatus.OK) {
-                  var result = results[0];
-                  var marker = "label:<%= index + 1 %>|" + result.geometry.location.toUrlValue();
-                  markers.push(encodeURI(marker));
-                } else if (status == google.maps.GeocoderStatus.ZERO_RESULTS) {
-                  mapping_errors.push("No results found.");
-                } else {
-                  mapping_errors.push("Unable to locate address: " + status);
-                }
-                deferred.resolve();
+      $(document).ready(function() {
+        var mapDiv = document.getElementById('manifest-map-<%= driver.id %>');
+        var map = L.map(mapDiv, { zoomControl: false });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap',
+          maxZoom: 19
+        }).addTo(map);
+
+        var bounds = L.latLngBounds();
+        var hasMarkers = false;
+
+        <% ordered_pickup_and_dropoff_addresses(trips).each_with_index do |address, index|
+          next if !address
+          lat = address.try(:latitude)
+          lon = address.try(:longitude)
+          next if lat.blank? || lon.blank?
+        %>
+          (function() {
+            var latlng = L.latLng(<%= lat %>, <%= lon %>);
+            bounds.extend(latlng);
+            hasMarkers = true;
+            L.marker(latlng).addTo(map)
+              .bindTooltip('<%= index + 1 %>', {
+                permanent: true,
+                direction: 'center',
+                className: 'manifest-marker-label'
               });
-            }).promise()<%= "," unless index + 1 == ordered_addresses.size %>
-          <% end %>
-        ).done(function() {
-          if (markers.length > 0) {
-            $("#manifest-map-<%= driver.id %>").append(
-              $("<img>").prop("src", "https://maps.googleapis.com/maps/api/staticmap?size=600x600&markers=" + markers.join("&markers="))
-            );
-          }
-          if (mapping_errors.length > 0) console.log(mapping_errors);
-        });
-      });    
-  <% end %>
+          })();
+        <% end %>
+
+        if (hasMarkers) {
+          map.fitBounds(bounds, { padding: [30, 30] });
+        } else {
+          map.setView([30.3, -97.7], 10); // fallback center
+        }
+      });
+    <% end %>
   <% end %>
 
   <% if i != @trips.size %>
     <br style="page-break-after: always" />
   <% end %>
 <% end %>
-<% content_for :footer do %>
-  <%= render "shared/google_maps/content_for_footer" %>
-<% end %>
+<style>
+  .manifest-marker-label {
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 12px;
+    padding: 2px 6px;
+    box-shadow: none;
+  }
+  .manifest-marker-label::before {
+    display: none;
+  }
+</style>

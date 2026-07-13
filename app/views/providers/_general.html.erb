@@ -212,12 +212,12 @@
         // Size the map to be the same as the form height.
         $("#region-preview").height($("#region-form").height() - 15);
     
-        var region_preview = new GoogleMap($("#region-preview"), {
+        var region_preview = new LeafletMap($("#region-preview"), {
           north: <%= @provider.region_nw_corner.y %>,
           west:  <%= @provider.region_nw_corner.x %>,
           south: <%= @provider.region_se_corner.y %>,
           east:  <%= @provider.region_se_corner.x %>
-        }, GoogleMapDefaults.viewport);
+        }, LeafletMapDefaults.viewport);
 
         if (region_preview.errors.length > 0) {
           html = "<h3>Boundary Errors</h3><ul>";

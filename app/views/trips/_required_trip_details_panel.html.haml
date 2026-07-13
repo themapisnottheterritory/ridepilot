@@ -62,7 +62,7 @@
             Lat/Lon
           - if edit_mode != :show  
             = f.hidden_field :pickup_address_id, class: 'trip_pickup_address_id'
-            = hidden_field_tag 'trip_pickup_google_address', params[:trip_pickup_google_address], class: 'trip_pickup_google_address'
+            = hidden_field_tag 'trip_pickup_address_data', params[:trip_pickup_address_data], class: 'trip_pickup_address_data'
 
     .form-group.place-picker-div
       .form-label
@@ -83,7 +83,7 @@
 
           - if edit_mode != :show
             = f.hidden_field :dropoff_address_id, class: 'trip_dropoff_address_id'
-            = hidden_field_tag 'trip_dropoff_google_address', params[:trip_dropoff_google_address], class: 'trip_dropoff_google_address'
+            = hidden_field_tag 'trip_dropoff_address_data', params[:trip_dropoff_address_data], class: 'trip_dropoff_address_data'
 
     .form-group
       .form-label

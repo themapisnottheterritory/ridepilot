@@ -1,8 +1,7 @@
-function GoogleMap(map_container, unparsed_bounds, unparsed_viewport) {
+function LeafletMap(map_container, unparsed_bounds, unparsed_viewport) {
   var self = this;
   this.map_container = map_container;
   this.map = null;
-  this.callback = null;
   this.bounds = null;
   this.viewport = null;
   this.errors = [];
@@ -22,12 +21,12 @@ function GoogleMap(map_container, unparsed_bounds, unparsed_viewport) {
     if (unparsed_viewport.zoom < 0 || unparsed_viewport.zoom >= 20) self.errors.push('Zoom must be between 0 and 19.');
 
     if (self.errors.length === 0) {
-      self.bounds = new google.maps.LatLngBounds(
-        new google.maps.LatLng(unparsed_bounds.south, unparsed_bounds.west),
-        new google.maps.LatLng(unparsed_bounds.north, unparsed_bounds.east)
+      self.bounds = L.latLngBounds(
+        L.latLng(unparsed_bounds.south, unparsed_bounds.west),
+        L.latLng(unparsed_bounds.north, unparsed_bounds.east)
       );
       self.viewport = {
-        center: new google.maps.LatLng(unparsed_viewport.center_lat, unparsed_viewport.center_lng),
+        center: L.latLng(unparsed_viewport.center_lat, unparsed_viewport.center_lng),
         zoom: unparsed_viewport.zoom
       };
     } else {
@@ -36,12 +35,14 @@ function GoogleMap(map_container, unparsed_bounds, unparsed_viewport) {
   };
 
   this.create_map = function (center, zoom) {
-    var opts = {
-      mapTypeId: google.maps.MapTypeId.ROADMAP
-    };
+    var opts = {};
     if (center) opts.center = center;
     if (zoom) opts.zoom = zoom;
-    self.map = new google.maps.Map(self.map_container[0], opts);
+    self.map = L.map(self.map_container[0], opts);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(self.map);
   };
 
   // Display a map region
@@ -49,20 +50,12 @@ function GoogleMap(map_container, unparsed_bounds, unparsed_viewport) {
     if (self.errors.length > 0) return self.errors;
     self.create_map();
     self.map.fitBounds(self.bounds);
-    var rectangle = new google.maps.Rectangle();
-    google.maps.event.addListener(self.map, 'zoom_changed', function () {
-      // Get the current bounds, which reflect the bounds before the zoom.
-      var rectOptions = {
-        strokeColor: "#598FEF",
-        strokeOpacity: 1,
-        strokeWeight: 2,
-        fillColor: "#E5F2FF",
-        fillOpacity: 0.3,
-        map: self.map,
-        bounds: self.bounds
-      };
-      rectangle.setOptions(rectOptions);
-    });
+    L.rectangle(self.bounds, {
+      color: '#598FEF',
+      weight: 2,
+      fillColor: '#E5F2FF',
+      fillOpacity: 0.3
+    }).addTo(self.map);
 
     return null;
   };
@@ -71,16 +64,13 @@ function GoogleMap(map_container, unparsed_bounds, unparsed_viewport) {
     if (self.errors.length > 0) return self.errors;
     self.create_map(self.viewport.center, self.viewport.zoom);
     self.map.panTo(self.viewport.center);
-    self.add_marker(self.viewport.center);
+    this.add_marker(self.viewport.center);
 
     return null;
   };
 
   this.add_marker = function (center) {
-    var marker = new google.maps.Marker({
-      map: self.map,
-      position: center
-    });
+    var marker = L.marker(center).addTo(self.map);
     return marker;
   };
 
