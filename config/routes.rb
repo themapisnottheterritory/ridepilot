@@ -11,7 +11,7 @@ Rails.application.routes.draw do
     get "admin", to: "home#index"
     get "schedule_recurring", to: "home#schedule_recurring"
 
-    devise_for :users
+    devise_for :users, skip: :omniauth_callbacks
 
     devise_scope :user do
       get "show_change_password" => "users#show_change_password"
@@ -404,6 +404,11 @@ Rails.application.routes.draw do
       end
     end
   end
+
+  # OmniAuth (Entra ID) callbacks must live OUTSIDE the (:locale) dynamic scope —
+  # Devise doesn't support scoping OmniAuth callbacks under a dynamic segment.
+  devise_for :users, only: :omniauth_callbacks,
+    controllers: { omniauth_callbacks: "users/omniauth_callbacks" }
 
   # Client portal PWA (magic-link auth, no Devise)
   scope "/my-ride" do
