@@ -6,15 +6,15 @@
 
 $white: #fff;
 
-$black: #3f4d55;
+$black: #131313;
 
 $gray: #728090;
 $gray-1: $gray;
 $gray-2: #A5B0BD;
 $gray-3: #cdd5df;
-$gray-4: #eef1f4;
+$gray-4: #F2E5C0;
 
-$yellow: #FFDB5E;
+$yellow: #FEB303;
 $yellow-1: $yellow;
 $yellow-2: mix($white, $yellow, 40);
 $yellow-3: mix($white, $yellow, 60);
@@ -52,8 +52,10 @@ $orange-2: mix($white, $orange, 40);
 $orange-3: mix($white, $orange, 60);
 $orange-4: mix($white, $orange, 80);
 
-$brand-primary: #0055A4;
-$brand-secondary: #EC1C24;
+$brand-primary: #12264F;
+$brand-secondary: #D22D2D;
+
+$gold: #CC9900;
 
 $brand-primary-muted: mix($white, $brand-primary, 33);
 
@@ -83,7 +85,7 @@ $panel-border: 1px solid $gray-2;
 // TYPOGRAPHY
 
 @mixin barlow {
-  font-family: 'Barlow', sans-serif;
+  font-family: 'Open Sans', sans-serif;
 }
 
 @mixin font-awesome {
