@@ -12,6 +12,7 @@ class ApplicationSetting < RailsSettings::Base
   field :cad_avl_data_storage_months, type: :integer, default: 1
   field :cad_avl_gps_interval_seconds, type: :integer, default: 10
   field :cad_avl_cad_refresh_interval_seconds, type: :integer, default: 30
+  field :opentransit_polling_interval_seconds, type: :integer, default: 15
 
   # For compatibility with older code expecting get_all method
   def self.get_all
@@ -20,7 +21,8 @@ class ApplicationSetting < RailsSettings::Base
       'devise.expire_password_after' => devise_expire_password_after,
       'cad_avl.data_storage_months' => cad_avl_data_storage_months,
       'cad_avl.gps_interval_seconds' => cad_avl_gps_interval_seconds,
-      'cad_avl.cad_refresh_interval_seconds' => cad_avl_cad_refresh_interval_seconds
+      'cad_avl.cad_refresh_interval_seconds' => cad_avl_cad_refresh_interval_seconds,
+      'opentransit.polling_interval_seconds' => opentransit_polling_interval_seconds
     }
   end
 
@@ -38,6 +40,7 @@ class ApplicationSetting < RailsSettings::Base
       self.cad_avl_data_storage_months = params['cad_avl.data_storage_months'].to_i if params.has_key? "cad_avl.data_storage_months"
       self.cad_avl_gps_interval_seconds = params['cad_avl.gps_interval_seconds'].to_i if params.has_key? "cad_avl.gps_interval_seconds"
       self.cad_avl_cad_refresh_interval_seconds = params['cad_avl.cad_refresh_interval_seconds'].to_i if params.has_key? "cad_avl.cad_refresh_interval_seconds"
+      self.opentransit_polling_interval_seconds = params['opentransit.polling_interval_seconds'].to_i if params.has_key? "opentransit.polling_interval_seconds"
 
       return true
     end
