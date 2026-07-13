@@ -100,7 +100,7 @@ class UsersController < ApplicationController
       new_attrs = new_attrs.except(:user_address_attributes)
     end
     
-    if @user.update_attributes(new_attrs)
+    if @user.update(new_attrs)
       role = Role.find_by(user: @user, provider: current_provider)
       if role && params[:role].present? && params[:role][:level].present?
         role.update(level: params[:role][:level]) 
@@ -187,7 +187,7 @@ class UsersController < ApplicationController
     @user = User.find(params[:id])
     authorize! :manage, @user
     
-    if @user.update_attributes(change_expiration_params)
+    if @user.update(change_expiration_params)
       flash.now[:alert] = "Expiration set"
       redirect_to users_provider_path(@user.current_provider)
     else

@@ -45,7 +45,7 @@ class VehicleRequirementTemplatesController < ApplicationController
   end
 
   def update
-    if @vehicle_requirement_template.update_attributes template_params
+    if @vehicle_requirement_template.update template_params
       redirect_to vehicle_requirement_template_path(@vehicle_requirement_template,provider_id: @vehicle_requirement_template.provider_id)
     else
       render 'edit'

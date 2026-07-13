@@ -20,7 +20,7 @@ class DevicePoolsController < ApplicationController
   def update
     params[:device_pool][:color] = params[:device_pool][:color].gsub(/#/, "")
     
-    if @device_pool.update_attributes(device_pool_params)
+    if @device_pool.update(device_pool_params)
       flash.now[:notice] = "Device pool updated"
       redirect_to provider_path(current_provider)
     else
