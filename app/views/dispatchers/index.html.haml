@@ -169,6 +169,11 @@
         if(was_collapsed == '0') {
           collapse_run_manifest(run_id);
         }
+
+        // Subscribe to real-time ETA updates for this run
+        if(typeof App !== 'undefined' && App.create_run_eta_channel) {
+          App.create_run_eta_channel(run_id);
+        }
       }
     });
   }
