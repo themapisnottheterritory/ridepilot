@@ -218,8 +218,8 @@ module Cad
       BusAvlConnection.new(
         host:     provider.busavl_host,
         database: provider.busavl_database.presence || 'busavl',
-        username: provider.busavl_username.presence || 'dbmojo',
-        password: provider.busavl_password.presence || 'igotmojo'
+        username: provider.busavl_username.presence || ENV['BUSAVL_DB_USERNAME'],
+        password: provider.busavl_password.presence || ENV['BUSAVL_DB_PASSWORD']
       ).fetch_locations
     rescue => e
       Rails.logger.warn "CAD reporting_vehicles MySQL error: #{e.message}"
