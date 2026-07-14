@@ -68,6 +68,32 @@ poller. Working-tree fixes are done (moved to
       `if providers.any?`; if no provider has `use_external_avl` at tick time,
       polling stops until process restart.
 
+## 🔴 Database schema needs a deliberate rebuild (do NOT blind-dump)
+
+After merging the feature branches, `db/schema.rb` is stale and inconsistent, and
+**regenerating it by dumping from the dev DB would make things worse.** Assessed
+2026-07-14; deliberately deferred rather than done wrong:
+
+- `db/schema.rb` is missing `customer_auths` (SMS) and its version line is the
+  malformed `202103162114206` (16 digits; real Rails versions are 14). It has been
+  hand-edited and is not a faithful dump.
+- The dev DB has all feature migrations applied (`up`), but also carries several
+  `NO FILE` migrations from *other* branches (2023/2024). Dumping `schema.rb` from
+  it would import those other-branch changes onto `victoria-transit-rails7`.
+- `20260218140000_create_gps_locations_view` runs raw SQL (`CREATE VIEW
+  gps_locations_view`). The project uses the default `schema_format = :ruby`, which
+  **cannot represent a SQL view** — so `schema.rb` is structurally incapable of
+  describing this schema, and a `db:schema:load` on a fresh DB would omit the view.
+
+**Recommended fix (dedicated task, clean environment):**
+- [ ] Switch to `config.active_record.schema_format = :sql` so `db/structure.sql`
+      captures the `gps_locations_view` (and any future views/partitioning/PostGIS).
+- [ ] Rebuild from migrations in a throwaway/clean DB (not the polluted dev DB),
+      then commit the regenerated `structure.sql`.
+- [ ] The one genuinely-pending migration on the dev DB is
+      `20260713120000_add_omniauth_to_users` (#10, O365) — apply it as part of the
+      clean rebuild.
+
 ## Integration testing still outstanding
 The AVL (#5), optimizer (#6), and SMS (#7) features were **static-reviewed only** —
 not runtime-verified. Before production they need live testing against their
