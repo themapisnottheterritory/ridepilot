@@ -230,6 +230,27 @@ Devise.setup do |config|
   # up on your models and hooks.
   # config.omniauth :github, 'APP_ID', 'APP_SECRET', scope: 'user,public_repo'
 
+  # ==> Office 365 / Entra ID SSO (Phase 1 — DARK)
+  # The strategy is registered ONLY when entra_id credentials are present, so
+  # this is completely inert until an operator supplies them (via Rails
+  # credentials `entra_id:` or ENV). No login behaviour changes until then, and
+  # even once live, database (password) auth stays enabled alongside it.
+  # Single-tenant: the specific tenant_id (gcrpc.org) means only that
+  # directory's accounts can authenticate.
+  _entra = (Rails.application.credentials.entra_id || {}).symbolize_keys
+  _entra = {
+    client_id:     ENV.fetch("ENTRA_CLIENT_ID", _entra[:client_id]),
+    client_secret: ENV.fetch("ENTRA_CLIENT_SECRET", _entra[:client_secret]),
+    tenant_id:     ENV.fetch("ENTRA_TENANT_ID", _entra[:tenant_id])
+  }
+  if _entra.values.all?(&:present?)
+    config.omniauth :entra_id,
+      client_id:     _entra[:client_id],
+      client_secret: _entra[:client_secret],
+      tenant_id:     _entra[:tenant_id],
+      scope:         "openid profile email"
+  end
+
   # ==> Warden configuration
   # If you want to use other strategies, that are not supported by Devise, or
   # change the failure app, you can configure them inside the config.warden block.

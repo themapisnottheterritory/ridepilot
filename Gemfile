@@ -88,6 +88,10 @@ gem 'cancancan'
 gem 'devise'
 gem 'devise_account_expireable'
 gem 'devise-security'
+# Office 365 / Entra ID SSO (Phase 1 — dark). The strategy only activates when
+# entra_id credentials are configured; password login remains the fallback.
+gem 'omniauth-entra-id'
+gem 'omniauth-rails_csrf_protection'
 #gem 'devise_security_extension', github: 'camsys/devise_security_extension'
 #gem 'devise_security_extension', path: '~/devise_security_extension'
 
