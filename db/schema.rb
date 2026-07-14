@@ -20,6 +20,34 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
   enable_extension "postgis_topology"
   enable_extension "uuid-ossp"
 
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "record_type", null: false
+    t.bigint "record_id", null: false
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.string "key", null: false
+    t.string "filename", null: false
+    t.string "content_type"
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.datetime "created_at", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
   create_table "activities", id: :serial, force: :cascade do |t|
     t.integer "trackable_id"
     t.string "trackable_type", limit: 255
@@ -1036,8 +1064,12 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.boolean "checked"
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
+    t.string "status", default: "ok", null: false
+    t.text "defect_note"
+    t.bigint "vehicle_inspection_report_id"
     t.index ["run_id"], name: "index_run_vehicle_inspections_on_run_id"
     t.index ["vehicle_inspection_id"], name: "index_run_vehicle_inspections_on_vehicle_inspection_id"
+    t.index ["vehicle_inspection_report_id"], name: "index_run_vehicle_inspections_on_vehicle_inspection_report_id"
   end
 
   create_table "runs", id: :serial, force: :cascade do |t|
@@ -1284,6 +1316,31 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.index ["vehicle_requirement_template_id"], name: "index_vehicle_compliances_on_vehicle_requirement_template_id"
   end
 
+  create_table "vehicle_inspection_reports", force: :cascade do |t|
+    t.bigint "run_id"
+    t.bigint "provider_id"
+    t.bigint "vehicle_id"
+    t.bigint "driver_id"
+    t.string "phase", null: false
+    t.integer "odometer"
+    t.integer "lift_cycle_count"
+    t.decimal "gallons", precision: 8, scale: 2
+    t.boolean "safe_to_operate"
+    t.boolean "has_defects", default: false, null: false
+    t.text "signature_data"
+    t.datetime "certified_at"
+    t.datetime "submitted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "maintenance_pushed_at"
+    t.index ["driver_id"], name: "index_vehicle_inspection_reports_on_driver_id"
+    t.index ["provider_id"], name: "index_vehicle_inspection_reports_on_provider_id"
+    t.index ["run_id"], name: "index_vehicle_inspection_reports_on_run_id"
+    t.index ["submitted_at"], name: "index_vehicle_inspection_reports_on_submitted_at"
+    t.index ["vehicle_id", "phase"], name: "index_vehicle_inspection_reports_on_vehicle_id_and_phase"
+    t.index ["vehicle_id"], name: "index_vehicle_inspection_reports_on_vehicle_id"
+  end
+
   create_table "vehicle_inspections", force: :cascade do |t|
     t.string "description"
     t.datetime "deleted_at", precision: nil
@@ -1292,6 +1349,10 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.datetime "updated_at", precision: nil, null: false
     t.boolean "flagged"
     t.boolean "mechanical"
+    t.string "category"
+    t.string "phase", default: "both", null: false
+    t.integer "position"
+    t.boolean "cdl_only", default: false, null: false
     t.index ["provider_id"], name: "index_vehicle_inspections_on_provider_id"
   end
 
@@ -1431,6 +1492,7 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.integer "vehicle_maintenance_schedule_type_id"
     t.integer "vehicle_type_id"
     t.boolean "is_5310_reportable", default: true
+    t.boolean "air_brake", default: false, null: false
     t.index ["default_driver_id"], name: "index_vehicles_on_default_driver_id"
     t.index ["deleted_at"], name: "index_vehicles_on_deleted_at"
     t.index ["garage_address_id"], name: "index_vehicles_on_garage_address_id"
@@ -1469,6 +1531,8 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.index ["repeating_trip_id"], name: "index_weekday_assignments_on_repeating_trip_id"
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "chat_read_receipts", "messages"
   add_foreign_key "chat_read_receipts", "runs"
   add_foreign_key "fare_card_data", "fare_cards"
@@ -1482,6 +1546,11 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
   add_foreign_key "messages", "drivers"
   add_foreign_key "messages", "runs"
   add_foreign_key "run_vehicle_inspections", "runs"
+  add_foreign_key "run_vehicle_inspections", "vehicle_inspection_reports"
   add_foreign_key "run_vehicle_inspections", "vehicle_inspections"
+  add_foreign_key "vehicle_inspection_reports", "drivers"
+  add_foreign_key "vehicle_inspection_reports", "providers"
+  add_foreign_key "vehicle_inspection_reports", "runs"
+  add_foreign_key "vehicle_inspection_reports", "vehicles"
   add_foreign_key "vehicle_inspections", "providers"
 end
