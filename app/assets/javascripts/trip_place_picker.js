@@ -1,4 +1,4 @@
-// initialize a place picker to query 1-click place datatable and google places
+// initialize a place picker to query saved places and Nominatim suggestions
 function init_place_picker(dom_selector, query_bounds, query_restrictions) {
   var saved_places = new Bloodhound({
     datumTokenizer: function(d) {
@@ -18,21 +18,29 @@ function init_place_picker(dom_selector, query_bounds, query_restrictions) {
 
   saved_places.initialize();
 
-  var autocomplete_service_config = {};
-  if (query_bounds) {
-    autocomplete_service_config.bounds = new google.maps.LatLngBounds(
-      new google.maps.LatLng(query_bounds.min_lat,query_bounds.min_lon),
-      new google.maps.LatLng(query_bounds.max_lat,query_bounds.max_lon));
+  // Nominatim-based suggestion source
+  var nominatim_url = $('meta[name="nominatim-url"]').attr('content') || 'http://10.0.0.18:8088';
+  var viewboxParam = '';
+  if (query_bounds && query_bounds.min_lat) {
+    viewboxParam = '&viewbox=' + query_bounds.min_lon + ',' + query_bounds.max_lat + ',' + query_bounds.max_lon + ',' + query_bounds.min_lat + '&bounded=1';
   }
-  if (query_restrictions) {
-    autocomplete_service_config.componentRestrictions = query_restrictions;
-  } else {
-    autocomplete_service_config.types = ['geocode'];
-    autocomplete_service_config.componentRestrictions = { country: 'us' };
-  }
-  var google_place_picker = new AddressPicker({
-    autocompleteService: autocomplete_service_config
+
+  var nominatim_places = new Bloodhound({
+    datumTokenizer: Bloodhound.tokenizers.whitespace,
+    queryTokenizer: Bloodhound.tokenizers.whitespace,
+    remote: {
+      url: nominatim_url + '/search?format=json&addressdetails=1&countrycodes=us&limit=5&q=%QUERY' + viewboxParam,
+      rateLimitWait: 300,
+      filter: function(results) {
+        return results.map(function(r) {
+          r.description = r.display_name;
+          return r;
+        });
+      }
+    }
   });
+
+  nominatim_places.initialize();
 
   $(dom_selector).typeahead({
     highlight: true
@@ -49,11 +57,11 @@ function init_place_picker(dom_selector, query_bounds, query_restrictions) {
       }
     },
     {
-      name: 'google_places',
+      name: 'nominatim_places',
       displayKey: "description",
-      source: google_place_picker.ttAdapter(),
+      source: nominatim_places.ttAdapter(),
       templates: {
-        header: '<h4>Google Suggestions</h4>',
+        header: '<h4>Address Suggestions</h4>',
         suggestion: Handlebars.compile([
           '<a>{{description}}</a>'
         ].join(''))
@@ -61,29 +69,9 @@ function init_place_picker(dom_selector, query_bounds, query_restrictions) {
     });
 }
 
-var google_place_service;
-if(window.google) {
-  google_place_service = new google.maps.places.PlacesService(document.createElement('div'));
-}
-
-function process_google_address(addr, type) {
-  google_place_service.getDetails({
-    placeId: addr.place_id
-  }, function(place, status) {
-    if (status === google.maps.places.PlacesServiceStatus.OK) {
-      $('input.trip_' + type + '_google_address').val(JSON.stringify(googlePlaceParser(place)));
-    } else {
-      return google_place_service.getDetails({
-        reference: addr.reference
-      }, function(new_place, status) {
-        if (status === google.maps.places.PlacesServiceStatus.OK) {
-          $('input.trip_' + type + '_google_address').val(JSON.stringify(googlePlaceParser(new_place)));
-        } else {
-          return console.log("No match found for: " + addr.name);
-        }
-      });
-    }
-  });
+function process_nominatim_address(addr, type) {
+  var parsed = nominatimToAddress(addr);
+  $('input.trip_' + type + '_address_data').val(JSON.stringify(parsed));
 }
 
 $(function() {
@@ -91,23 +79,22 @@ $(function() {
     $('#trip_pickup_lat').val('');
     $('#trip_pickup_lon').val('');
     $('input.trip_pickup_address_id').val('');
-    $('input.trip_pickup_google_address').val('');
+    $('input.trip_pickup_address_data').val('');
     $('#pickup_address_notes').val('');
   });
 
   $('#trip_pickup_lat, #trip_pickup_lon').on('input', function() {
     $('input.trip_pickup_address_id').val('');
-    $('input.trip_pickup_google_address').val('');
+    $('input.trip_pickup_address_data').val('');
     $('#pickup_address_notes').val('');
   });
-  
+
   $('#pickup_address').on('typeahead:selected', function(e, addr, data) {
     if(data == 'saved_places') {
       $('input.trip_pickup_address_id').val(addr.id);
       $('#pickup_address_notes').val(addr.notes);
-      // TODO: insert saved place's notes to Trip Notes field if applicable
-    } else if (data == 'google_places') {
-      process_google_address(addr, 'pickup');
+    } else if (data == 'nominatim_places') {
+      process_nominatim_address(addr, 'pickup');
     }
   });
 
@@ -115,25 +102,25 @@ $(function() {
     $('#trip_dropoff_lat').val('');
     $('#trip_dropoff_lon').val('');
     $('input.trip_dropoff_address_id').val('');
-    $('input.trip_dropoff_google_address').val('');
+    $('input.trip_dropoff_address_data').val('');
     $('#dropoff_address_notes').val('');
   });
 
   $('#trip_dropoff_lat, #trip_dropoff_lon').on('input', function() {
     $('input.trip_dropoff_address_id').val('');
-    $('input.trip_dropoff_google_address').val('');
+    $('input.trip_dropoff_address_data').val('');
     $('#dropoff_address_notes').val('');
   });
 
   $('#dropoff_address').on('typeahead:selected', function(e, addr, data) {
     $('input.trip_dropoff_address_id').val('');
-    $('input.trip_dropoff_google_address').val('');
+    $('input.trip_dropoff_address_data').val('');
     if(data == 'saved_places') {
       $('input.trip_dropoff_address_id').val(addr.id);
       $('.trip_purpose_id').val(addr.trip_purpose_id);
       $('#dropoff_address_notes').val(addr.notes);
-    } else if (data == 'google_places') {
-      process_google_address(addr, 'dropoff');
+    } else if (data == 'nominatim_places') {
+      process_nominatim_address(addr, 'dropoff');
     }
   });
 });

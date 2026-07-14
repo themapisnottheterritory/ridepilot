@@ -5,7 +5,8 @@ class GeocodingService
   def initialize(search_str, provider)
     @term = search_str
     @provider = provider
-    @base_url = "http://open.mapquestapi.com/nominatim/v1/search.php?key=#{ENV['MAPREQUEST_API_KEY']}&format=json&addressdetails=1&countrycodes=us&limit=10"
+    nominatim_url = ENV['NOMINATIM_URL'] || 'http://10.0.0.18:8088'
+    @base_url = "#{nominatim_url}/search?format=json&addressdetails=1&countrycodes=us&limit=10"
   end
 
   def execute

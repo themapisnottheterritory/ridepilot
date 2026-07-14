@@ -21,16 +21,10 @@
       $(form).find('.address_lon').val('');
     }
 
-    var autocompleteOptions = {
-      types: ['geocode'],
-      componentRestrictions: { country: 'us' }
-    };
-
     var bounds = #{(Utility.new.get_provider_bounds(current_provider) || {}).to_json.to_s.html_safe};
+    var autocompleteOptions = {};
     if(bounds.hasOwnProperty('min_lat')) {
-      autocompleteOptions.bounds = new google.maps.LatLngBounds(
-        new google.maps.LatLng(bounds.min_lat, bounds.min_lon),
-        new google.maps.LatLng(bounds.max_lat, bounds.max_lon));
+      autocompleteOptions.bounds = bounds;
     }
 
     // reset values when there is a change
@@ -38,9 +32,9 @@
       resetAddressDetails($(this).parents("#{container}"));
     });
 
-    $(".address_search").geocomplete(autocompleteOptions)
+    $(".address_search").nominatimComplete(autocompleteOptions)
       .bind("geocode:result", function(event, result){
         console.log('filling place...');
-        fillInAddressDetails($(this).parents("#{container}"), googlePlaceParser(result));
+        fillInAddressDetails($(this).parents("#{container}"), result);
       });
   });
