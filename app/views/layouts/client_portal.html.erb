@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#1a56db">
+  <title>My Ride</title>
+  <link rel="manifest" href="/pwa/manifest.json">
+  <%= action_cable_meta_tag %>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 18px;
+      line-height: 1.5;
+      color: #333;
+      background: #f5f5f5;
+      padding: 16px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .status-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .status-label {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .pickup-time {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1a56db;
+      margin-bottom: 12px;
+    }
+    .address {
+      font-size: 16px;
+      color: #555;
+      margin-bottom: 6px;
+    }
+    .eta-section {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
+    }
+    .eta-label {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #666;
+    }
+    .eta-time {
+      font-size: 28px;
+      font-weight: 700;
+      color: #059669;
+    }
+    #driver-map {
+      height: 250px;
+      border-radius: 8px;
+      margin-top: 16px;
+    }
+    .trip-row {
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+      font-size: 16px;
+    }
+    .trip-row .time { font-weight: 600; }
+    .no-trips {
+      text-align: center;
+      padding: 48px 24px;
+      background: white;
+      border-radius: 12px;
+    }
+    .no-trips p { margin-bottom: 12px; }
+    footer {
+      text-align: center;
+      margin-top: 24px;
+      padding: 16px;
+    }
+    footer a {
+      display: inline-block;
+      background: #1a56db;
+      color: white;
+      text-decoration: none;
+      padding: 14px 32px;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: 600;
+      min-width: 200px;
+      min-height: 44px;
+    }
+    footer a:active { background: #1e40af; }
+  </style>
+</head>
+<body>
+  <%= yield %>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/pwa/service_worker.js");
+    }
+  </script>
+  <%= javascript_include_tag 'cable' %>
+  <script>
+    // Subscribe to real-time ETA updates for the next trip's run
+    (function() {
+      var portal = document.querySelector('.client-portal');
+      if (!portal || !portal.dataset.runId) return;
+
+      var runId = portal.dataset.runId;
+      var tripId = parseInt(portal.dataset.tripId);
+      var map, driverMarker;
+
+      App.cable.subscriptions.create(
+        { channel: "RunEtaChannel", run_id: runId },
+        {
+          received: function(data) {
+            if (!data.ordered_trip_ids || !data.etas) return;
+
+            var idx = data.ordered_trip_ids.indexOf(tripId);
+            if (idx === -1) return;
+
+            // Update ETA display
+            var etaSec = data.etas[idx];
+            var etaDate = new Date(etaSec * 1000);
+            var etaEl = document.getElementById('eta-time');
+            if (etaEl) {
+              etaEl.textContent = etaDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+
+            // Show/update driver on map
+            if (data.driver_lat && data.driver_lng) {
+              var mapEl = document.getElementById('driver-map');
+              if (mapEl) {
+                mapEl.style.display = 'block';
+                if (!map) {
+                  map = L.map('driver-map').setView([data.driver_lat, data.driver_lng], 14);
+                  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap'
+                  }).addTo(map);
+                  driverMarker = L.marker([data.driver_lat, data.driver_lng]).addTo(map);
+                } else {
+                  driverMarker.setLatLng([data.driver_lat, data.driver_lng]);
+                  map.panTo([data.driver_lat, data.driver_lng]);
+                }
+              }
+            }
+          }
+        }
+      );
+    })();
+  </script>
+</body>
+</html>
