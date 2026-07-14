@@ -29,6 +29,7 @@ services:
       - ./docker/.env
     environment:
       PSYCH_ENABLE_ALIASES: "true"  # Enables YAML alias parsing
+      OPTIMIZER_URL: "http://optimizer:8765"
     ports:
       - 3000:3000
     volumes:
@@ -55,8 +56,29 @@ services:
       dockerfile: ./ridepilot/docker/app/Dockerfile
     env_file:
       - ./docker/.env
+    environment:
+      OPTIMIZER_URL: "http://optimizer:8765"
     command: bundle exec sidekiq -C config/sidekiq.yml
     volumes:
       - .:/var/www/ridepilot
       - ../engines:/var/www/engines
+
+  optimizer:
+    build: ./optimizer_service
+    restart: unless-stopped
+    ports:
+      - "8765:8765"
+    environment:
+      OSRM_URL: "http://osrm:5000"
+    depends_on:
+      - osrm
+
+  osrm:
+    image: osrm/osrm-backend
+    restart: unless-stopped
+    command: osrm-routed --algorithm mld /data/texas-latest.osrm
+    volumes:
+      - ./osrm-data:/data
+    ports:
+      - "5000:5000"
   
