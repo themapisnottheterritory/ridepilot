@@ -265,7 +265,7 @@ class Customer < ApplicationRecord
     address_objects.each_with_index do |addr_hash, index|
       if addr_hash[:id]
         addr = Address.find_by_id(addr_hash[:id])
-        addr.update_attributes addr_hash.select{|r| address_attrs.include?(r.to_s)}
+        addr.update addr_hash.select{|r| address_attrs.include?(r.to_s)}
       else
         addr = addresses.new(addr_hash.select{|r| address_attrs.include?(r.to_s)}.merge(customer_id: self.try(:id)))
       end
@@ -325,7 +325,7 @@ class Customer < ApplicationRecord
         data["ineligible_reason"] = nil
       end
 
-      item.update_attributes eligible: eligible, ineligible_reason: data["ineligible_reason"]
+      item.update eligible: eligible, ineligible_reason: data["ineligible_reason"]
     end
   end
 
@@ -339,7 +339,7 @@ class Customer < ApplicationRecord
     
       answer = data["answer"] == 'true' ? true : (data["answer"] == 'false' ? false: nil)
 
-      item.update_attributes answer: answer
+      item.update answer: answer
     end
   end
 

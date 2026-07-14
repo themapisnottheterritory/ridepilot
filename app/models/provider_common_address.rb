@@ -32,7 +32,7 @@ class ProviderCommonAddress < Address
       default_address_group_id = AddressGroup.default_address_group.try(:id)
 
       open(filename) do |f|
-        CSV.new(f, {:col_sep => ",", :headers => true}).each do |row|
+        CSV.new(f, col_sep: ",", headers: true).each do |row|
           address_name = row[2]
           address_city = row[6]
           address_state = row[7]

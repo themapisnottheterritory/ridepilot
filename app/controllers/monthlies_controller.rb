@@ -11,7 +11,7 @@ class MonthliesController < ApplicationController
   def edit; end
 
   def update
-    @monthly.update_attributes(monthly_params)
+    @monthly.update(monthly_params)
     if @monthly.save
       flash.now[:notice] = "Monthly report updated"
       redirect_to monthlies_path

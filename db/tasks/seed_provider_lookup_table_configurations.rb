@@ -32,7 +32,7 @@
 ].each do | config_data|
   config = ProviderLookupTable.find_by(name: config_data[:name])
   if config 
-    config.update_attributes(config_data)
+    config.update(config_data)
   else
     ProviderLookupTable.create(config_data)
   end

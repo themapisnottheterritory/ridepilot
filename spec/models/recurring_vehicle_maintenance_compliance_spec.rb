@@ -8,7 +8,7 @@ RSpec.describe RecurringVehicleMaintenanceCompliance, type: :model do
       @occurrence_association = :vehicle_maintenance_compliances
       @occurrence_owner_association = :vehicles      
       @complete_with = Proc.new do |compliance|
-        compliance.update_attributes compliance_date: Date.current, compliance_mileage: 123
+        compliance.update compliance_date: Date.current, compliance_mileage: 123
       end
     end
   end
@@ -316,7 +316,7 @@ RSpec.describe RecurringVehicleMaintenanceCompliance, type: :model do
 
           it "won't schedule anything when the recurrence_mileage is more than 6000 over the vehicle's last_odometer_reading" do
             # A vehicle's last_odometer_reading is 0 by default
-            @recurrence.update_attributes recurrence_mileage: 7000
+            @recurrence.update recurrence_mileage: 7000
             
             expect {
               RecurringVehicleMaintenanceCompliance.generate!
@@ -325,7 +325,7 @@ RSpec.describe RecurringVehicleMaintenanceCompliance, type: :model do
 
           it "will only schedule one event when the recurrence_mileage means the second occurrence will fall outside of 6000 miles from the vehicle's last_odometer_reading" do
             # A vehicle's last_odometer_reading is 0 by default
-            @recurrence.update_attributes recurrence_mileage: 3001
+            @recurrence.update recurrence_mileage: 3001
             
             expect {
               RecurringVehicleMaintenanceCompliance.generate!
@@ -404,7 +404,7 @@ RSpec.describe RecurringVehicleMaintenanceCompliance, type: :model do
 
           describe "when the previous occurrence is complete" do
             before do
-              @vehicle.vehicle_maintenance_compliances.last.update_attributes compliance_date: Date.current, compliance_mileage: 499
+              @vehicle.vehicle_maintenance_compliances.last.update compliance_date: Date.current, compliance_mileage: 499
             end
 
             it "schedules 1 new event based on the last due_mileage, regardless of the vehicle's last_odometer_reading" do
@@ -492,7 +492,7 @@ RSpec.describe RecurringVehicleMaintenanceCompliance, type: :model do
             end
 
             it "will only schedule one event when the recurrence_mileage means the second occurrence will fall outside of 6000 miles from the vehicle's last_odometer_reading" do
-              @recurrence.update_attributes recurrence_mileage: 3001
+              @recurrence.update recurrence_mileage: 3001
               expect {
                 RecurringVehicleMaintenanceCompliance.generate!
               }.to change(VehicleMaintenanceCompliance, :count).by(1)
@@ -810,7 +810,7 @@ RSpec.describe RecurringVehicleMaintenanceCompliance, type: :model do
             describe "when the previous occurrence is complete" do
               before do
                 # Time is still frozen at Monday, June 1, 2015
-                @vehicle.vehicle_maintenance_compliances.last.update_attributes compliance_date: Date.current, compliance_mileage: 499
+                @vehicle.vehicle_maintenance_compliances.last.update compliance_date: Date.current, compliance_mileage: 499
               end
 
               it "schedules 1 new event based on the last due_date and due_mileage, regardless of the vehicle's last_odometer_reading" do

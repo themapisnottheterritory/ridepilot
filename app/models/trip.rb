@@ -118,7 +118,7 @@ class Trip < ApplicationRecord
   end
 
   def cancel!
-    update_attributes( trip_result: TripResult.find_by_code('CANC') )
+    update( trip_result: TripResult.find_by_code('CANC') )
   end
 
   def vehicle_id
@@ -375,7 +375,7 @@ class Trip < ApplicationRecord
     return unless user && amount
 
     if self.donation
-      self.donation.update_attributes(user: user, amount: amount)
+      self.donation.update(user: user, amount: amount)
     elsif self.id && self.customer
       self.donation = Donation.create(date: Time.current, user: user, customer: self.customer, trip: self, amount: amount)
       self.save

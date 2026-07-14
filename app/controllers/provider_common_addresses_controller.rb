@@ -92,7 +92,7 @@ class ProviderCommonAddressesController < AddressesController
     the_geom       = process_geom
     new_addr_params[:the_geom] = the_geom if the_geom
     
-    if @address.update_attributes new_addr_params
+    if @address.update new_addr_params
       flash.now[:notice] = "Address '#{@address.name}' was successfully updated"
       redirect_to addresses_provider_path(@address.provider)
     else

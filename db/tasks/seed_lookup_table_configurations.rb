@@ -63,7 +63,7 @@
 ].each do | config_data|
   config = LookupTable.find_by(name: config_data[:name])
   if config 
-    config.update_attributes(config_data)
+    config.update(config_data)
   else
     LookupTable.create(config_data)
   end
