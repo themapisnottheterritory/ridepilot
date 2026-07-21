@@ -1,11 +1,58 @@
-# Office 365 / Entra ID Authentication — Discovery & Plan
+# Office 365 / Entra ID Authentication — Discovery, Plan & Implementation
 
-**Status:** Explored & planned. **NOT started. No active demand** — no one is currently
-requesting SSO or external access. This document exists so the analysis isn't lost; pick it
-back up if/when there's a real driver for it.
+**Status:** **Phases 0–2 BUILT and VERIFIED end-to-end against real Azure** (2026-07-21). Code is
+merged into the `victoria-transit-rails7` integration line. What remains is production
+environment/infra only — a TLS cert, secret provisioning, and turning it on. Sections 1–9 below
+are the original discovery/plan (kept for rationale); see **§0 Implementation status** for what is
+actually built and what is left.
 
-**Last updated:** 2026-07-13
+**Last updated:** 2026-07-21
 **Author of discovery:** design session (philz@gcrpc.org)
+
+---
+
+## 0. Implementation status (2026-07-21)
+
+Built and **verified with a real Microsoft login** (real single-tenant Azure app, real browser
+via an SSH tunnel to the headless server). Password login stayed fully working throughout.
+
+**What's done (merged into `victoria-transit-rails7`):**
+- **Phase 0** — single-tenant Azure app registered (`RidePilot Web SSO`, separate from the
+  compromised mail-reader app); read-only audit is a rake task `rake o365:email_audit`
+  (`lib/tasks/o365_audit.rake`).
+- **Phase 1** — plumbing (PR #10, merged): `omniauth-entra-id` + `omniauth-rails_csrf_protection`;
+  migration adding `omniauth_provider` / `omniauth_uid` (+ partial unique index); `:omniauthable`
+  strategy in `devise.rb` that registers **only when creds are present** (dark otherwise);
+  `User.from_omniauth` (link-only, never creates); callbacks controller + routes.
+- **Fix** (PR #12, merged): the login button had to become `button_to method: :post` — OmniAuth 2
+  + `omniauth-rails_csrf_protection` make the request phase **POST-only**, so the original
+  `link_to` (GET) 404'd. Also gitignored secrets/keys (`config/master.key`, the mail-reader
+  script, WireGuard keys).
+- **Phase 2** — self-service linking (PR #13, merged): the callback links the current account when
+  a user is signed in (else logs in); `users#unlink_entra` + a "Microsoft sign-in" section on the
+  user's own profile; login button now reads **"Sign in with Microsoft."**
+
+**Two gotchas learned the hard way (don't rediscover these):**
+1. **`omniauth-entra-id` sets `auth.uid` = `"<tenant_id><oid>"` (concatenated), NOT the bare
+   `oid`.** Linking with just the Entra Object ID fails. Always store `auth.uid` verbatim; the
+   login and link paths then match on the same value automatically.
+2. **Azure defers redirect-URI validation until AFTER authentication.** A `200` on the `/authorize`
+   endpoint does NOT prove the redirect URI is registered — `AADSTS50011` only appears once you log
+   in. Register every redirect URI you use (localhost included, for tunneled testing).
+
+**What's left — all production environment, no code:**
+1. **Prod TLS cert** for `rp.internal.gcrpc.org`. Azure rejects `http` redirect URIs for anything
+   but `localhost`, so the prod redirect URI (`https://rp.internal.gcrpc.org/users/auth/entra_id/callback`)
+   can't work until the host serves HTTPS. Let's Encrypt **DNS-01** is the clean path for an
+   internal-only host (no inbound connection needed). Note the app also sets
+   `config.force_ssl = true` in production, which itself needs TLS terminated.
+2. **Prod secrets.** Creds live in Rails **encrypted credentials** (`config/credentials.yml.enc`
+   under `entra_id:`); production needs the matching `RAILS_MASTER_KEY` (or `config/master.key`)
+   provisioned out-of-band, or it can't decrypt them. The strategy stays dark until all three
+   values resolve, so this is safe to stage early.
+3. **Land `victoria-transit-rails7` → `master`** when shipping the integration line.
+4. **Run the prod audit** (`RAILS_ENV=production bundle exec rake o365:email_audit`) to size the
+   SSO-eligible vs password-only web users before broad rollout.
 
 ---
 
@@ -85,10 +132,10 @@ RidePilot" — see the instance decision below.
 Principles: **web users only** (driver token API untouched), **password stays as fallback the
 whole way** (no lockouts), **match on Azure's immutable `oid` claim**, not email.
 
-- **Phase 0 — Discovery / Azure setup (no code):** register a single-tenant Azure app (redirect
+- **Phase 0 — Discovery / Azure setup (no code): ✅ DONE.** register a single-tenant Azure app (redirect
   `https://<host>/users/auth/entra_id/callback`, scopes `openid profile email`); audit web-user
   email quality (see §7); confirm MFA/conditional-access posture with whoever runs O365.
-- **Phase 1 — Plumbing, dark (behind a flag, zero user impact):**
+- **Phase 1 — Plumbing, dark (behind a flag, zero user impact): ✅ DONE (PR #10, #12).**
   - Gemfile: `omniauth-entra-id` (formerly `omniauth-azure-activedirectory-v2`) +
     `omniauth-rails_csrf_protection` (required for OmniAuth 2.x request-phase CSRF).
   - Migration: add `provider` + `uid` to `users` (uid = Azure `oid`), unique index on `[provider, uid]`.
@@ -99,10 +146,10 @@ whole way** (no lockouts), **match on Azure's immutable `oid` claim**, not email
     auto-provisioning would be a security hole → unknown identity = login denied).
   - `config/routes.rb`: `devise_for :users, controllers: { omniauth_callbacks: 'users/omniauth_callbacks' }`.
   - `app/controllers/users/omniauth_callbacks_controller.rb`: the callback handler.
-- **Phase 2 — Self-service linking:** while logged in by password, a user connects their O365
-  account → stamps `provider`/`uid` on their own record. Sidesteps the username↔UPN mapping
-  problem entirely (each user proves both identities).
-- **Phase 3 — Pilot SSO login:** "Sign in with Microsoft" button for a few admins; unlinked users
+- **Phase 2 — Self-service linking: ✅ DONE (PR #13).** while logged in by password, a user connects
+  their O365 account → stamps `omniauth_provider`/`omniauth_uid` on their own record. Sidesteps the
+  username↔UPN mapping problem entirely (each user proves both identities).
+- **Phase 3 — Pilot SSO login: ⏭️ NEXT (needs prod TLS + creds, see §0).** "Sign in with Microsoft" button for a few admins; unlinked users
   get a friendly "sign in with your password and link" message (never a dead end). Password still
   works for everyone.
 - **Phase 4 — Broad web rollout:** SSO preferred, **password remains the fallback** (hybrid
@@ -176,8 +223,9 @@ committing to Phase 1. That tail = the set of web users who stay password-only.
 
 ---
 
-## 9. First concrete moves, when resumed
+## 9. First concrete moves — DONE
 
-1. Promote the audit to `rake o365:email_audit`, run on prod, size the password-only tail.
-2. Spike Phase 1 plumbing (gems + migration + single-tenant initializer + callback controller)
-   behind a flag — produces a real, reviewable diff with no user impact.
+Both original "first moves" are complete: the audit is a rake task (`rake o365:email_audit`,
+`lib/tasks/o365_audit.rake`), and Phase 1 plumbing shipped (PR #10) plus Phase 2 linking (PR #13).
+The current remaining work is production-only — see **§0 Implementation status** (TLS cert, prod
+secret provisioning, `victoria → master`, prod audit run, then pilot).
