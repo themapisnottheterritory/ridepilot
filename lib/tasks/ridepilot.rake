@@ -67,7 +67,7 @@ namespace :ridepilot do
   desc 'Update lookup configs for ethnicities'
   task :update_ethnicity_lookup_config => :environment do
     config = LookupTable.find_by_name('provider_ethnicities')
-    config.update_attributes(name: 'ethnicities', caption: 'Ethnicity') if config
+    config.update(name: 'ethnicities', caption: 'Ethnicity') if config
   end
 
   desc 'Seed some fake data for testing'
@@ -133,7 +133,7 @@ namespace :ridepilot do
   desc "mark addresses if associated with a driver"
   task mark_address_if_driver_associated: :environment do
     Driver.includes(:address).each do |driver|
-      driver.address.update_attributes(is_driver_associated: true) if driver.address
+      driver.address.update(is_driver_associated: true) if driver.address
     end
   end
 
@@ -321,14 +321,14 @@ namespace :ridepilot do
     }
     config = LookupTable.find_by(name: config_data[:name])
     if config 
-      config.update_attributes(config_data)
+      config.update(config_data)
     else
       LookupTable.create(config_data)
     end
 
     p_config = ProviderLookupTable.find_by(name: config_data[:name])
     if p_config 
-      p_config.update_attributes(config_data)
+      p_config.update(config_data)
     else
       ProviderLookupTable.create(config_data)
     end
