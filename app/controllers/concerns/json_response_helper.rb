@@ -41,18 +41,17 @@ module JsonResponseHelper
     end
 
     def call(env)
-      begin
-        @app.call(env)
-      rescue ActionDispatch::Http::Parameters::ParseError => error
-        if env['CONTENT_TYPE'] =~ /application\/json/
-          error_output = {request: "There was a problem in the JSON you submitted.", error: error}
-          return [
-            400, {"Content-Type" => "application/json; charset=utf-8"},
-            [ json_response(:fail, data: error_output).to_json ]
-          ]
-        else
-          raise error
-        end
+      # Ruby 3.x compatibility: just pass through the result
+      @app.call(env)
+    rescue ActionDispatch::Http::Parameters::ParseError => error
+      if env['CONTENT_TYPE'] =~ /application\/json/
+        error_output = {request: "There was a problem in the JSON you submitted.", error: error}
+        [
+          400, {"Content-Type" => "application/json; charset=utf-8"},
+          [ json_response(:fail, data: error_output).to_json ]
+        ]
+      else
+        raise error
       end
     end
   end

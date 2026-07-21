@@ -1,7 +1,7 @@
 %select.form-control.reporting-reports-list{onChange:"window.location.href=this.value"}
   %option{value: "#", disabled: "disabled", selected: true}
     Please select a report
-  - reports.each do |report_info|
+  - @reports.each do |report_info|
     - report_name = report_info[:name]
     - a_report_id = report_info[:id]
     - if report_info[:is_saved]

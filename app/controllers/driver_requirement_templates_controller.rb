@@ -45,7 +45,7 @@ class DriverRequirementTemplatesController < ApplicationController
   end
 
   def update
-    if @driver_requirement_template.update_attributes template_params
+    if @driver_requirement_template.update template_params
       redirect_to driver_requirement_template_path(@driver_requirement_template,provider_id: @driver_requirement_template.provider_id)
     else
       render 'edit'

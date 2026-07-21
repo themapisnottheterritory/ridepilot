@@ -23,16 +23,16 @@ class Run < ApplicationRecord
   has_many :itineraries, :dependent => :destroy
   has_many :public_itineraries, -> { order(:sequence) }, :dependent => :destroy
 
-  belongs_to :repeating_run
+  belongs_to :repeating_run, optional: true
 
   has_one :run_distance
 
   has_many :run_vehicle_inspections, dependent: :destroy
   has_many :vehicle_inspections, through: :run_vehicle_inspections
 
-  belongs_to :from_garage_address, -> { with_deleted }, class_name: 'GarageAddress', foreign_key: 'from_garage_address_id'
+  belongs_to :from_garage_address, -> { with_deleted }, class_name: 'GarageAddress', foreign_key: 'from_garage_address_id', optional: true
   accepts_nested_attributes_for :from_garage_address, update_only: true
-  belongs_to :to_garage_address, -> { with_deleted }, class_name: 'GarageAddress', foreign_key: 'to_garage_address_id'
+  belongs_to :to_garage_address, -> { with_deleted }, class_name: 'GarageAddress', foreign_key: 'to_garage_address_id', optional: true
   accepts_nested_attributes_for :to_garage_address, update_only: true
 
   accepts_nested_attributes_for :trips
@@ -318,11 +318,11 @@ class Run < ApplicationRecord
           
           next unless action_time
 
-          pickup_index = index if !pickup_index && action_time.to_s(:time_utc) > trip_pickup_time.to_s(:time_utc)
+          pickup_index = index if !pickup_index && action_time.to_fs(:time_utc) > trip_pickup_time.to_fs(:time_utc)
 
           if !appt_index
             if trip_appt_time
-              appt_index = index if action_time.to_s(:time_utc) > trip_appt_time.to_s(:time_utc)
+              appt_index = index if action_time.to_fs(:time_utc) > trip_appt_time.to_fs(:time_utc)
               appt_index += 1 if pickup_index && pickup_index == appt_index
             else
               appt_index = pickup_index + 1 if pickup_index
@@ -474,7 +474,7 @@ class Run < ApplicationRecord
       start: scheduled_start_time ? scheduled_start_time.iso8601 : nil,
       end: scheduled_end_time ? scheduled_end_time.iso8601 : nil,
       title: label,
-      resource: date.to_date.to_s(:js),
+      resource: date.to_date.to_fs(:js),
       className: valid_as_daily_run? ? 'valid' : 'invalid'
     }
   end

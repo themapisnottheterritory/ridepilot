@@ -1,4 +1,4 @@
-class AddTripReferenceToDonations < ActiveRecord::Migration
+class AddTripReferenceToDonations < ActiveRecord::Migration[4.2]
   def up
     rename_column :trips, :donation, :donation_old
     add_reference :donations, :trip, index: true

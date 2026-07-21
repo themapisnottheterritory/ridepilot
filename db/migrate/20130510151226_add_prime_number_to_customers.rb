@@ -1,4 +1,4 @@
-class AddPrimeNumberToCustomers < ActiveRecord::Migration
+class AddPrimeNumberToCustomers < ActiveRecord::Migration[4.2]
   def self.up
     add_column :customers, :prime_number, :string
   end

@@ -1,0 +1,78 @@
+:javascript
+  // store list of upcoming_path polylines
+  var upcoming_path_lines = {};
+
+  var OSRM_URL = $('meta[name="osrm-url"]').attr('content') || 'http://10.0.0.18:5000';
+
+  // draw run upcoming_path location on map via OSRM
+  function drawUpcomingPath(run_id, waypoints) {
+    // remove previous polylines
+    removeUpcomingPath(run_id);
+
+    if (!waypoints || waypoints.length < 2) {
+      return;
+    }
+
+    // Build OSRM coordinates string (lon,lat;lon,lat;...)
+    var coords = waypoints.map(function(wp) {
+      return wp[1] + ',' + wp[0]; // OSRM expects lon,lat
+    }).join(';');
+
+    var url = OSRM_URL + '/route/v1/driving/' + coords + '?overview=full&geometries=geojson';
+
+    $.getJSON(url, function(data) {
+      if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
+        console.log('OSRM routing failed for run ' + run_id);
+        // Fallback: draw straight lines
+        drawUpcomingPathFallback(run_id, waypoints);
+        return;
+      }
+
+      var geometry = data.routes[0].geometry;
+      var polyline = L.geoJSON(geometry, {
+        style: {
+          color: '#2677FF',
+          weight: 7,
+          opacity: 0.7
+        }
+      }).addTo(map);
+
+      if (!upcoming_path_lines[run_id]) {
+        upcoming_path_lines[run_id] = [];
+      }
+      upcoming_path_lines[run_id].push(polyline);
+
+    }).fail(function() {
+      console.log('OSRM request failed for run ' + run_id + ', drawing straight lines');
+      drawUpcomingPathFallback(run_id, waypoints);
+    });
+  }
+
+  // Fallback: draw straight lines when OSRM is unavailable
+  function drawUpcomingPathFallback(run_id, waypoints) {
+    var latlngs = waypoints.map(function(wp) {
+      return L.latLng(wp[0], wp[1]);
+    });
+
+    var polyline = L.polyline(latlngs, {
+      color: '#2677FF',
+      weight: 5,
+      opacity: 0.5,
+      dashArray: '10, 10'
+    }).addTo(map);
+
+    if (!upcoming_path_lines[run_id]) {
+      upcoming_path_lines[run_id] = [];
+    }
+    upcoming_path_lines[run_id].push(polyline);
+  }
+
+  function removeUpcomingPath(run_id) {
+    if(upcoming_path_lines[run_id]) {
+      upcoming_path_lines[run_id].forEach(function(layer) {
+        map.removeLayer(layer);
+      });
+    }
+
+    upcoming_path_lines[run_id] = [];
+  }

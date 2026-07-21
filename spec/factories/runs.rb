@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :run do
-    name { Faker::Lorem.words(2).join(' ') }
+    name { Faker::Lorem.words(number: 2).join(' ') }
     vehicle
     driver
     provider

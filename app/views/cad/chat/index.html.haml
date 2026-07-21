@@ -1,0 +1,149 @@
+:css
+  .chat {
+      list-style: none !important;
+      margin: 0;
+      padding: 0;
+  }
+
+  .panel .slidedown .glyphicon, .chat .glyphicon
+  {
+      margin-right: 5px;
+  }
+
+  .panel-body
+  {
+      overflow-y: scroll;
+      height: 400px;
+  }
+
+  .chat li
+  {
+      margin-bottom: 10px;
+      padding-bottom: 5px;
+      border-bottom: 1px dotted #B3A9A9;
+  }
+
+
+  .chat li .chat-body p
+  {
+      margin: 0;
+      color: #777777;
+  }
+
+  .quick_response_list {
+    max-width: 200px !important;
+    width: auto !important;
+    display: inline-block !important;
+  }
+
+- last_read_msg_id = ChatReadReceipt.for_today.where(read_by_id: current_user.try(:id), run_id: @run.id).reorder(created_at: :desc).first.try(:message_id)
+.panel.panel-primary
+  .panel-heading
+    %span.glyphicon.glyphicon-comment
+    = "Chat with driver #{@run.driver.user.display_name} (Run: #{@run.name})"
+  .panel-body
+    %ul.chat
+      - @messages.each do |message|
+        = render 'details', message: message
+  .panel-footer{style: 'padding-bottom: 40px;'}
+    = form_for :chat, :method=>:post, url: chat_path, remote: true do |form|
+      = hidden_field_tag 'run_id', @run.id
+      = hidden_field_tag 'driver_id', @driver.id
+      %textarea.form-control{name: 'message', placeholder: "Type your message here...", required: true}
+      %span.pull-right{style: 'padding-top: 5px;'}
+        = collection_select(:message_template, :id, DispatcherMessageTemplate.by_provider(current_provider), :id, :message, { include_blank: "Quick response..."}, {id: 'message_template', class: 'form-control quick_response_list'} )
+        %button#btn-chat.btn.btn-warning.btn-sm{type: 'submit'}
+          Send
+
+:javascript
+  $(function() {
+    setTimeout( function() {
+      $(".panel-body").animate({ scrollTop: $(this).height() }, "slow");
+    }, 250);
+
+    var provider_id = #{current_provider_id};
+    var run_id = #{@run.id};
+    var driver_id = #{@run.driver_id};
+    var user_id = #{current_user.id};
+    var last_read_msg_id = #{last_read_msg_id || -1};
+    var is_focused = true;
+    
+    function new_message_callback(message_id) {
+      $.ajax({
+        url: "#{chat_path(id: 'xxx')}".replace('xxx', message_id),
+        success: function() {
+          if(is_focused) {
+            read_last_message();
+          }
+        }
+      });
+    }
+    create_chat_channel(provider_id, driver_id, new_message_callback);
+
+    function resizePage() {
+      // set height as: window size - (page header + footer)
+      $('.panel-body').height($(window).height() - 200);  
+    }
+
+    $(window).resize(function() {
+      clearTimeout(window.resizedFinished);
+      window.resizedFinished = setTimeout(function(){
+        resizePage();
+      }, 250);
+    });
+
+    $('#message_template').change(function() {
+      if($(this).val()) {
+        $('textarea[name=message]').val($(this).find("option:selected").text());
+        $(this).val('');
+        $('form').submit();
+      }
+    });
+
+    $('textarea[name=message]').keypress(function (e) {
+      if (e.which == 13) {
+        $('form').submit();
+        return false;
+      }
+    });
+
+    function mark_message_read(message_id) {
+      console.log('reading ' + message_id);
+      if(!message_id) {
+        return;
+      }
+
+      if(!last_read_msg_id || message_id != last_read_msg_id) {
+        $.ajax({
+          url: "#{read_chat_path}",
+          method: 'post',
+          data: {
+            run_id: run_id,
+            read_by_id: user_id,
+            message_id: message_id
+          },
+          success: function() {
+            last_read_msg_id = message_id;
+          }
+        });
+      }
+    }
+
+    function read_last_message() {
+      var last_message_id = $('.chat-body.from_other:last').data('id');
+      mark_message_read(last_message_id);
+    }
+
+    // when chat window loads, mark as read
+    read_last_message();
+
+    // page get focus to flag message read receipt
+    $(window, document).focus(function() {
+      is_focused = true;
+      read_last_message();
+    });
+
+    $(window, document).focusout(function(){
+      is_focused = false;
+    });
+  });

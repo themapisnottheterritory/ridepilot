@@ -109,9 +109,9 @@ class RecurringDriverCompliancesController < ApplicationController
     else
       # Return the first 6 occurrences, beginning with the start date
       RecurringDriverCompliance.occurrence_dates_on_schedule_in_range @recurring_driver_compliance, range_start_date: Date.current, range_end_date: (@recurring_driver_compliance.start_date + (@recurring_driver_compliance.recurrence_frequency * 5).send(@recurring_driver_compliance.recurrence_schedule))
-    end.collect{ |date| date.to_s(:long) }
+    end.collect{ |date| date.to_fs(:long) }
   end
-  
+
   def generate_future_schedule_preview
     @future_schedule_preview = if @recurring_driver_compliance.compliance_based_scheduling?
       # Return the adjusted_start_date, as of the day after the start date
@@ -120,13 +120,13 @@ class RecurringDriverCompliancesController < ApplicationController
       # Return the first 6 occurrences, as of the day after the start date
       adjusted_start_date = RecurringDriverCompliance.adjusted_start_date(@recurring_driver_compliance, as_of: @recurring_driver_compliance.start_date.tomorrow)
       RecurringDriverCompliance.occurrence_dates_on_schedule_in_range @recurring_driver_compliance, first_date: adjusted_start_date, range_end_date: (adjusted_start_date + (@recurring_driver_compliance.recurrence_frequency * 5).send(@recurring_driver_compliance.recurrence_schedule))
-    end.collect{ |date| date.to_s(:long) }
+    end.collect{ |date| date.to_fs(:long) }
   end
-  
+
   def generate_compliance_based_schedule_preview
     # Return the next occurance date, as of the day after the start date
     assumed_completion_date = @recurring_driver_compliance.start_date + 1.day
-    @compliance_based_schedule_preview = [RecurringDriverCompliance.next_occurrence_date_from_previous_date_in_range(@recurring_driver_compliance, assumed_completion_date, range_end_date: (assumed_completion_date + @recurring_driver_compliance.recurrence_frequency.send(@recurring_driver_compliance.recurrence_schedule)))].collect{ |date| date.to_s(:long) }
+    @compliance_based_schedule_preview = [RecurringDriverCompliance.next_occurrence_date_from_previous_date_in_range(@recurring_driver_compliance, assumed_completion_date, range_end_date: (assumed_completion_date + @recurring_driver_compliance.recurrence_frequency.send(@recurring_driver_compliance.recurrence_schedule)))].collect{ |date| date.to_fs(:long) }
   end
   
   def prep_form

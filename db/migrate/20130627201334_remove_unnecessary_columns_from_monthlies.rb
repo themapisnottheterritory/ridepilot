@@ -1,4 +1,4 @@
-class RemoveUnnecessaryColumnsFromMonthlies < ActiveRecord::Migration
+class RemoveUnnecessaryColumnsFromMonthlies < ActiveRecord::Migration[4.2]
   def self.up
     remove_column :monthlies, :end_date
     remove_column :monthlies, :complaints

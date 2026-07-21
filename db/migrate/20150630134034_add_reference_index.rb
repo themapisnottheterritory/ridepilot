@@ -1,4 +1,4 @@
-class AddReferenceIndex < ActiveRecord::Migration
+class AddReferenceIndex < ActiveRecord::Migration[4.2]
   def change
     add_index :addresses, :provider_id
     add_index :customers, :address_id

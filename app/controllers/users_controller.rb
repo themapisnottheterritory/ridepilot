@@ -63,7 +63,7 @@ class UsersController < ApplicationController
         #NewUserMailer.new_user_email(@user, new_password).deliver if new_user
 
         # send password reset instructions instead
-        @user.send_reset_password_instructions  if new_user
+        #@user.send_reset_password_instructions   if new_user
 
         flash.now[:notice] = "%s has been added and the instructions has been emailed" % @user.email
         redirect_to users_provider_path(@provider)
@@ -100,7 +100,7 @@ class UsersController < ApplicationController
       new_attrs = new_attrs.except(:user_address_attributes)
     end
     
-    if @user.update_attributes(new_attrs)
+    if @user.update(new_attrs)
       role = Role.find_by(user: @user, provider: current_provider)
       if role && params[:role].present? && params[:role][:level].present?
         role.update(level: params[:role][:level]) 
@@ -156,6 +156,14 @@ class UsersController < ApplicationController
     end
   end
 
+  # Phase 2 (O365 SSO): let a user disconnect their own linked Microsoft
+  # account. Password login is always available, so this never locks anyone out.
+  def unlink_entra
+    current_user.update_columns(omniauth_provider: nil, omniauth_uid: nil)
+    redirect_to user_path(current_user),
+                notice: "Your Microsoft account has been unlinked."
+  end
+
   def show_change_email
     @user = User.find_by_id(params[:id])
     authorize! :manage, @user
@@ -187,7 +195,7 @@ class UsersController < ApplicationController
     @user = User.find(params[:id])
     authorize! :manage, @user
     
-    if @user.update_attributes(change_expiration_params)
+    if @user.update(change_expiration_params)
       flash.now[:alert] = "Expiration set"
       redirect_to users_provider_path(@user.current_provider)
     else

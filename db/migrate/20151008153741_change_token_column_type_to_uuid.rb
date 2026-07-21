@@ -1,4 +1,4 @@
-class ChangeTokenColumnTypeToUuid < ActiveRecord::Migration
+class ChangeTokenColumnTypeToUuid < ActiveRecord::Migration[4.2]
   def change
     remove_column :booking_users, :token, :string
     add_column :booking_users, :token, :uuid, default: 'uuid_generate_v4()'

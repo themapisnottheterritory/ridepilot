@@ -611,9 +611,12 @@ class TripsController < ApplicationController
   end
 
   def process_address
-    if params[:trip][:pickup_address_id].blank? 
-      if !params[:trip_pickup_google_address].blank?
-        addr_params = JSON(params[:trip_pickup_google_address])
+    pickup_addr_data = params[:trip_pickup_address_data].presence || params[:trip_pickup_google_address].presence
+    dropoff_addr_data = params[:trip_dropoff_address_data].presence || params[:trip_dropoff_google_address].presence
+
+    if params[:trip][:pickup_address_id].blank?
+      if !pickup_addr_data.blank?
+        addr_params = JSON(pickup_addr_data)
         new_temp_addr = TempAddress.new(addr_params.select{|x| TempAddress.allowable_params.include?(x)})
         new_temp_addr.the_geom = Address.compute_geom(addr_params['lat'], addr_params['lon'])
         @trip.pickup_address = new_temp_addr
@@ -624,9 +627,9 @@ class TripsController < ApplicationController
       end
     end
 
-    if params[:trip][:dropoff_address_id].blank? 
-      if !params[:trip_dropoff_google_address].blank?
-        addr_params = JSON(params[:trip_dropoff_google_address])
+    if params[:trip][:dropoff_address_id].blank?
+      if !dropoff_addr_data.blank?
+        addr_params = JSON(dropoff_addr_data)
         new_temp_addr = TempAddress.new(addr_params.select{|x| TempAddress.allowable_params.include?(x)})
         new_temp_addr.the_geom = Address.compute_geom(addr_params['lat'], addr_params['lon'])
         @trip.dropoff_address = new_temp_addr

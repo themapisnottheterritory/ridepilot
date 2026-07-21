@@ -28,10 +28,10 @@ class Provider < ApplicationRecord
 
   has_one :address_upload_flag
 
-  belongs_to :fare
+  belongs_to :fare, optional: true
 
-  belongs_to :business_address, -> { with_deleted }, class_name: 'ProviderBusinessAddress', foreign_key: 'business_address_id'
-  belongs_to :mailing_address, -> { with_deleted }, class_name: 'ProviderMailingAddress', foreign_key: 'mailing_address_id'
+  belongs_to :business_address, -> { with_deleted }, class_name: 'ProviderBusinessAddress', foreign_key: 'business_address_id', optional: true
+  belongs_to :mailing_address, -> { with_deleted }, class_name: 'ProviderMailingAddress', foreign_key: 'mailing_address_id', optional: true
 
   accepts_nested_attributes_for :business_address, update_only: true
   accepts_nested_attributes_for :mailing_address, update_only: true

@@ -28,7 +28,7 @@ RSpec.shared_examples "a recurring compliance event scheduler" do
         @complete_with
       else
         Proc.new do |compliance|
-          compliance.update_attributes compliance_date: Date.current
+          compliance.update compliance_date: Date.current
         end
       end
     end
@@ -188,7 +188,7 @@ RSpec.shared_examples "a recurring compliance event scheduler" do
         compliance_occurrence = create @occurrence_class_factory, @recurrence_class_factory => recurrence
 
         expect {
-          recurrence.update_attributes event_name: "My Update Event Name", event_notes: "My Updated Event Notes"
+          recurrence.update event_name: "My Update Event Name", event_notes: "My Updated Event Notes"
         }.to change { [compliance_occurrence.reload.event, compliance_occurrence.reload.notes] }.to(["My Update Event Name", "My Updated Event Notes"])
       end
     end

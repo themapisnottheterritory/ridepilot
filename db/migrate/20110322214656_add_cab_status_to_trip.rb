@@ -1,4 +1,4 @@
-class AddCabStatusToTrip < ActiveRecord::Migration
+class AddCabStatusToTrip < ActiveRecord::Migration[4.2]
   def self.up
     change_table :trips do |t|
       t.boolean :cab, :default=>false

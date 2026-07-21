@@ -1,4 +1,4 @@
-class AddMileageToTrips < ActiveRecord::Migration
+class AddMileageToTrips < ActiveRecord::Migration[4.2]
   def self.up
     add_column :trips, :mileage, :integer
   end

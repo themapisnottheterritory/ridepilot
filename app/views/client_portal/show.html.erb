@@ -1,0 +1,54 @@
+<div class="client-portal"
+     data-trip-id="<%= @next_trip&.id %>"
+     data-run-id="<%= @next_trip&.run_id %>">
+
+  <% if @next_trip %>
+    <div class="status-card">
+      <p class="status-label">Your next ride</p>
+      <p class="pickup-time">
+        <%= @next_trip.pickup_time.in_time_zone("Central Time (US & Canada)")
+                                   .strftime("%A, %B %-d at %I:%M %p") %>
+      </p>
+      <p class="address">Pickup: <%= @next_trip.pickup_address&.address %></p>
+      <p class="address">Dropoff: <%= @next_trip.dropoff_address&.address %></p>
+
+      <div class="eta-section">
+        <% if @next_trip.estimated_pickup_time %>
+          <p class="eta-label">Estimated arrival</p>
+          <p class="eta-time" id="eta-time">
+            <%= @next_trip.estimated_pickup_time
+                          .in_time_zone("Central Time (US & Canada)")
+                          .strftime("%I:%M %p") %>
+          </p>
+        <% end %>
+      </div>
+
+      <div id="driver-map" style="display:none"></div>
+    </div>
+
+    <% @upcoming_trips.drop(1).each do |trip| %>
+      <div class="trip-row">
+        <span class="time">
+          <%= trip.pickup_time.in_time_zone("Central Time (US & Canada)")
+                               .strftime("%a %-d %b %I:%M %p") %>
+        </span>
+        <br>
+        <span>
+          <%= trip.pickup_address&.address %> &rarr; <%= trip.dropoff_address&.address %>
+        </span>
+      </div>
+    <% end %>
+
+  <% else %>
+    <div class="no-trips">
+      <p>No upcoming trips scheduled.</p>
+      <p>Call us to book a ride.</p>
+    </div>
+  <% end %>
+
+  <footer>
+    <a href="tel:<%= @current_customer.provider.phone_number %>">
+      Call <%= @current_customer.provider.name %>
+    </a>
+  </footer>
+</div>

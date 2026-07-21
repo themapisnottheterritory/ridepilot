@@ -3,7 +3,7 @@
     <%= link_to recurring_driver_compliance.event_name, recurring_driver_compliance %>
   </td>
   <td>
-    <%= recurring_driver_compliance.start_date.to_s(:long) %>
+    <%= recurring_driver_compliance.start_date.to_fs(:long) %>
   </td>
   <td>
     <%= "#{recurring_driver_compliance.recurrence_frequency} #{recurring_driver_compliance.recurrence_schedule}" %>

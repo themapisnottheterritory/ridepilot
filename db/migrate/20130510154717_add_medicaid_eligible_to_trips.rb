@@ -1,4 +1,4 @@
-class AddMedicaidEligibleToTrips < ActiveRecord::Migration
+class AddMedicaidEligibleToTrips < ActiveRecord::Migration[4.2]
   def self.up
     add_column :trips, :medicaid_eligible, :boolean
   end

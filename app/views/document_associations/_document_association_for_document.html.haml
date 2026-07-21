@@ -11,7 +11,7 @@
     - document_associations.each do |document_association|
       %tr
         %td
-          = document_association.associable.associable_date.to_s(:long)
+          = document_association.associable.associable_date.to_fs(:long)
         %td
           = document_association.associable.associable_name
         %td

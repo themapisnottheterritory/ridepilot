@@ -1,5 +1,6 @@
 :queues:
   - [high_critical, 3]
   - [critical, 2]
+  - [optimizer, 2]
   - default
   - low

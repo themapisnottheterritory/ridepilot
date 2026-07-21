@@ -1,4 +1,4 @@
-class CreateFundingAuthorizationNumbers < ActiveRecord::Migration
+class CreateFundingAuthorizationNumbers < ActiveRecord::Migration[4.2]
   def change
     create_table :funding_authorization_numbers do |t|
       t.references :funding_source, index: true

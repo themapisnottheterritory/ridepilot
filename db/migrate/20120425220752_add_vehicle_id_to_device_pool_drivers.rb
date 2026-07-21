@@ -1,4 +1,4 @@
-class AddVehicleIdToDevicePoolDrivers < ActiveRecord::Migration
+class AddVehicleIdToDevicePoolDrivers < ActiveRecord::Migration[4.2]
   def self.up
     change_table :device_pool_drivers do |t|
       t.integer :vehicle_id

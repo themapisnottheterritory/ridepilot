@@ -7,7 +7,7 @@ body {
   font-size:13px;
   *font-size:small; 
   line-height: 1.231; 
-  font-family: "Helvetica Neue",Arial,Helvetica,sans-serif;
+  font-family: "Open Sans", "Helvetica Neue", Arial, sans-serif;
   margin: 0;
 }
 select, input, textarea, button { font:99% sans-serif; }
@@ -36,12 +36,12 @@ h3 {
 
 /*
  *
- * Base Styles 
+ * Base Styles
  *
  */
-body, select, input, textarea { 
+body, select, input, textarea {
   color: #444;
-  font-family: "Helvetica Neue",Arial,Helvetica,sans-serif;
+  font-family: "Open Sans", "Helvetica Neue", Arial, sans-serif;
 }
 /* Headers (h1,h2,etc) have no default font-size or margin,
    you'll want to define those yourself. */ 
@@ -194,7 +194,7 @@ button {width: auto; overflow: visible;}
 
 #crossbar {
   padding: 0 20px;
-  background: #0d4680;
+  background: #12264F;
   color: #fff;
   position: relative;
 }
@@ -248,7 +248,7 @@ body.reports #primary-nav li.provider a:hover, body.reports #primary-nav li.prov
   background: #fff;
 }
 #page-header {
-  #background: #e5f2ff;
+  // background: #e5f2ff;
   padding: 5px 10px;
   margin: 0 0 10px;
   -webkit-border-radius: 5px;
@@ -372,7 +372,7 @@ fieldset.new-trip {
 }
 .ui-widget fieldset.new-trip, .ui-widget fieldset.new-trip input {
   /* Override jqUI styles when this is displayed as a modal dialog*/
-  font-family: "Helvetica Neue",Arial,Helvetica,sans-serif !important;
+  font-family: "Open Sans", "Helvetica Neue", Arial, sans-serif !important;
   font-size: 13px !important;
   line-height: 16px !important;
 }

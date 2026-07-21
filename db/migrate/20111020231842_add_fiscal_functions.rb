@@ -1,4 +1,4 @@
-class AddFiscalFunctions < ActiveRecord::Migration
+class AddFiscalFunctions < ActiveRecord::Migration[4.2]
   def self.up
     execute <<-SQL
       CREATE OR REPLACE FUNCTION fiscal_year(timestamp without time zone)

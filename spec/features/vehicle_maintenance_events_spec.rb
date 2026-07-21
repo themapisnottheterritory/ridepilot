@@ -27,7 +27,7 @@ RSpec.describe "VehicleMaintenanceEvents" do
       end
       
       it "shows the service date of the maintenance event" do
-        expect(page).to have_text @vehicle_maintenance_event.service_date.to_s(:long)
+        expect(page).to have_text @vehicle_maintenance_event.service_date.to_fs(:long)
       end
     end
 

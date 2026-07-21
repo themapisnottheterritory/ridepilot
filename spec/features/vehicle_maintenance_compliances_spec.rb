@@ -29,25 +29,25 @@ RSpec.describe "VehicleMaintenanceCompliances" do
       
       it "shows the due date of the compliance event for due_type 'date'" do
         visit vehicle_path(id: @vehicle.to_param)
-        expect(page).to have_text @vehicle_maintenance_compliance.due_date.to_s(:long)
+        expect(page).to have_text @vehicle_maintenance_compliance.due_date.to_fs(:long)
       end
       
       it "shows the due mileage of the compliance event for due_type 'mileage'" do
-        @vehicle_maintenance_compliance.update_attributes due_type: "mileage", due_mileage: 100
+        @vehicle_maintenance_compliance.update due_type: "mileage", due_mileage: 100
         visit vehicle_path(id: @vehicle.to_param)
         expect(page).to have_text "100 mi"
       end
       
       it "shows the due date and due mileage of the compliance event for due_type 'both'" do
-        @vehicle_maintenance_compliance.update_attributes due_type: "both", due_mileage: 100
+        @vehicle_maintenance_compliance.update due_type: "both", due_mileage: 100
         visit vehicle_path(id: @vehicle.to_param)
-        expect(page).to have_text "#{@vehicle_maintenance_compliance.due_date.to_s(:long)} and 100 mi"
+        expect(page).to have_text "#{@vehicle_maintenance_compliance.due_date.to_fs(:long)} and 100 mi"
       end
       
       it "does not show completed event by default" do
         completed_vehicle_maintenance_compliance = create :vehicle_maintenance_compliance, :complete, vehicle: @vehicle
         visit vehicle_path(id: @vehicle.to_param)
-        expect(page).not_to have_text completed_vehicle_maintenance_compliance.compliance_date.to_s(:long)
+        expect(page).not_to have_text completed_vehicle_maintenance_compliance.compliance_date.to_fs(:long)
       end
     end
 

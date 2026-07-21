@@ -1,5 +1,5 @@
 # This migration comes from reporting (originally 20150328210013)
-class CreateReportingReports < ActiveRecord::Migration
+class CreateReportingReports < ActiveRecord::Migration[4.2]
   def change
     create_table :reporting_reports do |t|
       t.string :name, null: false

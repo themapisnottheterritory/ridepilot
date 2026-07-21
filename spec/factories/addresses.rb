@@ -2,7 +2,7 @@ require 'faker'
 
 FactoryBot.define do
   factory :address do
-    name { Faker::Lorem.words(2).join(' ') }
+    name { Faker::Lorem.words(number: 2).join(' ') }
     address { Faker::Address.street_address }
     city { Faker::Address.city }
     state { "OR" }
@@ -18,7 +18,11 @@ FactoryBot.define do
 
   factory :customer_common_address, parent: :address, class: CustomerCommonAddress
 
-  factory :provider_common_address, parent: :address, class: ProviderCommonAddress do 
+  factory :provider_common_address, parent: :address, class: ProviderCommonAddress do
     address_group
   end
+
+  factory :provider_business_address, parent: :address, class: ProviderBusinessAddress
+
+  factory :provider_mailing_address, parent: :address, class: ProviderMailingAddress
 end

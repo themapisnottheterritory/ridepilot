@@ -1,4 +1,4 @@
-class CreateVehicleWarranties < ActiveRecord::Migration
+class CreateVehicleWarranties < ActiveRecord::Migration[4.2]
   def change
     create_table :vehicle_warranties do |t|
       t.references :vehicle, index: true

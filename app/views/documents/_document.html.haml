@@ -1,7 +1,7 @@
 %tr{:class => "document-#{document.id}"}
   %td
     %p.form-control-static
-      = document.document_updated_at.to_s(:long)
+      = document.document_updated_at.to_fs(:long)
   %td
     %p.form-control-static
       = link_to_if @readonly, document.description, document.document.url, target: :blank

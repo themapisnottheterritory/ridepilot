@@ -1,4 +1,4 @@
-class UnifyDriverNames < ActiveRecord::Migration
+class UnifyDriverNames < ActiveRecord::Migration[4.2]
   def self.up
     add_column :drivers, :name, :string
     for driver in Driver.all

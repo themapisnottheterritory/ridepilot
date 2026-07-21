@@ -1,0 +1,54 @@
+:javascript
+  // store list of prior_path polylines
+  var prior_path_lines = {};
+
+  // draw run prior_path location on map
+  function drawPriorPath(run_id, path_data) {
+    if(!path_data || path_data.length == 0) {
+      return;
+    }
+
+    renderLoadedPriorPath(run_id);
+
+    drawPriorPathPolyline(run_id, getLatLngs(path_data || []));
+  }
+
+  // Convert data array to Leaflet LatLng array
+  function getLatLngs(data) {
+    var coords = [];
+    for (var i = 0; i < data.length; i++) {
+      coords.push(L.latLng(data[i][0], data[i][1]));
+    }
+    return coords;
+  }
+
+  function drawPriorPathPolyline(run_id, coords) {
+    var run_path = prior_path_lines[run_id];
+    if(!run_path) {
+      run_path = L.polyline(coords, {
+        color: 'gray',
+        weight: 7,
+        opacity: 0.7
+      }).addTo(map);
+
+      prior_path_lines[run_id] = run_path;
+    } else {
+      // Append new coordinates
+      coords.forEach(function(latlng) {
+        run_path.addLatLng(latlng);
+      });
+    }
+  }
+
+  function renderLoadedPriorPath(run_id) {
+    if(prior_path_lines[run_id]) {
+      prior_path_lines[run_id].addTo(map);
+    }
+  }
+
+  function removePriorPath(run_id) {
+    if(prior_path_lines[run_id]) {
+      map.removeLayer(prior_path_lines[run_id]);
+      delete prior_path_lines[run_id];
+    }
+  }

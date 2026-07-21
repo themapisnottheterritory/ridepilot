@@ -1,5 +1,5 @@
 # This migration comes from reporting (originally 20150401144656)
-class CreateReportingOutputFields < ActiveRecord::Migration
+class CreateReportingOutputFields < ActiveRecord::Migration[4.2]
   def change
     create_table :reporting_output_fields do |t|
       t.string :name, null: false

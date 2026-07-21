@@ -1,5 +1,5 @@
 class RepeatingTripsController < ApplicationController
-  before_action :set_trip, except: [:index, :new, :create, :clone_from_daily_run]
+  before_action :set_trip, except: [:index, :new, :create, :clone_from_daily_trip]
   authorize_resource :except=>[:show]
 
   def index
@@ -211,9 +211,12 @@ class RepeatingTripsController < ApplicationController
   end
 
   def process_address
-    if params[:repeating_trip][:pickup_address_id].blank? 
-      if !params[:trip_pickup_google_address].blank?
-        addr_params = JSON(params[:trip_pickup_google_address])
+    pickup_addr_data = params[:trip_pickup_address_data].presence || params[:trip_pickup_google_address].presence
+    dropoff_addr_data = params[:trip_dropoff_address_data].presence || params[:trip_dropoff_google_address].presence
+
+    if params[:repeating_trip][:pickup_address_id].blank?
+      if !pickup_addr_data.blank?
+        addr_params = JSON(pickup_addr_data)
         new_temp_addr = TempAddress.new(addr_params.select{|x| TempAddress.allowable_params.include?(x) })
         new_temp_addr.the_geom = Address.compute_geom(addr_params['lat'], addr_params['lon'])
         @trip.pickup_address = new_temp_addr
@@ -224,9 +227,9 @@ class RepeatingTripsController < ApplicationController
       end
     end
 
-    if params[:repeating_trip][:dropoff_address_id].blank? 
-      if !params[:trip_dropoff_google_address].blank?
-        addr_params = JSON(params[:trip_dropoff_google_address])
+    if params[:repeating_trip][:dropoff_address_id].blank?
+      if !dropoff_addr_data.blank?
+        addr_params = JSON(dropoff_addr_data)
         new_temp_addr = TempAddress.new(addr_params.select{|x| TempAddress.allowable_params.include?(x)})
         new_temp_addr.the_geom = Address.compute_geom(addr_params['lat'], addr_params['lon'])
         @trip.dropoff_address = new_temp_addr
@@ -236,7 +239,6 @@ class RepeatingTripsController < ApplicationController
         @trip.dropoff_address = new_temp_addr
       end
     end
-        
   end
 
   def edit_mobilities

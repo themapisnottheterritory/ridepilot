@@ -1,4 +1,4 @@
-class CreateDriverHistories < ActiveRecord::Migration
+class CreateDriverHistories < ActiveRecord::Migration[4.2]
   def change
     create_table :driver_histories do |t|
       t.references :driver, index: true

@@ -1,0 +1,4 @@
+- if @public_itin
+  infoPopup.type = "Stop";
+  infoPopup.itin_id = #{@public_itin.itinerary_id};
+  infoPopup.setContent("#{ j render 'stop_info_window', public_itin: @public_itin }");

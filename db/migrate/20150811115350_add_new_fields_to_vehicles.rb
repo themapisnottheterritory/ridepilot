@@ -1,4 +1,4 @@
-class AddNewFieldsToVehicles < ActiveRecord::Migration
+class AddNewFieldsToVehicles < ActiveRecord::Migration[4.2]
   def change
     add_column :vehicles, :insurance_coverage_details, :text
     add_column :vehicles, :ownership, :string

@@ -35,7 +35,7 @@
               .form-label
                 = label_tag "", translate_helper("document_form_upload_date"), class: "col-md-3 control-label"
               .form-field
-                %p.form-control-static= @document.document_updated_at.to_s(:long)
+                %p.form-control-static= @document.document_updated_at.to_fs(:long)
         / END .panel-body
       / END .panel
     .col-sm-12.col-md-6

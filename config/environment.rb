@@ -1,5 +1,5 @@
 # Load the Rails application.
-require File.expand_path('../application', __FILE__)
+require_relative "application"
 
 Rails.application.routes.default_url_options[:host] = ENV['RIDEPILOT_HOST']
 
@@ -89,6 +89,7 @@ GOOGLE_MAP_DEFAULTS = {
     zoom: 11
   }
 }.freeze
+
 
 # Initialize the Rails application.
 Rails.application.initialize!

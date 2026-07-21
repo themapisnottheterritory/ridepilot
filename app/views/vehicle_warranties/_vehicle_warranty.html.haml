@@ -1,7 +1,7 @@
 %tr{:class => "vehicle_warranty-#{vehicle_warranty.id}"}
   %td
     %p.form-control-static
-      = vehicle_warranty.expiration_date.to_s(:long)
+      = vehicle_warranty.expiration_date.to_fs(:long)
   %td
     %p.form-control-static
       = link_to vehicle_warranty.description, polymorphic_path([vehicle_warranty.vehicle, vehicle_warranty], action: @readonly ? nil : :edit), remote: true

@@ -1,0 +1,5 @@
+- unless @itins_data.blank?
+  var bounds = L.latLngBounds();
+  var itins_data = #{@itins_data.to_json.html_safe};
+  itins_data.forEach(function(itin) { bounds.extend(L.latLng(itin[1], itin[2])); });
+  map.fitBounds(bounds);

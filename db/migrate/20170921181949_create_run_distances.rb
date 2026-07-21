@@ -1,4 +1,4 @@
-class CreateRunDistances < ActiveRecord::Migration
+class CreateRunDistances < ActiveRecord::Migration[4.2]
   def change
     create_table :run_distances do |t|
       t.float :total_dist

@@ -1,4 +1,4 @@
-class AddDriverIdAndVehicleIdToRepeatingTrips < ActiveRecord::Migration
+class AddDriverIdAndVehicleIdToRepeatingTrips < ActiveRecord::Migration[4.2]
   def self.up
     change_table :repeating_trips do |t|
       t.references :driver

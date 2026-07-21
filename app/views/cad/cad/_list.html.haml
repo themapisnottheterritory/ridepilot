@@ -1,0 +1,187 @@
+:ruby
+  has_run = @runs.any?
+
+:css
+  .run_checkboxes .run_list {
+    font-weight: normal;
+    display: block;
+  }
+
+  .run_list input, .select_all input {
+    vertical-align: initial;
+  }
+
+  .toggle {
+    float: right;
+  }
+
+  .driver_chat.new_message {
+    color: red;
+  }
+
+  .reporting-vehicle-marker-icon {
+    background: none !important;
+    border: none !important;
+  }
+
+%h3
+  Select Runs to Show:
+  %input#all_toggle{type: 'checkbox', 'data-toggle': 'toggle', 'data-on': 'All Runs', 'data-off': 'Incomplete Only', 'data-size': 'small', 'data-width': '125', checked: 'true'}
+.col-sm-12
+  %span.select_all{style: (has_run ? "" : "display: none;")}
+    %input{type: 'checkbox'}
+      %b Select All
+  %label#no_run_warning{style: (!has_run ? "" : "display: none;")}
+    - unless params[:cad] && params[:cad][:incomplete_runs_only] == 'true'
+      = "There are no runs for this day."
+    - else
+      = "There are no remaining incomplete runs for this day."
+
+  = render 'run_checkboxes', runs: @runs, expanded_run_id: nil
+
+.col-sm-12{style: 'margin-top: 8px; padding-top: 8px; border-top: 1px solid #ddd;'}
+  %label
+    %input#show_reporting_vehicles{type: 'checkbox'}
+    %b Show All Reporting Vehicles
+  %span#reporting_vehicle_count.text-muted{style: 'margin-left: 5px; font-size: 12px;'}
+
+- if @runs.first.try(:date) == Date.today
+  :javascript
+    $(function() {
+      var run_ids = #{@runs.pluck(:id)};
+      run_ids.forEach(function(run_id) {
+        var callback = function(data) {
+          console.log(data);
+          var run_span = $('.run_list[data-run-id= ' + run_id + ']');
+          if(data.dismiss && #{current_user.id} == data.read_by_id) {
+            // Dismiss alert
+            if(data.message_id && run_span.attr('data-last-message-id') == data.message_id.toString()) {
+              run_span.find('.driver_chat').removeClass('new_message');
+            }
+          } else if(data.sender_id && data.sender_id != #{current_user.id}) {
+            run_span.attr('data-last-message-id', data.message_id);
+            run_span.find('.driver_chat').addClass('new_message');
+          }
+        };
+
+        create_chat_alert_channel(run_id, callback);
+      });
+    });
+
+:javascript
+  $(function() {
+    $(document).on('change', '.select_all input', function() {
+      if ($(this).is(':checked')) {
+        $('.run_list input').prop('checked', true).trigger('change');
+      } else {
+        $('.run_list input').prop('checked', false).trigger('change');
+      }
+    });
+
+    $('#all_toggle').change(function() {
+      $('.select_all input').prop('checked', false).trigger('change');
+      if ($(this).prop('checked')){
+        reloadRuns(false);
+      }
+      else {
+        reloadRuns(true);
+      }
+    });
+
+    $(document).on('change', '.run_checkboxes input', function (){
+      var run_id = $(this).data('run-id');
+
+      if ($(this).is(':checked')) {
+        reloadRun(run_id, true);
+      } else {
+        removeRun(run_id);
+      }
+    });
+
+    // --- Show All Reporting Vehicles ---
+    var reporting_markers = {};
+    var reporting_refresh_timer = null;
+
+    function reportingUnitIcon(unitId, speed) {
+      var moving = speed > 1.0;
+      var bg = moving ? '#2677FF' : '#888';
+      var html = '<div style="' +
+        'background:' + bg + ';' +
+        'color:#fff;' +
+        'font-size:11px;' +
+        'font-weight:bold;' +
+        'padding:2px 5px;' +
+        'border-radius:3px;' +
+        'border:1px solid rgba(0,0,0,0.3);' +
+        'white-space:nowrap;' +
+        'text-align:center;' +
+        'box-shadow:1px 1px 3px rgba(0,0,0,0.4);' +
+        '">' + unitId + '</div>';
+      return L.divIcon({
+        html: html,
+        iconSize: null,
+        iconAnchor: [20, 10],
+        className: 'reporting-vehicle-marker-icon'
+      });
+    }
+
+    function loadReportingVehicles() {
+      var url = "#{reporting_vehicles_cad_path}";
+      console.log('AVL: fetching reporting vehicles from', url);
+      $.getJSON(url).done(function(data) {
+        console.log('AVL: got', data.length, 'vehicles');
+        // Remove old markers
+        clearReportingMarkers();
+
+        data.forEach(function(v) {
+          var marker = L.marker([v.lat, v.lon], {
+            icon: reportingUnitIcon(v.unit_id, v.speed),
+            zIndexOffset: 500
+          }).addTo(map);
+
+          var tooltip = v.vehicle_name + '<br>Speed: ' + v.speed.toFixed(1) + ' mph' +
+            '<br>Heading: ' + v.heading.toFixed(0) + '°' +
+            '<br>' + v.timestamp;
+          marker.bindTooltip(tooltip);
+
+          marker.on('click', function() {
+            infoPopup.setLatLng(marker.getLatLng());
+            infoPopup.setContent('<b>Vehicle ' + v.vehicle_name + '</b><br>' +
+              'Unit: ' + v.unit_id + '<br>' +
+              'Speed: ' + v.speed.toFixed(1) + ' mph<br>' +
+              'Heading: ' + v.heading.toFixed(0) + '&deg;<br>' +
+              'Last update: ' + v.timestamp);
+            infoPopup.openOn(map);
+          });
+
+          reporting_markers[v.unit_id] = marker;
+        });
+
+        $('#reporting_vehicle_count').text('(' + data.length + ' vehicles)');
+      }).fail(function(jqXHR, textStatus, errorThrown) {
+        console.error('AVL: failed to load reporting vehicles', textStatus, errorThrown, jqXHR.status);
+      });
+    }
+
+    function clearReportingMarkers() {
+      for (var key in reporting_markers) {
+        map.removeLayer(reporting_markers[key]);
+      }
+      reporting_markers = {};
+    }
+
+    $('#show_reporting_vehicles').change(function() {
+      if ($(this).is(':checked')) {
+        loadReportingVehicles();
+        // Auto-refresh every 15 seconds
+        reporting_refresh_timer = setInterval(loadReportingVehicles, 15000);
+      } else {
+        clearReportingMarkers();
+        $('#reporting_vehicle_count').text('');
+        if (reporting_refresh_timer) {
+          clearInterval(reporting_refresh_timer);
+          reporting_refresh_timer = null;
+        }
+      }
+    });
+  });

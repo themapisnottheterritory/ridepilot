@@ -1,5 +1,5 @@
 # This migration comes from reporting (originally 20150328211336)
-class CreateReportingLookupTables < ActiveRecord::Migration
+class CreateReportingLookupTables < ActiveRecord::Migration[4.2]
   def change
     create_table :reporting_lookup_tables do |t|
       t.string :name, null: false

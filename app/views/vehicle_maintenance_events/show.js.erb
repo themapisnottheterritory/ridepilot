@@ -1,5 +1,5 @@
 var $new_form = $("<%= j (render partial: 'form', locals: {remote: true}) %>");
 
 $('#modal-dialog .modal-body .container-fluid').html($new_form);
-$('#modal-dialog .modal-title').html("<%= @vehicle_maintenance_event.service_date.try(:to_s, :long) %>");
+$('#modal-dialog .modal-title').html("<%= @vehicle_maintenance_event.service_date.try(:to_fs, :long) %>");
 $('#modal-dialog').modal('show');

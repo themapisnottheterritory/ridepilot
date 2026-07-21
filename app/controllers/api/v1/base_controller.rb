@@ -1,4 +1,4 @@
-class API::V1::BaseController < API::ApiController
+class Api::V1::BaseController < Api::ApiController
   before_action :cors_preflight_check, :authenticate_user_from_token!
   after_action :cors_set_access_control_headers
 

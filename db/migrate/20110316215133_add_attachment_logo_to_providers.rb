@@ -1,4 +1,4 @@
-class AddAttachmentLogoToProviders < ActiveRecord::Migration
+class AddAttachmentLogoToProviders < ActiveRecord::Migration[4.2]
   def self.up
     add_column :providers, :logo_file_name, :string
     add_column :providers, :logo_content_type, :string

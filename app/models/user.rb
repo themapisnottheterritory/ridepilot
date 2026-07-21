@@ -14,8 +14,9 @@ class User < ApplicationRecord
   
   # Include default devise modules. Others available are:
   # :rememberable, :confirmable, :lockable
-  devise :database_authenticatable, :recoverable, :trackable, :validatable, 
-    :timeoutable, :password_expirable, :password_archivable, :account_expireable
+  devise :database_authenticatable, :recoverable, :trackable, :validatable,
+    :timeoutable, :password_expirable, :password_archivable, :account_expireable,
+    :omniauthable, omniauth_providers: [:entra_id]
   # Let Devise handle the email format requirement
   validates :username, :email, uniqueness: { :case_sensitive => false, conditions: -> { where(deleted_at: nil) } }
   validates_presence_of :first_name, :last_name, :username
@@ -37,6 +38,15 @@ class User < ApplicationRecord
   
   def self.drivers(provider)
     Driver.where(:provider_id => provider.id).map(&:user)
+  end
+
+  # Office 365 / Entra ID SSO — LINK-ONLY resolver used by the OmniAuth
+  # callback. Returns the (non-deleted) User already linked to this Entra
+  # identity, or nil. Never creates a User: authorization is granted via Role,
+  # and password login remains the fallback for unlinked accounts.
+  def self.from_omniauth(auth)
+    return nil if auth.blank? || auth.uid.blank?
+    find_by(omniauth_provider: auth.provider.to_s, omniauth_uid: auth.uid.to_s)
   end
   
   # Generate a password that will validate properly for User
@@ -76,7 +86,7 @@ class User < ApplicationRecord
   
   # super admin (aka system admin) is regardless of providers
   def super_admin?
-    !roles.system_admins.empty?
+    roles.system_admins.exists?
   end
 
   def admin?

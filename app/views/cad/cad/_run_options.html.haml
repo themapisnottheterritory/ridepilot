@@ -1,0 +1,127 @@
+:css
+  .run_option {
+    font-weight: normal;
+    display: block;
+  }
+
+  .run_option input {
+    vertical-align: initial;
+  }
+
+.panel.panel-default#run_options_panel
+  .panel-body{style: 'padding: 5px;'}
+    %h3
+      For Selected Runs, Show:
+    
+    .col-sm-12
+      - if @is_today_or_future
+        %label.run_option
+          %input#run_upcoming_path{type: 'checkbox', checked: true}
+            Upcoming Path
+
+      - if @is_today_or_past
+        %label.run_option
+          %input#run_prior_path{type: 'checkbox'}
+            Prior Path
+
+      %label.run_option
+        %input#run_stops{type: 'checkbox'}
+          Garage, pickup and dropoff locations
+
+:javascript
+  $(function() {
+    $('#run_stops').change(function() {
+      if($(this).is(':checked')) {
+        drawSelectedRunStops();
+      } else {
+        removeAllRunStops();
+      }
+    });
+
+    $('#run_prior_path').change(function() {
+      if($(this).is(':checked')) {
+        requestPriorPath();
+      } else {
+        removeAllPriorPath();
+      }
+    });
+
+    $('#run_upcoming_path').change(function() {
+      if($(this).is(':checked')) {
+        requestUpcomingPath();
+      } else {
+        removeAllUpcomingPath();
+      }
+    });
+
+    function drawSelectedRunStops() {
+      var run_ids = [];
+      $('.run_list input:checked').each(function() {
+        run_ids.push($(this).data('run-id'));
+      });
+
+      $.ajax({
+        url: "#{load_run_stops_cad_path}",
+        data: {
+          run_ids: run_ids.join(',')
+        }
+      });
+    }
+
+    function requestPriorPath() {
+      $('.run_list input:checked').each(function() {
+        var run_id = $(this).data('run-id');
+        var last_log_time = (last_log_time ? last_log_time.toISOString() : null);
+        if(!prior_path_lines[run_id]) {
+          last_log_time = null;
+        }
+      
+        $.ajax({
+          url: "#{load_prior_path_cad_path}",
+          data: {
+            cad: {
+              run_id: run_id,
+              last_log_time: last_log_time
+            }
+          }
+        });
+      });
+    }
+
+    function requestUpcomingPath() {
+      $('.run_list input:checked').each(function() {
+        $.ajax({
+          url: "#{load_upcoming_path_cad_path}",
+          data: {
+            cad: {
+              run_id: $(this).data('run-id')
+            }
+          }
+        });
+      });
+    }
+
+    function removeAllRunStops() {
+      if(stop_markers) {
+        for(var run_id in stop_markers) {
+          removeRunStops(run_id);
+        }
+      }
+    }
+
+    function removeAllPriorPath() {
+      if(prior_path_lines) {
+        for(var run_id in prior_path_lines) {
+          removePriorPath(run_id);
+        }
+      }
+    }
+
+    function removeAllUpcomingPath() {
+      if(upcoming_path_lines) {
+        for(var run_id in upcoming_path_lines) {
+          removeUpcomingPath(run_id);
+        }
+      }
+    }
+  });

@@ -1,5 +1,5 @@
 # This migration comes from reporting (originally 20150328212122)
-class CreateReportingFields < ActiveRecord::Migration
+class CreateReportingFields < ActiveRecord::Migration[4.2]
   def change
     create_table :reporting_fields do |t|
       t.references :filter_group, index: true, foreign_key: true, null: false

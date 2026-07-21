@@ -107,10 +107,10 @@ RSpec.describe Vehicle, type: :model do
       compliance = create :vehicle_maintenance_compliance, vehicle: @vehicle, due_type: 'date', due_date: Date.current.yesterday, due_mileage: 100
       expect(@vehicle.compliant?).to be_falsey
 
-      compliance.update_attributes due_type: 'mileage'
+      compliance.update due_type: 'mileage'
       expect(@vehicle.reload.compliant?).to be_falsey
 
-      compliance.update_attributes due_type: 'both'
+      compliance.update due_type: 'both'
       expect(@vehicle.reload.compliant?).to be_falsey
     end
   end

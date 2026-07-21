@@ -1,4 +1,4 @@
-class AddHomePositionToProvider < ActiveRecord::Migration
+class AddHomePositionToProvider < ActiveRecord::Migration[4.2]
   def self.up
     add_column :providers, :region_nw_corner, :point
     add_column :providers, :region_se_corner, :point

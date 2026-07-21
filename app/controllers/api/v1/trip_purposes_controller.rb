@@ -1,4 +1,4 @@
-class API::V1::TripPurposesController < API::V1::BaseController
+class Api::V1::TripPurposesController < Api::V1::BaseController
   
   def index
     provider = Provider.active.find_by_id(params[:provider_id])

@@ -14,9 +14,9 @@
       - if run.repeating_run_id.present?
         %span.label.label-info
           Recur
-  %td= run.date.to_s(:long)
-  %td= run.scheduled_start_time.try(:to_s,:time_only)
-  %td= run.scheduled_end_time.try(:to_s,:time_only)
+  %td= run.date.to_fs(:long)
+  %td= run.scheduled_start_time.try(:to_fs,:time_only)
+  %td= run.scheduled_end_time.try(:to_fs,:time_only)
   - vehicle_overdue_check = get_vehicle_warnings(run.vehicle, run)
   %td{class: vehicle_overdue_check[:class_name], title: vehicle_overdue_check[:tips] }
     = run.vehicle ? run.vehicle.name : translate_helper('no_vehicle')

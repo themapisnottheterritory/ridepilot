@@ -157,18 +157,18 @@ module RecurringComplianceEventScheduler
     end
     
     # Accepts a block. If present, it will be called instead of the
-    # default_generate method. This block should accept two arguments: the 
+    # default_generate method. This block should accept two arguments: the
     # recurrence instance, and a collection of owner objects.
-    def generates_occurrences_with
-      @occurrence_generator_block = Proc.new
+    def generates_occurrences_with(&block)
+      @occurrence_generator_block = block
     end
     
     # Accepts a block. If present, it will be called instead of the
-    # default_occurrence_attributes method. This block should accept a minimum 
-    # of two arguments: the owner, and the recurrence, plus any necessary 
+    # default_occurrence_attributes method. This block should accept a minimum
+    # of two arguments: the owner, and the recurrence, plus any necessary
     # options such as the occurrence_date
-    def make_occurence_with_attributes
-      @occurrence_attribute_block = Proc.new
+    def make_occurence_with_attributes(&block)
+      @occurrence_attribute_block = block
     end
     
     def set_generate_options(opts = {})

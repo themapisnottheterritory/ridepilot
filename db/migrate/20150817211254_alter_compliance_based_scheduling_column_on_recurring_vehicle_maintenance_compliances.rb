@@ -1,4 +1,4 @@
-class AlterComplianceBasedSchedulingColumnOnRecurringVehicleMaintenanceCompliances < ActiveRecord::Migration
+class AlterComplianceBasedSchedulingColumnOnRecurringVehicleMaintenanceCompliances < ActiveRecord::Migration[4.2]
   def up
     change_column_default :recurring_vehicle_maintenance_compliances, :compliance_based_scheduling, false
   end

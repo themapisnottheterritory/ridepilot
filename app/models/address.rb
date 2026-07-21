@@ -1,13 +1,13 @@
 class Address < ApplicationRecord
   acts_as_paranoid # soft delete
   
-  belongs_to :provider, -> { with_deleted }
+  belongs_to :provider, -> { with_deleted }, optional: true
 
-  belongs_to :customer, -> { with_deleted }, inverse_of: :addresses
+  belongs_to :customer, -> { with_deleted }, inverse_of: :addresses, optional: true
 
   has_one :driver
 
-  belongs_to :trip_purpose, -> { with_deleted }
+  belongs_to :trip_purpose, -> { with_deleted }, optional: true
   delegate :name, to: :trip_purpose, prefix: :trip_purpose, allow_nil: true
   
   has_many :trips_from, :class_name => "Trip", :foreign_key => :pickup_address_id

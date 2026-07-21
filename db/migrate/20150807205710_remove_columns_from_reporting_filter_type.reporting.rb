@@ -1,5 +1,5 @@
 # This migration comes from reporting (originally 20150407210447)
-class RemoveColumnsFromReportingFilterType < ActiveRecord::Migration
+class RemoveColumnsFromReportingFilterType < ActiveRecord::Migration[4.2]
   def up
     remove_column :reporting_filter_types, :formatter
     remove_column :reporting_filter_types, :partial

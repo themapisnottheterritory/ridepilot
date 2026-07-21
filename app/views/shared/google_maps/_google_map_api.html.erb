@@ -1,1 +1,2 @@
-<%= javascript_include_tag "https://maps.googleapis.com/maps/api/js?v=3&libraries=places&key=#{ENV['GOOGLE_API_KEY']}" %>
+<meta name="nominatim-url" content="<%= ENV['NOMINATIM_URL'] || 'http://10.0.0.18:8088' %>">
+<meta name="osrm-url" content="<%= ENV['OSRM_URL'] || 'http://10.0.0.18:5000' %>">

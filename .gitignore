@@ -24,4 +24,18 @@
 /config/application.yml
 /railsbox
 /.byebug_history
-/dump.rdb
+/dump.rdbget-gcrpc-mail-users.py
+get-mail-users.py
+*.json
+
+# --- secrets / keys: NEVER commit to this public repo ---
+# Rails master key (decrypts credentials.yml.enc)
+/config/master.key
+# Azure app-only script with a hardcoded (compromised) client secret
+get-gcrpc-mail-users.py
+# WireGuard tablet keys (private keys) — belongs in a vault
+driver_tablet_keys.csv
+# --- local runtime / scratch artifacts ---
+destinations_FINAL.csv
+/osrm-data/
+/storage/

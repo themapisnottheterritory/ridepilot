@@ -41,7 +41,7 @@
 }
 
 .field_with_errors {
-  @extend .has-error;
+  @extend .has-error !optional;
 }
 
 /* Get rid of the top blue border applied to all tables in Ridepilot, when using

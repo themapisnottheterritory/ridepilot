@@ -1,4 +1,4 @@
-class AddDefaultsForWorkflow < ActiveRecord::Migration
+class AddDefaultsForWorkflow < ActiveRecord::Migration[4.2]
   def self.up
     change_column_default :trips, :customer_informed, :false
     change_column_default :trips, :trip_result, "unscheduled"

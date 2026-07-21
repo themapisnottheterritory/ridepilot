@@ -1,4 +1,4 @@
-class CreateVehicleRequirementTemplates < ActiveRecord::Migration
+class CreateVehicleRequirementTemplates < ActiveRecord::Migration[4.2]
   def change
     create_table :vehicle_requirement_templates do |t|
       t.references :provider, index: true

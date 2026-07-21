@@ -21,5 +21,5 @@
   },
 ].each do |addr_type|
   item = CustomerAddressType.where(code: addr_type[:code]).first_or_create
-  item.update_attributes name: addr_type[:name]
+  item.update name: addr_type[:name]
 end

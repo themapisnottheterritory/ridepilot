@@ -1,4 +1,4 @@
-class AddTrimetRegion < ActiveRecord::Migration
+class AddTrimetRegion < ActiveRecord::Migration[4.2]
   def self.up
     create_table :regions do |t|
       t.string :name
@@ -6,7 +6,7 @@ class AddTrimetRegion < ActiveRecord::Migration
 
     add_column :regions, :the_geom, :polygon, :srid => 4326
     
-    add_index :regions, :the_geom, :spatial => true
+    add_index :regions, :the_geom, using: :gist
   end
 
   def self.down

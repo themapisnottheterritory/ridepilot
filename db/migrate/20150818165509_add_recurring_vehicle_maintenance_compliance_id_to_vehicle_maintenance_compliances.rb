@@ -1,4 +1,4 @@
-class AddRecurringVehicleMaintenanceComplianceIdToVehicleMaintenanceCompliances < ActiveRecord::Migration
+class AddRecurringVehicleMaintenanceComplianceIdToVehicleMaintenanceCompliances < ActiveRecord::Migration[4.2]
   def change
     # Disable automatic index creation, otherwise we get an error:
     #   Index name '...' on table 'vehicle_maintenance_compliances' is too 

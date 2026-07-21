@@ -3,49 +3,82 @@ volumes:
   postgres_data:
   redis:
 services:
-  db:    
+  db:
     image: mdillon/postgis:9.4
+    restart: unless-stopped
     volumes:      
       - postgres_data:/var/lib/postgresql/data 
+    ports: 
+      - 5432:5432
 
   redis:
-    image: 'redis:4.0-alpine'
+    image: 'redis:7-alpine'
+    restart: unless-stopped
     volumes:
       - redis:/data
 
-  app:    
-    build:      
-      context: .      
-      dockerfile: ./docker/app/Dockerfile    
-    depends_on:      
-      - db  
+  app:
+    build:
+      context: ..
+      dockerfile: ./ridepilot/docker/app/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - db
       - redis
     env_file:
       - ./docker/.env
+    environment:
+      PSYCH_ENABLE_ALIASES: "true"  # Enables YAML alias parsing
+      OPTIMIZER_URL: "http://optimizer:8765"
     ports:
       - 3000:3000
     volumes:
       - .:/var/www/ridepilot
+      - ../engines:/var/www/engines
 
-  web:    
-    build:      
-      context: .      
-      dockerfile: ./docker/web/Dockerfile    
+  web:
+    build:
+      context: ..
+      dockerfile: ./ridepilot/docker/web/Dockerfile
+    restart: unless-stopped
     depends_on:      
       - app    
     ports:      
       - 80:80
 
   sidekiq:
+    restart: unless-stopped
     depends_on:
       - db
       - redis
-    build: 
-      context: .
-      dockerfile: ./docker/app/Dockerfile
+    build:
+      context: ..
+      dockerfile: ./ridepilot/docker/app/Dockerfile
     env_file:
       - ./docker/.env
+    environment:
+      OPTIMIZER_URL: "http://optimizer:8765"
     command: bundle exec sidekiq -C config/sidekiq.yml
     volumes:
       - .:/var/www/ridepilot
+      - ../engines:/var/www/engines
+
+  optimizer:
+    build: ./optimizer_service
+    restart: unless-stopped
+    ports:
+      - "8765:8765"
+    environment:
+      OSRM_URL: "http://osrm:5000"
+    depends_on:
+      - osrm
+
+  osrm:
+    image: osrm/osrm-backend
+    restart: unless-stopped
+    command: osrm-routed --algorithm mld /data/texas-latest.osrm
+    volumes:
+      - ./osrm-data:/data
+    ports:
+      - "5000:5000"
   

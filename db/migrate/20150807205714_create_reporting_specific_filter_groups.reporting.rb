@@ -1,5 +1,5 @@
 # This migration comes from reporting (originally 20150414180638)
-class CreateReportingSpecificFilterGroups < ActiveRecord::Migration
+class CreateReportingSpecificFilterGroups < ActiveRecord::Migration[4.2]
   def up
     create_table :reporting_specific_filter_groups do |t|
       t.references :report

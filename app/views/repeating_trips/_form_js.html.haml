@@ -7,13 +7,13 @@
         var attrs = [];
 
         var today_str = moment(new Date()).format('YYYY-MM-DD');
-        var original_pickup_time = moment(today_str + " #{@trip.pickup_time.try(:to_s, :time_only)}", "YYYY-MM-DD HH:mm A");
+        var original_pickup_time = moment(today_str + " #{@trip.pickup_time.try(:to_fs, :time_only)}", "YYYY-MM-DD HH:mm A");
         var new_pickup_time = moment(today_str + " " +$('#repeating_trip_pickup_time').val(), "YYYY-MM-DD HH:mm A");
         if(new_pickup_time - original_pickup_time != 0) {
           attrs.push('pickup time');
         }
 
-        var original_appointment_time = moment(today_str + " #{@trip.appointment_time.try(:to_s, :time_only)}", "YYYY-MM-DD HH:mm A");
+        var original_appointment_time = moment(today_str + " #{@trip.appointment_time.try(:to_fs, :time_only)}", "YYYY-MM-DD HH:mm A");
         var new_appointment_time = moment(today_str + " " + $('#repeating_trip_appointment_time').val(), "YYYY-MM-DD HH:mm A");
         if(new_appointment_time - original_appointment_time != 0) {
           attrs.push('appointment time');

@@ -1,4 +1,4 @@
-class RemoveUniqueIndexToDocumentAssociations < ActiveRecord::Migration
+class RemoveUniqueIndexToDocumentAssociations < ActiveRecord::Migration[4.2]
   def change
     remove_index :document_associations, 
       column: [:document_id, :associable_id, :associable_type], 

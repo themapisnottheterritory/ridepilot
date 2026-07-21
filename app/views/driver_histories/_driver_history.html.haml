@@ -1,7 +1,7 @@
 %tr{:class => "driver_history-#{driver_history.id}"}
   %td
     %p.form-control-static
-      = driver_history.event_date.to_s(:long)
+      = driver_history.event_date.to_fs(:long)
   %td
     %p.form-control-static
       = link_to driver_history.event, polymorphic_path([driver_history.driver, driver_history], action: @readonly ? nil : :edit), remote: true

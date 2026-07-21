@@ -1,0 +1,184 @@
+:javascript
+  // store list of stop markers
+  var stop_markers = {};
+
+  // cluster marker group
+  var stopMarkerCluster;
+
+  // stop marker when mouse hovers on stop name in run stop list
+  var stopHoverMarker;
+
+  // SVG pin path used for pickup/dropoff icons
+  var PIN_PATH = 'M0-48c-9.8 0-17.7 7.8-17.7 17.4 0 15.5 17.7 30.6 17.7 30.6s17.7-15.4 17.7-30.6c0-9.6-7.9-17.4-17.7-17.4z';
+
+  function makePinIcon(color, opacity, label) {
+    var labelHtml = label != null ? '<span style="position:absolute;top:3px;left:50%;transform:translateX(-50%);font-weight:bold;font-size:11px;color:white;">' + label + '</span>' : '';
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="26" viewBox="-18 -48 36 50">' +
+      '<path d="' + PIN_PATH + '" fill="' + color + '" fill-opacity="' + opacity + '" stroke="' + color + '"/></svg>';
+    return L.divIcon({
+      html: '<div style="position:relative;width:18px;height:26px;">' + svg + labelHtml + '</div>',
+      iconSize: [18, 26],
+      iconAnchor: [9, 26],
+      className: 'stop-marker-icon'
+    });
+  }
+
+  function makeCircleIcon(opacity) {
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14">' +
+      '<circle cx="7" cy="7" r="5" fill="white" fill-opacity="' + opacity + '" stroke="black" stroke-width="3"/></svg>';
+    return L.divIcon({
+      html: svg,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7],
+      className: 'stop-marker-icon'
+    });
+  }
+
+  // draw run stop location on map
+  function drawRunStop(itin_data, seq_number) {
+    if(!itin_data || itin_data.length == 0) {
+      return;
+    }
+
+    var itin_id = itin_data[0];
+    var lat = itin_data[1];
+    var lng = itin_data[2];
+    var run_id = itin_data[3];
+    var leg_flag = itin_data[4];
+    var stats_code = itin_data[5];
+
+    if(lat == null || lng == null) {
+      return;
+    }
+
+    // define marker
+    var icon = getIcon(leg_flag, 0.8, seq_number);
+    if (!icon) return; // end marker has no icon
+
+    var marker = L.marker([lat, lng], { icon: icon });
+
+    if(stopMarkerCluster) {
+      stopMarkerCluster.addLayer(marker);
+    } else {
+      marker.addTo(map);
+    }
+
+    // save reference as need to hide marker
+    if(!stop_markers[run_id]) {
+      stop_markers[run_id] = [];
+    }
+    stop_markers[run_id].push(marker);
+
+    marker.on('click', function() {
+      infoPopup.setLatLng(marker.getLatLng());
+      infoPopup.setContent('loading...');
+      infoPopup.openOn(map);
+
+      marker.setIcon(getIcon(leg_flag, 1, seq_number));
+
+      function restoreIcon() {
+        marker.setIcon(getIcon(leg_flag, 0.8, seq_number));
+      }
+
+      //ajax request content
+      requestStopInfo(itin_id, restoreIcon);
+    });
+
+    if(infoPopup.isOpen && infoPopup.isOpen() && infoPopup.type == 'Stop' && infoPopup.itin_id == itin_id) {
+      // re-load info window
+      marker.fire('click');
+    }
+  }
+
+  function getIcon(type, opacity, label) {
+    switch(type) {
+      case 0:
+        // start
+        return makeCircleIcon(opacity);
+      case 3:
+        // end
+        return null;
+      case 1:
+        // pickup
+        return makePinIcon('blue', opacity, label);
+      case 2:
+        // dropoff
+        return makePinIcon('black', opacity, label);
+      default:
+        return null;
+    }
+  }
+
+  // remove stop markers for a run
+  function removeRunStops(run_id) {
+    if(stop_markers[run_id] && stop_markers[run_id].length > 0) {
+      stop_markers[run_id].forEach(function(marker) {
+        if(stopMarkerCluster) {
+          stopMarkerCluster.removeLayer(marker);
+        } else {
+          map.removeLayer(marker);
+        }
+      });
+
+      delete stop_markers[run_id];
+    }
+  }
+
+  function requestStopInfo(itin_id, callback_when_info_closed) {
+    $.ajax({
+      url: "#{stop_info_cad_path}",
+      data: {
+        itinerary_id: itin_id
+      }
+    }).done(function() {
+      map.on('popupclose', function onClose() {
+        callback_when_info_closed();
+        map.off('popupclose', onClose);
+      });
+    });
+  }
+
+  function zoomToRun(run_id) {
+    $.ajax({
+      url: "#{zoom_to_run_cad_path}",
+      data: {
+        run_id: run_id
+      }
+    });
+  }
+
+  function hoverStop(lat, lng, leg_flag) {
+    if(!lat || !lng) {
+      return;
+    }
+
+    exitHoverStop();
+
+    // CSS bounce animation for hover marker
+    var icon = getIcon(leg_flag, 1, null) || makeCircleIcon(1);
+    stopHoverMarker = L.marker([lat, lng], {
+      icon: icon,
+      zIndexOffset: 2000
+    }).addTo(map);
+
+    // Add bounce animation via CSS
+    var el = stopHoverMarker.getElement();
+    if (el) {
+      el.style.animation = 'leaflet-bounce 0.5s ease infinite alternate';
+    }
+  }
+
+  function exitHoverStop() {
+    if(stopHoverMarker) {
+      map.removeLayer(stopHoverMarker);
+      stopHoverMarker = null;
+    }
+  }
+
+%style
+  :plain
+    .stop-marker-icon, .vehicle-marker-icon { background: none; border: none; }
+    @keyframes leaflet-bounce {
+      from { transform: translateY(0); }
+      to   { transform: translateY(-10px); }
+    }

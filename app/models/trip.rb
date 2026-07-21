@@ -9,17 +9,17 @@ class Trip < ApplicationRecord
 
   attr_accessor :driver_id, :vehicle_id   #,:date #Custom date setter and getter in trip_core.rb
 
-  belongs_to :called_back_by, -> { with_deleted }, class_name: "User"
-  belongs_to :run
-  belongs_to :trip_result, -> { with_deleted }
+  belongs_to :called_back_by, -> { with_deleted }, class_name: "User", optional: true
+  belongs_to :run, optional: true
+  belongs_to :trip_result, -> { with_deleted }, optional: true
   has_one    :return_trip, class_name: "Trip", foreign_key: :linking_trip_id
-  belongs_to :outbound_trip, class_name: 'Trip', foreign_key: :linking_trip_id
-  belongs_to :repeating_trip
+  belongs_to :outbound_trip, class_name: "Trip", foreign_key: :linking_trip_id, optional: true
+  belongs_to :repeating_trip, optional: true
   has_one    :donation
   has_many   :ridership_mobilities, class_name: "TripRidershipMobility", foreign_key: :host_id, dependent: :destroy
   has_many   :itineraries, dependent: :destroy
 
-  belongs_to :fare
+  belongs_to :fare, optional: true
   accepts_nested_attributes_for :fare
 
   delegate :label, to: :run, prefix: :run, allow_nil: true
@@ -118,7 +118,7 @@ class Trip < ApplicationRecord
   end
 
   def cancel!
-    update_attributes( trip_result: TripResult.find_by_code('CANC') )
+    update( trip_result: TripResult.find_by_code('CANC') )
   end
 
   def vehicle_id
@@ -165,7 +165,7 @@ class Trip < ApplicationRecord
       title: customer_name + "\n" + pickup_address.try(:address_text).to_s,
       start: pickup_time.iso8601,
       "end": appointment_time ? appointment_time.iso8601 : date.end_of_day.iso8601,
-      resource: pickup_time.to_date.to_s(:js)
+      resource: pickup_time.to_date.to_fs(:js)
     }
   end
 
@@ -375,7 +375,7 @@ class Trip < ApplicationRecord
     return unless user && amount
 
     if self.donation
-      self.donation.update_attributes(user: user, amount: amount)
+      self.donation.update(user: user, amount: amount)
     elsif self.id && self.customer
       self.donation = Donation.create(date: Time.current, user: user, customer: self.customer, trip: self, amount: amount)
       self.save

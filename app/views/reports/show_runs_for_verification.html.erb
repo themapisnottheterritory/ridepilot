@@ -62,11 +62,11 @@
             </td>
             <td>
               <%= run_fields.text_field :actual_start_time, :size => 8, 
-                  :value => run.actual_start_time.try(:to_s, :time_only), "data-behavior" => "time-picker" %>
+                  :value => run.actual_start_time.try(:to_fs, :time_only), "data-behavior" => "time-picker" %>
             </td>
             <td>
               <%= run_fields.text_field :actual_end_time, :size => 8, 
-                  :value => run.actual_end_time.try(:to_s, :time_only), "data-behavior" => "time-picker" %>
+                  :value => run.actual_end_time.try(:to_fs, :time_only), "data-behavior" => "time-picker" %>
             </td>
             <td>
               <%= run_fields.text_field :start_odometer, :size => 8 %>

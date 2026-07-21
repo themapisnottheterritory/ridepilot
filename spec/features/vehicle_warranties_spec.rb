@@ -29,7 +29,7 @@ RSpec.describe "VehicleWarranties" do
       
       it "shows the expiration date of the warranty" do
         visit vehicle_path(id: @vehicle.to_param)
-        expect(page).to have_text @vehicle_warranty.expiration_date.to_s(:long)
+        expect(page).to have_text @vehicle_warranty.expiration_date.to_fs(:long)
       end
     end
 

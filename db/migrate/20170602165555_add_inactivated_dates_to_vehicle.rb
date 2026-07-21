@@ -1,4 +1,4 @@
-class AddInactivatedDatesToVehicle < ActiveRecord::Migration
+class AddInactivatedDatesToVehicle < ActiveRecord::Migration[4.2]
   def change
     add_column :vehicles, :inactivated_start_date, :date
     add_column :vehicles, :inactivated_end_date, :date

@@ -1,4 +1,4 @@
-class CreateDriverCompliances < ActiveRecord::Migration
+class CreateDriverCompliances < ActiveRecord::Migration[4.2]
   def change
     create_table :driver_compliances do |t|
       t.references :driver, index: true

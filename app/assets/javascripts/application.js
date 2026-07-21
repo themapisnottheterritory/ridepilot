@@ -27,9 +27,12 @@
 //= require constants
 //= require moment
 //= require handlebars
-//= require jquery.geocomplete
-//= require google_place_parser
-//= require typeahead-addresspicker
+//= require leaflet
+//= require leaflet_init
+//= require leaflet.markercluster
+//= require leaflet.rotatedMarker
+//= require nominatim_place_picker
+//= require leaflet_map
 //= require trip_place_picker
 //= require trip_result_reason
 //= require double_booked_trips
@@ -43,7 +46,6 @@
 //= require jquery.floatThead
 //= require jquery.splitter
 //= require jquery.timeago
-//= require OverlappingMarkerSpiderfier
 //= require bootstrap-toggle
 //= require cable
 //= require_self

@@ -1,4 +1,4 @@
-class CreateDocumentAssociations < ActiveRecord::Migration
+class CreateDocumentAssociations < ActiveRecord::Migration[4.2]
   def change
     create_table :document_associations do |t|
       t.references :document, index: true 

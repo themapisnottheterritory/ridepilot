@@ -1,4 +1,4 @@
-class ChangeUsersDriversAndDevicePoolUsers < ActiveRecord::Migration
+class ChangeUsersDriversAndDevicePoolUsers < ActiveRecord::Migration[4.2]
   def self.up
     remove_column :users, :driver_id
     add_column    :drivers, :user_id, :integer

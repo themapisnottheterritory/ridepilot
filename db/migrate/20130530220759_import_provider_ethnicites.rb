@@ -1,4 +1,4 @@
-class ImportProviderEthnicites < ActiveRecord::Migration
+class ImportProviderEthnicites < ActiveRecord::Migration[4.2]
   class Provider  < ApplicationRecord
     has_many :ethnicities, :class_name => 'ImportProviderEthnicites::ProviderEthnicity'
   end

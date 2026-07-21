@@ -1,4 +1,4 @@
-class AddProviderIdToMonthlies < ActiveRecord::Migration
+class AddProviderIdToMonthlies < ActiveRecord::Migration[4.2]
   def self.up
     change_table :monthlies do |t|
       t.integer  "provider_id"

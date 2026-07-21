@@ -1,4 +1,4 @@
-class API::V2::PasswordsController < API::V2::BaseController
+class Api::V2::PasswordsController < Api::V2::BaseController
   skip_before_action :require_authentication
 
   # Request to send password reset instructions to user email

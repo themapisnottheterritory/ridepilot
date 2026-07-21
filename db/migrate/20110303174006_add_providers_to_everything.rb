@@ -1,4 +1,4 @@
-class AddProvidersToEverything < ActiveRecord::Migration
+class AddProvidersToEverything < ActiveRecord::Migration[4.2]
   def self.up
     rename_table :driver, :drivers
     rename_table :client, :clients

@@ -1,4 +1,4 @@
-class CreateRecurringDriverCompliances < ActiveRecord::Migration
+class CreateRecurringDriverCompliances < ActiveRecord::Migration[4.2]
   def change
     create_table :recurring_driver_compliances do |t|
       t.references :provider, index: true

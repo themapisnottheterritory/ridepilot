@@ -1,4 +1,4 @@
-class API::V2::SessionsController < API::V2::BaseController
+class Api::V2::SessionsController < Api::V2::BaseController
   skip_before_action :require_authentication, only: [:create]
 
   # Signs in an existing user, returning auth token
