@@ -11,6 +11,10 @@ Rails.application.configure do
   # Do not eager load code on boot.
   config.eager_load = false
 
+  # Allow local DNS hostnames
+  config.hosts << "rp.internal.gcrpc.org"
+  config.hosts << /.*\.gcrpc\.org/
+
   # Show full error reports.
   config.consider_all_requests_local = true
 
