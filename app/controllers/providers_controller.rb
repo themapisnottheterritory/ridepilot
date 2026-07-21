@@ -213,7 +213,7 @@ class ProvidersController < ApplicationController
   end
 
   def change_reimbursement_rates
-    @provider.update_attributes reimbursement_params
+    @provider.update reimbursement_params
 
     redirect_to general_provider_path(@provider, anchor: "reimbursement_rates_settings")
   end
