@@ -20,7 +20,9 @@
 
 <%- if devise_mapping.omniauthable? %>
   <%- resource_class.omniauth_providers.each do |provider| %>
+    <%# Friendly label: the entra_id provider key is "Microsoft" to users %>
+    <%- provider_label = provider.to_s == "entra_id" ? "Microsoft" : provider.to_s.titleize %>
     <%# OmniAuth 2 + omniauth-rails_csrf_protection requires a POST to the request phase (GET 404s), so button_to not link_to %>
-    <%= button_to translate_helper("omniauth_link", provider: provider.to_s), omniauth_authorize_path(resource_name, provider), method: :post, data: { turbo: false } %><br />
+    <%= button_to translate_helper("omniauth_link", provider: provider_label), omniauth_authorize_path(resource_name, provider), method: :post, data: { turbo: false } %><br />
   <% end -%>
 <% end -%>
