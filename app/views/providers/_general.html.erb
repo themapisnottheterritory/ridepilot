@@ -99,6 +99,87 @@
 
 <hr />
 
+<h2 class="section-header" id="avl_settings">AVL / GPS Source</h2>
+<% if can? :edit, @provider %>
+  <%= form_tag change_avl_settings_provider_path(@provider), method: :post do %>
+    <fieldset>
+      <ol class="section one">
+        <li>
+          <%= label_tag "Use External AVL (Pepwave GPS)" %>
+          <%= select_tag "use_external_avl", options_for_select( [["No (Tablet GPS)", "false"], ["Yes (Pepwave AVL)", "true"]], @provider.use_external_avl?.to_s ), id: 'avl_enabled_toggle' %>
+        </li>
+        <li>
+          <%= label_tag "AVL Data Source" %>
+          <%= select_tag "avl_source", options_for_select( [["OpenTransit REST API", "opentransit_api"], ["MySQL Direct (busavl)", "mysql_direct"]], @provider.avl_source || 'opentransit_api' ), id: 'avl_source_toggle' %>
+        </li>
+      </ol>
+
+      <%# --- OpenTransit fields --- %>
+      <div id="opentransit_fields" style="<%= 'display:none;' if @provider.avl_source == 'mysql_direct' %>">
+        <ol class="section one">
+          <li>
+            <%= label_tag "OpenTransit Server URL" %>
+            <%= text_field_tag "opentransit_url", @provider.opentransit_url, class: 'form-control', placeholder: 'http://10.0.0.18:8080', style: 'width: 350px;' %>
+            <span class="hint">e.g. http://10.0.0.18:8080</span>
+          </li>
+        </ol>
+      </div>
+
+      <%# --- MySQL direct fields --- %>
+      <div id="mysql_fields" style="<%= 'display:none;' unless @provider.avl_source == 'mysql_direct' %>">
+        <ol class="section one">
+          <li>
+            <%= label_tag "MySQL Host" %>
+            <%= text_field_tag "busavl_host", @provider.busavl_host, class: 'form-control', placeholder: '10.0.0.40', style: 'width: 350px;' %>
+          </li>
+          <li>
+            <%= label_tag "Database Name" %>
+            <%= text_field_tag "busavl_database", @provider.busavl_database.presence || 'busavl', class: 'form-control', style: 'width: 350px;' %>
+          </li>
+          <li>
+            <%= label_tag "Username" %>
+            <%= text_field_tag "busavl_username", @provider.busavl_username, class: 'form-control', style: 'width: 350px;' %>
+          </li>
+          <li>
+            <%= label_tag "Password" %>
+            <%= password_field_tag "busavl_password", @provider.busavl_password, class: 'form-control', style: 'width: 350px;' %>
+          </li>
+        </ol>
+      </div>
+
+      <div class="actions">
+        <%= submit_tag "Save AVL Settings", class: 'btn action-button' %>
+      </div>
+      <% if @provider.use_external_avl? %>
+        <div style="margin-top: 10px;">
+          <span class="label label-success">AVL Active</span>
+          <% if @provider.avl_source == 'mysql_direct' %>
+            Reading from MySQL (<%= @provider.busavl_host %>/<%= @provider.busavl_database.presence || 'busavl' %>)
+          <% else %>
+            Polling OpenTransit every <%= ApplicationSetting.opentransit_polling_interval_seconds %> seconds
+          <% end %>
+        </div>
+      <% end %>
+    </fieldset>
+
+    <script>
+      $(document).ready(function() {
+        $('#avl_source_toggle').on('change', function() {
+          if ($(this).val() === 'mysql_direct') {
+            $('#opentransit_fields').hide();
+            $('#mysql_fields').show();
+          } else {
+            $('#opentransit_fields').show();
+            $('#mysql_fields').hide();
+          }
+        });
+      });
+    </script>
+  <% end %>
+<% end %>
+
+<hr />
+
 <h2 class="section-header" id="scheduling_settings"><%=translate_helper("provider_form_scheduling")%></h2>
 <% if can? :edit, @provider %>
   <%= form_tag change_scheduling_provider_path(@provider) do %>

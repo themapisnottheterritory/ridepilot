@@ -5,3 +5,11 @@
 every 1.day, :at => '12:00 am' do
   rake "scheduler:run"
 end
+
+every 1.day, :at => '6:00 pm' do
+  runner "DayBeforeReminderJob.perform_later"
+end
+
+every 1.day, :at => '11:00 pm' do
+  runner "OvernightOptimizeJob.perform_later"
+end

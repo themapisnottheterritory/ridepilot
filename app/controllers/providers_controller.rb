@@ -181,6 +181,25 @@ class ProvidersController < ApplicationController
     redirect_to general_provider_path(@provider, anchor: "run_tracking_settings")
   end
 
+  def change_avl_settings
+    @provider.update_columns(
+      use_external_avl: params[:use_external_avl] == 'true',
+      avl_source: params[:avl_source].to_s.strip.presence || 'opentransit_api',
+      opentransit_url: params[:opentransit_url].to_s.strip,
+      busavl_host: params[:busavl_host].to_s.strip,
+      busavl_database: params[:busavl_database].to_s.strip.presence || 'busavl',
+      busavl_username: params[:busavl_username].to_s.strip,
+      busavl_password: params[:busavl_password].to_s.strip
+    )
+
+    # Start the poller if AVL was just enabled
+    if @provider.use_external_avl
+      AvlPollerWorker.perform_async
+    end
+
+    redirect_to general_provider_path(@provider, anchor: "avl_settings")
+  end
+
   def change_advance_day_scheduling
     @provider.update_attribute :advance_day_scheduling, params[:advance_day_scheduling]
     
