@@ -156,6 +156,14 @@ class UsersController < ApplicationController
     end
   end
 
+  # Phase 2 (O365 SSO): let a user disconnect their own linked Microsoft
+  # account. Password login is always available, so this never locks anyone out.
+  def unlink_entra
+    current_user.update_columns(omniauth_provider: nil, omniauth_uid: nil)
+    redirect_to user_path(current_user),
+                notice: "Your Microsoft account has been unlinked."
+  end
+
   def show_change_email
     @user = User.find_by_id(params[:id])
     authorize! :manage, @user

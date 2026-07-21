@@ -24,6 +24,7 @@ Rails.application.routes.draw do
       get "check_session" => "users#check_session"
       get "touch_session" => "users#touch_session"
       get "restore_user" => "users#restore"
+      delete "unlink_entra" => "users#unlink_entra"
     end
 
     resources :users, only: [:show, :edit, :update] do 
