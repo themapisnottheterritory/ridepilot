@@ -1,4 +1,16 @@
-= render 'form', edit_mode: :show 
+= render 'form', edit_mode: :show
+
+-# Phase 2 (O365 SSO): self-service Microsoft account linking, only on your OWN
+-# profile. Kept outside .user_form so the input-disabling JS below leaves it active.
+- if @user == current_user
+  #microsoft-sso.section{ style: "margin-top: 1.5em; padding-top: 1em; border-top: 1px solid #ddd;" }
+    %h2 Microsoft sign-in
+    - if @user.omniauth_provider.present?
+      %p ✓ Your Microsoft account is linked — you can sign in with Microsoft.
+      = button_to "Unlink Microsoft account", unlink_entra_path, method: :delete, data: { confirm: "Unlink your Microsoft account? You'll continue signing in with your username and password." }
+    - else
+      %p Link your Microsoft account to enable one-click “Sign in with Microsoft” next time. Your username and password keep working either way.
+      = button_to "Link my Microsoft account", omniauth_authorize_path(:user, :entra_id), method: :post, data: { turbo: false }
 
 :javascript
   $(".user_form :input, .user_form select").attr("disabled","disabled");
