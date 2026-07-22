@@ -31,6 +31,9 @@ get-mail-users.py
 # --- secrets / keys: NEVER commit to this public repo ---
 # Rails master key (decrypts credentials.yml.enc)
 /config/master.key
+# Encrypted credentials — env-specific and paired to a local master.key; prod secrets
+# are provisioned in the environment, not committed to this public repo
+/config/credentials.yml.enc
 # Azure app-only script with a hardcoded (compromised) client secret
 get-gcrpc-mail-users.py
 # WireGuard tablet keys (private keys) — belongs in a vault
