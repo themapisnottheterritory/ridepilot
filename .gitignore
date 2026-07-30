@@ -42,3 +42,8 @@ driver_tablet_keys.csv
 destinations_FINAL.csv
 /osrm-data/
 /storage/
+# --- editor / backup files: can silently carry secrets (e.g. get-gcrpc-mail-users.py~), never commit ---
+*~
+*.bak
+*.swp
+*.swo
