@@ -1,0 +1,12 @@
+<%# Replacement for Devise's removed devise_error_messages! helper (gone in
+    Devise 4.3+/5). Rendered as: render "devise/shared/error_messages", resource: resource %>
+<% if resource.errors.any? %>
+  <div id="error_explanation">
+    <h2><%= pluralize(resource.errors.count, "error") %> prohibited this from being saved:</h2>
+    <ul>
+      <% resource.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
