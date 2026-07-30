@@ -21,7 +21,9 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     # Phase 2: an authenticated user completing the flow is LINKING their account.
     return link_current_user(auth) if user_signed_in?
 
-    user = User.from_omniauth(auth)
+    # Linked identity signs in; otherwise adopt it onto a matching unlinked
+    # account by verified email (first-login auto-link). Never creates a user.
+    user = User.from_omniauth(auth) || User.link_by_verified_email(auth)
 
     if user&.persisted?
       sign_in_and_redirect user, event: :authentication
