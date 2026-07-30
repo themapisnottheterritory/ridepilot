@@ -48,6 +48,31 @@ class User < ApplicationRecord
     return nil if auth.blank? || auth.uid.blank?
     find_by(omniauth_provider: auth.provider.to_s, omniauth_uid: auth.uid.to_s)
   end
+
+  # Just-in-time linking on first SSO login: when an Entra identity isn't linked
+  # yet, adopt it onto an existing RidePilot user whose Microsoft-verified email
+  # matches -- but ONLY when exactly one still-unlinked account matches (never
+  # ambiguous, never creates an account). Lets admin-created users sign in with
+  # Microsoft with no manual link step. Called only on the signed-out login path
+  # (a signed-in user goes through explicit self-service linking instead).
+  def self.link_by_verified_email(auth)
+    return nil if auth.blank? || auth.uid.blank?
+    email = auth.info&.email.to_s.strip.downcase
+    return nil if email.blank?
+
+    # If this identity is already linked, it's not a first-login claim.
+    return nil if exists?(omniauth_provider: auth.provider.to_s, omniauth_uid: auth.uid.to_s)
+
+    candidates = where(omniauth_provider: nil, omniauth_uid: nil)
+                   .where("lower(email) = ?", email)
+    return nil unless candidates.count == 1 # 0 or >1 -> don't guess
+
+    user = candidates.first
+    user.update_columns(omniauth_provider: auth.provider.to_s, omniauth_uid: auth.uid.to_s)
+    user
+  rescue ActiveRecord::RecordNotUnique
+    nil
+  end
   
   # Generate a password that will validate properly for User
   def self.generate_password(length = 8)
