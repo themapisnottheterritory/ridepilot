@@ -7,7 +7,7 @@ class Run < ApplicationRecord
 
   has_paper_trail
 
-  serialize :manifest_order, Array
+  serialize :manifest_order, coder: YAML, type: Array
 
   FIELDS_FOR_COMPLETION = [
     :unpaid_driver_break_time,

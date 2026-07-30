@@ -5,7 +5,7 @@ class Provider < ApplicationRecord
   
   acts_as_paranoid # soft delete
   
-  serialize :fields_required_for_run_completion, Array
+  serialize :fields_required_for_run_completion, coder: YAML, type: Array
 
   after_initialize :set_defaults
 
