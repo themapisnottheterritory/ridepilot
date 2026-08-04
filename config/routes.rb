@@ -320,10 +320,11 @@ Rails.application.routes.draw do
       end
     end
 
-    resources :vehicle_inspections, only: [] do 
-      member do 
+    resources :vehicle_inspections, only: [] do
+      member do
         patch :mark_flagged
         patch :mark_mechanical
+        patch :set_phase
       end
     end
 
