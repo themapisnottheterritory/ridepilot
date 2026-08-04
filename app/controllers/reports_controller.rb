@@ -1308,15 +1308,22 @@ class ReportsController < ApplicationController
       run_data_array = runs.pluck(:id, :name, :date, :driver_notes)
       @run_data = Hash[run_data_array.collect { |item| [item[0], item[1..-1]] } ]
 
-      # formulate report data
+      # formulate report data — each failed item carries the DVIR detail
+      # (defect note, photo count, and which phase it was found on). Legacy rows
+      # simply have these blank.
       @report_data = {}
-      @inspections.pluck("runs.vehicle_id", "runs.id", "vehicle_inspections.description").each do |insp_data|
-        vehicle_id = insp_data[0]
-        run_id = insp_data[1]
-        @report_data[vehicle_id] = {} unless @report_data[vehicle_id]
-        vehicle_data = @report_data[vehicle_id]
-        vehicle_data[run_id] = [] unless vehicle_data[run_id]
-        vehicle_data[run_id] << insp_data[2]
+      @inspections.includes(:vehicle_inspection, :vehicle_inspection_report).each do |ri|
+        vehicle_id = ri.run.vehicle_id
+        run_id = ri.run_id
+        @report_data[vehicle_id] ||= {}
+        @report_data[vehicle_id][run_id] ||= []
+        @report_data[vehicle_id][run_id] << {
+          description: ri.vehicle_inspection.description,
+          status:      ri.status,
+          defect_note: ri.defect_note,
+          photo_count: (ri.photos.attached? ? ri.photos.count : 0),
+          phase:       ri.vehicle_inspection_report&.phase
+        }
       end
       @vehicle_names = Vehicle.where(id: @report_data.keys.uniq).pluck(:id, :name).to_h
     end
