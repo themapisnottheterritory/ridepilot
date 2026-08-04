@@ -18,6 +18,7 @@
     - if table.name == 'vehicle_inspections'
       %th Flagged?
       %th Mechanical?
+      %th Phase
     - if table.name == 'funding_sources'
       %th NTD Reportable?
   %tbody
@@ -35,9 +36,12 @@
           %td
             = form_for item, url: mark_flagged_vehicle_inspection_path(item), remote: true, method: :patch do |f|
               = f.check_box :flagged, :onclick => "$(this).parents('form').submit()"
-          %td 
+          %td
             = form_for item, url: mark_mechanical_vehicle_inspection_path(item), remote: true, method: :patch do |f|
               = f.check_box :mechanical, :onclick => "$(this).parents('form').submit()"
+          %td
+            = form_for item, url: set_phase_vehicle_inspection_path(item), remote: true, method: :patch do |f|
+              = f.select :phase, options_for_select([["Both", "both"], ["Pre-trip", "pre"], ["Post-trip", "post"]], item.phase), {}, { onchange: "$(this).parents('form').submit()" }
         - if table.name == 'funding_sources'
           %td
             = form_for item, url: mark_ntd_reportable_funding_source_path(item), remote: true, method: :patch do |f|
