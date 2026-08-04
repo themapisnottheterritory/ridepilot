@@ -451,7 +451,6 @@ Rails.application.routes.draw do
             put 'end'
             put 'update_from_address'
             put 'update_to_address'
-            get 'inspections'
             get 'manifest_published_at'
           end
         end

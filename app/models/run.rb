@@ -650,20 +650,6 @@ class Run < ApplicationRecord
     r.valid?
   end
 
-  def vehicle_inspections_as_json
-    run_inspection_data = self.run_vehicle_inspections.pluck(:vehicle_inspection_id, :checked).to_h
-    inspection_as_json = []
-    VehicleInspection.by_provider(self.provider).pluck(:id, :description).each do |v|
-      inspection_as_json << {
-        id: v[0],
-        description: v[1],
-        checked: run_inspection_data[v[0]]
-      }
-    end
-
-    inspection_as_json
-  end
-
   private
 
   def fix_dates
