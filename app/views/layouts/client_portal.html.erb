@@ -146,7 +146,7 @@
                 mapEl.style.display = 'block';
                 if (!map) {
                   map = L.map('driver-map').setView([data.driver_lat, data.driver_lng], 14);
-                  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                  L.tileLayer('/tiles/{z}/{x}/{y}.png', {
                     attribution: '&copy; OpenStreetMap'
                   }).addTo(map);
                   driverMarker = L.marker([data.driver_lat, data.driver_lng]).addTo(map);
