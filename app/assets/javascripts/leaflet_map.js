@@ -39,7 +39,7 @@ function LeafletMap(map_container, unparsed_bounds, unparsed_viewport) {
     if (center) opts.center = center;
     if (zoom) opts.zoom = zoom;
     self.map = L.map(self.map_container[0], opts);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('/tiles/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
       maxZoom: 19
     }).addTo(self.map);

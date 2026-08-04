@@ -55,7 +55,7 @@
       $(document).ready(function() {
         var mapDiv = document.getElementById('manifest-map-<%= driver.id %>');
         var map = L.map(mapDiv, { zoomControl: false });
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        L.tileLayer('/tiles/{z}/{x}/{y}.png', {
           attribution: '&copy; OpenStreetMap',
           maxZoom: 19
         }).addTo(map);
