@@ -12,8 +12,9 @@
       - run_data = @run_data[run_id]
       = CSV.generate_line(["#{run_data[0]}, #{format_date(run_data[1])}"], {:row_sep => nil}).html_safe
       
+      = CSV.generate_line(["", "Item", "Phase", "Defect Note", "Photos"], {:row_sep => nil}).html_safe
       - inspections.each do |insp|
-        = CSV.generate_line(["", insp], {:row_sep => nil}).html_safe
+        = CSV.generate_line(["", insp[:description], (insp[:phase].present? ? "#{insp[:phase]}-trip" : ""), insp[:defect_note], insp[:photo_count].to_i], {:row_sep => nil}).html_safe
       - driver_notes = run_data[2]
       - if driver_notes
         = CSV.generate_line(["Driver notes", driver_notes], {:row_sep => nil}).html_safe

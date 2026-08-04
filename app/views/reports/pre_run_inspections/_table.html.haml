@@ -10,7 +10,16 @@
       %b= "#{run_data[0]}, #{format_date(run_data[1])}"
       %ul
         - inspections.each do |insp|
-          %li= insp
+          %li
+            = insp[:description]
+            - if insp[:phase].present?
+              %em= " (#{insp[:phase]}-trip)"
+            - if insp[:photo_count].to_i > 0
+              = " · #{insp[:photo_count]} #{'photo'.pluralize(insp[:photo_count].to_i)}"
+            - if insp[:defect_note].present?
+              %div
+                %b Note:
+                = insp[:defect_note]
         - driver_notes = run_data[2]
         - if driver_notes
           %li
