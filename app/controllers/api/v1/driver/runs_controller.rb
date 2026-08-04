@@ -25,14 +25,6 @@ class Api::V1::Driver::RunsController < Api::V1::Driver::BaseController
       @run.actual_start_time = current_time
       @run.save(validate: false)
 
-      unless params[:inspections].blank?
-        params[:inspections].each do |insp|
-          run_insp = @run.run_vehicle_inspections.where(vehicle_inspection_id: insp[:id]).first_or_create
-          run_insp.checked = insp[:checked]
-          run_insp.save(validate: false)
-        end
-      end
-
       # start leg completed
       @run.itineraries.run_begin.update_all(status_code: Itinerary::STATUS_COMPLETED, finish_time: current_time)
     end
@@ -77,14 +69,6 @@ class Api::V1::Driver::RunsController < Api::V1::Driver::BaseController
     end
 
     render success_response({})
-  end
-
-  def inspections
-    @run = Run.find_by_id(params[:id])
-
-    render success_response({
-      data: @run.try(:vehicle_inspections_as_json) || []
-      })
   end
 
   # find active run and active itin
