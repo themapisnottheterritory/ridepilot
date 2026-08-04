@@ -1283,10 +1283,14 @@ class ReportsController < ApplicationController
       @report_params << ["Inspection Type", @query.run_inspection_type.titleize] if @query.run_inspection_type
 
       # get failed inspections
+      # DVIR records a failed item as status "defect"; the legacy checkbox flow used
+      # checked=false. Match both so this report covers DVIR inspections going forward
+      # AND any historical legacy data.
       @inspections = RunVehicleInspection.joins(run: :vehicle).joins(:vehicle_inspection)
                       .where("runs.provider_id": current_provider_id)
                       .where("runs.date >= ? and runs.date < ?", @query.start_date, @query.end_date)
-                      .where(checked: false)
+                      .where("run_vehicle_inspections.status = :defect OR run_vehicle_inspections.checked = :unchecked",
+                             defect: "defect", unchecked: false)
                       .order("lower(vehicles.name)", "runs.date", "runs.scheduled_start_time_string", "vehicle_inspections.description")
       
       @inspections = @inspections.where("runs.vehicle_id": @query.vehicle_id) if @query.vehicle_id
