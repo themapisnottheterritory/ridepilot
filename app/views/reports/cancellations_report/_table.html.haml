@@ -1,0 +1,67 @@
+%h2 Summary
+
+%h3 By Passenger Type
+%table.table.table-bordered
+  %thead
+    %tr
+      %th
+      %th Customer Count
+      %th Guest Count
+      %th Attendant Count
+      %th Total
+  %tbody
+    - col_sums = [0, 0, 0, 0]
+    - @cancelled_trips_results.pluck(:id, :name).to_h.each do |id, name|
+      - col_sums[0] += @customer_count[id].to_i
+      - col_sums[1] += @guest_count[id].to_i
+      - col_sums[2] += @attendant_count[id].to_i
+      - col_sums[3] += @total_rider_count[id].to_i
+      %tr
+        %td= name
+        %td= @customer_count[id].to_i
+        %td= @guest_count[id].to_i
+        %td= @attendant_count[id].to_i
+        %td= @total_rider_count[id].to_i
+    %tr
+      %th Total
+      %th= col_sums[0]
+      %th= col_sums[1]
+      %th= col_sums[2]
+      %th= col_sums[3]
+
+%h3 By Mobility
+- mobility_type_hash = @mobility_types.pluck(:id, :name).to_h
+%table.table.table-bordered
+  %thead
+    %tr
+      %th
+      - mobility_type_hash.each do |m_id, m_name|
+        %th= m_name
+      %th Total
+  %tbody
+    - col_sums = Array.new(@mobility_types.size + 1, 0)
+    - @cancelled_trips_results.pluck(:id, :name).to_h.each do |id, name|
+      - row_total = 0
+      - col_counter = 0
+      %tr
+        %td= name
+        - mobility_type_hash.each do |m_id, m_name|
+          - t_count = @mobility_count[[id, m_id]].to_i
+          - row_total += t_count
+          - col_sums[col_counter] += t_count
+          - col_counter += 1
+          %td= t_count
+        - col_sums[col_sums.size - 1] += row_total
+        %td= row_total
+    %tr
+      %th Total
+      - col_sums.each do |s|
+        %th= s
+
+- if @customer_names
+  %h3 List of Customer Names
+  %table.table.table-bordered
+    %tbody
+      - @customer_names.each do |name|
+        %tr
+          %td= name.join(" ")
