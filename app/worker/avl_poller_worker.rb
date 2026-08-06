@@ -143,5 +143,8 @@ class AvlPollerWorker
       provider_id: provider.id,
       run_id: active_run.id
     )
+
+    # Fresh position landed -> refresh this run's live GPS-based pickup ETAs.
+    RunEtaWorker.perform_async(active_run.id)
   end
 end
