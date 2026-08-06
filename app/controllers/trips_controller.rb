@@ -382,6 +382,7 @@ class TripsController < ApplicationController
           end
         }
       else
+        clarify_unresolved_address_errors
         prep_view
         format.html { render :action => "new" }
       end
@@ -454,6 +455,7 @@ class TripsController < ApplicationController
           render :json => {:status => "success"}, :content_type => "text/json"
         }
       else
+        clarify_unresolved_address_errors
         prep_view
         format.html { render :action => "edit"  }
         format.js   { @remote = true; render :json => {:status => "error", :form => render_to_string(:partial => 'form') }, :content_type => "text/json" }
@@ -626,7 +628,11 @@ class TripsController < ApplicationController
         @trip.pickup_address = new_temp_addr
       elsif params[:pickup_address].present?
         resolved = resolve_typed_address(params[:pickup_address])
-        @trip.pickup_address = resolved if resolved
+        if resolved
+          @trip.pickup_address = resolved
+        else
+          @pickup_address_unresolved = true
+        end
       end
     end
 
@@ -642,8 +648,27 @@ class TripsController < ApplicationController
         @trip.dropoff_address = new_temp_addr
       elsif params[:dropoff_address].present?
         resolved = resolve_typed_address(params[:dropoff_address])
-        @trip.dropoff_address = resolved if resolved
+        if resolved
+          @trip.dropoff_address = resolved
+        else
+          @dropoff_address_unresolved = true
+        end
       end
+    end
+  end
+
+  # When a dispatcher typed an address we could not geocode, the belongs_to
+  # "must exist" + presence "can't be blank" errors are misleading — the field
+  # wasn't blank, we just couldn't locate it. Replace them with an actionable
+  # message so the dispatcher fixes the spelling, picks a suggestion, or drops a
+  # pin instead of hunting for an empty box. Called from the create/update error
+  # branch after validation has populated @trip.errors.
+  def clarify_unresolved_address_errors
+    [[:pickup_address, @pickup_address_unresolved, "Pickup address"],
+     [:dropoff_address, @dropoff_address_unresolved, "Dropoff address"]].each do |assoc, unresolved, _label|
+      next unless unresolved
+      @trip.errors.delete(assoc)
+      @trip.errors.add(assoc, "couldn't be located — check the spelling, pick a match from the suggestions list, or switch on Lat/Lon to enter coordinates")
     end
   end
 
