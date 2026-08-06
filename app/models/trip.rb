@@ -272,7 +272,10 @@ class Trip < ApplicationRecord
     }
     distance_calculator = TripDistanceDurationProxy.new(ENV['TRIP_PLANNER_TYPE'], params)
     self.drive_distance = distance_calculator.get_drive_distance
-    self.save
+    # Only a derived field changed here; skip validation so a trip that is
+    # otherwise invalid (e.g. legacy rows failing newer validations) still gets
+    # its distance persisted instead of the save silently failing.
+    self.save(validate: false)
   end
 
   def as_profile_json
