@@ -624,6 +624,9 @@ class TripsController < ApplicationController
         new_temp_addr = GeocodedAddress.new
         new_temp_addr.the_geom = Address.compute_geom(params['trip_pickup_lat'], params['trip_pickup_lon'])
         @trip.pickup_address = new_temp_addr
+      elsif params[:pickup_address].present?
+        resolved = resolve_typed_address(params[:pickup_address])
+        @trip.pickup_address = resolved if resolved
       end
     end
 
@@ -637,8 +640,62 @@ class TripsController < ApplicationController
         new_temp_addr = GeocodedAddress.new
         new_temp_addr.the_geom = Address.compute_geom(params['trip_dropoff_lat'], params['trip_dropoff_lon'])
         @trip.dropoff_address = new_temp_addr
+      elsif params[:dropoff_address].present?
+        resolved = resolve_typed_address(params[:dropoff_address])
+        @trip.dropoff_address = resolved if resolved
       end
     end
+  end
+
+  # Fallback address resolution for the dispatcher trip form.
+  #
+  # The place picker only writes the hidden id/data/lat-lng fields on
+  # `typeahead:selected`, and CLEARS them on every `input` event. So a dispatcher
+  # who selects a saved place (e.g. "Home (205 King St, Cuero, TX 77954)") and then
+  # touches the field again — or hits a browser re-render that fires `input` after
+  # the select — submits with a visibly-filled box but blank hidden fields, and the
+  # typed address was silently dropped → "Dropoff address must exist / can't be
+  # blank". (Reported via Erika, customer Irene Spence.)
+  #
+  # This resolves the VISIBLE text the same two ways the picker's dropdown does:
+  #   1. match one of the customer's saved common addresses (same scope + geom/active
+  #      filters as addresses#trippable_autocomplete), else
+  #   2. geocode the free text via Nominatim (same source as the picker suggestions).
+  # Returns nil when nothing resolves, leaving the existing presence validation to
+  # fire so genuinely-empty/bad input still errors.
+  def resolve_typed_address(text)
+    normalize = ->(s) { s.to_s.gsub(/\s+/, ' ').strip.downcase }
+    normalized = normalize.call(text)
+    return nil if normalized.blank?
+
+    customer = @trip.customer || Customer.find_by_id(params[:customer_id])
+
+    scope = Address.where.not(the_geom: nil).where('inactive is NULL or inactive != ?', true)
+    candidates = []
+    if customer
+      candidates += scope.where(customer_id: customer.id, type: 'CustomerCommonAddress').to_a
+      candidates += scope.where(provider_id: customer.authorized_provider_ids, type: 'ProviderCommonAddress').to_a
+    else
+      candidates += scope.where(provider_id: current_provider_id, type: 'ProviderCommonAddress').to_a
+    end
+
+    match = candidates.find { |a| normalize.call(a.text) == normalized } ||
+            candidates.find { |a| normalize.call(a.address_text) == normalized }
+    return match if match
+
+    begin
+      results = GeocodingService.new(text, current_provider).execute
+      if results.present?
+        r = results.first.stringify_keys
+        new_temp_addr = TempAddress.new(r.select { |k, _| TempAddress.allowable_params.include?(k) })
+        new_temp_addr.the_geom = Address.compute_geom(r['lat'], r['lon'])
+        return new_temp_addr
+      end
+    rescue => e
+      Rails.logger.warn("resolve_typed_address geocode failed for #{text.inspect}: #{e.message}")
+    end
+
+    nil
   end
 
   def edit_mobilities
