@@ -634,6 +634,10 @@ class TripsController < ApplicationController
           @pickup_address_unresolved = true
         end
       end
+
+      if params[:save_pickup_address].present? && @trip.pickup_address && !@pickup_address_unresolved
+        @trip.pickup_address = promote_to_customer_common_address(@trip.pickup_address, params[:pickup_address_name])
+      end
     end
 
     if params[:trip][:dropoff_address_id].blank?
@@ -654,7 +658,36 @@ class TripsController < ApplicationController
           @dropoff_address_unresolved = true
         end
       end
+
+      if params[:save_dropoff_address].present? && @trip.dropoff_address && !@dropoff_address_unresolved
+        @trip.dropoff_address = promote_to_customer_common_address(@trip.dropoff_address, params[:dropoff_address_name])
+      end
     end
+  end
+
+  # "Save to this customer" — when the dispatcher ticks the box on the trip form,
+  # persist a freshly-entered address as a reusable CustomerCommonAddress for the
+  # customer (instead of a throwaway TempAddress), so it autocompletes on future
+  # trips. No-op without a customer or a geocoded location, and never duplicates
+  # an address the dispatcher picked from the saved list — that path keeps its
+  # *_address_id and skips this whole block. Returns the address to attach.
+  def promote_to_customer_common_address(address, name)
+    return address unless address && address.the_geom.present?
+    return address if address.is_a?(CustomerCommonAddress) && address.persisted?
+    customer = @trip.customer || Customer.find_by_id(params[:customer_id])
+    return address unless customer
+
+    cca = CustomerCommonAddress.new(
+      address:     address.address,
+      city:        address.city,
+      state:       address.state,
+      zip:         address.zip,
+      name:        name.presence,
+      customer_id: customer.id,
+      provider_id: current_provider_id
+    )
+    cca.the_geom = address.the_geom
+    cca
   end
 
   # When a dispatcher typed an address we could not geocode, the belongs_to

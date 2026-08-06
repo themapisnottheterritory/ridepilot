@@ -60,9 +60,14 @@
           %label
             %input.latlng_address_switch{type: 'checkbox', checked: ("true" if is_pickup_latlng)}
             Lat/Lon
-          - if edit_mode != :show  
+          - if edit_mode != :show
             = f.hidden_field :pickup_address_id, class: 'trip_pickup_address_id'
             = hidden_field_tag 'trip_pickup_address_data', params[:trip_pickup_address_data], class: 'trip_pickup_address_data'
+            .save-to-customer{style: 'width:100%; margin-top:6px;'}
+              %label{style: 'font-weight:normal; font-size:0.9em;'}
+                = check_box_tag 'save_pickup_address', '1', false, class: 'save-address-check'
+                Save to this customer's addresses
+              = text_field_tag 'pickup_address_name', params[:pickup_address_name], class: 'form-control save-address-name', placeholder: "Label (e.g. Doctor, Daughter's)", style: 'display:none; width:100%; margin-top:3px;'
 
     .form-group.place-picker-div
       .form-label
@@ -84,6 +89,11 @@
           - if edit_mode != :show
             = f.hidden_field :dropoff_address_id, class: 'trip_dropoff_address_id'
             = hidden_field_tag 'trip_dropoff_address_data', params[:trip_dropoff_address_data], class: 'trip_dropoff_address_data'
+            .save-to-customer{style: 'width:100%; margin-top:6px;'}
+              %label{style: 'font-weight:normal; font-size:0.9em;'}
+                = check_box_tag 'save_dropoff_address', '1', false, class: 'save-address-check'
+                Save to this customer's addresses
+              = text_field_tag 'dropoff_address_name', params[:dropoff_address_name], class: 'form-control save-address-name', placeholder: "Label (e.g. Doctor, Daughter's)", style: 'display:none; width:100%; margin-top:3px;'
 
     .form-group
       .form-label
@@ -101,4 +111,9 @@
       ".trip-address-picker",
       geocoder_bounds
     );
+
+    // Reveal the optional label field only when "Save to this customer" is ticked.
+    $('.save-address-check').on('change', function() {
+      $(this).closest('.address_container').find('.save-address-name').toggle(this.checked);
+    });
   });
