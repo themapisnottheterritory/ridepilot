@@ -32,10 +32,13 @@ def solve_run(req):
     transit_idx = routing.RegisterTransitCallback(time_callback)
     routing.SetArcCostEvaluatorOfAllVehicles(transit_idx)
 
-    # Time window dimension
+    # Time window dimension.
+    # Slack here is per-node WAITING time. Paratransit runs span the day, so the
+    # vehicle routinely waits between temporally-distant pickups (e.g. a 9am and
+    # a 2pm trip). Capping slack at a 2-min boarding time made any such run
+    # infeasible, so allow waiting up to the full horizon.
     max_time = 86400  # seconds in a day
-    boarding_slack = 120  # 2 min default board/alight time
-    routing.AddDimension(transit_idx, boarding_slack, max_time, False, "Time")
+    routing.AddDimension(transit_idx, max_time, max_time, False, "Time")
     time_dim = routing.GetDimensionOrDie("Time")
 
     for i, trip in enumerate(trips):
@@ -154,10 +157,11 @@ def solve_fleet(req):
     transit_idx = routing.RegisterTransitCallback(time_callback)
     routing.SetArcCostEvaluatorOfAllVehicles(transit_idx)
 
-    # Time window dimension
+    # Time window dimension. Slack is per-node waiting; allow up to the full
+    # horizon so a vehicle can wait between temporally-distant pickups (see the
+    # run solver above).
     max_time = 86400
-    boarding_slack = 120
-    routing.AddDimension(transit_idx, boarding_slack, max_time, False, "Time")
+    routing.AddDimension(transit_idx, max_time, max_time, False, "Time")
     time_dim = routing.GetDimensionOrDie("Time")
 
     # Vehicle start/end time windows
