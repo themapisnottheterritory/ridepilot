@@ -664,7 +664,11 @@ class TripsController < ApplicationController
   # Returns nil when nothing resolves, leaving the existing presence validation to
   # fire so genuinely-empty/bad input still errors.
   def resolve_typed_address(text)
-    normalize = ->(s) { s.to_s.gsub(/\s+/, ' ').strip.downcase }
+    # Punctuation-insensitive: the picker displays saved places as
+    # "Home (205 King St, Cuero, TX 77954)" while Address#text is
+    # "Home\n 205 King St \nCuero, TX 77954" — collapse all non-alphanumerics so
+    # the parens/commas/newlines don't defeat the match.
+    normalize = ->(s) { s.to_s.downcase.gsub(/[^a-z0-9]+/, ' ').strip }
     normalized = normalize.call(text)
     return nil if normalized.blank?
 
@@ -684,17 +688,50 @@ class TripsController < ApplicationController
     return match if match
 
     begin
-      results = GeocodingService.new(text, current_provider).execute
-      if results.present?
-        r = results.first.stringify_keys
-        new_temp_addr = TempAddress.new(r.select { |k, _| TempAddress.allowable_params.include?(k) })
-        new_temp_addr.the_geom = Address.compute_geom(r['lat'], r['lon'])
+      geo = geocode_relaxed(text)
+      if geo
+        new_temp_addr = TempAddress.new(geo.select { |k, _| TempAddress.allowable_params.include?(k) })
+        new_temp_addr.the_geom = Address.compute_geom(geo['lat'], geo['lon'])
         return new_temp_addr
       end
     rescue => e
       Rails.logger.warn("resolve_typed_address geocode failed for #{text.inspect}: #{e.message}")
     end
 
+    nil
+  end
+
+  # Geocode free-typed address text, progressively relaxing the query when the
+  # self-hosted Nominatim (Texas OSM) can't match it exactly. Rural TX addresses
+  # frequently have no house-number node in OSM — and dispatchers sometimes
+  # mistype the ZIP — so an exact "210 Foo St, Cuero, TX 77854" returns nothing
+  # even though the street exists. We fall back to street level (drop the house
+  # number, then the ZIP, then the state) and re-attach the dispatcher's house
+  # number to the matched street, so the trip still saves with a routable
+  # location instead of being rejected. (Regression surfaced after the
+  # Google -> self-hosted Nominatim migration; Google had house numbers
+  # everywhere, the local OSM extract does not.) Returns a stringified attrs
+  # hash (address/city/state/zip/lat/lon) or nil.
+  def geocode_relaxed(text)
+    house_number = text[/\A\s*(\d+)\s+/, 1]
+    no_house     = text.sub(/\A\s*\d+\s+/, '')
+    drop_zip     = ->(s) { s.sub(/,?\s*\d{5}(?:-\d{4})?\s*\z/, '').strip.sub(/,\s*\z/, '') }
+    drop_st_zip  = ->(s) { s.sub(/,?\s*(?:tx|texas)\b.*\z/i, '').strip.sub(/,\s*\z/, '') }
+
+    variants = [text, no_house, drop_zip.call(no_house), drop_st_zip.call(no_house)]
+                 .map { |s| s.to_s.strip }.reject(&:blank?).uniq
+
+    variants.each do |q|
+      results = GeocodingService.new(q, current_provider).execute
+      next if results.blank?
+      r = results.first.stringify_keys
+      # Re-attach the dispatcher's house number when the matched street doesn't
+      # already carry it (street-level fallback, or Nominatim returned the road).
+      if house_number.present? && r['address'].present? && r['address'] !~ /\A#{Regexp.escape(house_number)}\b/
+        r['address'] = "#{house_number} #{r['address']}"
+      end
+      return r
+    end
     nil
   end
 
