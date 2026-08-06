@@ -1,17 +1,17 @@
 - # common
-= render 'reports/common_csv_header.csv.haml'
+= render 'reports/common_csv_header'
 
 - if @runs 
-  = CSV.generate_line(["Summary"], {:row_sep => nil}).html_safe
-  = CSV.generate_line([translate_helper(:total_hours_scheduled), format_float_number(@total_hours) || 0], {:row_sep => nil}).html_safe
-  = CSV.generate_line([translate_helper(:volunteer_driver_count), @total_volunteer_driver_count || 0], {:row_sep => nil}).html_safe
-  = CSV.generate_line([translate_helper(:paid_driver_count), @total_paid_driver_count || 0], {:row_sep => nil}).html_safe
+  = CSV.generate_line(["Summary"], row_sep: nil).html_safe
+  = CSV.generate_line([translate_helper(:total_hours_scheduled), format_float_number(@total_hours) || 0], row_sep: nil).html_safe
+  = CSV.generate_line([translate_helper(:volunteer_driver_count), @total_volunteer_driver_count || 0], row_sep: nil).html_safe
+  = CSV.generate_line([translate_helper(:paid_driver_count), @total_paid_driver_count || 0], row_sep: nil).html_safe
   - unless @is_summary_report && @service_drivers.any?
-    = CSV.generate_line([""], {:row_sep => nil}).html_safe
-    = CSV.generate_line([translate_helper(:driver_form_name), translate_helper(:days_worked), translate_helper(:number_of_runs_completed), translate_helper(:hours_scheduled), translate_helper(:driver_type)], {:row_sep => nil}).html_safe
+    = CSV.generate_line([""], row_sep: nil).html_safe
+    = CSV.generate_line([translate_helper(:driver_form_name), translate_helper(:days_worked), translate_helper(:number_of_runs_completed), translate_helper(:hours_scheduled), translate_helper(:driver_type)], row_sep: nil).html_safe
     - @service_drivers.each do |driver|
-      = CSV.generate_line([driver.user_name, @days_worked_by_driver[driver.id] || 0, @runs_completed_by_driver[driver.id] || 0, format_float_number(@seconds_scheduled_by_driver[driver.id] / 3600.0)|| 0, driver.paid? ? "Paid" : "Volunteer"], {:row_sep => nil}).html_safe
-    = CSV.generate_line([translate_helper("total"), @total_days_worked, @total_runs_completed, format_float_number(@total_hours) || 0, "#{@total_paid_driver_count} Paid, #{@total_volunteer_driver_count} Volunteer"], {:row_sep => nil}).html_safe
+      = CSV.generate_line([driver.user_name, @days_worked_by_driver[driver.id] || 0, @runs_completed_by_driver[driver.id] || 0, format_float_number(@seconds_scheduled_by_driver[driver.id] / 3600.0)|| 0, driver.paid? ? "Paid" : "Volunteer"], row_sep: nil).html_safe
+    = CSV.generate_line([translate_helper("total"), @total_days_worked, @total_runs_completed, format_float_number(@total_hours) || 0, "#{@total_paid_driver_count} Paid, #{@total_volunteer_driver_count} Volunteer"], row_sep: nil).html_safe
 
 
 

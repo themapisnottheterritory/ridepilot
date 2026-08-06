@@ -1,25 +1,25 @@
-= render 'reports/common_csv_header.csv.haml'
+= render 'reports/common_csv_header'
 
-= CSV.generate_line(["Summary"], {:row_sep => nil}).html_safe
+= CSV.generate_line(["Summary"], row_sep: nil).html_safe
 
-= CSV.generate_line(["By Passenger Type"], {:row_sep => nil}).html_safe
+= CSV.generate_line(["By Passenger Type"], row_sep: nil).html_safe
 - col_sums = [0,0,0,0]
-= CSV.generate_line(["", "Customer Count", "Guest Count", "Attendant Count", "Total"], {:row_sep => nil}).html_safe
+= CSV.generate_line(["", "Customer Count", "Guest Count", "Attendant Count", "Total"], row_sep: nil).html_safe
 - @cancelled_trips_results.pluck(:id, :name).to_h.each do |id, name|
   - col_sums[0] += @customer_count[id].to_i
   - col_sums[1] += @guest_count[id].to_i
   - col_sums[2] += @attendant_count[id].to_i
   - col_sums[3] += @total_rider_count[id].to_i
-  = CSV.generate_line([name, @customer_count[id].to_i, @guest_count[id].to_i, @attendant_count[id].to_i, @total_rider_count[id].to_i], {:row_sep => nil}).html_safe
-= CSV.generate_line(["Total", col_sums[0], col_sums[1], col_sums[2], col_sums[3]], {:row_sep => nil}).html_safe
+  = CSV.generate_line([name, @customer_count[id].to_i, @guest_count[id].to_i, @attendant_count[id].to_i, @total_rider_count[id].to_i], row_sep: nil).html_safe
+= CSV.generate_line(["Total", col_sums[0], col_sums[1], col_sums[2], col_sums[3]], row_sep: nil).html_safe
 
-= CSV.generate_line(["By Mobility"], {:row_sep => nil}).html_safe
+= CSV.generate_line(["By Mobility"], row_sep: nil).html_safe
 - col_sums = Array.new(@mobility_types.size + 1, 0)
 - header_labels = [""]
 - header_labels += @mobility_types.pluck(:name)
 - header_labels << "Total"
 - mobility_type_hash = @mobility_types.pluck(:id, :name).to_h
-= CSV.generate_line(header_labels, {:row_sep => nil}).html_safe
+= CSV.generate_line(header_labels, row_sep: nil).html_safe
 - @cancelled_trips_results.pluck(:id, :name).to_h.each do |id, name|
   - row = [name]
   - row_total = 0
@@ -32,12 +32,12 @@
     - col_counter += 1
   - row << row_total
   - col_sums[col_sums.size - 1] += row_total
-  = CSV.generate_line(row, {:row_sep => nil}).html_safe
-= CSV.generate_line(["Total"] +  col_sums, {:row_sep => nil}).html_safe
+  = CSV.generate_line(row, row_sep: nil).html_safe
+= CSV.generate_line(["Total"] +  col_sums, row_sep: nil).html_safe
 
 - if @customer_names
-  = CSV.generate_line([""], {:row_sep => nil}).html_safe
-  = CSV.generate_line(["List of Customer Names"], {:row_sep => nil}).html_safe
+  = CSV.generate_line([""], row_sep: nil).html_safe
+  = CSV.generate_line(["List of Customer Names"], row_sep: nil).html_safe
   - @customer_names.each do |name|
-    = CSV.generate_line([name.join(" ")], {:row_sep => nil}).html_safe
+    = CSV.generate_line([name.join(" ")], row_sep: nil).html_safe
 

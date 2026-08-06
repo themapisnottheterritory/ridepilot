@@ -1,6 +1,6 @@
 - # Header
-= CSV.generate_line([translate_helper("name"), translate_helper("inactivated_start_date"), translate_helper("inactivated_end_date"), translate_helper("inactivated_reason"), translate_helper("phone_number")], {:row_sep => nil}).html_safe
+= CSV.generate_line([translate_helper("name"), translate_helper("inactivated_start_date"), translate_helper("inactivated_end_date"), translate_helper("inactivated_reason"), translate_helper("phone_number")], row_sep: nil).html_safe
 
 - # Data
 - @drivers.each do |driver|
-  = CSV.generate_line([driver.user_name, format_date(driver.inactivated_start_date), format_date(driver.inactivated_end_date), driver.active_status_changed_reason, format_phone_number(driver.phone_number)], {:row_sep => nil}).html_safe
+  = CSV.generate_line([driver.user_name, format_date(driver.inactivated_start_date), format_date(driver.inactivated_end_date), driver.active_status_changed_reason, format_phone_number(driver.phone_number)], row_sep: nil).html_safe

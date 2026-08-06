@@ -1,22 +1,22 @@
 - # common
-= render 'reports/common_csv_header.csv.haml'
+= render 'reports/common_csv_header'
 
 - # Header
-= CSV.generate_line([translate_helper("total_donations"), @total_amount], {:row_sep => nil}).html_safe
-= CSV.generate_line([""], {:row_sep => nil}).html_safe
+= CSV.generate_line([translate_helper("total_donations"), @total_amount], row_sep: nil).html_safe
+= CSV.generate_line([""], row_sep: nil).html_safe
 
 - # Data
 - @customers.each do |customer|
   - customer_data = @report_data[customer.id]
   - next unless customer_data && customer_data[:donations].any?
   - donations = customer_data[:donations]
-  = CSV.generate_line([customer.name], {:row_sep => nil}).html_safe
-  = CSV.generate_line([translate_helper("date"), translate_helper("donation_amount")], {:row_sep => nil}).html_safe
+  = CSV.generate_line([customer.name], row_sep: nil).html_safe
+  = CSV.generate_line([translate_helper("date"), translate_helper("donation_amount")], row_sep: nil).html_safe
   - donations.each do |data|
-    = CSV.generate_line([format_date(data[0]), data[1]], {:row_sep => nil}).html_safe
-  = CSV.generate_line([translate_helper("total"), customer_data[:total]], {:row_sep => nil}).html_safe
+    = CSV.generate_line([format_date(data[0]), data[1]], row_sep: nil).html_safe
+  = CSV.generate_line([translate_helper("total"), customer_data[:total]], row_sep: nil).html_safe
   - unless @is_summary_report
-    = CSV.generate_line([translate_helper("unlinked_trip_count"), @customer_trip_sizes[customer.id] || 0], {:row_sep => nil}).html_safe
+    = CSV.generate_line([translate_helper("unlinked_trip_count"), @customer_trip_sizes[customer.id] || 0], row_sep: nil).html_safe
   
 
   

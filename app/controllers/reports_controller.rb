@@ -1470,12 +1470,12 @@ class ReportsController < ApplicationController
       :header => {
           :spacing => 20,
           :html => {
-              :template => "reports/pdf_header.pdf.haml"
+              :template => "reports/pdf_header"
           }
       },
       :show_as_html => params[:debug].present?,
-      :template => "reports/show.pdf.haml",
-      :layout => 'pdf.html',
+      :template => "reports/show",
+      :layout => 'pdf',
       :orientation => layout,
       :footer => {
           :center => view_context.format_for_pdf_printing(Time.now),
@@ -1488,9 +1488,9 @@ class ReportsController < ApplicationController
     request.format = @query.report_format if @query && @query.report_format
     respond_to do |format|
       format.html
-      format.csv do 
+      format.csv do
         headers['Content-Disposition'] = "attachment;filename=#{@custom_report.name}.csv"
-        render template: "reports/show.csv.haml"
+        render template: "reports/show"
       end
 
       format.xlsx do 

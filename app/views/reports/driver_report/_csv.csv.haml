@@ -1,12 +1,12 @@
 - # common
-= render 'reports/common_csv_header.csv.haml'
+= render 'reports/common_csv_header'
 
 - if @drivers
   - column_headers = [translate_helper(:driver_form_name), translate_helper(:phone_number), translate_helper(:driver_type)]
   - unless @is_summary_report
     - column_headers += [translate_helper(:driver_form_email), translate_helper(:driver_address_heading), translate_helper(:driver_alt_address_heading), translate_helper(:driver_form_emergency_contact_heading)]
 
-  = CSV.generate_line(column_headers, {:row_sep => nil}).html_safe
+  = CSV.generate_line(column_headers, row_sep: nil).html_safe
 
   - @drivers.each do | driver |
     - data = [driver.user_name, [format_phone_number(driver.phone_number), format_phone_number(driver.alt_phone_number)].compact.join("\n"), driver.paid? ? "Paid" : "Volunteer"]
@@ -16,9 +16,9 @@
       - if driver.emergency_contact
         - data += [format_driver_emergency_contact(driver.emergency_contact).html_safe]
     
-    = CSV.generate_line(data, {:row_sep => nil}).html_safe
+    = CSV.generate_line(data, row_sep: nil).html_safe
   
-  = CSV.generate_line([translate_helper("total"), "#{@total_paid_driver_count} Paid, #{@total_volunteer_driver_count} Volunteer"], {:row_sep => nil}).html_safe
+  = CSV.generate_line([translate_helper("total"), "#{@total_paid_driver_count} Paid, #{@total_volunteer_driver_count} Volunteer"], row_sep: nil).html_safe
 
 
 

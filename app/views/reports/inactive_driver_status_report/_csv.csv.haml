@@ -1,5 +1,5 @@
 - # common
-= render 'reports/common_csv_header.csv.haml'
+= render 'reports/common_csv_header'
 
 - if @is_perm_inactive_report
   = render "reports/#{@custom_report.name}/perm_inactive.csv.haml"

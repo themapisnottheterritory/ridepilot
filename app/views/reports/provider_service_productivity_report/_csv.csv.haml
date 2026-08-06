@@ -1,20 +1,20 @@
 - # common
-= render 'reports/common_csv_header.csv.haml'
+= render 'reports/common_csv_header'
 
 - if @runs
-  = CSV.generate_line([translate_helper(:summary)], {:row_sep => nil}).html_safe
-  = CSV.generate_line([translate_helper(:passenger_type), translate_helper(:passenger_count)], {:row_sep => nil}).html_safe
-  = CSV.generate_line(["Customer", @total_customer_count.to_i], {:row_sep => nil}).html_safe
-  = CSV.generate_line(["Guest", @total_guest_count.to_i], {:row_sep => nil}).html_safe
-  = CSV.generate_line(["Attendant", @total_attendant_count.to_i], {:row_sep => nil}).html_safe
-  = CSV.generate_line(["Service Animal", @total_service_animal_count], {:row_sep => nil}).html_safe
-  = CSV.generate_line([translate_helper(:total_passengers), "#{@total_passengers_count.to_i} passengers, #{@total_trips_count.to_i} trips"], {:row_sep => nil}).html_safe
+  = CSV.generate_line([translate_helper(:summary)], row_sep: nil).html_safe
+  = CSV.generate_line([translate_helper(:passenger_type), translate_helper(:passenger_count)], row_sep: nil).html_safe
+  = CSV.generate_line(["Customer", @total_customer_count.to_i], row_sep: nil).html_safe
+  = CSV.generate_line(["Guest", @total_guest_count.to_i], row_sep: nil).html_safe
+  = CSV.generate_line(["Attendant", @total_attendant_count.to_i], row_sep: nil).html_safe
+  = CSV.generate_line(["Service Animal", @total_service_animal_count], row_sep: nil).html_safe
+  = CSV.generate_line([translate_helper(:total_passengers), "#{@total_passengers_count.to_i} passengers, #{@total_trips_count.to_i} trips"], row_sep: nil).html_safe
 
-  = CSV.generate_line([""], {:row_sep => nil}).html_safe
-  = CSV.generate_line([translate_helper(:funding_source), translate_helper(:number_of_trips), translate_helper(:total_passengers)], {:row_sep => nil}).html_safe
+  = CSV.generate_line([""], row_sep: nil).html_safe
+  = CSV.generate_line([translate_helper(:funding_source), translate_helper(:number_of_trips), translate_helper(:total_passengers)], row_sep: nil).html_safe
   - funding_sources = FundingSource.by_provider(current_provider).where(id: @trip_count_by_funding_source.keys)
   - if funding_sources.empty?
-    = CSV.generate_line(["No funding source for trips."], {:row_sep => nil}).html_safe
+    = CSV.generate_line(["No funding source for trips."], row_sep: nil).html_safe
   - else
     - funding_sources.each do |source|
       - passenger_counts_by_funding_source = []
@@ -32,30 +32,30 @@
         - total_passenger_count += @service_animal_count_by_funding_source[source.id]
         - passenger_counts_by_funding_source << "#{@service_animal_count_by_funding_source[source.id]} Service Animal"
       - passenger_by_funding_source_summary = total_passenger_count > 0 ? "#{total_passenger_count} total: #{passenger_counts_by_funding_source.join(', ')}" : ""
-      = CSV.generate_line([source.name, @trip_count_by_funding_source[source.id].to_i, passenger_by_funding_source_summary], {:row_sep => nil}).html_safe
+      = CSV.generate_line([source.name, @trip_count_by_funding_source[source.id].to_i, passenger_by_funding_source_summary], row_sep: nil).html_safe
 
-  = CSV.generate_line([""], {:row_sep => nil}).html_safe
+  = CSV.generate_line([""], row_sep: nil).html_safe
   - if @run_dates
     - @run_dates.each do |date|
       - next unless @ride_counts_by_date && @ride_counts_by_date[date].to_i > 0
-      = CSV.generate_line([format_date(date)], {:row_sep => nil}).html_safe
-      = CSV.generate_line(["Mobility"], {:row_sep => nil}).html_safe
-      = CSV.generate_line(["Mobility Type", "Count"], {:row_sep => nil}).html_safe
+      = CSV.generate_line([format_date(date)], row_sep: nil).html_safe
+      = CSV.generate_line(["Mobility"], row_sep: nil).html_safe
+      = CSV.generate_line(["Mobility Type", "Count"], row_sep: nil).html_safe
       - Mobility.by_provider(current_provider).pluck(:id, :name).each do |mobility|
         - mobility_count = @mobility_counts[[date, mobility[0]]]
         - next unless mobility_count && mobility_count.to_i > 0
-        = CSV.generate_line([mobility[1], mobility_count], {:row_sep => nil}).html_safe
+        = CSV.generate_line([mobility[1], mobility_count], row_sep: nil).html_safe
       
-      = CSV.generate_line([""], {:row_sep => nil}).html_safe
+      = CSV.generate_line([""], row_sep: nil).html_safe
 
-      = CSV.generate_line(["Ride Counts By Trip Purpose"], {:row_sep => nil}).html_safe
-      = CSV.generate_line([translate_helper(:trip_purpose), translate_helper(:number_of_trips)], {:row_sep => nil}).html_safe
+      = CSV.generate_line(["Ride Counts By Trip Purpose"], row_sep: nil).html_safe
+      = CSV.generate_line([translate_helper(:trip_purpose), translate_helper(:number_of_trips)], row_sep: nil).html_safe
       - TripPurpose.by_provider(current_provider).pluck(:id, :name).each do |tp|
         - ride_count = @ride_counts_by_trip_purpose[[date, tp[0]]]
         - next unless ride_count && ride_count.to_i > 0
-        = CSV.generate_line([tp[1], ride_count], {:row_sep => nil}).html_safe
+        = CSV.generate_line([tp[1], ride_count], row_sep: nil).html_safe
 
-      = CSV.generate_line([""], {:row_sep => nil}).html_safe
+      = CSV.generate_line([""], row_sep: nil).html_safe
 
       
   

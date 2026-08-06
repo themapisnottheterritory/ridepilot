@@ -4,21 +4,21 @@
 
   - if customer.age_eligible?
     - has_eligible = true
-    = CSV.generate_line(["",translate_helper(:age_eligible), yes_label], {:row_sep => nil}).html_safe
+    = CSV.generate_line(["",translate_helper(:age_eligible), yes_label], row_sep: nil).html_safe
 
   - if customer.ada_eligible?
     - has_eligible = true
-    = CSV.generate_line(["", translate_helper(:ada_eligible), yes_label], {:row_sep => nil}).html_safe
+    = CSV.generate_line(["", translate_helper(:ada_eligible), yes_label], row_sep: nil).html_safe
 
     - eligible_ada_questions = customer.customer_ada_questions.eligible
     - if eligible_ada_questions.any?
       - eligible_ada_questions.includes(:ada_question).references(:ada_question).each do |question|
         - next unless question.ada_question
-        = CSV.generate_line(["","",question.ada_question.name, yes_label], {:row_sep => nil}).html_safe
+        = CSV.generate_line(["","",question.ada_question.name, yes_label], row_sep: nil).html_safe
   - customer.customer_eligibilities.eligible.includes(:eligibility).references(:eligibility).each do |elig|
     - next unless elig.eligibility && elig.eligibility.description
     - has_eligible = true
-    = CSV.generate_line(["", elig.eligibility.description, yes_label], {:row_sep => nil}).html_safe
+    = CSV.generate_line(["", elig.eligibility.description, yes_label], row_sep: nil).html_safe
 
   - unless has_eligible
-    = CSV.generate_line(["", "(None eligible)"], {:row_sep => nil}).html_safe
+    = CSV.generate_line(["", "(None eligible)"], row_sep: nil).html_safe

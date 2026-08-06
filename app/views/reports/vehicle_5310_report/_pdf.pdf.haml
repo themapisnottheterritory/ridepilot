@@ -1,2 +1,2 @@
 - if @vehicles
-  = render "reports/#{@custom_report.name}/table.html.haml"
+  = render partial: "reports/#{@custom_report.name}/table", formats: [:html]

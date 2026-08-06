@@ -1,24 +1,24 @@
 - # common
-= render 'reports/common_csv_header.csv.haml'
+= render 'reports/common_csv_header'
 
 - if @vehicles
-  = CSV.generate_line([translate_helper(:summary)], {:row_sep => nil}).html_safe
-  = CSV.generate_line([translate_helper(:vehicle_form_name_label), translate_helper(:mileage), translate_helper(:number_of_trips), translate_helper(:total_passengers), translate_helper(:total_hours_driven)], {:row_sep => nil}).html_safe
+  = CSV.generate_line([translate_helper(:summary)], row_sep: nil).html_safe
+  = CSV.generate_line([translate_helper(:vehicle_form_name_label), translate_helper(:mileage), translate_helper(:number_of_trips), translate_helper(:total_passengers), translate_helper(:total_hours_driven)], row_sep: nil).html_safe
   - @service_vehicles.each do |vehicle|
-    = CSV.generate_line([vehicle.name, @miles_by_vehicle[vehicle.id].to_f, @trips_count[vehicle.id].to_i, @passengers_count[vehicle.id].to_i, format_float_number(@vehicle_hours[vehicle.id].to_f / 3600.0)], {:row_sep => nil}).html_safe
-  = CSV.generate_line([translate_helper("total") + " (#{@total_vehicle_count.to_i} vehicles)", @total_vehicle_miles.to_f, @total_trips_count.to_i, @total_passengers_count.to_i, format_float_number(@total_vehicle_hours)], {:row_sep => nil}).html_safe
+    = CSV.generate_line([vehicle.name, @miles_by_vehicle[vehicle.id].to_f, @trips_count[vehicle.id].to_i, @passengers_count[vehicle.id].to_i, format_float_number(@vehicle_hours[vehicle.id].to_f / 3600.0)], row_sep: nil).html_safe
+  = CSV.generate_line([translate_helper("total") + " (#{@total_vehicle_count.to_i} vehicles)", @total_vehicle_miles.to_f, @total_trips_count.to_i, @total_passengers_count.to_i, format_float_number(@total_vehicle_hours)], row_sep: nil).html_safe
 
-  = CSV.generate_line([""], {:row_sep => nil}).html_safe
+  = CSV.generate_line([""], row_sep: nil).html_safe
   - if @run_dates
     - @run_dates.each do |date|
       - next if @report_data[date].blank?
-      = CSV.generate_line([format_date(date)], {:row_sep => nil}).html_safe
-      = CSV.generate_line([translate_helper(:vehicle_form_name_label), translate_helper(:start_odometer), translate_helper(:end_odometer), translate_helper(:mileage), "#{translate_helper(:run_distance_revenue_miles)} (approx)", "#{translate_helper(:run_distance_non_revenue_miles)} (approx)", translate_helper(:number_of_trips)], {:row_sep => nil}).html_safe
+      = CSV.generate_line([format_date(date)], row_sep: nil).html_safe
+      = CSV.generate_line([translate_helper(:vehicle_form_name_label), translate_helper(:start_odometer), translate_helper(:end_odometer), translate_helper(:mileage), "#{translate_helper(:run_distance_revenue_miles)} (approx)", "#{translate_helper(:run_distance_non_revenue_miles)} (approx)", translate_helper(:number_of_trips)], row_sep: nil).html_safe
       - @vehicles_basic_data.each do | vehicle_id, vehicle_name |
         - next if @report_data[date][vehicle_id].blank?
         - vehicle_data = @report_data[date][vehicle_id]
-        = CSV.generate_line([vehicle_name, format_float_number(vehicle_data[:beginning_mileage]), format_float_number(vehicle_data[:ending_mileage]), format_float_number(vehicle_data[:mileage]), format_float_number(vehicle_data[:revenue_miles_sum]), format_float_number(vehicle_data[:non_revenue_miles_sum]), vehicle_data[:trips_count]], {:row_sep => nil}).html_safe
+        = CSV.generate_line([vehicle_name, format_float_number(vehicle_data[:beginning_mileage]), format_float_number(vehicle_data[:ending_mileage]), format_float_number(vehicle_data[:mileage]), format_float_number(vehicle_data[:revenue_miles_sum]), format_float_number(vehicle_data[:non_revenue_miles_sum]), vehicle_data[:trips_count]], row_sep: nil).html_safe
       - total_data = @report_data_totals[date]
-      = CSV.generate_line([translate_helper(:total), "", "", format_float_number(total_data[:mileage]), format_float_number(total_data[:revenue_miles_sum]), format_float_number(total_data[:non_revenue_miles_sum]), total_data[:trips_count]], {:row_sep => nil}).html_safe
+      = CSV.generate_line([translate_helper(:total), "", "", format_float_number(total_data[:mileage]), format_float_number(total_data[:revenue_miles_sum]), format_float_number(total_data[:non_revenue_miles_sum]), total_data[:trips_count]], row_sep: nil).html_safe
 
   

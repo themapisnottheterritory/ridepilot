@@ -1,9 +1,9 @@
 - # common
-= render 'reports/common_csv_header.csv.haml'
+= render 'reports/common_csv_header'
 
 - # Header
-= CSV.generate_line([translate_helper("address_results_type_column"), translate_helper("address_results_name_column"), translate_helper("address"), translate_helper("phone_number")], {:row_sep => nil}).html_safe
+= CSV.generate_line([translate_helper("address_results_type_column"), translate_helper("address_results_name_column"), translate_helper("address"), translate_helper("phone_number")], row_sep: nil).html_safe
 
 - # Data
 - @addresses.each do |addr|
-  = CSV.generate_line([addr.address_group.try(:name), addr.name, addr.address, format_phone_number(addr.phone_number)], {:row_sep => nil}).html_safe
+  = CSV.generate_line([addr.address_group.try(:name), addr.name, addr.address, format_phone_number(addr.phone_number)], row_sep: nil).html_safe

@@ -1,13 +1,13 @@
 - # report name
-= CSV.generate_line([@custom_report.display_name], {:row_sep => nil}).html_safe
+= CSV.generate_line([@custom_report.display_name], row_sep: nil).html_safe
 
 - # timestamp
-= CSV.generate_line(["Report Datetime", format_for_pdf_printing(Time.now)], {:row_sep => nil}).html_safe
+= CSV.generate_line(["Report Datetime", format_for_pdf_printing(Time.now)], row_sep: nil).html_safe
 
 - # report params
-= CSV.generate_line(["Parameters"], {:row_sep => nil}).html_safe
+= CSV.generate_line(["Parameters"], row_sep: nil).html_safe
 - (@report_params || []).each do |param|
-  = CSV.generate_line(param.try(:prepend, ""), {:row_sep => nil}).html_safe
+  = CSV.generate_line(param.try(:prepend, ""), row_sep: nil).html_safe
 
 - # divider from main data
-= CSV.generate_line([""], {:row_sep => nil}).html_safe
+= CSV.generate_line([""], row_sep: nil).html_safe

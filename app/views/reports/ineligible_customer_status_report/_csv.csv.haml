@@ -1,14 +1,14 @@
 - # common
-= render 'reports/common_csv_header.csv.haml'
+= render 'reports/common_csv_header'
 
 - # Header
-= CSV.generate_line([translate_helper("name"), translate_helper("permanent_inactive"), translate_helper("inactivated_start_date"), translate_helper("inactivated_end_date"), translate_helper("inactivated_reason")], {:row_sep => nil}).html_safe
+= CSV.generate_line([translate_helper("name"), translate_helper("permanent_inactive"), translate_helper("inactivated_start_date"), translate_helper("inactivated_end_date"), translate_helper("inactivated_reason")], row_sep: nil).html_safe
 
 - # Data
 - @customers.each do |customer|
   - if customer.permanent_inactivated?
-    = CSV.generate_line([customer.name, "Permanent", format_date(customer.inactivated_date), "", customer.active_status_changed_reason], {:row_sep => nil}).html_safe
+    = CSV.generate_line([customer.name, "Permanent", format_date(customer.inactivated_date), "", customer.active_status_changed_reason], row_sep: nil).html_safe
   - else
-    = CSV.generate_line([customer.name, "", format_date(customer.inactivated_start_date), format_date(customer.inactivated_end_date), customer.active_status_changed_reason], {:row_sep => nil}).html_safe
+    = CSV.generate_line([customer.name, "", format_date(customer.inactivated_start_date), format_date(customer.inactivated_end_date), customer.active_status_changed_reason], row_sep: nil).html_safe
 
   

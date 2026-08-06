@@ -1,47 +1,47 @@
 - # common
-= render 'reports/common_csv_header.csv.haml'
+= render 'reports/common_csv_header'
 
 - if @drivers 
   - compliance_event_headers = [translate_helper("driver_compliance_form_due_date"), translate_helper("driver_compliance_form_event"), translate_helper("driver_compliance_form_compliance_date")]
   - history_event_headers = [translate_helper("driver_history_form_event_date"), translate_helper("driver_history_form_event")]
   - @drivers.each do |driver|
-    = CSV.generate_line(["Driver Name", driver.user_name], {:row_sep => nil}).html_safe
+    = CSV.generate_line(["Driver Name", driver.user_name], row_sep: nil).html_safe
     
     - # legal compliances
-    = CSV.generate_line([""], {:row_sep => nil}).html_safe
-    = CSV.generate_line([translate_helper("legal_driver_compliances_heading")], {:row_sep => nil}).html_safe
+    = CSV.generate_line([""], row_sep: nil).html_safe
+    = CSV.generate_line([translate_helper("legal_driver_compliances_heading")], row_sep: nil).html_safe
     - legal_compliances = @legal_compliances[driver.id]
     - unless legal_compliances.blank?
-      = CSV.generate_line(compliance_event_headers, {:row_sep => nil}).html_safe
+      = CSV.generate_line(compliance_event_headers, row_sep: nil).html_safe
       - legal_compliances.each do |c|
-        = CSV.generate_line([format_date(c.due_date), c.event, format_date(c.compliance_date)], {:row_sep => nil}).html_safe
+        = CSV.generate_line([format_date(c.due_date), c.event, format_date(c.compliance_date)], row_sep: nil).html_safe
     - else
-      = CSV.generate_line(["No record"], {:row_sep => nil}).html_safe
+      = CSV.generate_line(["No record"], row_sep: nil).html_safe
 
     - # non legal compliances
-    = CSV.generate_line([""], {:row_sep => nil}).html_safe
-    = CSV.generate_line([translate_helper("driver_compliances_heading")], {:row_sep => nil}).html_safe
+    = CSV.generate_line([""], row_sep: nil).html_safe
+    = CSV.generate_line([translate_helper("driver_compliances_heading")], row_sep: nil).html_safe
     - non_legal_compliances = @non_legal_compliances[driver.id]
     - unless non_legal_compliances.blank?
-      = CSV.generate_line(compliance_event_headers, {:row_sep => nil}).html_safe
+      = CSV.generate_line(compliance_event_headers, row_sep: nil).html_safe
       - non_legal_compliances.each do |c|
-        = CSV.generate_line([format_date(c.due_date), c.event, format_date(c.compliance_date)], {:row_sep => nil}).html_safe
+        = CSV.generate_line([format_date(c.due_date), c.event, format_date(c.compliance_date)], row_sep: nil).html_safe
     - else
-      = CSV.generate_line(["No record"], {:row_sep => nil}).html_safe
+      = CSV.generate_line(["No record"], row_sep: nil).html_safe
 
     - # histories
     - unless @is_summary_report
-      = CSV.generate_line([""], {:row_sep => nil}).html_safe
-      = CSV.generate_line([translate_helper("driver_histories_heading")], {:row_sep => nil}).html_safe
+      = CSV.generate_line([""], row_sep: nil).html_safe
+      = CSV.generate_line([translate_helper("driver_histories_heading")], row_sep: nil).html_safe
       - driver_histories = @driver_histories[driver.id]
       - unless driver_histories.blank?
-        = CSV.generate_line(history_event_headers, {:row_sep => nil}).html_safe
+        = CSV.generate_line(history_event_headers, row_sep: nil).html_safe
         - driver_histories.each do |c|
-          = CSV.generate_line([format_date(c.event_date), c.event], {:row_sep => nil}).html_safe
+          = CSV.generate_line([format_date(c.event_date), c.event], row_sep: nil).html_safe
       - else
-        = CSV.generate_line(["No record"], {:row_sep => nil}).html_safe
+        = CSV.generate_line(["No record"], row_sep: nil).html_safe
 
-    = CSV.generate_line([""], {:row_sep => nil}).html_safe
+    = CSV.generate_line([""], row_sep: nil).html_safe
 
 
 
