@@ -11,10 +11,11 @@ SMTP_MAIL_PORT:
 SMTP_MAIL_USER_NAME:            
 SYSTEM_SEND_FROM_ADDRESS:   
 
-# Planner    
-TRIP_PLANNER_TYPE:   # GOOGLE or OTP
-OPEN_TRIP_PLANNER_URL:      
-GOOGLE_TRIP_PLANNER_URL: "https://maps.googleapis.com/maps/api/distancematrix/json?"  
+# Planner (trip distance/ETA). Use OSRM with the self-hosted map stack.
+TRIP_PLANNER_TYPE: "OSRM"   # GOOGLE, OTP, or OSRM (self-hosted)
+OPEN_TRIP_PLANNER_URL:
+GOOGLE_TRIP_PLANNER_URL: "https://maps.googleapis.com/maps/api/distancematrix/json?"
+OSRM_URL: "http://osrm:5000"   # OSRM routing backend (docker service); used when TRIP_PLANNER_TYPE=OSRM
 
 # Map display, CAD etc
 GOOGLE_API_KEY:               

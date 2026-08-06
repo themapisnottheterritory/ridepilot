@@ -17,6 +17,13 @@ module Ridepilot
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w(assets tasks))
 
+    # The distance/duration services live in app/services/distance_duration_services/
+    # but are referenced by their bare class names (e.g. OsrmDistanceDurationService
+    # in TripDistanceDurationProxy). Collapse the directory so Zeitwerk treats those
+    # files as top-level constants instead of expecting a DistanceDurationServices::
+    # namespace (which otherwise raises "uninitialized constant").
+    Rails.autoloaders.main.collapse("#{root}/app/services/distance_duration_services")
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files

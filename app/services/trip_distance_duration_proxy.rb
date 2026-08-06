@@ -38,6 +38,8 @@ class TripDistanceDurationProxy
       @proxy = GoogleDistanceDurationService.new(params[:from_lat], params[:from_lon], params[:to_lat], params[:to_lon], params[:trip_datetime])
     elsif proxy_type == 'OTP'
       @proxy = OtpDistanceDurationService.new(params[:from_lat], params[:from_lon], params[:to_lat], params[:to_lon], params[:trip_datetime])
+    elsif proxy_type == 'OSRM'
+      @proxy = OsrmDistanceDurationService.new(params[:from_lat], params[:from_lon], params[:to_lat], params[:to_lon], params[:trip_datetime])
     else
       raise "Proxy #{proxy_type} not found."
     end
