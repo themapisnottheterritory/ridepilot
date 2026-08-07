@@ -1476,6 +1476,7 @@ class ReportsController < ApplicationController
           }
       },
       :show_as_html => params[:debug].present?,
+      :encoding => 'UTF-8',   # wkhtmltopdf defaults to Latin-1 -> mojibake (e.g. "·" -> "Â·")
       :template => "reports/show",
       :layout => 'pdf',
       :orientation => layout,
