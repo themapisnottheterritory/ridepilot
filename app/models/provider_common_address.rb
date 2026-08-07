@@ -1,5 +1,5 @@
 class ProviderCommonAddress < Address
-  
+
   belongs_to :address_group
 
   validates :address_group_id, presence: true
@@ -11,79 +11,132 @@ class ProviderCommonAddress < Address
 
   #validates :provider, presence: true
 
-  def self.load_addresses(filename, provider) 
+  # GCRPC service-area bounding box. Shah has known geocode outliers (e.g. a
+  # Goliad record that lands in Georgia); reject anything clearly outside the
+  # region so bad coordinates don't get loaded. lat 27.5..30.3, lon -98.8..-95.5.
+  SERVICE_AREA_LAT = (27.5..30.3)
+  SERVICE_AREA_LON = (-98.8..-95.5)
+
+  # Rider-residence placeholders that must NOT enter the provider book -- these
+  # belong on the customer record as CustomerCommonAddress. Matches "Home",
+  # "Home Urban/Rural", and "Home-<county>" (e.g. Home-Dewitt); does NOT match
+  # real destinations like "Home Depot"/"HomeGoods".
+  def self.placeholder_name?(name)
+    n = name.to_s.strip.downcase
+    n == "home" || n == "home urban" || n == "home rural" || n.match?(/\Ahome\s*-\s*\w+\z/)
+  end
+
+  # Load provider common addresses from a CSV. Columns (positional, as emitted
+  # by the Shah extraction query):
+  #   0 longitude  1 latitude  2 name  3 building_name  4 address  5 unit/address2
+  #   6 city  7 state  8 zip  9 address_group  10 notes
+  #
+  # dry_run: true validates every row inside a rolled-back transaction and
+  # reports counts without persisting anything or touching the provider's
+  # upload flag.
+  def self.load_addresses(filename, provider, dry_run: false)
     require 'csv'
-    require 'open-uri'
-    alert_msgs = []
-    Rails.logger.info "Loading common address from file '#{filename}'"
+
+    Rails.logger.info "Loading common addresses from '#{filename}'#{' (DRY RUN)' if dry_run}"
     Rails.logger.info "Starting at: #{Time.current}"
 
-    count_good = 0
-    count_bad = 0
-    count_failed = 0
-    count_possible_existing = 0
+    counts = Hash.new(0)   # good, possible_existing, placeholder, out_of_bounds, bad_no_name, failed
+    failures = []
 
-    if !provider
+    unless provider
       Rails.logger.info "Provider is nil..."
-    else
-      provider.address_upload_flag.uploading!
+      return "Provider is nil -- nothing loaded"
+    end
 
-      address_group_lookups = AddressGroup.pluck("lower(name)", :id).to_h
-      default_address_group_id = AddressGroup.default_address_group.try(:id)
+    provider.address_upload_flag.uploading! unless dry_run
 
-      open(filename) do |f|
+    address_group_lookups = AddressGroup.pluck("lower(name)", :id).to_h
+    default_address_group_id = AddressGroup.default_address_group.try(:id)
+
+    ActiveRecord::Base.transaction do
+      # Defect 3: Kernel#open no longer delegates to URI on Ruby 3+ (and is a
+      # security smell); use File.open for local paths.
+      File.open(filename) do |f|
         CSV.new(f, col_sep: ",", headers: true).each do |row|
-          address_name = row[2]
-          address_city = row[6]
-          address_state = row[7]
+          name  = row[2].to_s.strip
+          city  = row[6]
+          state = row[7]
+          lon   = row[0].to_s.strip
+          lat   = row[1].to_s.strip
+
+          # Defect 2: join street (col 4) + unit (col 5) with a space instead of
+          # concatenating into "123 Main StSuite 200"; tolerate a blank col 5.
+          street = [row[4], row[5]].map { |x| x.to_s.strip }.reject(&:blank?).join(" ")
+
           address_group_id = address_group_lookups[row[9].to_s.downcase] || default_address_group_id
-          #If we have already created this common address, don't create it again.
-          if !address_group_id || ProviderCommonAddress.exists?(["address_group_id = ? and provider_id = ? and lower(name) = ? and lower(city) = ? and lower(state) = ?", address_group_id, provider.try(:id), address_name.try(:downcase), address_city.try(:downcase), address_state.try(:downcase)])
-            #Rails.logger.info "Possible duplicate: #{row}"
-            count_possible_existing += 1
+
+          # Part 4: skip blank-name rows (name is required) ...
+          if name.blank?
+            counts[:bad_no_name] += 1
             next
           end
+          # ... and rider-residence placeholders (Home family).
+          if placeholder_name?(name)
+            counts[:placeholder] += 1
+            next
+          end
+
+          # Part 3: reject geocode outliers outside the service area.
+          if lat.present? && lon.present? && !(SERVICE_AREA_LAT.cover?(lat.to_f) && SERVICE_AREA_LON.cover?(lon.to_f))
+            counts[:out_of_bounds] += 1
+            failures << "out-of-bounds (#{lat},#{lon}): #{name}"
+            next
+          end
+
+          # Defect 1: the dedup guard now includes the STREET ADDRESS. Without it,
+          # distinct streets sharing a name+city collapsed into one row silently.
+          if !address_group_id || ProviderCommonAddress.exists?([
+              "address_group_id = ? AND provider_id = ? AND lower(name) = ? AND lower(address) = ? AND lower(city) = ? AND lower(state) = ?",
+              address_group_id, provider.id, name.downcase, street.downcase, city.to_s.downcase, state.to_s.downcase])
+            counts[:possible_existing] += 1
+            next
+          end
+
           begin
-            if address_name
-              p = ProviderCommonAddress.create!({
-                provider: provider,
-                the_geom: Address.compute_geom(row[1], row[0]),
-                name: address_name,
-                building_name: row[3],
-                address: row[4].to_s + row[5].to_s,
-                city: address_city,
-                state: address_state,
-                zip: row[8],
-                address_group_id: address_group_id,
-                notes: row[10]
-              })
-              count_good += 1
-            else
-              count_bad += 1
-            end
-          rescue Exception => e
-            #Rails.logger.info "Failed to save: #{e.message} for #{p.ai}"
-            count_failed += 1
+            ProviderCommonAddress.create!(
+              provider: provider,
+              the_geom: Address.compute_geom(row[1], row[0]),
+              name: name,
+              building_name: row[3],
+              address: street,
+              city: city,
+              state: state,
+              zip: row[8],
+              address_group_id: address_group_id,
+              notes: row[10]
+            )
+            counts[:good] += 1
+          rescue => e
+            # Defect 4: surface WHY a row failed instead of swallowing it.
+            counts[:failed] += 1
+            msg = "'#{name}' / '#{street}' / '#{city}': #{e.class}: #{e.message}"
+            failures << msg
+            Rails.logger.error "ProviderCommonAddress load failed -- #{msg}"
           end
         end
       end
+
+      raise ActiveRecord::Rollback if dry_run
     end
 
-    Rails.logger.info "Common address loading finished"
-    provider.address_upload_flag.uploaded!
+    summary = "Common address #{'DRY RUN ' if dry_run}load: " \
+              "loaded=#{counts[:good]}, possible_existing=#{counts[:possible_existing]}, " \
+              "placeholder_skipped=#{counts[:placeholder]}, out_of_bounds=#{counts[:out_of_bounds]}, " \
+              "blank_name=#{counts[:bad_no_name]}, failed=#{counts[:failed]}"
+    Rails.logger.info summary
+    failures.first(50).each { |m| Rails.logger.info "  - #{m}" } if failures.any?
 
-    sub_pairs = {
-      count_good: count_good,
-      count_failed: count_failed,
-      count_bad: count_bad,
-      count_possible_existing: count_possible_existing
-    }
+    unless dry_run
+      provider.address_upload_flag.uploaded!
+      provider.address_upload_flag.last_upload_summary = summary
+      provider.address_upload_flag.save
+    end
 
-    summary_info = TranslationEngine.translate_text(:common_address_upload_summary) % sub_pairs
-    provider.address_upload_flag.last_upload_summary = summary_info
-    provider.address_upload_flag.save
-
-    Rails.logger.info summary_info
-    summary_info
+    summary
   end
 end
