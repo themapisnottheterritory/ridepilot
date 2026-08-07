@@ -1468,11 +1468,11 @@ class ReportsController < ApplicationController
       pdf: "#{report_name}",
       disposition: 'attachment',
       :margin => {
-          :top => 30,
+          :top => 15,
           :bottom => 10
       },
       :header => {
-          :spacing => 20,
+          :spacing => 10,
           :html => {
               :template => "reports/pdf_header"
           }
