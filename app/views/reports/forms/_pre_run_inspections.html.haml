@@ -7,7 +7,7 @@
     = f.date_select  :before_end_date, :order => [:month,:day,:year] rescue nil
     = f.label :vehicle_id, "#{translate_helper(:vehicle)}:"
     = f.collection_select :vehicle_id, @active_vehicles, :id, :name, {include_blank: 'All'}
-    = f.select :run_inspection_type, options_for_select([['Flagged', 'flagged'],['Mechanical', 'mechanical']], @query.run_inspection_type)
+    = f.select :run_inspection_type, options_for_select([['Flagged', 'flagged'],['Mechanical', 'mechanical']], @query.run_inspection_type), {include_blank: 'All'}
 
     = render 'reports/forms/v2_reports/common_controls', has_multiple_report_types: false, f: f
     = render 'reports/forms/save_report_controls', custom_report_id: @custom_report.id
