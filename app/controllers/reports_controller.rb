@@ -1327,7 +1327,9 @@ class ReportsController < ApplicationController
           phase:       ri.vehicle_inspection_report&.phase
         }
       end
-      @vehicle_names = Vehicle.where(id: @report_data.keys.uniq).pluck(:id, :name).to_h
+      report_vehicles = Vehicle.where(id: @report_data.keys.uniq)
+      @vehicle_names = report_vehicles.pluck(:id, :name).to_h
+      @vehicle_plates = report_vehicles.pluck(:id, :license_plate).to_h
     end
 
     apply_v2_response
@@ -1460,7 +1462,7 @@ class ReportsController < ApplicationController
 
   def pdf_template
     report_name = @custom_report.name
-    layout = report_name == 'manifest' ? 'portrait' : 'landscape'
+    layout = %w[manifest pre_run_inspections].include?(report_name) ? 'portrait' : 'landscape'
 
     {
       pdf: "#{report_name}",
@@ -1481,7 +1483,7 @@ class ReportsController < ApplicationController
       :layout => 'pdf',
       :orientation => layout,
       :footer => {
-          :center => view_context.format_for_pdf_printing(Time.now),
+          :center => view_context.format_for_pdf_printing(Time.current) + Time.current.strftime(" %Z"),
           :right => 'Page [page] of [topage]'
       }
     }

@@ -3,8 +3,11 @@
 - else
   %h2 Below is the list of failed inspections:
   - @report_data.each do |vehicle_id, vehicle_data|
-    %h4 
-      %u= "Vehicle: #{@vehicle_names[vehicle_id]}"
+    %h3.vehicle-heading
+      %u
+        = "Vehicle: #{@vehicle_names[vehicle_id]}"
+      - if @vehicle_plates && @vehicle_plates[vehicle_id].present?
+        %span.vehicle-plate= " · Plate #{@vehicle_plates[vehicle_id]}"
     - vehicle_data.each do |run_id, inspections|
       - run_data = @run_data[run_id]
       %b= "#{run_data[0]}, #{format_date(run_data[1])}"
