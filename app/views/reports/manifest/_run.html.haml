@@ -1,6 +1,6 @@
 
 
-= render "reports/manifest/run_header#{@is_pdf ? '.html.haml' : ''}", run: run
+= render partial: "reports/manifest/run_header", formats: [:html], locals: {run: run}
 .row
   %table{style: 'font-size: 12pt; width: 100% !important;'}
     %tr
@@ -11,4 +11,4 @@
     %tbody
       - itins = get_public_itineraries(run, true)
       - itins.each_with_index do |itin, index|
-        = render "reports/manifest/itinerary#{@is_pdf ? '.html.haml' : ''}", itinerary: itin
+        = render partial: "reports/manifest/itinerary", formats: [:html], locals: {itinerary: itin}

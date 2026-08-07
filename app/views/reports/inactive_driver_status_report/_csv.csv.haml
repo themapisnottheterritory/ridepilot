@@ -2,9 +2,9 @@
 = render 'reports/common_csv_header'
 
 - if @is_perm_inactive_report
-  = render "reports/#{@custom_report.name}/perm_inactive.csv.haml"
+  = render "reports/#{@custom_report.name}/perm_inactive"
 - else
-  = render "reports/#{@custom_report.name}/temp_inactive.csv.haml"
+  = render "reports/#{@custom_report.name}/temp_inactive"
   
 
   

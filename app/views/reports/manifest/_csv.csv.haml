@@ -1,0 +1,13 @@
+= render 'reports/common_csv_header'
+
+- @runs.each do |run|
+  = CSV.generate_line([""], row_sep: nil).html_safe
+  = CSV.generate_line(["Run", run.try(:name), "Date", run.date.try(:strftime, "%m/%d/%Y")], row_sep: nil).html_safe
+  = CSV.generate_line(["Driver", (run.driver.try(:user_name) || "(no driver)"), "Vehicle", run.vehicle.try(:name)], row_sep: nil).html_safe
+  = CSV.generate_line(["Scheduled Run Time", "#{format_time_for_listing(run.scheduled_start_time)} - #{format_time_for_listing(run.scheduled_end_time)}"], row_sep: nil).html_safe
+  = CSV.generate_line(["Stop", "Customer", "Address", "City", "Scheduled Time", "Notes"], row_sep: nil).html_safe
+  - get_public_itineraries(run, true).each do |itin|
+    - trip = itin.trip
+    - is_pickup = itin.leg_flag == 1
+    - address = is_pickup ? trip.pickup_address : trip.dropoff_address
+    = CSV.generate_line([(is_pickup ? "PU" : "DO"), trip.customer.try(:name), address.try(:address), address.try(:city), (itin.time ? format_time_for_listing(itin.time) : ""), trip.notes], row_sep: nil).html_safe

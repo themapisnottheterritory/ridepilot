@@ -49,7 +49,7 @@
             %img{src: "/uta_logo.png", height:40, width:151}
           
     %br  
-    = render "reports/manifest/run#{@is_pdf ? '.html.haml' : ''}", run: run
+    = render partial: "reports/manifest/run", formats: [:html], locals: {run: run}
 
 
        

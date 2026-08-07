@@ -63,7 +63,7 @@
     %b Eligibility 
     %br
     - if @is_pdf
-      = render 'customers/customer_eligibility_list.pdf.haml', customer: customer
+      = render partial: 'customers/customer_eligibility_list', formats: [:pdf], locals: {customer: customer}
     - else
       .row
         .col-sm-6

@@ -40,7 +40,7 @@
     = CSV.generate_line(["Mobility Device", customer.mobility.try(:name) || '(Not specified)'], row_sep: nil).html_safe
 
     = CSV.generate_line(["Eligibility"], row_sep: nil).html_safe
-    = render 'customers/customer_eligibility_list.csv.haml', customer: customer
+    = render 'customers/customer_eligibility_list', customer: customer
 
 
   
