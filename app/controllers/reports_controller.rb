@@ -1312,16 +1312,18 @@ class ReportsController < ApplicationController
       # (defect note, photo count, and which phase it was found on). Legacy rows
       # simply have these blank.
       @report_data = {}
-      @inspections.includes(:vehicle_inspection, :vehicle_inspection_report).each do |ri|
+      @inspections.includes(:vehicle_inspection, :vehicle_inspection_report, photos_attachments: :blob).each do |ri|
         vehicle_id = ri.run.vehicle_id
         run_id = ri.run_id
         @report_data[vehicle_id] ||= {}
         @report_data[vehicle_id][run_id] ||= []
+        photos = ri.photos.attached? ? ri.photos.to_a : []
         @report_data[vehicle_id][run_id] << {
           description: ri.vehicle_inspection.description,
           status:      ri.status,
           defect_note: ri.defect_note,
-          photo_count: (ri.photos.attached? ? ri.photos.count : 0),
+          photo_count: photos.size,
+          photos:      photos,
           phase:       ri.vehicle_inspection_report&.phase
         }
       end

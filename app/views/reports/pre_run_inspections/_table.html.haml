@@ -16,6 +16,10 @@
               %em= " (#{insp[:phase]}-trip)"
             - if insp[:photo_count].to_i > 0
               = " · #{insp[:photo_count]} #{'photo'.pluralize(insp[:photo_count].to_i)}"
+              - if request.format.html? && insp[:photos].present?
+                %div{style: 'margin: 4px 0;'}
+                  - insp[:photos].each do |photo|
+                    = link_to image_tag(rails_blob_path(photo, only_path: true), style: 'max-height: 110px; margin: 3px; border: 1px solid #ccc;'), rails_blob_path(photo, only_path: true), target: '_blank'
             - if insp[:defect_note].present?
               %div
                 %b Note:
