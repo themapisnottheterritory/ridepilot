@@ -1,0 +1,38 @@
+// GCRPC brand styling for on-screen reports -- matches the report PDFs
+// (reports/show.pdf.haml). Scoped to body.reports (controller_name) so other
+// app tables/pages are untouched, and to table.table so the manifest's custom
+// run-sheet tables (which don't use .table) keep their own layout.
+$gcrpc-navy: #12264F;
+$gcrpc-gold: #CC9900;
+
+body.reports {
+  h2 {
+    color: $gcrpc-navy;
+    border-bottom: 2px solid $gcrpc-gold;
+    padding-bottom: 3px;
+  }
+
+  .vehicle-heading {
+    color: $gcrpc-navy;
+    font-size: 20px;
+    margin-bottom: 2px;
+
+    .vehicle-plate { color: $gcrpc-navy; font-weight: 600; }
+  }
+
+  u { text-decoration: none; color: $gcrpc-navy; font-weight: bold; }
+
+  table.table {
+    thead th,
+    th {
+      background: $gcrpc-navy !important;
+      color: #fff !important;
+      border-color: $gcrpc-navy !important;
+      font-weight: 600;
+    }
+
+    td { border-color: #cfd6e4; }
+
+    tbody tr:nth-child(even) td { background: #f4f6fa; }
+  }
+}
