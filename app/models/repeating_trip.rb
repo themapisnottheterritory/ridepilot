@@ -14,7 +14,7 @@ class RepeatingTrip < ApplicationRecord
   has_many :weekday_assignments, dependent: :destroy
 
   has_one    :return_trip, class_name: "RepeatingTrip", foreign_key: :linking_trip_id
-  belongs_to :outbound_trip, class_name: 'RepeatingTrip', foreign_key: :linking_trip_id
+  belongs_to :outbound_trip, class_name: 'RepeatingTrip', foreign_key: :linking_trip_id, optional: true
 
   before_destroy :unschedule!
   before_update :check_days_of_week_removed
@@ -68,8 +68,8 @@ class RepeatingTrip < ApplicationRecord
       end
     }
 
-  belongs_to :driver, -> { with_deleted } 
-  belongs_to :vehicle, -> { with_deleted }
+  belongs_to :driver, -> { with_deleted }, optional: true
+  belongs_to :vehicle, -> { with_deleted }, optional: true
 
   has_many :repeating_runs, through: :weekday_assignments
   has_many :weekday_assignments, dependent: :destroy

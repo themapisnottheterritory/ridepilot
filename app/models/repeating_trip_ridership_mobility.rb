@@ -1,3 +1,3 @@
 class RepeatingTripRidershipMobility < RidershipMobilityMapping
-  belongs_to :trip, foreign_key: :host_id
+  belongs_to :trip, foreign_key: :host_id, optional: true
 end
