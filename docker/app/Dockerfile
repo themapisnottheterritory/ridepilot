@@ -14,6 +14,9 @@ RUN apt-get update && apt-get install -y \
 # Imagemagick
 RUN apt-get install imagemagick libmagickwand-dev -y
 
+# poppler-utils -> pdftotext, for verifying/inspecting generated report PDFs
+RUN apt-get install -y poppler-utils
+
 # Define where our application will live inside the image
 ENV RAILS_ROOT /var/www/ridepilot
 
