@@ -1,5 +1,8 @@
 # RidePilot ops monitoring
 
+> Rebuilding the host from scratch? Start with **[../disaster-recovery.md](../disaster-recovery.md)** — this monitoring is the last (verification) step of that runbook.
+
+
 Host-side monitoring for the RidePilot deployment (Docker host 10.0.0.16, user
 `philz`). **The scripts here are the live source** — the host cron and the Claude
 Code hook invoke them *in place* from this checkout, so editing a file here (and
