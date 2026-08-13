@@ -148,6 +148,12 @@ gem 'public_activity'
 gem 'rails-settings-cached'
 # background worker - updated for Rails 7.1 compatibility
 gem 'sidekiq', '~> 7.0'
+# Pin below 3.0: connection_pool 3.0 changed TimedStack#pop to keyword args,
+# but sidekiq 7.3.9 calls it positionally in Scheduled::Poller#initial_wait ->
+# "wrong number of arguments (given 1, expected 0)" kills the scheduler thread
+# on every boot (scheduled/retry jobs never fire). sidekiq's own dep has no
+# upper bound, so 3.0.2 slipped in.
+gem 'connection_pool', '~> 2.5'
 # Use redis as the cache_store for Rails
 gem 'redis-rails'
 # Excel
