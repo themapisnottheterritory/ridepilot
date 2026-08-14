@@ -76,9 +76,14 @@ Hit these bringing the stack up from scratch; all resolved. Read before the next
 - **All four gitignored config files are needed, not just `application.yml`.** The clone
   omits `application.yml`, `database.yml`, `master.key`, `credentials.yml.enc` (list via
   `git status --ignored config/`). Missing `database.yml` → boot dies with `Cannot load
-  database configuration`. Copy them from `.16`. (`master.key` is root-owned on `.16` so
-  scp gets Permission denied — but this app reads secrets from `application.yml`/figaro and
-  boots fine without it; grab it with sudo only if a feature ever needs Rails credentials.)
+  database configuration`. Copy them from `.16`. **`master.key` is root-owned mode-600 on
+  `.16`** so scp is denied — pull it via a root-in-container read:
+  `ssh philz@10.0.0.16 "docker run --rm -v /home/philz/rptest/ridepilot/config:/c:ro alpine cat /c/master.key" > config/master.key`.
+  The app *boots* without it (secrets come from `application.yml`/figaro), **but it is
+  REQUIRED for Entra SSO**: without it `Rails.application.credentials.entra_id` can't
+  decrypt → the OmniAuth strategy never registers (`Devise.omniauth_providers` empty) → the
+  "Sign in with Microsoft" button vanishes from the login page. Verify after copying:
+  `docker exec ridepilot_app_1 bundle exec rails runner 'p Devise.omniauth_providers'` → `[:entra_id]`.
 - **`tmp/pids` must exist.** The image creates it, but the repo bind-mount hides the
   image's copy and a fresh clone has no `tmp/pids`, so puma binds then dies on
   `rb_sysopen - tmp/pids/server.pid (Errno::ENOENT)`. Fix: `mkdir -p tmp/pids`.
