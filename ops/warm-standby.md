@@ -8,13 +8,46 @@ Companion to [disaster-recovery.md](disaster-recovery.md) (the from-scratch
 rebuild) — this is the "don't rebuild from scratch, fail over instead" answer to
 the single-host risk.
 
-**Status (2026-08-14):** primary-side hourly backup **live** on `.16`. `.15`
-reinstalled to Ubuntu 24.04, stack built, first sync succeeded, hourly pull cron
-installed, and **the app serves live prod data** (`:3000` → 302 login; 19,247 customers
-matching `.16`). **Remaining:** the map layer — `web`/nginx won't start until `osm-tiles`
-+ `osrm` resolve (they aren't on `.15` yet), so the front tier (`:80`/`:443`) is down
-until the map services are provided or nginx is made lazy (see gotchas). Then a practiced
-failover (phase 3). The app itself is fully reachable meanwhile at `http://10.0.0.15:3000`.
+**Status (2026-08-14): FULL PARITY.** `.15` (Ubuntu 24.04) runs the complete current
+stack — app, db, redis, sidekiq, optimizer, **osrm + osm-tiles**, and **web/nginx serving
+on :80/:443** (302 login). Data mirrors prod hourly (19,247 customers). Map tiles (Texas)
+and OSRM routing were copied from `.16`. **Only remaining: a practiced failover (phase 3).**
+
+## Map layer setup (how osrm + osm-tiles got onto `.15`, 2026-08-14)
+
+Copied `.16`'s prepared data rather than re-importing (which would be hours + the source
+extract). The trick throughout: **stream via a throwaway `alpine` container that reads as
+root inside**, so host file perms and Docker-volume ownership don't matter. All run from
+`.15` (which has a passwordless key to `.16`).
+
+- **OSRM** (bind-mounted `./osrm-data`, 6.6 GB, one file is root-only `700`):
+  ```sh
+  ssh philz@10.0.0.16 "docker run --rm -v /home/philz/rptest/ridepilot/osrm-data:/data:ro alpine tar cf - -C /data ." \
+    | docker run --rm -i -v /home/philz/rptest/ridepilot/osrm-data:/data alpine tar xf - -C /data
+  docker compose restart osrm
+  ```
+- **osm-tiles** (23 GB Docker volume `osm-tile-db` + tiny `osm-tile-cache`). Stop `.16`'s
+  tile server first for a consistent Postgres copy (brief `.16` maps-gray, app unaffected):
+  ```sh
+  docker volume create osm-tile-db; docker volume create osm-tile-cache
+  ssh philz@10.0.0.16 "docker stop -t 30 osm-tiles"
+  ssh philz@10.0.0.16 "docker run --rm -v osm-tile-db:/data:ro alpine tar cf - -C /data ." | docker run --rm -i -v osm-tile-db:/data alpine tar xf - -C /data
+  ssh philz@10.0.0.16 "docker run --rm -v osm-tile-cache:/data:ro alpine tar cf - -C /data ." | docker run --rm -i -v osm-tile-cache:/data alpine tar xf - -C /data
+  ssh philz@10.0.0.16 "docker start osm-tiles"
+  ```
+- **osm-tiles is a STANDALONE container, NOT in compose** (same as `.16`). Recreate it
+  joined to the compose network so nginx resolves `osm-tiles`. **`PG_VERSION=15` is
+  mandatory** — the copied DB was built with Postgres 15:
+  ```sh
+  docker run -d --name osm-tiles --restart unless-stopped --network ridepilot_default \
+    -e UPDATES=disabled -e PG_VERSION=15 -e AUTOVACUUM=on -e THREADS=20 \
+    -p 127.0.0.1:8082:80 \
+    -v osm-tile-db:/data/database -v osm-tile-cache:/data/tiles \
+    overv/openstreetmap-tile-server run
+  ```
+- Then `docker compose restart web` — nginx now resolves `app`/`osm-tiles`/`osrm` and
+  starts. (`osrm` reads `osrm-data/` bind mount; it's a compose service and comes up once
+  the data exists.)
 
 ## Build gotchas (from the first real build on `.15`, 2026-08-14)
 
