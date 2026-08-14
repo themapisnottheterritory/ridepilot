@@ -9,9 +9,12 @@ rebuild) — this is the "don't rebuild from scratch, fail over instead" answer 
 the single-host risk.
 
 **Status (2026-08-14):** primary-side hourly backup **live** on `.16`. `.15`
-reinstalled to Ubuntu 24.04, **stack built and running**, and the **first sync
-succeeded** — `.15` mirrors production (19,247 customers, matching `.16`). Remaining:
-the hourly pull cron on `.15` (phase 2b) and a practiced failover (phase 3).
+reinstalled to Ubuntu 24.04, stack built, first sync succeeded, hourly pull cron
+installed, and **the app serves live prod data** (`:3000` → 302 login; 19,247 customers
+matching `.16`). **Remaining:** the map layer — `web`/nginx won't start until `osm-tiles`
++ `osrm` resolve (they aren't on `.15` yet), so the front tier (`:80`/`:443`) is down
+until the map services are provided or nginx is made lazy (see gotchas). Then a practiced
+failover (phase 3). The app itself is fully reachable meanwhile at `http://10.0.0.15:3000`.
 
 ## Build gotchas (from the first real build on `.15`, 2026-08-14)
 
@@ -37,6 +40,23 @@ Hit these bringing the stack up from scratch; all resolved. Read before the next
 - **The DB isn't auto-created.** Compose sets no `POSTGRES_DB`, so a fresh `db` container
   has only `postgres`. Before the first restore: `docker exec ridepilot_db_1 psql -U
   postgres -c "CREATE DATABASE ridepilot;"`.
+- **All four gitignored config files are needed, not just `application.yml`.** The clone
+  omits `application.yml`, `database.yml`, `master.key`, `credentials.yml.enc` (list via
+  `git status --ignored config/`). Missing `database.yml` → boot dies with `Cannot load
+  database configuration`. Copy them from `.16`. (`master.key` is root-owned on `.16` so
+  scp gets Permission denied — but this app reads secrets from `application.yml`/figaro and
+  boots fine without it; grab it with sudo only if a feature ever needs Rails credentials.)
+- **`tmp/pids` must exist.** The image creates it, but the repo bind-mount hides the
+  image's copy and a fresh clone has no `tmp/pids`, so puma binds then dies on
+  `rb_sysopen - tmp/pids/server.pid (Errno::ENOENT)`. Fix: `mkdir -p tmp/pids`.
+- **nginx (`web`) hard-fails on unresolvable upstreams.** It declares `upstream`s for
+  `app`, `osm-tiles`, and `osrm`; if any name doesn't resolve at startup it exits
+  (`host not found in upstream …`) and crash-loops. On a box without the map services,
+  `web` stays down until you either (a) provide `osm-tiles` + `osrm` (map data, matching
+  `.16`), or (b) make nginx resolve lazily (add `resolver 127.0.0.11;` and switch the
+  `/tiles/` and `/osrm/` proxy_pass to `set $var …` variables so resolution defers to
+  request time — test carefully, the path rewrites and query-string passing are fiddly).
+  The app is reachable directly on `:3000` regardless.
 
 ---
 
