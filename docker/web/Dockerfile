@@ -8,10 +8,12 @@ ENV RAILS_ROOT /var/www/ridepilot
 WORKDIR $RAILS_ROOT
 # create log directory
 RUN mkdir log
-# copy over static assets
-COPY public public/
+# copy over static assets (paths are relative to the build context, which is the
+# repo's PARENT dir per docker-compose.yml `context: ..` -- hence the ridepilot/ prefix,
+# matching docker/app/Dockerfile)
+COPY ridepilot/public public/
 # Copy Nginx config template
-COPY docker/web/nginx.conf /tmp/docker.nginx
+COPY ridepilot/docker/web/nginx.conf /tmp/docker.nginx
 # substitute variable references in the Nginx config template for real values from the environment 
 # put the final config in its place
 RUN envsubst '$RAILS_ROOT' < /tmp/docker.nginx > /etc/nginx/conf.d/default.conf
