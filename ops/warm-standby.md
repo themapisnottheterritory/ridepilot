@@ -8,9 +8,35 @@ Companion to [disaster-recovery.md](disaster-recovery.md) (the from-scratch
 rebuild) — this is the "don't rebuild from scratch, fail over instead" answer to
 the single-host risk.
 
-**Status (2026-08-14):** primary-side hourly backup is **live** (`ops/backup/
-ridepilot-backup.sh` + cron on `.16`). `.15` reinstalled to Ubuntu 24.04. Standby
-setup (phases 0–1) and the pull/failover wiring (phases 2b–3) are pending.
+**Status (2026-08-14):** primary-side hourly backup **live** on `.16`. `.15`
+reinstalled to Ubuntu 24.04, **stack built and running**, and the **first sync
+succeeded** — `.15` mirrors production (19,247 customers, matching `.16`). Remaining:
+the hourly pull cron on `.15` (phase 2b) and a practiced failover (phase 3).
+
+## Build gotchas (from the first real build on `.15`, 2026-08-14)
+
+Hit these bringing the stack up from scratch; all resolved. Read before the next rebuild:
+
+- **Compose v1 vs v2 naming.** `.16` runs `docker-compose` **v1.25** → underscore names
+  (`ridepilot_db_1`), which every ops script expects. Fresh hosts get Compose **v2** →
+  hyphen names (`ridepilot-db-1`), breaking the scripts. Fix: `export
+  COMPOSE_COMPATIBILITY=true` (added to `~/.bashrc`) so v2 uses underscores. Install the
+  plugin first: `sudo apt-get install -y docker-compose-v2`.
+- **The `engines/` sibling isn't in the repo.** The build context is the repo's PARENT
+  (`context: ..`), and the Dockerfile does `COPY engines …` — path-dependency gems
+  (`reporting`, `translation_engine`) that live at `/home/philz/rptest/engines`, NOT in
+  the `ridepilot` repo. Copy them over: `rsync -az
+  philz@10.0.0.16:/home/philz/rptest/engines /home/philz/rptest/`.
+- **web Dockerfile needed a fix** (commit `85fef0d4`): its `COPY` sources lacked the
+  `ridepilot/` prefix the `context: ..` build requires (app had it, web didn't). Fixed in
+  the repo now — a fresh `git pull` has it.
+- **bundle_cache first-boot race.** `app` and `sidekiq` share the `ridepilot_bundle_cache`
+  volume; on a fresh volume both try to populate it at once → `mkdir … specifications:
+  file exists`. Fix: `docker compose up -d app` alone first (populates the volume), then
+  `docker compose up -d` the rest.
+- **The DB isn't auto-created.** Compose sets no `POSTGRES_DB`, so a fresh `db` container
+  has only `postgres`. Before the first restore: `docker exec ridepilot_db_1 psql -U
+  postgres -c "CREATE DATABASE ridepilot;"`.
 
 ---
 
