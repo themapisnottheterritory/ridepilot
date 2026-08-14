@@ -93,11 +93,13 @@ routing set `TRIP_PLANNER_TYPE: OSRM` and `OSRM_URL: http://osrm:5000`.
 
 ## 3. Backup status — READ THIS
 
-> ⚠️ **As of 2026-08-13 there is NO automated database backup.** The host crontab runs
-> only `scheduler:run` and the health check. If `10.0.0.16` dies right now, the
-> `ridepilot` database and `public/system` uploads are lost. Closing this gap is the
-> single most important DR action. The commands below both create and restore backups —
-> wire the "create" ones into cron.
+> ✅ **As of 2026-08-14 an automated hourly backup is live** — `ops/backup/
+> ridepilot-backup.sh` runs from the host crontab (`0 * * * *`) and writes a PostGIS
+> dump + uploads mirror to `/home/philz/backups/` (168 hourly dumps retained, ~6.4 MB
+> each). This is also the feed for the `.15` warm standby — see
+> [warm-standby.md](warm-standby.md). **Remaining gap:** those backups still live on
+> `10.0.0.16`; copy `~/backups/` off-box (the standby pull does this hourly once `.15`
+> is wired) so a loss of `.16` doesn't take the backups with it.
 
 ### Create backups (run on the host)
 ```sh
