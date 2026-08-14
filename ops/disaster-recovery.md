@@ -140,9 +140,15 @@ cd ridepilot && git checkout master
 > the Claude hook paths in §4.7–4.8 accordingly.
 
 ### 4.2 Restore secrets and certs
+The clone does NOT include gitignored config — the app won't boot without it (a
+missing `config/database.yml` throws `Cannot load database configuration` at startup).
+List them on a working box with `git status --ignored config/`; as of 2026-08-14 they are
+**`application.yml`, `database.yml`, `master.key`, `credentials.yml.enc`** (all four).
 ```sh
-cp /path/to/backup/application.yml config/application.yml
-# database.yml is committed but confirm its password matches the db (see §4.4)
+for f in application.yml database.yml master.key credentials.yml.enc; do
+  cp /path/to/backup/config/$f config/$f
+done
+chmod 600 config/master.key
 mkdir -p /home/philz/ridepilot-ops
 cp -r /path/to/backup/certs /home/philz/ridepilot-ops/certs
 chmod 600 /home/philz/ridepilot-ops/certs/rp.key
@@ -154,10 +160,20 @@ TLS procedure. Place the leaf + fullchain + key in `~/ridepilot-ops/certs/` as
 `rp.key`, `rp.crt`, `rp-fullchain.crt`.
 
 ### 4.3 Build and start the stack
+The Docker build context is the repo's PARENT and needs the `engines/` sibling
+(path-dependency gems, NOT in the repo). On Compose v2 hosts, force underscore container
+names so the ops scripts match, and bring `app` up alone first to avoid the shared-gem-
+volume populate race. (Full explanations in [warm-standby.md](warm-standby.md) → "Build
+gotchas".)
 ```sh
+# engines sibling (from a working box or backup)
+cp -r /path/to/engines /home/philz/rptest/engines      # reporting + translation_engine
 cd /home/philz/rptest/ridepilot
+export COMPOSE_COMPATIBILITY=true                       # v2 -> underscore names (ridepilot_db_1)
 docker compose build
-docker compose up -d
+docker compose up -d app                                # populate bundle_cache alone first
+sleep 25
+docker compose up -d                                    # then the rest
 ```
 This creates fresh (empty) `ridepilot_postgres_data`, `ridepilot_redis`, and
 `ridepilot_bundle_cache` volumes.
