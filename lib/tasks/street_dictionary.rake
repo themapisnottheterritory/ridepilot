@@ -1,8 +1,9 @@
 namespace :street_dictionary do
-  desc 'Rebuild the street dictionary and canonicalize new entries against the geocoder'
+  desc 'Rebuild the street dictionary and canonicalize new entries (RETRY_ALL=1 to re-try known failures)'
   task build: :environment do
     limit = ENV['LIMIT'].presence&.to_i
-    stats = StreetDictionaryBuilder.new(logger: Logger.new($stdout)).run(limit: limit)
+    stats = StreetDictionaryBuilder.new(logger: Logger.new($stdout))
+                                   .run(limit: limit, retry_all: ENV['RETRY_ALL'].present?)
     puts stats.inspect
   end
 
@@ -11,10 +12,11 @@ namespace :street_dictionary do
     puts StreetDictionaryBuilder.new(logger: Logger.new($stdout)).collect.inspect
   end
 
-  desc 'Canonicalize unresolved entries (LIMIT=n to work through it in batches)'
+  desc 'Canonicalize unresolved entries (LIMIT=n for batches, RETRY_ALL=1 to ignore the retry interval)'
   task canonicalize: :environment do
     limit = ENV['LIMIT'].presence&.to_i
-    puts StreetDictionaryBuilder.new(logger: Logger.new($stdout)).canonicalize(limit: limit).inspect
+    puts StreetDictionaryBuilder.new(logger: Logger.new($stdout))
+                                .canonicalize(limit: limit, retry_all: ENV['RETRY_ALL'].present?).inspect
   end
 
   desc 'Coverage summary'

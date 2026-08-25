@@ -1171,8 +1171,11 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.datetime "resolved_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "last_attempted_at"
+    t.integer "attempts", default: 0, null: false
     t.index ["raw_street", "city", "state"], name: "index_street_dictionary_on_raw_street_city_state", unique: true
     t.index ["search_key"], name: "index_street_dictionary_on_search_key_prefix", opclass: :varchar_pattern_ops
+    t.index ["street", "last_attempted_at"], name: "index_street_dictionary_on_street_and_last_attempted_at"
   end
 
   create_table "translation_keys", id: :serial, force: :cascade do |t|

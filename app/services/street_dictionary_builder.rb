@@ -23,6 +23,13 @@ class StreetDictionaryBuilder
   # Be a good neighbour to the geocoder even though it is ours.
   REQUEST_PAUSE = 0.05
 
+  # About a quarter of collected streets never resolve -- typos, fragments
+  # ("Hwy"), private roads OSM has no record of. Retrying those every night
+  # would cost thousands of requests to learn nothing, so a failed entry waits
+  # this long before it is tried again. Long enough to be cheap, short enough
+  # that a genuine OSM improvement still lands within the month.
+  RETRY_AFTER = 30.days
+
   attr_reader :stats
 
   def initialize(logger: Rails.logger, state: DEFAULT_STATE)
@@ -31,9 +38,9 @@ class StreetDictionaryBuilder
     @stats  = Hash.new(0)
   end
 
-  def run(limit: nil)
+  def run(limit: nil, retry_all: false)
     collect
-    canonicalize(limit: limit)
+    canonicalize(limit: limit, retry_all: retry_all)
     stats
   end
 
@@ -69,8 +76,14 @@ class StreetDictionaryBuilder
   end
 
   # Phase 2 -- resolve each unresolved entry to OSM's name for it.
-  def canonicalize(limit: nil)
+  # Entries tried within RETRY_AFTER are skipped, which is what keeps the
+  # nightly run proportional to the number of NEW streets rather than to the
+  # backlog of unresolvable ones. Pass retry_all: true to force a full sweep.
+  def canonicalize(limit: nil, retry_all: false)
     scope = StreetDictionaryEntry.unresolved.order(weight: :desc)
+    unless retry_all
+      scope = scope.where('last_attempted_at IS NULL OR last_attempted_at < ?', RETRY_AFTER.ago)
+    end
     scope = scope.limit(limit) if limit
     total = scope.count
     log "canonicalize: #{total} unresolved entries"
@@ -80,15 +93,18 @@ class StreetDictionaryBuilder
     # the most-used streets first. The table is small enough to load.
     scope.to_a.each_with_index do |entry, i|
       road = lookup_road(entry.raw_street, entry.city)
+      attrs = { last_attempted_at: Time.current, attempts: entry.attempts + 1 }
 
       if road.present?
-        entry.update!(street: road,
-                      search_key: StreetDictionaryEntry.normalize(road),
-                      resolved_at: Time.current)
+        attrs.merge!(street: road,
+                     search_key: StreetDictionaryEntry.normalize(road),
+                     resolved_at: Time.current)
         @stats[:resolved] += 1
       else
         @stats[:unresolved] += 1
       end
+
+      entry.update!(attrs)
 
       log "  #{i + 1}/#{total} resolved=#{@stats[:resolved]}" if ((i + 1) % 250).zero?
       sleep REQUEST_PAUSE
