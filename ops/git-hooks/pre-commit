@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Refuse to commit a db/schema.rb that deletes tables.
+#
+# Why this exists: `RAILS_ENV=test rails db:migrate` re-dumps db/schema.rb from
+# the TEST database. The test DB is missing tables that exist in production
+# (fare_cards, fare_card_data, lite_customers, lite_trips,
+# lite_incidental_trips, lite_unique_riders), so the dump silently deletes them
+# from the schema. Committing that hands anyone who later runs
+# `db:schema:load` a database with those tables missing.
+#
+# It is easy to miss: the diff also contains a legitimate-looking addition for
+# whatever migration you just wrote, so the stat line reads like a normal
+# change. This has already been caught twice in review.
+#
+# If a migration genuinely drops a table, this hook is wrong and you should say
+# so explicitly:
+#
+#     git commit --no-verify
+#
+# Installed via:  git config core.hooksPath ops/git-hooks
+set -uo pipefail
+
+SCHEMA=db/schema.rb
+
+# Nothing to check unless the schema is part of this commit.
+git diff --cached --name-only | grep -qx "$SCHEMA" || exit 0
+
+DROPPED="$(git diff --cached -U0 -- "$SCHEMA" \
+  | grep -E '^-  create_table' \
+  | sed -E 's/^-  create_table "([^"]+)".*/\1/')"
+
+[ -z "$DROPPED" ] && exit 0
+
+COUNT="$(printf '%s\n' "$DROPPED" | wc -l | tr -d ' ')"
+
+cat >&2 <<EOF
+
+  BLOCKED: this commit deletes $COUNT table(s) from $SCHEMA
+
+$(printf '    - %s\n' $DROPPED)
+
+  Almost always this means the schema was dumped from the test database
+  rather than development. To fix:
+
+      git checkout $SCHEMA
+      docker exec ridepilot_app_1 sh -c 'cd /var/www/ridepilot && bin/rails db:schema:dump'
+      git add $SCHEMA
+
+  Then re-check that the diff only ADDS:
+
+      git diff --cached $SCHEMA | grep '^-' | grep -v '^---'
+
+  If a migration really does drop these tables, commit with --no-verify.
+
+EOF
+
+exit 1
