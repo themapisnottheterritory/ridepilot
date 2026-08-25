@@ -1,2 +1,10 @@
-<meta name="nominatim-url" content="<%= ENV['NOMINATIM_URL'] || 'http://10.0.0.18:8088' %>">
-<meta name="osrm-url" content="<%= ENV['OSRM_URL'] || 'http://10.0.0.18:5000' %>">
+<%# Browser-facing geocoder URL. Deliberately NOT ENV['NOMINATIM_URL'] -- that   %>
+<%# one is the absolute http://10.0.0.18:8088 used server-side by              %>
+<%# GeocodingService, and a plain-http XHR from the https vhost is blocked as  %>
+<%# mixed content. Default to the same-origin nginx proxy (docker/web/nginx.conf). %>
+<meta name="nominatim-url" content="<%= ENV['NOMINATIM_BROWSER_URL'] || '/nominatim' %>">
+<%# Browser-facing routing URL. Deliberately NOT ENV['OSRM_URL'] -- that is    %>
+<%# the docker service name (http://osrm:5000) used server-side by             %>
+<%# RunEtaEstimator, which no browser can resolve. Default to the same-origin  %>
+<%# nginx proxy (docker/web/nginx.conf).                                       %>
+<meta name="osrm-url" content="<%= ENV['OSRM_BROWSER_URL'] || '/osrm' %>">

@@ -198,6 +198,7 @@ Rails.application.routes.draw do
       collection do
         post :validate_customer_specific
         get :autocomplete_public
+        get :geocode_suggest
       end
     end
     get "trip_address_autocomplete" => "addresses#trippable_autocomplete"

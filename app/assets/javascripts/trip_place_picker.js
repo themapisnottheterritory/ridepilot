@@ -18,18 +18,15 @@ function init_place_picker(dom_selector, query_bounds, query_restrictions) {
 
   saved_places.initialize();
 
-  // Nominatim-based suggestion source
-  var nominatim_url = $('meta[name="nominatim-url"]').attr('content') || 'http://10.0.0.18:8088';
-  var viewboxParam = '';
-  if (query_bounds && query_bounds.min_lat) {
-    viewboxParam = '&viewbox=' + query_bounds.min_lon + ',' + query_bounds.max_lat + ',' + query_bounds.max_lon + ',' + query_bounds.min_lat + '&bounded=1';
-  }
-
+  // Nominatim-based suggestion source. Goes through geocode_suggest, which
+  // applies the provider viewbox and retries via Nominatim's structured search
+  // when free text finds nothing (see AddressesController#geocode_suggest);
+  // query_bounds is now applied server-side.
   var nominatim_places = new Bloodhound({
     datumTokenizer: Bloodhound.tokenizers.whitespace,
     queryTokenizer: Bloodhound.tokenizers.whitespace,
     remote: {
-      url: nominatim_url + '/search?format=json&addressdetails=1&countrycodes=us&limit=5&q=%QUERY' + viewboxParam,
+      url: '/addresses/geocode_suggest?q=%QUERY',
       rateLimitWait: 300,
       filter: function(results) {
         return results.map(function(r) {

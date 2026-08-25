@@ -2,7 +2,8 @@
   // store list of upcoming_path polylines
   var upcoming_path_lines = {};
 
-  var OSRM_URL = $('meta[name="osrm-url"]').attr('content') || 'http://10.0.0.18:5000';
+  // Same-origin nginx proxy; a plain-http URL here is blocked as mixed content.
+  var OSRM_URL = $('meta[name="osrm-url"]').attr('content') || '/osrm';
 
   // draw run upcoming_path location on map via OSRM
   function drawUpcomingPath(run_id, waypoints) {

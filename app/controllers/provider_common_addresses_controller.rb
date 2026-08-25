@@ -71,7 +71,8 @@ class ProviderCommonAddressesController < AddressesController
       attrs[:prefix] = prefix
       render json: attrs.to_json 
     else
-      errors = address.errors.messages
+      # errors.messages is frozen on Rails 7.1 (see addresses_controller).
+      errors = address.errors.messages.deep_dup
       errors['prefix'] = prefix
       render json: errors
     end

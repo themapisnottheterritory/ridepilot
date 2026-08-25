@@ -2,7 +2,12 @@
 // Provides $.fn.nominatimComplete() and nominatimToAddress() utility
 
 (function($) {
-  var NOMINATIM_URL = $('meta[name="nominatim-url"]').attr('content') || 'http://10.0.0.18:8088';
+  // Default to the same-origin /nominatim/ proxy (see docker/web/nginx.conf).
+  // Hardcoding http://10.0.0.18:8088 here meant the browser made a plain-http
+  // XHR from an https page, which is blocked as mixed content -- the dropdown
+  // never appeared, so the address fields were never populated.
+  var NOMINATIM_URL = $('meta[name="nominatim-url"]').attr('content') || '/nominatim';
+  var SUGGEST_URL = '/addresses/geocode_suggest';
 
   // Parse a Nominatim result into RidePilot address format
   // (same output shape as googlePlaceParser)
@@ -70,12 +75,8 @@
       $input.after($dropdown);
       $input.css('position', 'relative');
 
-      // Build viewbox query param from bounds
-      var viewboxParam = '';
-      if (options.bounds) {
-        var b = options.bounds;
-        viewboxParam = '&viewbox=' + b.min_lon + ',' + b.max_lat + ',' + b.max_lon + ',' + b.min_lat + '&bounded=1';
-      }
+      // Bounds are no longer built here -- geocode_suggest applies the provider
+      // viewbox server-side. options.bounds is still accepted for callers.
 
       var fetchResults = debounce(function() {
         var query = $input.val();
@@ -84,7 +85,10 @@
           return;
         }
 
-        var url = NOMINATIM_URL + '/search?format=json&addressdetails=1&countrycodes=us&limit=5&q=' + encodeURIComponent(query) + viewboxParam;
+        // Server-side endpoint: applies the provider viewbox and falls back to
+        // Nominatim's structured search when free text finds nothing. See
+        // AddressesController#geocode_suggest.
+        var url = SUGGEST_URL + '?q=' + encodeURIComponent(query);
 
         $.getJSON(url, function(results) {
           $dropdown.empty();

@@ -4,6 +4,12 @@ class AddressesController < ApplicationController
   load_resource :only => [:edit, :update, :destroy]
   authorize_resource
 
+  # Nominatim matches whole tokens only -- it has no prefix search -- so there
+  # is no point querying it before the user has typed a word.
+  MIN_SUGGEST_LENGTH = 3
+  # Structured search returns nothing at all without an explicit state.
+  NOMINATIM_FALLBACK_STATE = ENV['NOMINATIM_FALLBACK_STATE'] || 'TX'
+
   # provider & customer common addresses
   def trippable_autocomplete
     term = parse_search_term
@@ -90,13 +96,54 @@ class AddressesController < ApplicationController
         attributes: address.as_json
       }
     else
-      errors = address.errors.messages
+      # errors.messages is frozen on Rails 7.1; mutating it raised FrozenError
+      # and returned a 500, which the address dialog swallowed silently.
+      errors = address.errors.messages.deep_dup
       errors[:prefix] = prefix
       render :json => errors
     end
   end
 
+  # Suggestion source for the browser-side address pickers.
+  #
+  # Two passes on purpose. Nominatim's free-text search cannot resolve a house
+  # number against a street whose name collides with a place name -- "1404 E
+  # Virginia" returns nothing, because "Virginia" reads as the state -- unless
+  # the street type is spelled out ("1404 E Virginia Ave"). Its structured
+  # search resolves the same string without the street type, but only when
+  # given an explicit state. So: free text first, structured as a fallback.
+  # The fallback runs only when free text found nothing, so it can add matches
+  # but never change ones that already worked.
+  def geocode_suggest
+    term = params[:q].to_s.strip
+    return render(json: []) if term.length < MIN_SUGGEST_LENGTH
+
+    results = nominatim_suggest(q: term)
+    results = nominatim_suggest(street: term, state: NOMINATIM_FALLBACK_STATE) if results.empty?
+
+    render json: results
+  end
+
   private
+
+  # Returns raw Nominatim JSON; the pickers already know how to parse that shape.
+  def nominatim_suggest(search_params)
+    base  = ENV['NOMINATIM_URL'] || 'http://10.0.0.18:8088'
+    query = { format: 'json', addressdetails: 1, countrycodes: 'us', limit: 5 }.merge(search_params)
+
+    bounds = Utility.new.get_provider_bounds(current_provider)
+    if bounds
+      query[:viewbox] = "#{bounds[:min_lon]},#{bounds[:max_lat]},#{bounds[:max_lon]},#{bounds[:min_lat]}"
+      query[:bounded] = 1
+    end
+
+    ActiveSupport::JSON.decode(
+      OpenURI.open_uri("#{base}/search?#{query.to_query}", open_timeout: 3, read_timeout: 5).read
+    )
+  rescue StandardError => e
+    Rails.logger.warn "geocode_suggest(#{search_params.keys.join(',')}) failed: #{e.class}: #{e.message}"
+    []
+  end
 
   def parse_search_term
     term = params['term'].downcase.strip
