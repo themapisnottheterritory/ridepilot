@@ -1,7 +1,10 @@
 require 'open-uri'
 
 class AddressesController < ApplicationController
-  load_resource :only => [:edit, :update, :destroy]
+  # No load_resource: this controller has no edit/update/destroy actions (and no
+  # routes to them), so the old `load_resource only: [...]` referenced callbacks
+  # that could never fire -- which Rails 7.1 raises on, breaking every spec in
+  # this file. authorize_resource still guards the collection actions.
   authorize_resource
 
   # Nominatim matches whole tokens only -- it has no prefix search -- so there
@@ -9,6 +12,7 @@ class AddressesController < ApplicationController
   MIN_SUGGEST_LENGTH = 3
   # Structured search returns nothing at all without an explicit state.
   NOMINATIM_FALLBACK_STATE = ENV['NOMINATIM_FALLBACK_STATE'] || 'TX'
+  SUGGEST_LIMIT = 5
 
   # provider & customer common addresses
   def trippable_autocomplete
@@ -120,6 +124,10 @@ class AddressesController < ApplicationController
 
     results = nominatim_suggest(q: term)
     results = nominatim_suggest(street: term, state: NOMINATIM_FALLBACK_STATE) if results.empty?
+    # Third pass: the caller may have typed a partial street ("1404 E Vir"),
+    # which Nominatim cannot match at all. Runs last so it can only add
+    # results, never displace ones the geocoder already found.
+    results = street_dictionary_suggest(term) if results.empty?
 
     render json: results
   end
@@ -143,6 +151,20 @@ class AddressesController < ApplicationController
   rescue StandardError => e
     Rails.logger.warn "geocode_suggest(#{search_params.keys.join(',')}) failed: #{e.class}: #{e.message}"
     []
+  end
+
+  # Completes a partial street from the local dictionary, then geocodes the
+  # completed address. The dictionary supplies the prefix matching and the
+  # correct street type; the geocoder still supplies the house number, so a
+  # number nobody has used before still resolves.
+  def street_dictionary_suggest(term)
+    house_number, fragment = StreetDictionaryEntry.split_house_number(term)
+    return [] if fragment.blank?
+
+    StreetDictionaryEntry.complete(fragment).flat_map { |entry|
+      street = house_number.present? ? "#{house_number} #{entry.street}" : entry.street
+      nominatim_suggest(street: street, city: entry.city, state: entry.state)
+    }.uniq { |r| r['place_id'] }.first(SUGGEST_LIMIT)
   end
 
   def parse_search_term

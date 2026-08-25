@@ -28,7 +28,7 @@ RSpec.describe AddressesController, type: :controller do
     # MapRequest API now requires a key, current call without key causes HTTP error, so skip for now
     it "responds with JSON" do
       post :trippable_autocomplete, params: autocomplete_terms
-      expect(response.content_type).to eq("application/json")
+      expect(response.content_type).to start_with("application/json")
     end
 
     it "include matching address info in the json response" do

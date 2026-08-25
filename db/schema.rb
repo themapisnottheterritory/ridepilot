@@ -198,6 +198,16 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.datetime "deleted_at", precision: nil
   end
 
+  create_table "customer_auths", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.string "token", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["customer_id"], name: "index_customer_auths_on_customer_id"
+    t.index ["token"], name: "index_customer_auths_on_token", unique: true
+  end
+
   create_table "customer_eligibilities", id: :serial, force: :cascade do |t|
     t.integer "customer_id"
     t.integer "eligibility_id"
@@ -252,6 +262,8 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.string "code", limit: 255
     t.integer "passenger_load_min"
     t.integer "passenger_unload_min"
+    t.boolean "sms_notifications_enabled", default: true
+    t.string "preferred_language", default: "en"
     t.index ["address_id"], name: "index_customers_on_address_id"
     t.index ["default_funding_source_id"], name: "index_customers_on_default_funding_source_id"
     t.index ["deleted_at"], name: "index_customers_on_deleted_at"
@@ -784,6 +796,13 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.integer "late_arrival_threshold_min"
     t.integer "very_late_arrival_threshold_min"
     t.bigint "fare_id"
+    t.boolean "use_external_avl", default: false
+    t.string "opentransit_url"
+    t.string "avl_source", default: "opentransit_api"
+    t.string "busavl_host"
+    t.string "busavl_database"
+    t.string "busavl_username"
+    t.string "busavl_password"
     t.index ["business_address_id"], name: "index_providers_on_business_address_id"
     t.index ["deleted_at"], name: "index_providers_on_deleted_at"
     t.index ["fare_id"], name: "index_providers_on_fare_id"
@@ -1142,6 +1161,20 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.index ["thing_type", "thing_id", "var"], name: "index_settings_on_thing_type_and_thing_id_and_var", unique: true
   end
 
+  create_table "street_dictionary_entries", force: :cascade do |t|
+    t.string "raw_street", null: false
+    t.string "city", null: false
+    t.string "state", default: "TX", null: false
+    t.string "street"
+    t.string "search_key"
+    t.integer "weight", default: 0, null: false
+    t.datetime "resolved_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["raw_street", "city", "state"], name: "index_street_dictionary_on_raw_street_city_state", unique: true
+    t.index ["search_key"], name: "index_street_dictionary_on_search_key_prefix", opclass: :varchar_pattern_ops
+  end
+
   create_table "translation_keys", id: :serial, force: :cascade do |t|
     t.string "name", limit: 255
     t.datetime "created_at", precision: nil
@@ -1243,6 +1276,7 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.bigint "fare_id"
     t.float "fare_amount"
     t.datetime "fare_collected_time", precision: nil
+    t.datetime "estimated_pickup_time"
     t.index ["called_back_by_id"], name: "index_trips_on_called_back_by_id"
     t.index ["customer_id"], name: "index_trips_on_customer_id"
     t.index ["deleted_at"], name: "index_trips_on_deleted_at"
@@ -1286,11 +1320,14 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.string "phone_number", limit: 255
     t.integer "address_id"
     t.string "authentication_token", limit: 30
+    t.string "omniauth_provider"
+    t.string "omniauth_uid"
     t.index ["address_id"], name: "index_users_on_address_id"
     t.index ["authentication_token"], name: "index_users_on_authentication_token", unique: true
     t.index ["current_provider_id"], name: "index_users_on_current_provider_id"
     t.index ["deleted_at"], name: "index_users_on_deleted_at"
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["omniauth_provider", "omniauth_uid"], name: "index_users_on_omniauth_provider_and_uid", unique: true, where: "((omniauth_provider IS NOT NULL) AND (omniauth_uid IS NOT NULL))"
     t.index ["password_changed_at"], name: "index_users_on_password_changed_at"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
@@ -1535,6 +1572,7 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "chat_read_receipts", "messages"
   add_foreign_key "chat_read_receipts", "runs"
+  add_foreign_key "customer_auths", "customers"
   add_foreign_key "fare_card_data", "fare_cards"
   add_foreign_key "gps_locations", "providers"
   add_foreign_key "gps_locations", "runs"
