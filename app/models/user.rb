@@ -8,7 +8,12 @@ class User < ApplicationRecord
   belongs_to :current_provider, class_name: "Provider", foreign_key: :current_provider_id
   has_one    :driver
   has_one    :device_pool_driver, through: :driver
-  belongs_to :user_address, -> { with_deleted }, class_name: 'UserAddress', foreign_key: 'address_id'
+  # optional: Rails 5 -> 7 made belongs_to required by default, and users.address_id
+  # is nullable by design -- 3 of the 17 existing users have no address, and
+  # users_controller#create_user explicitly sets user_address = nil when the address
+  # fields come back blank. Without this, creating a user without an address fails
+  # with "User address must exist", which broke the admin Add User form outright.
+  belongs_to :user_address, -> { with_deleted }, class_name: 'UserAddress', foreign_key: 'address_id', optional: true
   accepts_nested_attributes_for :user_address, update_only: true
   has_many :verification_questions, dependent: :destroy
   
