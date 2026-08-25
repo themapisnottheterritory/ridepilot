@@ -9,6 +9,34 @@ RSpec.describe StreetDictionaryBuilder do
     }.merge(attrs))
   end
 
+  describe "#collect" do
+    # collect only sees geocoded addresses, so a live one has to have a point.
+    def live_address(street, city)
+      create(:address, address: street, city: city, state: "TX",
+                       the_geom: Address.compute_geom(29.0, -97.0))
+    end
+
+    it "prunes entries for spellings no longer in the address book" do
+      live_address("1010 McArthur Street", "Cuero")
+      stale = entry(raw_street: "Macarthur St", city: "Cuero",
+                    street: "McArthur Street", weight: 20)
+
+      builder.collect
+
+      expect(StreetDictionaryEntry.where(id: stale.id)).to be_empty
+      expect(StreetDictionaryEntry.find_by(raw_street: "McArthur Street", city: "Cuero")).to be_present
+    end
+
+    it "refuses to prune when that would wipe most of the table" do
+      # No live addresses at all: every entry looks stale, which is exactly the
+      # shape of a broken collect. Deleting the table here would be the bug.
+      5.times { |i| entry(raw_street: "Gone #{i} St", city: "Cuero") }
+
+      expect { builder.collect }.not_to change(StreetDictionaryEntry, :count)
+      expect(builder.stats[:prune_refused]).to eq(5)
+    end
+  end
+
   describe "#canonicalize" do
     context "retry interval" do
       # The nightly rebuild must stay proportional to the number of NEW streets.

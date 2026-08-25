@@ -22,7 +22,7 @@ class StreetDictionaryEntry < ApplicationRecord
 
   LEADING_HOUSE_NUMBER = /\A\s*(\d+[A-Za-z]?)\s+/
   # Keyword-introduced unit ("APT 3", "Ste B") ...
-  UNIT_KEYWORD = /\b(?:apt|apartment|unit|ste|suite|lot|trlr|rm|room|bldg|#)\b.*\z/i
+  UNIT_KEYWORD = /\b(?:apt|apartment|unit|ste|suite|lot|trlr|trailer|rm|room|bldg|#)\b.*\z/i
   # ... and the bare trailing codes that carry no keyword at all ("Leary Ln NO6",
   # "Village Dr 94"). Left attached, these strings do not geocode.
   UNIT_TAIL = /[\s,]+(?:no\.?\s*\d+\S*|\d+[A-Za-z]?|[A-Za-z]?-?\d+[A-Za-z]?)\z/i
@@ -70,9 +70,15 @@ class StreetDictionaryEntry < ApplicationRecord
       return none if key.blank?
 
       escaped = sanitize_sql_like(key)
+      # Also match ignoring spaces, so "Mc Art" finds "McArthur Street". Staff
+      # split these names unpredictably -- the Cuero addresses alone carried
+      # "Mc Arthur", "Mac Arthur", "Macarthur" and "McArthur" -- and the
+      # canonical spelling is only ever one of them.
+      squashed = sanitize_sql_like(key.delete(' '))
       resolved
-        .where('search_key LIKE :prefix OR search_key LIKE :anywhere',
-               prefix: "#{escaped}%", anywhere: "%#{escaped}%")
+        .where('search_key LIKE :prefix OR search_key LIKE :anywhere ' \
+               'OR REPLACE(search_key, \' \', \'\') LIKE :squashed',
+               prefix: "#{escaped}%", anywhere: "%#{escaped}%", squashed: "#{squashed}%")
         .order(Arel.sql(
           ActiveRecord::Base.sanitize_sql_array(
             ['CASE WHEN search_key LIKE ? THEN 0 ELSE 1 END, weight DESC, street ASC',

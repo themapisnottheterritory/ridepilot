@@ -69,10 +69,38 @@ class StreetDictionaryBuilder
       @stats[entry.previously_new_record? ? :created : :refreshed] += 1
     end
 
+    prune(counts.keys)
+
     @stats[:collected] = counts.size
     log "collect: #{counts.size} distinct street/city pairs " \
-        "(#{@stats[:created]} new, #{@stats[:refreshed]} existing)"
+        "(#{@stats[:created]} new, #{@stats[:refreshed]} existing, #{@stats[:pruned]} pruned)"
     @stats
+  end
+
+  # Drop entries for spellings that no longer appear anywhere in the address
+  # book -- otherwise cleaning up a misspelled street leaves its old entry
+  # behind at its old weight, and it keeps showing up on the unresolved
+  # worklist as a job already done. Completion is unaffected either way:
+  # search_key comes from the canonical name, so a pruned alias is already
+  # covered by the entry that replaced it.
+  def prune(live_pairs)
+    live = live_pairs.to_set
+    stale = StreetDictionaryEntry.where(state: @state).reject { |e|
+      live.include?([e.raw_street, e.city])
+    }
+    return if stale.empty?
+
+    # Guard against a bad collect wiping the table: a normal run changes a
+    # handful of streets, never most of them.
+    total = StreetDictionaryEntry.where(state: @state).count
+    if total.positive? && stale.size > total / 2
+      log "prune: refusing to delete #{stale.size} of #{total} entries -- collect looks wrong"
+      @stats[:prune_refused] = stale.size
+      return
+    end
+
+    StreetDictionaryEntry.where(id: stale.map(&:id)).delete_all
+    @stats[:pruned] = stale.size
   end
 
   # Phase 2 -- resolve each unresolved entry to OSM's name for it.

@@ -79,6 +79,14 @@ RSpec.describe StreetDictionaryEntry, type: :model do
       expect(described_class.complete("E Vis")).not_to include(unresolved)
     end
 
+    it "matches across a space the user inserted" do
+      # Staff split these names unpredictably: the Cuero addresses alone carried
+      # "Mc Arthur", "Mac Arthur", "Macarthur" and "McArthur".
+      mcarthur = create_entry(street: "McArthur Street", city: "Cuero", weight: 47)
+      expect(described_class.complete("Mc Art")).to include(mcarthur)
+      expect(described_class.complete("McArt")).to include(mcarthur)
+    end
+
     it "returns nothing for a fragment that is too short to be meaningful" do
       expect(described_class.complete("E")).to be_empty
     end
