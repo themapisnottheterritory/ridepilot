@@ -17,6 +17,10 @@
 /db/*.sqlite3-journal
 /db/legacy
 /log/*.log
+# Rotated and compressed logs: /log/*.log matches development.log but not
+# development.log.1.gz, so logrotate's output would otherwise be offered up
+# for commit -- a 28 MB gzip of dev-mode SQL, the first time it ran.
+/log/*.log.*
 /public/system
 /public/cad_avl_data_archives
 /tmp
