@@ -1,15 +1,21 @@
 %table.table.table-bordered#address_results
   %thead
     %tr
-      %th= translate_helper("address_results_type_column")
+      -# Holds the address group, which is where the counties live -- not a "type".
+      -# The eight actual place categories (Medical, Dialysis, Senior Center ...) share
+      -# this field and have nothing assigned to them, so naming it honestly is the
+      -# least this column can do until that is untangled.
+      %th= translate_helper("address_group")
       %th= translate_helper("address_results_name_column")
       %th= translate_helper("address")
       %th= translate_helper("city")
-      %th= translate_helper("state")
+      -# State was dropped: all 2,788 provider addresses are TX, so the column only
+      -# ever repeated itself. County would be the useful thing here, but it is the
+      -# address group, already shown in the first column.
       %th= translate_helper("phone_number")
       %th= translate_helper("in_district")
       %th= translate_helper("address_notes")
-      - if can? :edit, Vehicle
+      - if can? :edit, Address
         %th
   %tbody
     - @provider.addresses.each do |address|
