@@ -9,7 +9,11 @@ class Driver < ApplicationRecord
   has_paper_trail
 
   belongs_to :address, -> { with_deleted }, class_name: 'DriverAddress', foreign_key: 'address_id'
-  belongs_to :alt_address, -> { with_deleted }, class_name: 'DriverAddress', foreign_key: 'alt_address_id'
+  # Optional by name and by data: it is the driver's SECOND address, and not one
+  # of the 51 imported from Shaw has one. Rails 5 made belongs_to required by
+  # default, which quietly turned every driver record invalid -- "Alt address
+  # must exist" -- so none of them could be saved from the profile screen.
+  belongs_to :alt_address, -> { with_deleted }, class_name: 'DriverAddress', foreign_key: 'alt_address_id', optional: true
   belongs_to :provider, -> { with_deleted }
   belongs_to :user, -> { with_deleted }
 
