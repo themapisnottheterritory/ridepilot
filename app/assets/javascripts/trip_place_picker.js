@@ -71,53 +71,75 @@ function process_nominatim_address(addr, type) {
   $('input.trip_' + type + '_address_data').val(JSON.stringify(parsed));
 }
 
+// Wire one address box (pickup or dropoff) to its hidden fields.
+//
+// The box shows a label -- "Home (2501 E Mockingbird Ln APT 3502 Victoria, TX
+// 77904)" -- while the address the trip actually saves lives in a hidden field
+// that is only set by clicking a suggestion. Typing has to drop that binding,
+// or an edited box would submit the address that was there before.
+//
+// What it must not do is make an accidental edit unrecoverable, and it used to.
+// Backspacing the closing bracket unbound the address; typing the bracket back
+// left the box looking correct with nothing behind it, and the label does not
+// geocode, so re-picking from the dropdown was the only way out. A dispatcher
+// who does not spot that abandons the form and starts the trip again, which is
+// how one rider ended up with three identical standing trips. Restoring the
+// binding when the text returns to what was loaded costs nothing and removes
+// the trap.
+function bind_address_field(type) {
+  var $text = $('#' + type + '_address');
+  if (!$text.length) { return; }
+
+  var $id    = $('input.trip_' + type + '_address_id');
+  var $data  = $('input.trip_' + type + '_address_data');
+  var $notes = $('#' + type + '_address_notes');
+  var $lat   = $('#trip_' + type + '_lat');
+  var $lon   = $('#trip_' + type + '_lon');
+
+  // The text the box was loaded with, and the binding that belongs to it.
+  var bound = {};
+  function remember() {
+    bound = {text: $text.val(), id: $id.val(), data: $data.val(), notes: $notes.val()};
+  }
+  function unbind() {
+    $id.val('');
+    $data.val('');
+    $notes.val('');
+  }
+  remember();
+
+  $text.on('input', function() {
+    $lat.val('');
+    $lon.val('');
+    if ($text.val() === bound.text) {
+      $id.val(bound.id);
+      $data.val(bound.data);
+      $notes.val(bound.notes);
+    } else {
+      unbind();
+    }
+  });
+
+  $lat.add($lon).on('input', unbind);
+
+  $text.on('typeahead:selected', function(e, addr, source) {
+    // Clear first: switching from a saved address to a geocoded one otherwise
+    // leaves the old id set, and the server prefers the id over the new data.
+    unbind();
+    if (source == 'saved_places') {
+      $id.val(addr.id);
+      $notes.val(addr.notes);
+      if (type === 'dropoff') { $('.trip_purpose_id').val(addr.trip_purpose_id); }
+    } else if (source == 'nominatim_places') {
+      process_nominatim_address(addr, type);
+    }
+    // A fresh pick is the new thing to restore to. Deferred because typeahead
+    // writes the box's value around this event, not before it.
+    setTimeout(remember, 0);
+  });
+}
+
 $(function() {
-  $('#pickup_address').on('input', function() {
-    $('#trip_pickup_lat').val('');
-    $('#trip_pickup_lon').val('');
-    $('input.trip_pickup_address_id').val('');
-    $('input.trip_pickup_address_data').val('');
-    $('#pickup_address_notes').val('');
-  });
-
-  $('#trip_pickup_lat, #trip_pickup_lon').on('input', function() {
-    $('input.trip_pickup_address_id').val('');
-    $('input.trip_pickup_address_data').val('');
-    $('#pickup_address_notes').val('');
-  });
-
-  $('#pickup_address').on('typeahead:selected', function(e, addr, data) {
-    if(data == 'saved_places') {
-      $('input.trip_pickup_address_id').val(addr.id);
-      $('#pickup_address_notes').val(addr.notes);
-    } else if (data == 'nominatim_places') {
-      process_nominatim_address(addr, 'pickup');
-    }
-  });
-
-  $('#dropoff_address').on('input', function() {
-    $('#trip_dropoff_lat').val('');
-    $('#trip_dropoff_lon').val('');
-    $('input.trip_dropoff_address_id').val('');
-    $('input.trip_dropoff_address_data').val('');
-    $('#dropoff_address_notes').val('');
-  });
-
-  $('#trip_dropoff_lat, #trip_dropoff_lon').on('input', function() {
-    $('input.trip_dropoff_address_id').val('');
-    $('input.trip_dropoff_address_data').val('');
-    $('#dropoff_address_notes').val('');
-  });
-
-  $('#dropoff_address').on('typeahead:selected', function(e, addr, data) {
-    $('input.trip_dropoff_address_id').val('');
-    $('input.trip_dropoff_address_data').val('');
-    if(data == 'saved_places') {
-      $('input.trip_dropoff_address_id').val(addr.id);
-      $('.trip_purpose_id').val(addr.trip_purpose_id);
-      $('#dropoff_address_notes').val(addr.notes);
-    } else if (data == 'nominatim_places') {
-      process_nominatim_address(addr, 'dropoff');
-    }
-  });
+  bind_address_field('pickup');
+  bind_address_field('dropoff');
 });

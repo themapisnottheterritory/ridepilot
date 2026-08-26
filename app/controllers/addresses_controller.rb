@@ -12,6 +12,18 @@ class AddressesController < ApplicationController
   MIN_SUGGEST_LENGTH = 3
   # Structured search returns nothing at all without an explicit state.
   NOMINATIM_FALLBACK_STATE = ENV['NOMINATIM_FALLBACK_STATE'] || 'TX'
+
+  # A saved address reaches the picker as Address#one_line_text -- a label of
+  # the form "Home (2501 E Mockingbird Ln APT 3502 Victoria, TX 77904)". Editing
+  # that text in place is the obvious way to retarget a leg, and it used to find
+  # nothing at all: the name and bracket travel to Nominatim with the address,
+  # and a half-deleted label arrives with the bracket unclosed, which is why the
+  # closer is optional here.
+  #
+  # The inside must start with a house number before we unwrap it. Without that
+  # a genuine "1404 E Virginia (rear entrance)" would be searched as "rear
+  # entrance" -- the note instead of the address.
+  LABELLED_ADDRESS = /\A[^()]+\(\s*(?<addr>\d[^()]*?)\s*\)?\z/
   SUGGEST_LIMIT = 5
 
   # provider & customer common addresses
@@ -120,6 +132,7 @@ class AddressesController < ApplicationController
   # but never change ones that already worked.
   def geocode_suggest
     term = params[:q].to_s.strip
+    term = Regexp.last_match[:addr] if term.match(LABELLED_ADDRESS)
     return render(json: []) if term.length < MIN_SUGGEST_LENGTH
 
     results = nominatim_suggest(q: term)
