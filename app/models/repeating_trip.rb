@@ -17,6 +17,7 @@ class RepeatingTrip < ApplicationRecord
   belongs_to :outbound_trip, class_name: 'RepeatingTrip', foreign_key: :linking_trip_id, optional: true
 
   before_destroy :unschedule!
+  before_destroy :withdraw_future_trips!
   before_update :check_days_of_week_removed
   after_update :process_days_of_week_removed
 
@@ -188,6 +189,22 @@ class RepeatingTrip < ApplicationRecord
     return_trip.ridership_mobilities = self.ridership_mobilities.has_capacity.collect{|m| m.dup}
 
     return_trip
+  end
+
+  # Deleting a standing trip used to leave behind the daily trips it had already
+  # generated, still on the schedule, pointing at a template that no longer
+  # exists. Nothing that works from the standing trip can see them, so they are
+  # only ever found on the dispatch board itself: one rider carried 30 of them
+  # for three weeks, duplicating the corrected pair that replaced them, and a
+  # template deleted eight seconds after it was created left another eight.
+  #
+  # Only trips that have not happened yet, and only ones with no recorded
+  # result. A completed or cancelled trip is a record of what the service
+  # actually did, and withdrawing the template does not undo it.
+  def withdraw_future_trips!
+    trips.where(trip_result_id: nil)
+         .where("pickup_time > ?", Time.current)
+         .find_each(&:destroy)
   end
 
   def unschedule!(days_of_week = nil)
