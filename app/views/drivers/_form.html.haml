@@ -73,7 +73,7 @@
               = f.label :user_id, translate_helper("driver_form_associated_user")
             .form-field
               - if @readonly
-                = @driver.user.name_with_username
+                = @driver.user.try(:name_with_username)
               - else
                 = f.collection_select :user_id, @available_users, :id, :name_with_username, { include_blank: true }
         / END .panel-body
