@@ -7,7 +7,10 @@
   %td= address.city
   %td= address.state
   %td= format_phone_number address.phone_number
-  %td= address.in_district? ? "In District" : "Out of District"
+  -# Through the same keys as the column header above it, which is how the two
+  -# came to disagree: the header read "In UTA District" from the translation while
+  -# these cells were hardcoded English.
+  %td= address.in_district? ? translate_helper("in_district") : translate_helper("out_of_district")
   %td= address.notes
   - if can? :edit, Address
     %td= link_to translate_helper("edit"), edit_provider_common_address_path(address), :class=>'edit edit-address'
