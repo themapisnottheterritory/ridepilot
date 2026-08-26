@@ -58,6 +58,14 @@
       = form.label :zip, translate_helper("zip")
     .form-field
       = form.text_field :zip, class: 'address_zip form-control'
+  -# County used to be held in the address group, which is the address TYPE
+  -# everywhere else in the code. It has its own column now, so it needs its own
+  -# field -- otherwise it becomes data nobody can correct.
+  %li.form-group
+    .form-label
+      = form.label :county, translate_helper("county")
+    .form-field
+      = form.text_field :county, class: 'address_county form-control'
 %li.form-group
   .form-label
     = form.label :phone_number, translate_helper("phone_number")

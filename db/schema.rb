@@ -111,7 +111,9 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.boolean "is_user_associated"
     t.string "type", limit: 255
     t.integer "address_group_id"
+    t.string "county"
     t.index ["address_group_id"], name: "index_addresses_on_address_group_id"
+    t.index ["county"], name: "index_addresses_on_county"
     t.index ["customer_id"], name: "index_addresses_on_customer_id"
     t.index ["deleted_at"], name: "index_addresses_on_deleted_at"
     t.index ["provider_id"], name: "index_addresses_on_provider_id"

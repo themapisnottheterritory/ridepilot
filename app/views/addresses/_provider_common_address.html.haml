@@ -5,6 +5,7 @@
     = link_to_if can?(:edit, ProviderCommonAddress), address.name || '' , edit_provider_common_address_path(address)
   %td= address.coded_by_lat_lng? ? address.address_text : address.address
   %td= address.city
+  %td= address.county
   %td= format_phone_number address.phone_number
   -# Three states, not two. The edit form offers Unspecified / Yes / No, and 2,781
   -# of the 2,788 provider addresses are Unspecified -- none is actually No. Folding

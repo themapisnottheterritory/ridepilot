@@ -9,9 +9,10 @@
       %th= translate_helper("address_results_name_column")
       %th= translate_helper("address")
       %th= translate_helper("city")
-      -# State was dropped: all 2,788 provider addresses are TX, so the column only
-      -# ever repeated itself. County would be the useful thing here, but it is the
-      -# address group, already shown in the first column.
+      -# State was dropped -- all 2,788 provider addresses are TX, so the column
+      -# only ever repeated itself. County took the space once it stopped sharing
+      -# a field with the address type and got a column of its own.
+      %th= translate_helper("county")
       %th= translate_helper("phone_number")
       %th= translate_helper("in_district")
       %th= translate_helper("address_notes")

@@ -188,6 +188,6 @@ class ProviderCommonAddressesController < AddressesController
   end
 
   def address_params
-    params.require(:provider_common_address).permit(:address_group_id, :name, :building_name, :address, :city, :state, :zip, :in_district, :provider_id, :phone_number, :inactive, :trip_purpose_id, :notes)
+    params.require(:provider_common_address).permit(:address_group_id, :name, :building_name, :address, :city, :state, :zip, :county, :in_district, :provider_id, :phone_number, :inactive, :trip_purpose_id, :notes)
   end
 end
