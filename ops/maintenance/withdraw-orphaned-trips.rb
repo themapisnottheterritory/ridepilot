@@ -11,14 +11,20 @@
 # here is recoverable with Trip.only_deleted.
 #
 # Runs as a dry run. Set APPLY=1 to actually withdraw.
+# Set CUSTOMER_ID to limit it to one rider -- the orphans belong to whoever
+# happened to have a standing trip deleted, so they are rarely all one
+# decision, and clearing them a rider at a time is usually the honest way.
 
-apply = ENV['APPLY'] == '1'
+apply    = ENV['APPLY'] == '1'
+customer = ENV['CUSTOMER_ID'].presence&.to_i
 
 orphans = Trip.where.not(repeating_trip_id: nil)
               .where("pickup_time > ?", Time.current)
               .where("NOT EXISTS (SELECT 1 FROM repeating_trips rt WHERE rt.id = trips.repeating_trip_id)")
+orphans = orphans.where(customer_id: customer) if customer
 
 puts(apply ? "APPLYING" : "DRY RUN -- nothing will change (set APPLY=1 to withdraw)")
+puts "scope: customer #{customer}" if customer
 puts
 
 orphans.group_by(&:customer_id).each do |customer_id, trips|
@@ -36,7 +42,8 @@ if apply
   n = 0
   ActiveRecord::Base.transaction { orphans.find_each { |t| t.destroy; n += 1 } }
   puts "withdrawn: #{n}"
-  puts "remaining future orphans: #{
-    Trip.where.not(repeating_trip_id: nil).where('pickup_time > ?', Time.current)
-        .where('NOT EXISTS (SELECT 1 FROM repeating_trips rt WHERE rt.id = trips.repeating_trip_id)').count}"
+  remaining = Trip.where.not(repeating_trip_id: nil).where('pickup_time > ?', Time.current)
+                  .where('NOT EXISTS (SELECT 1 FROM repeating_trips rt WHERE rt.id = trips.repeating_trip_id)')
+  puts "future orphans left system-wide: #{remaining.count}"
+  remaining.group(:customer_id).count.each { |cid, n| puts "   customer #{cid}: #{n}" }
 end
