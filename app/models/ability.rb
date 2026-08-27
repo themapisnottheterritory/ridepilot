@@ -123,6 +123,18 @@ class Ability
       can :manage, :cab_trip
       can :manage, RecurringDriverCompliance, :provider_id => provider.id
       can :manage, RecurringVehicleMaintenanceCompliance, :provider_id => provider.id
+      # The provider's address book. An editor could already edit every address
+      # in it -- can :manage, ProviderCommonAddress, further up -- but not open
+      # the page that lists them, because ProvidersController is
+      # load_and_authorize_resource and CanCan maps this custom action to
+      # authorize! :addresses, provider, which only :manage on the provider
+      # satisfies. So the rights were to change any address but not to find one.
+      #
+      # Not :load, and not AddressGroup. :load is the bulk CSV upload, which can
+      # rewrite the whole book in one go, and AddressGroup is the list of
+      # categories itself rather than an address's place in it -- setting that
+      # comes with ProviderCommonAddress. Both stay with admins.
+      can :addresses, provider
       # can :edit, Provider, :id => provider.id
     end
 
