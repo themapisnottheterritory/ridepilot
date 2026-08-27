@@ -135,19 +135,59 @@ class AddressesController < ApplicationController
     term = Regexp.last_match[:addr] if term.match(LABELLED_ADDRESS)
     return render(json: []) if term.length < MIN_SUGGEST_LENGTH
 
+    # Free text and structured search answer differently, and neither is reliably
+    # the better one. "2001 Palm Village" free-text returns a Palm Court in
+    # Bridgeland; structured returns 2001 Palm Village Boulevard in Bay City,
+    # which is the address being typed. Running them as a chain -- structured
+    # only when free text came back empty -- meant a poor first answer hid the
+    # right second one, and the dispatcher saw only the poor one.
+    typed_number = term[/\A\s*(\d+)/, 1]
     results = nominatim_suggest(q: term)
-    results = nominatim_suggest(street: term, state: NOMINATIM_FALLBACK_STATE) if results.empty?
-    # Third pass: the caller may have typed a partial street ("1404 E Vir"),
-    # which Nominatim cannot match at all. Runs last so it can only add
-    # results, never displace ones the geocoder already found.
+
+    # The second pass costs another round trip, so it is only spent when the
+    # first looks unconvincing: nothing at all, or nothing carrying the house
+    # number that was typed. A free-text hit on the right number needs no help.
+    unless convincing_suggestions?(results, typed_number)
+      results += nominatim_suggest(street: term, state: NOMINATIM_FALLBACK_STATE)
+    end
+
+    results = rank_suggestions(results, typed_number)
+
+    # Last resort: a partial street ("1404 E Vir") that Nominatim cannot match
+    # in any form, completed from the local dictionary.
     results = street_dictionary_suggest(term) if results.empty?
 
-    render json: results
+    render json: results.first(SUGGEST_LIMIT)
   end
 
   private
 
   # Returns raw Nominatim JSON; the pickers already know how to parse that shape.
+  # Whether the geocoder's first answer is good enough to stop at. With a house
+  # number typed, only a result carrying that number counts -- otherwise every
+  # vaguely street-shaped match would end the search.
+  def convincing_suggestions?(results, typed_number)
+    return false if results.empty?
+    return true  if typed_number.nil?
+
+    results.any? { |r| r.dig('address', 'house_number') == typed_number }
+  end
+
+  # Lift the results that carry the number that was typed, then those that carry
+  # any number, above the rest. Nominatim's own ordering is preserved inside each
+  # band, so this promotes better answers rather than reshuffling the list.
+  def rank_suggestions(results, typed_number)
+    results.uniq { |r| r['place_id'] }.each_with_index.sort_by { |r, i|
+      house_number = r.dig('address', 'house_number')
+      band = if typed_number && house_number == typed_number then 0
+             elsif typed_number && house_number              then 1
+             elsif house_number                              then 2
+             else                                                3
+             end
+      [band, i]
+    }.map(&:first)
+  end
+
   def nominatim_suggest(search_params)
     base  = ENV['NOMINATIM_URL'] || 'http://10.0.0.18:8088'
     query = { format: 'json', addressdetails: 1, countrycodes: 'us', limit: 5 }.merge(search_params)
