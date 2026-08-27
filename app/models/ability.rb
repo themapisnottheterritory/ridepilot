@@ -73,6 +73,12 @@ class Ability
     end
 
     can action,  Address, :provider_id => provider.id
+    # :manage subsumes :load, and :load is the bulk CSV upload -- one file can
+    # rewrite the whole provider address book. An editor gets everything else
+    # about an address; the admin block below re-grants :load, and the guard
+    # keeps it away from system admins, who reach here having already been given
+    # :manage, :all.
+    cannot :load, Address unless can_manage_all
     can action,  Customer, :provider_id => provider.id
     cannot :update_authorized_providers, Customer unless can_manage_all# only system admin can
     can action,  DevicePool, :provider_id => provider.id if provider.dispatch?

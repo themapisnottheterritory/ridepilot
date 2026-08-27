@@ -16,4 +16,7 @@
     
 
 = render 'add_address_dialog'
-= render 'addresses/upload_form', provider: @provider 
+-# Only for those who can actually run it. Editors reach this page now, and a
+-# submit button that answers "not authorized" is a worse answer than no button.
+- if can? :load, ProviderCommonAddress
+  = render 'addresses/upload_form', provider: @provider 
