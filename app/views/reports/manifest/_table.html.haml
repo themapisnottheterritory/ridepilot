@@ -43,13 +43,16 @@
           = format_date(run.date)
       .col-xs-6{style: 'padding-right: 0px;'}
         .pull-right
-          -# The GCRPC seal is square; the UTA mark it replaces was a 151x40
-          -# banner, and reusing those dimensions would have squashed it. 70x70
-          -# is the size the seal already runs at on the custom report masthead.
+          -# Option One, the Primary Logo, taken from the official delivery and
+          -# trimmed of its canvas padding. The brand book puts this one alone on
+          -# page 2 with its clear-space grid and uses it on the letterhead, which
+          -# is the nearest thing to a manifest header. 76x70 is its own 756x700
+          -# proportions -- the mark it replaced was a 151x40 banner and those
+          -# numbers would flatten it.
           - if @is_pdf
-            = wicked_pdf_image_tag "/gcrpc-logo.png", height:70, width:70, alt: "GCRPC"
+            = wicked_pdf_image_tag "/gcrpc-logo.png", height:70, width:76, alt: "GCRPC"
           - else
-            %img{src: "/gcrpc-logo.png", height:70, width:70, alt: "GCRPC"}
+            %img{src: "/gcrpc-logo.png", height:70, width:76, alt: "GCRPC"}
           
     %br  
     = render partial: "reports/manifest/run", formats: [:html], locals: {run: run}
