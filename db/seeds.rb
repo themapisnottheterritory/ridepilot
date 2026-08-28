@@ -11,9 +11,9 @@ ApplicationRecord.transaction do
 
   puts "Creating first provider and system admin..."
   if !Provider.first.present?
-    puts "Creating first Provider UTA..."
-    provider = Provider.new(:name => 'Utah Transit Authority', :dispatch => true)
-    provider.logo = File.open(Rails.root.join("public", "uta_logo.png"))
+    puts "Creating first Provider..."
+    provider = Provider.new(:name => 'Victoria Transit GCRPC', :dispatch => true)
+    provider.logo = File.open(Rails.root.join("public", "gcrpc-logo.png"))
     provider.save!
 
     puts "Creating first User..."

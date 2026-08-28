@@ -34,7 +34,9 @@
             .col-sm-12{style: 'padding-left: 0px;'}
               = format_date(run.date)
           .col-xs-6{style: 'padding-right: 0px;'}
-            %img.pull-right{src: "/uta_logo.png", height:40, width:151}
+            -# Square seal, not the 151x40 banner the UTA mark used. See the
+            -# note in reports/manifest/_table.
+            %img.pull-right{src: "/gcrpc-logo.png", height:70, width:70, alt: "GCRPC"}
         .row
           %h1{style: 'text-align: center;'}
             %u

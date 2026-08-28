@@ -43,10 +43,13 @@
           = format_date(run.date)
       .col-xs-6{style: 'padding-right: 0px;'}
         .pull-right
+          -# The GCRPC seal is square; the UTA mark it replaces was a 151x40
+          -# banner, and reusing those dimensions would have squashed it. 70x70
+          -# is the size the seal already runs at on the custom report masthead.
           - if @is_pdf
-            = wicked_pdf_image_tag "/uta_logo.png", height:40, width:151
+            = wicked_pdf_image_tag "/gcrpc-logo.png", height:70, width:70, alt: "GCRPC"
           - else
-            %img{src: "/uta_logo.png", height:40, width:151}
+            %img{src: "/gcrpc-logo.png", height:70, width:70, alt: "GCRPC"}
           
     %br  
     = render partial: "reports/manifest/run", formats: [:html], locals: {run: run}
