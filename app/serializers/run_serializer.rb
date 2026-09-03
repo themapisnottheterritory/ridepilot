@@ -1,7 +1,7 @@
 class RunSerializer
   include FastJsonapi::ObjectSerializer
   set_type :run
-  attributes :name, :complete, :start_odometer, :end_odometer, :actual_start_time, :actual_end_time, :driver_notes, :manifest_published_at
+  attributes :name, :complete, :start_odometer, :end_odometer, :actual_start_time, :actual_end_time, :driver_notes, :manifest_published_at, :vehicle_confirmed_at
 
   belongs_to :vehicle
 

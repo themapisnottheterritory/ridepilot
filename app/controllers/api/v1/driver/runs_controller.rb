@@ -111,6 +111,53 @@ class Api::V1::Driver::RunsController < Api::V1::Driver::BaseController
       })
   end
 
+  # Unit confirmation. At run start the driver either confirms the assigned
+  # vehicle (vehicle_id blank or equal to the run's) or names the unit actually
+  # being driven. Drivers take a different bus all the time, and everything
+  # downstream (DVIR, odometer, maintenance events, AVL, NTD miles) keys off the
+  # run's vehicle, so a change is paper-trailed, written to the run's action
+  # log, and announced to dispatch through the run's chat.
+  def update_vehicle
+    @run = Run.find_by(id: params[:id], driver: @driver)
+    return render fail_response(status: 404, run: "Run not found.") unless @run
+    return render fail_response(status: 422, vehicle: "This run has already ended.") if @run.end_odometer.present?
+
+    requested_id = params[:vehicle_id].presence.try(:to_i)
+    if requested_id.nil? || requested_id == @run.vehicle_id
+      return render fail_response(status: 422, vehicle: "No unit is assigned to this run. Choose the unit you are driving.") if @run.vehicle.nil?
+      @run.update_column(:vehicle_confirmed_at, DateTime.current)
+      return render success_response(@run, include: [:vehicle])
+    end
+
+    vehicle = Vehicle.for_provider(@run.provider_id).where(active: true).find_by(id: requested_id)
+    return render fail_response(status: 404, vehicle: "That unit is not in the active fleet.") unless vehicle
+
+    # Same unit already rolling on someone else's overlapping run: block, the
+    # driver has to sort it out with dispatch. Merely assigned but not started:
+    # allow it and let dispatch know (they will reassign the other run).
+    overlapping = Run.other_overlapped_runs(@run).where(vehicle_id: vehicle.id).includes(:driver)
+    rolling = overlapping.where.not(start_odometer: nil).where(end_odometer: nil).first
+    if rolling
+      who = rolling.driver.try(:user_name) || rolling.name
+      return render fail_response(status: 422, vehicle: "Unit #{vehicle.name} is on #{who}'s run. Call dispatch.")
+    end
+    also_assigned = overlapping.where(start_odometer: nil).first
+
+    previous = @run.vehicle
+    @run.vehicle = vehicle
+    @run.vehicle_confirmed_at = DateTime.current
+    PaperTrail.request(whodunnit: @driver.user_id.to_s) do
+      @run.save(validate: false)
+    end
+    TrackerActionLog.update_run(@run, @driver.user, { 'vehicle_id' => [previous.try(:id), vehicle.id] })
+
+    body = "Taking unit #{vehicle.name} instead of #{previous ? "unit #{previous.name}" : 'the unassigned unit'} for run #{@run.name}."
+    body += " Unit #{vehicle.name} was assigned to #{also_assigned.driver.try(:user_name) || also_assigned.name} (not started)." if also_assigned
+    RoutineMessage.create(provider_id: @run.provider_id, driver: @driver, sender: @driver.user, run_id: @run.id, body: body)
+
+    render success_response(@run, include: [:vehicle])
+  end
+
   def manifest_published_at
     @run = Run.find_by_id(params[:id])
     render success_response({

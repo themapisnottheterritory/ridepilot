@@ -9,6 +9,18 @@
       .form-field
         = f.collection_select :vehicle_id, @vehicles, :id, :name, {include_blank: true}, {class: 'form-control'}
 
+    - if !@is_repeating_run && @run.persisted?
+      .form-group
+        .form-label
+          = label_tag :vehicle_confirmed_at, "Driver confirmation"
+        .form-field
+          - if @run.vehicle_confirmed_at
+            %span.text-success
+              %span.glyphicon.glyphicon-ok
+              = "Unit confirmed by the driver #{format_simple_full_datetime(@run.vehicle_confirmed_at)}"
+          - else
+            %span.text-muted Not yet confirmed by the driver
+
     - if !@is_repeating_run && edit_mode == :edit
       .form-group.use_vehicle_garage{style: 'display: none;'}
         .form-label
