@@ -98,6 +98,8 @@ RidePilot is the place they are operated. Route colours come from the six map PD
 Green, Pink, Purple, Red).
 
 ### WP3 — Unit confirmation at run start (all modes, Rails + tablet)
+**Status: BUILT 2026-09-03** — ridepilot branch `unit-confirmation` (commit `92ff6eaf`), rideavl-v2 branch `unit-confirmation` (commit `2ca07fb`, app 1.0.6). Verified end to end in a headless browser against the live server. Deploy note: the migration adds a column, so puma must be restarted after migrating or saves silently drop the timestamp.
+
 Applies to demand response too, and ships on its own ahead of the rest. Today the run payload
 carries the assigned vehicle and the DVIR pre-trip silently inspects it; nothing asks the driver
 whether that is the bus they are sitting in.
