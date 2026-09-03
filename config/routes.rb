@@ -453,8 +453,10 @@ Rails.application.routes.draw do
             put 'update_from_address'
             put 'update_to_address'
             get 'manifest_published_at'
+            put 'vehicle', action: :update_vehicle
           end
         end
+        resources :vehicles, only: [:index]
 
         # DVIR (driver vehicle inspection reports) — step 2
         get 'inspection_template' => 'inspection_reports#template'

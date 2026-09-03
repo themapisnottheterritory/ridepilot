@@ -1123,6 +1123,7 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.text "driver_notes"
     t.datetime "manifest_published_at", precision: nil
     t.boolean "manifest_changed"
+    t.datetime "vehicle_confirmed_at"
     t.index ["deleted_at"], name: "index_runs_on_deleted_at"
     t.index ["driver_id"], name: "index_runs_on_driver_id"
     t.index ["from_garage_address_id"], name: "index_runs_on_from_garage_address_id"

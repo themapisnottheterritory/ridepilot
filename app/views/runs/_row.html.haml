@@ -20,6 +20,8 @@
   - vehicle_overdue_check = get_vehicle_warnings(run.vehicle, run)
   %td{class: vehicle_overdue_check[:class_name], title: vehicle_overdue_check[:tips] }
     = run.vehicle ? run.vehicle.name : translate_helper('no_vehicle')
+    - if run.vehicle_confirmed_at
+      %span.glyphicon.glyphicon-ok.text-success{title: "Unit confirmed by the driver #{format_simple_full_datetime(run.vehicle_confirmed_at)}"}
   - driver_overdue_check = get_driver_warnings(run.driver, run)
   %td{class: driver_overdue_check[:class_name], title: driver_overdue_check[:tips] }
     = run.driver  ? run.driver.user_name : translate_helper('no_driver')
