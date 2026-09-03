@@ -3,7 +3,7 @@ class Itinerary < ApplicationRecord
 
   acts_as_paranoid # soft delete
   
-  belongs_to :trip 
+  belongs_to :trip, optional: true  # run begin/end legs have no trip (Rails 7 belongs_to is required by default)
   belongs_to :run
   has_one :public_itinerary
 
