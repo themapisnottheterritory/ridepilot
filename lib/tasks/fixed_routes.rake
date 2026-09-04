@@ -97,7 +97,7 @@ namespace :fixed_routes do
     puts dry ? "dry run, nothing written" : "done: #{stats.map { |k, v| "#{k}=#{v}" }.join(' ')}"
   end
 
-  desc "Create one repeating run per fixed-route block (unassigned; dispatch adds driver + vehicle). DRY_RUN=1 to preview"
+  desc "Repeating run per fixed-route block. Without ASSIGNMENTS=file.csv it only prints the blocks; with it (name,driver_username,unit) it creates them. DRY_RUN=1 previews"
   task :seed_repeating_runs, [:provider_id] => :environment do |_t, args|
     # Decision D2 default: one block per city route per service day spanning the
     # timetable (first departure - 30 min to last arrival + 30 min); the Inteplast
@@ -107,8 +107,16 @@ namespace :fixed_routes do
     base     = (ENV["FIXED_ROUTE_AUTHORING_URL"].presence || "http://10.0.0.16:8080").chomp("/")
     dry      = ENV["DRY_RUN"].to_s == "1"
     pad      = (ENV["BLOCK_PAD_MINUTES"] || 30).to_i
-    puts "provider: #{provider.name}#{dry ? '  (DRY RUN)' : ''}  pad: #{pad} min"
-    created = 0; kept = 0
+    # A repeating run needs a driver and a vehicle, so blocks are only created
+    # from an assignment list: CSV with columns name,driver_username,unit
+    # (e.g. "Red,jamesc,1770"). Without it the task just prints the blocks.
+    assignments = {}
+    if ENV["ASSIGNMENTS"].present?
+      require "csv"
+      CSV.foreach(ENV["ASSIGNMENTS"], headers: true) { |row| assignments[row["name"].to_s.strip] = [row["driver_username"].to_s.strip, row["unit"].to_s.strip] }
+    end
+    puts "provider: #{provider.name}#{dry ? '  (DRY RUN)' : ''}  pad: #{pad} min  assignments: #{assignments.size}#{assignments.empty? ? ' (none: listing blocks only)' : ''}"
+    created = 0; kept = 0; skipped = 0
 
     FixedRoute.for_provider(provider.id).active.default_order.each do |route|
       details = route.external_route_ids.map { |id| fetch_json("#{base}/api/routes/#{id}") }
@@ -134,18 +142,30 @@ namespace :fixed_routes do
         name  = [route.name, label].compact.join(" ")
         start = block_time(first, -pad); finish = block_time(last, pad)
         existing = RepeatingRun.where(provider_id: provider.id, name: name).first
-        puts format("  %-7s %-14s %s-%s  %s", existing ? "keep" : "create", name, start, finish, days.map { |d| d[0..1].capitalize }.join(""))
+        driver_name, unit = assignments[name]
+        driver  = driver_name.present? && Driver.joins(:user).where(provider_id: provider.id).find_by(users: { username: driver_name })
+        vehicle = unit.present? && Vehicle.for_provider(provider.id).find_by(name: unit)
+        action = existing ? "keep" : (assignments.empty? ? "block" : (driver && vehicle ? "create" : "skip"))
+        who = existing ? "(#{existing.driver.try(:user_name)} / #{existing.vehicle.try(:name)})" :
+              (driver && vehicle ? "#{driver.user_name} / #{vehicle.name}" : (assignments.empty? ? "" : "no assignment#{driver_name.present? && !driver ? " (unknown driver #{driver_name})" : ''}#{unit.present? && !vehicle ? " (unknown unit #{unit})" : ''}"))
+        puts format("  %-7s %-14s %s-%s  %-14s %s", action, name, start, finish, days.map { |d| d[0..1].capitalize }.join(""), who)
         if existing then kept += 1; next end
+        if action != "create" then skipped += 1; next end
         next if dry
         rr = RepeatingRun.new(name: name, provider: provider, service_mode: "fixed_route", fixed_route: route, paid: true,
+                              driver: driver, vehicle: vehicle,
                               scheduled_start_time: Time.zone.parse(start), scheduled_end_time: Time.zone.parse(finish),
                               start_date: Date.today, repetition_interval: 1)
         %w[monday tuesday wednesday thursday friday saturday sunday].each { |d| rr.send("repeats_#{d}s=", days.include?(d[0, 3])) }
-        rr.save!
-        created += 1
+        if rr.save
+          created += 1
+        else
+          puts "          NOT created: #{rr.errors.full_messages.to_sentence}"
+          skipped += 1
+        end
       end
     end
-    puts dry ? "dry run, nothing written" : "done: created=#{created} kept=#{kept}. Assign drivers and vehicles on Runs > Repeating Runs; tonight's scheduler generates the daily runs."
+    puts dry ? "dry run, nothing written" : "done: created=#{created} kept=#{kept} skipped=#{skipped}. Tonight's scheduler generates the daily runs (or run RepeatingRun.generate! now)."
   end
 
   # ---- helpers -------------------------------------------------------------
