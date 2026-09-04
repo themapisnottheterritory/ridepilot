@@ -141,6 +141,8 @@ whether that is the bus they are sitting in.
 - Build and ship as the next APK version on the existing signing key.
 
 ### WP7 — NTD and ridership reporting (Rails)
+**Status: BUILT 2026-09-04** — branch `fixed-route-wp7` (stacked on WP5). Demand-response NTD workbook proven cell-for-cell identical to the pre-change baseline; fixed workbook verified against a hand-computed fixture.
+
 - `NtdReport.new(provider, year, month, mode:)`. Demand-response path unchanged except runs are filtered to mode. Fixed path implements the right-hand column of the table in §3.
 - Report form: Mode select. Filename becomes `NTD_<year>_<month>_<mode>.xlsx`.
 - New V2 custom report **Fixed Route Ridership**: date range, route, group by day / stop / rider category / fare type; HTML, CSV, PDF through the shared export path fixed in August. Seeded through `db/tasks/seed_v2_custom_reports.rb` like the others.
