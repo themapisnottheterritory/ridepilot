@@ -111,6 +111,9 @@ namespace :training do
       old.really_destroy! rescue old.delete
     end
     VehicleMaintenanceEvent.where("services_performed LIKE 'DVIR % defect%' AND created_at > ?", today - 8).delete_all
+    fixed_routes = %w[Red Gold].map { |nm| FixedRoute.for_provider(provider.id).active.find_by(name: nm) }.compact
+    fixed_routes = FixedRoute.for_provider(provider.id).active.where(kind: "city").default_order.first(2) if fixed_routes.empty?
+    FixedRouteBoarding.with_deleted.joins(:run).where(runs: { name: Run.unscoped.where("name LIKE ?", "#{RUN_PREFIX}%").select(:name) }).each(&:really_destroy!) rescue nil
     used_vehicle_ids = Run.where(date: today).where.not(vehicle_id: nil).pluck(:vehicle_id)
     vehicles = Vehicle.for_provider(provider.id).where(active: true).where.not(id: used_vehicle_ids).default_order.to_a
 
@@ -139,11 +142,24 @@ namespace :training do
       driver.save!(validate: false)
 
       vehicle = vehicles.shift or abort("ran out of unassigned active vehicles at trainee #{n}")
-      run = build_training_run(provider, driver, vehicle, depot, today, "#{RUN_PREFIX} #{format('%02d', n)}", tz)
-      trips = seed_trips(run, riders, destinations, ambulatory, funding, purpose, tz, today)
-      run.public_itineraries.destroy_all
-      run.publish_manifest!(false)
-      accounts << [uname, password, vehicle.name, run.id, trips.size]
+      # The last two trainees drive fixed routes (Red, then Gold) so a class
+      # covers both service modes; the rest are paratransit.
+      fixed_route = fixed_routes.any? && n > count - [2, count].min && n > 0 ? fixed_routes[(count - n) % fixed_routes.size] : nil
+      if fixed_route
+        run = build_training_run(provider, driver, vehicle, depot, today, "#{RUN_PREFIX} #{format('%02d', n)} #{fixed_route.name}", tz, fixed_route)
+        run.public_itineraries.destroy_all
+        run.publish_manifest!(false)
+        accounts << [uname, password, vehicle.name, run.id, "fixed route #{fixed_route.name}"]
+        # Yesterday's completed run on the same route with a dozen walk-ons, so the
+        # Fixed Route Ridership report and the NTD fixed-route workbook have a day to show.
+        seed_ridership_day(provider, driver, vehicle, depot, today - 1, fixed_route, tz) if n == count
+      else
+        run = build_training_run(provider, driver, vehicle, depot, today, "#{RUN_PREFIX} #{format('%02d', n)}", tz)
+        trips = seed_trips(run, riders, destinations, ambulatory, funding, purpose, tz, today)
+        run.public_itineraries.destroy_all
+        run.publish_manifest!(false)
+        accounts << [uname, password, vehicle.name, run.id, "#{trips.size} trips"]
+      end
 
       # Trainee 01 also has yesterday's run with a defect, so the pre-trip shows
       # a prior unresolved defect (and a maintenance event exists to look at).
@@ -152,7 +168,7 @@ namespace :training do
 
     puts
     puts "Training accounts (provider #{provider.name}):"
-    accounts.each { |u, p, v, r, t| puts format("  %-10s %-14s unit %-6s run #%-5s %d trips", u, p, v, r, t) }
+    accounts.each { |u, p, v, r, t| puts format("  %-10s %-14s unit %-6s run #%-5s %s", u, p, v, r, t) }
     puts "Dispatcher/staff logins are the real ones (restored from the backup)."
   end
 
@@ -174,9 +190,10 @@ namespace :training do
 
   # ---- helpers -------------------------------------------------------------
 
-  def build_training_run(provider, driver, vehicle, depot, date, name, tz)
+  def build_training_run(provider, driver, vehicle, depot, date, name, tz, fixed_route = nil)
     run = Run.new(name: name, date: date, provider: provider, driver: driver, vehicle: vehicle, paid: true,
-                  scheduled_start_time: tz.parse("#{date} 08:00"), scheduled_end_time: tz.parse("#{date} 17:00"))
+                  service_mode: (fixed_route ? "fixed_route" : "demand_response"), fixed_route: fixed_route,
+                  scheduled_start_time: tz.parse("#{date} #{fixed_route ? '07:30' : '08:00'}"), scheduled_end_time: tz.parse("#{date} 17:00"))
     run.from_garage_address = depot.dup
     run.to_garage_address   = depot.dup
     run.save(validate: false)
@@ -199,6 +216,24 @@ namespace :training do
       run.add_trip_itineraries!(trip.id)
       trip
     end
+  end
+
+  # A finished fixed-route day: twelve walk-ons spread over the route's stops,
+  # categories and fare types, odometer and clock filled in, run complete.
+  def seed_ridership_day(provider, driver, vehicle, depot, date, route, tz)
+    run = build_training_run(provider, driver, vehicle, depot, date, "#{RUN_PREFIX} #{route.name} (yesterday)", tz, route)
+    run.update_columns(start_odometer: 61240, end_odometer: 61352, actual_start_time: tz.parse("#{date} 07:31"), actual_end_time: tz.parse("#{date} 16:52"), complete: true)
+    stops = route.stops.to_a; cats = RiderCategory.by_provider(provider).default_order.to_a; fares = FareType.by_provider(provider).default_order.to_a
+    return if stops.empty? || cats.empty?
+    12.times do |i|
+      stop = stops[(i * 5) % stops.size]; cat = cats[i % cats.size]; fare = fares[i % [fares.size, 1].max]
+      FixedRouteBoarding.create!(run: run, stop: stop, rider_category: cat, fare_type: fare, boarded_count: 1 + (i % 3), alighted_count: i % 2,
+                                 fare_amount: (fare && fare.name =~ /cash/i ? 1.0 * (1 + (i % 3)) : nil), client_uuid: "training-#{date}-#{i}",
+                                 recorded_at: tz.parse("#{date} 08:00") + (i * 40).minutes)
+    end
+    puts "  ridership day seeded on #{route.name}: #{run.fixed_route_boardings.sum(:boarded_count)} boarded over 12 walk-ons"
+  rescue => e
+    puts "  ridership day NOT seeded: #{e.class}: #{e.message[0, 160]}"
   end
 
   def seed_prior_defect(provider, driver, vehicle, depot, date, tz)
