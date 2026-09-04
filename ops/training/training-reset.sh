@@ -22,7 +22,7 @@ log() { echo "$(date '+%F %T') $*"; }
 if [ "${SKIP_RESTORE:-0}" != "1" ]; then
   if [ -x "$PULL" ]; then
     log "restoring last production backup"
-    "$PULL" || { log "restore FAILED, not scrubbing a half-restored database"; exit 1; }
+    FORCE_RESTORE=1 "$PULL" || { log "restore FAILED, not scrubbing a half-restored database"; exit 1; }
   else
     log "no pull script at $PULL; run SKIP_RESTORE=1 to scrub+seed the current database"; exit 1
   fi
