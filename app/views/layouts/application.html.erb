@@ -16,6 +16,11 @@
   <%= yield :head %>
 </head>
 <body class="<%= bodytag_class %>">
+<% if ENV["TRAINING_MODE"].to_s == "true" %>
+  <div id="training-banner" style="background:#e8710a;color:#fff;font-weight:700;text-align:center;padding:6px 12px;letter-spacing:.04em;font-size:14px;">
+    TRAINING SERVER &mdash; fictitious riders, resets every night. Nothing done here affects real service.
+  </div>
+<% end %>
   <div>
   <div id="session-timeout-warning" style="display: none;">
     <%= translate_helper("session_timeout_warning") %>
