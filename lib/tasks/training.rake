@@ -19,7 +19,7 @@ namespace :training do
   LAST_NAMES  = %w[Abbott Bishop Cantu Dorsey Ennis Farley Guerra Hobbs Ingram Juarez Keller Lozano
                    Mendez Nunez Ortega Pruitt Quiroz Rangel Salas Torres Ulrich Varela Whitley Ybarra
                    Zapata Acosta Baird Cobb Dunn Eaton Flores Gomez Hicks Irwin Joyce Kemp Lara Mora Nash Oakes].freeze
-  DEFAULT_PASSWORD = "Train-2026!".freeze
+  DEFAULT_PASSWORD = "Train1234".freeze
   RUN_PREFIX = "Training Run".freeze
 
   def training_guard!
