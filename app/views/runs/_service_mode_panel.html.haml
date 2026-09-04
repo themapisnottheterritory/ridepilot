@@ -1,0 +1,38 @@
+-# Service mode: demand response (trips) or fixed route (a route block whose
+-# riders are walk-ons). Shared by the run and repeating-run forms.
+.panel.panel-primary#run_service_mode_panel
+  .panel-heading
+    %h3.panel-title Service
+  .panel-body{style: 'padding: 5px;'}
+    .form-group
+      .form-label
+        = f.label :service_mode, "Service mode"
+      .form-field
+        - Run::SERVICE_MODES.each do |mode|
+          %label.radio-inline{style: 'margin-right: 14px;'}
+            = f.radio_button :service_mode, mode, class: 'service-mode-radio'
+            = mode == 'fixed_route' ? 'Fixed route' : 'Demand response'
+    .form-group#run_fixed_route_group{style: (@run.fixed_route? ? '' : 'display: none;')}
+      .form-label
+        = f.label :fixed_route_id, "Fixed route"
+      .form-field
+        = f.collection_select :fixed_route_id, @fixed_routes || [], :id, :display_name, {include_blank: true}, {class: 'form-control'}
+        - if @run.fixed_route
+          %span.help-block{style: 'margin: 4px 0 0;'}
+            %span{style: "display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;background:#{@run.fixed_route.css_color || '#777'};border:1px solid rgba(0,0,0,.2);"}
+            = "#{@run.fixed_route.stops.count} stops · #{@run.fixed_route.directions.join(' / ')}"
+    - if @run.fixed_route? && !@is_repeating_run
+      %p.help-block{style: 'margin: 4px 5px 0;'}
+        Riders on a fixed run are logged as walk-ons from the tablet; this run has no trip list.
+
+- if edit_mode != :show
+  :javascript
+    $(function() {
+      function syncServiceMode() {
+        var fixed = $('.service-mode-radio:checked').val() === 'fixed_route';
+        $('#run_fixed_route_group').toggle(fixed);
+        $('#run_fixed_route_id').prop('required', fixed);
+      }
+      $('.service-mode-radio').on('change', syncServiceMode);
+      syncServiceMode();
+    });

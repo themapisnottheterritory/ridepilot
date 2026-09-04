@@ -12,7 +12,7 @@ class RunsController < ApplicationController
   def index
     Date.beginning_of_week= :sunday
 
-    @runs = Run.for_provider(current_provider_id).includes(:driver, :vehicle).reorder(nil).default_order
+    @runs = Run.for_provider(current_provider_id).includes(:driver, :vehicle, :fixed_route).reorder(nil).default_order
     filter_runs
     
     @drivers = Driver.where(:provider_id=>current_provider_id).default_order
@@ -54,6 +54,9 @@ class RunsController < ApplicationController
   def show
     @readonly = true
     setup_run
+    if @run.fixed_route?
+      @boardings = @run.fixed_route_boardings.includes(:rider_category, :fare_type, :stop, :driver).chronological
+    end
   end
 
   def edit
@@ -290,6 +293,7 @@ class RunsController < ApplicationController
   
   def setup_run
     @drivers = Driver.active.where(:provider_id=>@run.provider_id).default_order
+    @fixed_routes = FixedRoute.for_provider(@run.provider_id).active.default_order
 
     @vehicles = Vehicle.active.where(:provider_id=>@run.provider_id).default_order
 
@@ -332,6 +336,8 @@ class RunsController < ApplicationController
     params.require(:run).permit(
       :name, 
       :date, 
+      :service_mode,
+      :fixed_route_id,
       :start_odometer, 
       :end_odometer, 
       :scheduled_start_time, 
@@ -388,6 +394,7 @@ class RunsController < ApplicationController
       driver_id: session[:runs_driver_id], 
       vehicle_id: session[:runs_vehicle_id],
       run_result_id: session[:runs_run_result_id], 
+      service_mode: session[:runs_service_mode],
       days_of_week: session[:runs_days_of_week]
     }
   end

@@ -65,6 +65,7 @@ class Run < ApplicationRecord
   validate                  :vehicle_availability
   validates :service_mode, inclusion: { in: SERVICE_MODES }
   validates :fixed_route, presence: true, if: :fixed_route?
+  validate  :no_trips_on_a_fixed_run
 
   scope :after,                  -> (date) { where('runs.date > ?', date) }
   scope :after_today,            -> { where('runs.date > ?', Date.today) }
@@ -109,6 +110,14 @@ class Run < ApplicationRecord
   # based on recurring dispatching, batch assign recurring trip instances to recurring run instances
   def fixed_route?
     service_mode == 'fixed_route'
+  end
+
+  # Riders on a fixed run are walk-ons (boardings), never trips; a run that
+  # already carries trips cannot be switched to fixed route.
+  def no_trips_on_a_fixed_run
+    if fixed_route? && persisted? && trips.exists?
+      errors.add(:service_mode, "cannot be Fixed route while trips are assigned to this run")
+    end
   end
 
   def demand_response?

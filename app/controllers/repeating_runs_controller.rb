@@ -95,6 +95,8 @@ class RepeatingRunsController < ApplicationController
   def run_params
     params.require(:repeating_run).permit(
       :name, 
+      :service_mode,
+      :fixed_route_id,
       :scheduled_start_time, 
       :scheduled_end_time, 
       :vehicle_id, 
@@ -119,6 +121,7 @@ class RepeatingRunsController < ApplicationController
 
   def prep_view
     @drivers = Driver.active.where(:provider_id=>@run.provider_id)
+    @fixed_routes = FixedRoute.for_provider(@run.provider_id).active.default_order
     @vehicles = Vehicle.active.where(:provider_id=>@run.provider_id)
   end
 end

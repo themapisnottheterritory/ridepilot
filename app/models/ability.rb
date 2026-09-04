@@ -93,6 +93,7 @@ class Ability
       can :manage,  Trip, :provider_id => provider.id 
       can action,  RepeatingRun, :provider_id => provider.id
       can action,  Run, :provider_id => provider.id
+      can action,  FixedRouteBoarding, :provider_id => provider.id   # correct/void walk-ons on a fixed run
       cannot_cancel_or_destroy_started_run
       cannot_destroy_completed_trip
     end
