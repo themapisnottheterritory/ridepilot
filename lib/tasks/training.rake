@@ -83,7 +83,7 @@ namespace :training do
   task :seed, [:trainees] => :environment do |_t, args|
     training_guard!
     provider  = Provider.find(1)
-    count     = (args[:trainees] || ENV["TRAINEES"] || 6).to_i
+    count     = (args[:trainees] || ENV["TRAINEES"]).to_i # 0 = auto: 4 paratransit + one per city route
     password  = ENV["TRAINING_PASSWORD"].presence || DEFAULT_PASSWORD
     today     = Date.today
     tz        = Time.zone
@@ -111,8 +111,11 @@ namespace :training do
       old.really_destroy! rescue old.delete
     end
     VehicleMaintenanceEvent.where("services_performed LIKE 'DVIR % defect%' AND created_at > ?", today - 8).delete_all
-    fixed_routes = %w[Red Gold].map { |nm| FixedRoute.for_provider(provider.id).active.find_by(name: nm) }.compact
-    fixed_routes = FixedRoute.for_provider(provider.id).active.where(kind: "city").default_order.first(2) if fixed_routes.empty?
+    # One fixed-route run per active city route, so the whole simulated fleet
+    # can show on dispatch; falls back to Red/Gold if route kinds aren't set.
+    fixed_routes = FixedRoute.for_provider(provider.id).active.where(kind: "city").default_order.to_a
+    fixed_routes = %w[Red Gold].map { |nm| FixedRoute.for_provider(provider.id).active.find_by(name: nm) }.compact if fixed_routes.empty?
+    count = 4 + fixed_routes.size if count <= 0
     FixedRouteBoarding.with_deleted.joins(:run).where(runs: { name: Run.unscoped.where("name LIKE ?", "#{RUN_PREFIX}%").select(:name) }).each(&:really_destroy!) rescue nil
     used_vehicle_ids = Run.where(date: today).where.not(vehicle_id: nil).pluck(:vehicle_id)
     vehicles = Vehicle.for_provider(provider.id).where(active: true).where.not(id: used_vehicle_ids).default_order.to_a
@@ -142,9 +145,9 @@ namespace :training do
       driver.save!(validate: false)
 
       vehicle = vehicles.shift or abort("ran out of unassigned active vehicles at trainee #{n}")
-      # The last two trainees drive fixed routes (Red, then Gold) so a class
-      # covers both service modes; the rest are paratransit.
-      fixed_route = fixed_routes.any? && n > count - [2, count].min && n > 0 ? fixed_routes[(count - n) % fixed_routes.size] : nil
+      # The last trainees each drive one fixed route (one per active city
+      # route) so a class covers both service modes; the rest are paratransit.
+      fixed_route = fixed_routes.any? && n > count - [fixed_routes.size, count].min ? fixed_routes[(count - n) % fixed_routes.size] : nil
       if fixed_route
         run = build_training_run(provider, driver, vehicle, depot, today, "#{RUN_PREFIX} #{format('%02d', n)} #{fixed_route.name}", tz, fixed_route)
         run.public_itineraries.destroy_all
