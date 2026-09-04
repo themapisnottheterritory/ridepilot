@@ -17,6 +17,6 @@ class RiderCategory < ApplicationRecord
   end
 
   def as_api_json
-    { id: id, name: name }
+    { id: id, name: name, default_fare: default_fare.to_f }
   end
 end

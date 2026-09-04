@@ -14,25 +14,54 @@ require "net/http"
 require "json"
 
 namespace :fixed_routes do
-  DEFAULT_RIDER_CATEGORIES = ["Adult", "Senior", "Disabled", "Student", "Child", "Transfer"].freeze
-  DEFAULT_FARE_TYPES       = ["Cash", "Pass", "Free / Transfer", "No fare"].freeze
+  # Victoria Transit fare schedule (gcrpc.org, verified 2026-09-04): one-trip
+  # fares by rider category; passes "available soon". Youth 0-5 ride free with a
+  # paying adult.
+  FARE_SCHEDULE = [["Adult", 1.00], ["Senior 60+", 0.50], ["Disabled", 0.50], ["Youth 5-17", 0.75], ["Youth 0-5", 0.00]].freeze
+  FARE_TYPES    = [["Cash", 1.0], ["Pass", 0.0], ["Free / Transfer", 0.0], ["No fare", 0.0]].freeze
+  # placeholder names from the first seed → schedule names
+  RENAMES = { "Senior" => "Senior 60+", "Student" => "Youth 5-17", "Child" => "Youth 0-5" }.freeze
+  DEFAULT_RIDER_CATEGORIES = FARE_SCHEDULE.map(&:first).freeze
+  DEFAULT_FARE_TYPES       = FARE_TYPES.map(&:first).freeze
 
   desc "Seed rider categories and fare types (decision D1 defaults) and register the lookup tables"
   task seed_lookups: :environment do
     load Rails.root.join("db", "tasks", "seed_lookup_table_configurations.rb")
     if RiderCategory.count.zero?
-      DEFAULT_RIDER_CATEGORIES.each { |n| RiderCategory.create!(name: n) }
-      puts "rider categories: #{DEFAULT_RIDER_CATEGORIES.join(', ')}"
+      FARE_SCHEDULE.each { |n, fare| RiderCategory.create!(name: n, default_fare: fare) }
+      puts "rider categories: #{FARE_SCHEDULE.map { |n, f| "#{n} $#{'%.2f' % f}" }.join(', ')}"
     else
-      puts "rider categories already present (#{RiderCategory.count}), left alone"
+      puts "rider categories already present (#{RiderCategory.count}), left alone (rake fixed_routes:apply_fare_schedule updates them)"
     end
     if FareType.count.zero?
-      DEFAULT_FARE_TYPES.each { |n| FareType.create!(name: n) }
-      puts "fare types: #{DEFAULT_FARE_TYPES.join(', ')}"
+      FARE_TYPES.each { |n, factor| FareType.create!(name: n, fare_factor: factor) }
+      puts "fare types: #{FARE_TYPES.map { |n, f| "#{n} x#{f}" }.join(', ')}"
     else
-      puts "fare types already present (#{FareType.count}), left alone"
+      puts "fare types already present (#{FareType.count}), left alone (rake fixed_routes:apply_fare_schedule updates them)"
     end
     puts "lookup tables registered: #{LookupTable.where(name: %w[rider_categories fare_types]).pluck(:caption).join(' / ')}"
+  end
+
+  desc "Bring rider categories and fare types in line with the published fare schedule (renames placeholders, sets amounts)"
+  task apply_fare_schedule: :environment do
+    RENAMES.each do |from, to|
+      if (c = RiderCategory.find_by(name: from)) && !RiderCategory.where(name: to).exists?
+        c.update!(name: to); puts "renamed #{from} -> #{to}"
+      end
+    end
+    FARE_SCHEDULE.each do |name, fare|
+      c = RiderCategory.find_or_create_by!(name: name)
+      c.update!(default_fare: fare) if c.default_fare.to_f != fare
+      puts format("  %-12s $%.2f", name, fare)
+    end
+    if (t = RiderCategory.find_by(name: "Transfer")) && !t.boardings.exists?
+      t.destroy; puts "removed placeholder category Transfer (transfers are a fare type)"
+    end
+    FARE_TYPES.each do |name, factor|
+      f = FareType.find_or_create_by!(name: name)
+      f.update!(fare_factor: factor) if f.fare_factor.to_f != factor
+      puts format("  %-16s x%.1f", name, factor)
+    end
   end
 
   desc "Sync routes and stops from the fixed-route authoring tool (DRY_RUN=1 to preview)"

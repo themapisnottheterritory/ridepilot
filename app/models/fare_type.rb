@@ -16,6 +16,6 @@ class FareType < ApplicationRecord
   end
 
   def as_api_json
-    { id: id, name: name }
+    { id: id, name: name, fare_factor: fare_factor.to_f }
   end
 end
