@@ -140,8 +140,10 @@ namespace :fixed_routes do
 
       blocks.each do |label, first, last|
         name  = [route.name, label].compact.join(" ")
+        # A demand-response repeating run may already carry the route's name ("Pink"); the block gets its own.
+        name  = "#{name} fixed route" if RepeatingRun.where(provider_id: provider.id, name: name).where.not(service_mode: "fixed_route").exists?
         start = block_time(first, -pad); finish = block_time(last, pad)
-        existing = RepeatingRun.where(provider_id: provider.id, name: name).first
+        existing = RepeatingRun.where(provider_id: provider.id, name: name, service_mode: "fixed_route").first
         driver_name, unit = assignments[name]
         driver  = driver_name.present? && Driver.joins(:user).where(provider_id: provider.id).find_by(users: { username: driver_name })
         vehicle = unit.present? && Vehicle.for_provider(provider.id).find_by(name: unit)
