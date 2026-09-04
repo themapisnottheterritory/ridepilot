@@ -83,6 +83,8 @@ first row only.
 Each is one PR against master, deployable on its own.
 
 ### WP1 — Schema, models, lookups (Rails)
+**Status: BUILT 2026-09-04** — branch `fixed-route-wp1`, PR #34 (with WP2). Migration applied on production; app restarted.
+
 Migrations above. `Run#fixed_route?`, `Run.fixed_route` / `Run.demand_response` scopes,
 `belongs_to :fixed_route, optional: true`. `FixedRouteBoarding` with `has_paper_trail` (compliance
 records, same posture as DVIR). Lookup-table registration for rider categories and fare types with
@@ -90,6 +92,8 @@ a seed of proposed defaults (decision D1). Rails 7 gotcha from the DVIR work app
 `belongs_to` on a nullable key needs `optional: true`.
 
 ### WP2 — Route sync from the authoring tool (rake task)
+**Status: BUILT 2026-09-04** — `rake fixed_routes:sync[1]` run on production: 13 routes (6 city, 7 commuter), 240 stops. `rake fixed_routes:seed_lookups` seeded the D1 defaults.
+
 `rake fixed_routes:sync` reads `GET /api/routes` and `/api/routes/:id` from the authoring tool on
 :8080 and upserts `fixed_routes` + `fixed_route_stops`. It only takes the FY2027 and Inteplast
 routes; DRAFT and Retired entries are skipped. Idempotent, dry-run flag, same shape as
