@@ -122,6 +122,8 @@ whether that is the bus they are sitting in.
 - Run completion: unchanged. Dispatch marks the run complete the way they do now; the NTD report only counts complete runs.
 
 ### WP5 — Driver API (Rails, `api/v1/driver`)
+**Status: BUILT 2026-09-04** — branch `fixed-route-wp5` (stacked on WP4). Undo is by submission `client_uuid` rather than row id, so one tap undoes one tap.
+
 - Run payload gains `service_mode` and `fixed_route {id, name, color}`.
 - `GET runs/:id/fixed_route` returns stops grouped by direction, rider categories, fare types. Cached on the tablet, refreshed on run open.
 - `POST runs/:id/boardings` takes one walk-on submission (client_uuid, stop, direction, entries by category, alighted_count, recorded_at, lat/lng). Idempotent on client_uuid.
