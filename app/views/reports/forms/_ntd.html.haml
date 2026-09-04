@@ -19,6 +19,10 @@
 
     
     %label
+      Mode:
+      = f.select :ntd_mode, options_for_select([['Demand response', 'demand_response'], ['Fixed route', 'fixed_route']], @query.ntd_mode || 'demand_response')
+
+    %label
       = "#{translate_helper(:report_format)}:"
       = f.select :report_format, options_for_select([['Excel', 'xlsx']], @query.report_format || 'xlsx')
 
