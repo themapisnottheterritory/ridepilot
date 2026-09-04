@@ -347,7 +347,7 @@ Rails.application.routes.draw do
       "customer_receiving_trips_in_range", "customers_report", "daily_manifest", "daily_manifest_by_half_hour", 
       "daily_manifest_by_half_hour_with_cab", "daily_manifest_with_cab", "daily_trips", "donations", 
       "driver_compliances_report", "driver_manifest", "driver_monthly_service_report", "driver_report", 
-      "export_trips_in_range",  "inactive_driver_status_report", "ineligible_customer_status_report", "manifest", 
+      "export_trips_in_range", "fixed_route_ridership", "inactive_driver_status_report", "ineligible_customer_status_report", "manifest", 
       "missing_data_report", "monthlies", "ntd", "pre_run_inspections", "provider_common_location_report", "provider_service_productivity_report", 
       "service_summary", "show_runs_for_verification", "show_trips_for_verification", "update_runs_for_verification", 
       "update_trips_for_verification", "vehicle_monthly_service_report", "vehicle_report", "vehicle_5310_report", "vehicles_monthly"].each do |action|
