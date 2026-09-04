@@ -1,7 +1,15 @@
+require "paper_trail/frameworks/rails/controller"
+
 class ApplicationController < ActionController::Base
   # Prevent CSRF attacks by raising an exception.
   # For APIs, you may want to use :null_session instead.
   protect_from_forgery with: :exception
+
+  # Record WHO made each paper-trailed change (versions.whodunnit = user id).
+  # PaperTrail >= 10 no longer adds this before_action itself, so until now
+  # every web edit was recorded with no author.
+  include PaperTrail::Rails::Controller
+  before_action :set_paper_trail_whodunnit
   skip_before_action :verify_authenticity_token, if: -> { controller_name == 'sessions' && action_name == 'create' }
 
   before_action :apply_application_settings

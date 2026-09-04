@@ -13,6 +13,7 @@ class RunFilter
     filter_by_vehicle!
     filter_by_driver!
     filter_by_result!
+    filter_by_service_mode!
 
     @runs
   end
@@ -57,6 +58,12 @@ class RunFilter
   def filter_by_driver!
     if @filters[:driver_id].present?  
       @runs = @runs.includes(:driver).references(:driver).where(driver_id: @filters[:driver_id]) 
+    end
+  end
+
+  def filter_by_service_mode!
+    if @filters[:service_mode].present? && Run::SERVICE_MODES.include?(@filters[:service_mode])
+      @runs = @runs.where(service_mode: @filters[:service_mode])
     end
   end
 

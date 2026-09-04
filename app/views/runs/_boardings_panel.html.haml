@@ -1,0 +1,84 @@
+-# Walk-ons on a fixed-route run, in place of the trip list. Editors can
+-# correct counts / category / fare or void a row; every change is paper-trailed.
+- boardings = boardings.to_a
+- categories = RiderCategory.by_provider(run.provider).default_order
+- fare_types = FareType.by_provider(run.provider).default_order
+- editable = !run.complete? && can?(:manage, FixedRouteBoarding)
+- by_category = boardings.group_by { |b| b.rider_category.try(:name) || '—' }.transform_values { |rows| rows.sum(&:boarded_count) }
+- total_on = boardings.sum(&:boarded_count)
+- total_off = boardings.sum(&:alighted_count)
+- total_fare = boardings.sum { |b| b.fare_amount.to_f }
+
+.panel.panel-primary#run_boardings_panel
+  .panel-heading
+    %h3.panel-title
+      = "Walk-ons"
+      - if run.fixed_route
+        %span{style: "display:inline-block;width:10px;height:10px;border-radius:2px;margin: 0 4px 0 10px;background:#{run.fixed_route.css_color || '#777'};border:1px solid rgba(255,255,255,.6);"}
+        %span{style: 'font-weight: normal;'}= run.fixed_route.display_name
+  .panel-body{style: 'padding: 5px;'}
+    .row{style: 'margin: 4px 0 10px;'}
+      .col-sm-12
+        %strong Boarded today:
+        = total_on
+        %span{style: 'margin: 0 12px;'}
+        %strong Alighted:
+        = total_off
+        - if total_fare > 0
+          %span{style: 'margin: 0 12px;'}
+          %strong Fares:
+          = number_to_currency(total_fare)
+        - if by_category.any?
+          %br
+          %span.text-muted
+            = by_category.map { |name, n| "#{name} #{n}" }.join(' · ')
+    - if boardings.empty?
+      %p.text-muted{style: 'margin: 6px;'} No walk-ons recorded yet.
+    - else
+      -# A <form> cannot live inside a <tr>, so each row's form is rendered once
+      -# here (hidden, carrying the CSRF token and _method) and the row's inputs
+      -# point at it with the HTML5 form= attribute.
+      - if editable
+        - boardings.each do |b|
+          = form_for b, url: fixed_route_boarding_path(b), method: :patch, html: { id: "boarding-form-#{b.id}", style: 'display: none;' } do |bf|
+            %span.boarding-form-anchor
+      %table.table.table-condensed.boardings-table{style: 'margin-bottom: 4px;'}
+        %thead
+          %tr
+            %th Time
+            %th Stop
+            %th Dir
+            %th Category
+            %th{style: 'text-align: right;'} On
+            %th{style: 'text-align: right;'} Off
+            %th Fare type
+            %th{style: 'text-align: right;'} Fare
+            %th Driver
+            - if editable
+              %th
+        %tbody
+          - boardings.each do |b|
+            - fid = "boarding-form-#{b.id}"
+            %tr{class: "boarding", data: { 'boarding-id' => b.id }}
+              %td= b.recorded_at.to_fs(:time_only)
+              %td= b.stop_name.presence || b.stop.try(:name) || '—'
+              %td= b.direction
+              - if editable
+                %td= select_tag 'fixed_route_boarding[rider_category_id]', options_from_collection_for_select(categories, :id, :name, b.rider_category_id), form: fid, class: 'form-control input-sm'
+                %td{style: 'text-align: right;'}= number_field_tag 'fixed_route_boarding[boarded_count]', b.boarded_count, min: 0, form: fid, class: 'form-control input-sm', style: 'width: 60px;'
+                %td{style: 'text-align: right;'}= number_field_tag 'fixed_route_boarding[alighted_count]', b.alighted_count, min: 0, form: fid, class: 'form-control input-sm', style: 'width: 60px;'
+                %td= select_tag 'fixed_route_boarding[fare_type_id]', options_from_collection_for_select(fare_types, :id, :name, b.fare_type_id), include_blank: true, form: fid, class: 'form-control input-sm'
+                %td{style: 'text-align: right;'}= number_field_tag 'fixed_route_boarding[fare_amount]', b.fare_amount, min: 0, step: 0.25, form: fid, class: 'form-control input-sm', style: 'width: 70px;'
+                %td= b.driver.try(:user_name)
+                %td{style: 'white-space: nowrap;'}
+                  = submit_tag 'Save', form: fid, class: 'btn btn-xs btn-primary', name: nil
+                  = link_to 'Void', fixed_route_boarding_path(b), method: :delete, data: { confirm: "Void this walk-on (#{b.boarded_count} on / #{b.alighted_count} off at #{b.stop_name})? It stays in the audit trail." }, class: 'btn btn-xs btn-danger'
+              - else
+                %td= b.rider_category.try(:name)
+                %td{style: 'text-align: right;'}= b.boarded_count
+                %td{style: 'text-align: right;'}= b.alighted_count
+                %td= b.fare_type.try(:name)
+                %td{style: 'text-align: right;'}= b.fare_amount ? number_to_currency(b.fare_amount) : ''
+                %td= b.driver.try(:user_name)
+    - if run.complete?
+      %p.text-muted{style: 'margin: 6px;'} Run is complete; set it as incomplete to correct walk-ons.
