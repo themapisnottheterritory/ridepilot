@@ -59,6 +59,16 @@
     name: 'driver_message_templates',
     caption: 'Common Driver Message',
     value_column_name: 'message'
+  },
+  {
+    name: 'rider_categories',
+    caption: 'Fixed Route Rider Category',
+    value_column_name: 'name'
+  },
+  {
+    name: 'fare_types',
+    caption: 'Fixed Route Fare Type',
+    value_column_name: 'name'
   }
 ].each do | config_data|
   config = LookupTable.find_by(name: config_data[:name])

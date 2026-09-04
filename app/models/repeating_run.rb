@@ -10,6 +10,12 @@ class RepeatingRun < ApplicationRecord
 
   has_paper_trail
 
+  # Fixed route: a repeating fixed-route block. service_mode and fixed_route_id
+  # are copied onto each generated child run (ride_coordinator_attributes).
+  belongs_to :fixed_route, optional: true
+  validates :service_mode, inclusion: { in: Run::SERVICE_MODES }
+  validates :fixed_route, presence: true, if: -> { service_mode == 'fixed_route' }
+
   has_many :repeating_trips, through: :weekday_assignments
   has_many :weekday_assignments, dependent: :destroy
   has_many :repeating_itineraries, dependent: :destroy

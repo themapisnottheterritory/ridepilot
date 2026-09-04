@@ -25,6 +25,13 @@ class Run < ApplicationRecord
 
   belongs_to :repeating_run, optional: true
 
+  # Fixed route (ops/fixed-route-phase1-plan.md). A run is either demand
+  # response (trips, the default) or a fixed-route block for the day whose
+  # riders are walk-ons recorded as fixed_route_boardings.
+  SERVICE_MODES = %w[demand_response fixed_route].freeze
+  belongs_to :fixed_route, optional: true
+  has_many :fixed_route_boardings
+
   has_one :run_distance
 
   has_many :run_vehicle_inspections, dependent: :destroy
@@ -56,6 +63,8 @@ class Run < ApplicationRecord
   validate                  :within_advance_day_scheduling
   validate                  :driver_availability
   validate                  :vehicle_availability
+  validates :service_mode, inclusion: { in: SERVICE_MODES }
+  validates :fixed_route, presence: true, if: :fixed_route?
 
   scope :after,                  -> (date) { where('runs.date > ?', date) }
   scope :after_today,            -> { where('runs.date > ?', Date.today) }
@@ -89,6 +98,8 @@ class Run < ApplicationRecord
   scope :other_overlapped_runs, -> (run) { overlapped(run).other_than(run) }
 
   scope :default_order, -> { order(:date, :scheduled_start_time_string, :scheduled_end_time_string, :name) }
+  scope :demand_response_runs, -> { where(service_mode: 'demand_response') }
+  scope :fixed_route_runs,     -> { where(service_mode: 'fixed_route') }
 
   CAB_RUN_ID = -1 # id for cab runs
   UNSCHEDULED_RUN_ID = -2 # id for unscheduled run (empty container)
@@ -96,6 +107,14 @@ class Run < ApplicationRecord
   TRIP_UNMET_NEED_ID = -4 # put trip to unmet need
   
   # based on recurring dispatching, batch assign recurring trip instances to recurring run instances
+  def fixed_route?
+    service_mode == 'fixed_route'
+  end
+
+  def demand_response?
+    !fixed_route?
+  end
+
   def self.batch_update_recurring_trip_assignment!
     recurring.each do |r|      
       r.update_recurring_trip_assignment! if r

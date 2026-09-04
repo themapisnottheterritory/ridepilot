@@ -470,6 +470,13 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "fare_types", force: :cascade do |t|
+    t.string "name", null: false
+    t.datetime "deleted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "fares", force: :cascade do |t|
     t.integer "fare_type"
     t.boolean "pre_trip"
@@ -486,6 +493,64 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.datetime "created_at", precision: nil
     t.datetime "updated_at", precision: nil
     t.index ["provider_id"], name: "index_field_configs_on_provider_id"
+  end
+
+  create_table "fixed_route_boardings", force: :cascade do |t|
+    t.integer "provider_id", null: false
+    t.integer "run_id", null: false
+    t.integer "fixed_route_id"
+    t.integer "fixed_route_stop_id"
+    t.string "stop_name"
+    t.string "direction"
+    t.integer "driver_id"
+    t.integer "vehicle_id"
+    t.integer "rider_category_id", null: false
+    t.integer "fare_type_id"
+    t.integer "boarded_count", default: 0, null: false
+    t.integer "alighted_count", default: 0, null: false
+    t.decimal "fare_amount", precision: 8, scale: 2
+    t.datetime "recorded_at", null: false
+    t.decimal "latitude", precision: 10, scale: 6
+    t.decimal "longitude", precision: 10, scale: 6
+    t.string "client_uuid", null: false
+    t.datetime "deleted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["client_uuid", "rider_category_id"], name: "idx_fixed_route_boardings_client", unique: true
+    t.index ["fixed_route_id"], name: "index_fixed_route_boardings_on_fixed_route_id"
+    t.index ["recorded_at"], name: "index_fixed_route_boardings_on_recorded_at"
+    t.index ["run_id"], name: "index_fixed_route_boardings_on_run_id"
+  end
+
+  create_table "fixed_route_stops", force: :cascade do |t|
+    t.integer "fixed_route_id", null: false
+    t.string "external_route_id", null: false
+    t.string "external_stop_id", null: false
+    t.string "direction", null: false
+    t.integer "sequence", null: false
+    t.string "name", null: false
+    t.decimal "latitude", precision: 10, scale: 6
+    t.decimal "longitude", precision: 10, scale: 6
+    t.boolean "timepoint", default: false, null: false
+    t.float "distance_along_shape_m"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fixed_route_id", "direction", "sequence"], name: "idx_on_fixed_route_id_direction_sequence_1c89de4ad0"
+    t.index ["fixed_route_id", "external_route_id", "external_stop_id"], name: "idx_fixed_route_stops_external", unique: true
+  end
+
+  create_table "fixed_routes", force: :cascade do |t|
+    t.integer "provider_id", null: false
+    t.string "name", null: false
+    t.string "short_name"
+    t.string "color"
+    t.string "kind", default: "city", null: false
+    t.string "external_route_ids", default: [], array: true
+    t.boolean "active", default: true, null: false
+    t.datetime "deleted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["provider_id", "name"], name: "index_fixed_routes_on_provider_id_and_name", unique: true, where: "(deleted_at IS NULL)"
   end
 
   create_table "funding_authorization_numbers", id: :serial, force: :cascade do |t|
@@ -914,7 +979,10 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.text "manifest_order"
     t.string "scheduled_start_time_string", limit: 255
     t.string "scheduled_end_time_string", limit: 255
+    t.string "service_mode", default: "demand_response", null: false
+    t.integer "fixed_route_id"
     t.index ["driver_id"], name: "index_repeating_runs_on_driver_id"
+    t.index ["fixed_route_id"], name: "index_repeating_runs_on_fixed_route_id"
     t.index ["provider_id"], name: "index_repeating_runs_on_provider_id"
     t.index ["vehicle_id"], name: "index_repeating_runs_on_vehicle_id"
   end
@@ -1041,6 +1109,13 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.index ["report_id"], name: "index_of_report_on_specific_filter_group"
   end
 
+  create_table "rider_categories", force: :cascade do |t|
+    t.string "name", null: false
+    t.datetime "deleted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "ridership_mobility_mappings", id: :serial, force: :cascade do |t|
     t.integer "ridership_id"
     t.integer "mobility_id"
@@ -1124,12 +1199,16 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.datetime "manifest_published_at", precision: nil
     t.boolean "manifest_changed"
     t.datetime "vehicle_confirmed_at"
+    t.string "service_mode", default: "demand_response", null: false
+    t.integer "fixed_route_id"
     t.index ["deleted_at"], name: "index_runs_on_deleted_at"
     t.index ["driver_id"], name: "index_runs_on_driver_id"
+    t.index ["fixed_route_id"], name: "index_runs_on_fixed_route_id"
     t.index ["from_garage_address_id"], name: "index_runs_on_from_garage_address_id"
     t.index ["provider_id", "date"], name: "index_runs_on_provider_id_and_date"
     t.index ["provider_id", "scheduled_start_time"], name: "index_runs_on_provider_id_and_scheduled_start_time"
     t.index ["repeating_run_id"], name: "index_runs_on_repeating_run_id"
+    t.index ["service_mode"], name: "index_runs_on_service_mode"
     t.index ["to_garage_address_id"], name: "index_runs_on_to_garage_address_id"
     t.index ["vehicle_id"], name: "index_runs_on_vehicle_id"
   end
