@@ -155,7 +155,20 @@ class RepeatingRun < ApplicationRecord
             run.driver = nil if !run.driver.available_between?(run.date, run.scheduled_start_time.strftime('%H:%M'), run.scheduled_end_time.strftime('%H:%M'))
           end
 
+          # A fixed-route block runs depot to depot with no trips, so nothing
+          # else will ever give it start/end legs or publish it. Fall back to
+          # the provider's garage when the vehicle has none, so the begin/end
+          # legs get built on create, then publish so the tablet lists it.
+          if run.fixed_route? && !run.vehicle.try(:garage_address)
+            depot = GarageAddress.where(provider_id: run.provider_id).first
+            if depot
+              run.from_garage_address = depot.dup
+              run.to_garage_address   = depot.dup
+            end
+          end
+
           run.save(validate: false) #allow invalid run exist
+          run.publish_manifest!(false) if run.fixed_route? && run.manifest_publishable?
 
           TrackerActionLog.create_run(run, nil)
         end
