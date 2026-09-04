@@ -29,6 +29,16 @@ else
 fi
 
 # 2) restore the latest db dump into the standby's db container
+#    On the TRAINING box (TRAINING_MODE in application.yml) the hourly run only
+#    pulls the dumps; the restore happens once a night from
+#    ops/training/training-reset.sh (which sets FORCE_RESTORE=1), so the day's
+#    scrubbed riders and trainee runs are not wiped every hour. The dumps on
+#    disk stay current for failover either way.
+if grep -qE "^\s*TRAINING_MODE:\s*['\"]?true" "$APPDIR/config/application.yml" 2>/dev/null && [ "${FORCE_RESTORE:-0}" != "1" ]; then
+  log "training box: dumps pulled, restore skipped (nightly training-reset restores)"
+  log "done"
+  exit 0
+fi
 LATEST="$DEST/db/latest.dump"
 if [ -e "$LATEST" ]; then
   REAL="$DEST/db/$(readlink "$LATEST" 2>/dev/null || echo "$(basename "$LATEST")")"

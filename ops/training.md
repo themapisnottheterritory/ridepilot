@@ -46,6 +46,12 @@ key exists only on `.15`. Running the tasks on production does nothing.
 
 `rake training:status` shows what is loaded.
 
+### The hourly standby pull on a training box
+`ops/backup/ridepilot-standby-pull.sh` runs hourly on `.15` for failover. When it sees
+`TRAINING_MODE: 'true'` in `application.yml` it only pulls the dumps and skips the restore, so the
+day's scrubbed data survives; the nightly reset restores with `FORCE_RESTORE=1`. Failover from a
+training box = run the pull with `FORCE_RESTORE=1` (a few minutes) and remove `TRAINING_MODE`.
+
 ## One-time setup on `.15`
 
 Assumes the stack from [warm-standby.md](warm-standby.md) Phase 1 is up (app, db, sidekiq, web,
