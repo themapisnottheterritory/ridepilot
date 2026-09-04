@@ -30,7 +30,7 @@ restore. To keep a multi-day scenario, comment the cron out for the week.
   logins are kept.
 
 ### `rake training:seed[N]` — today's class (default 6 trainees)
-- Users `trainee01…trainee06`, password `Train-2026!` (override with `TRAINING_PASSWORD=`), each with
+- Users `trainee01…trainee06`, password `Train1234` (override with `TRAINING_PASSWORD=`), each with
   a driver record and a role on provider 1.
 - One run per trainee for today, 08:00–17:00, depot to depot, on an active vehicle no other run
   uses today, **3 trips** on random fictitious riders to Walmart on Navarro / Citizens Medical

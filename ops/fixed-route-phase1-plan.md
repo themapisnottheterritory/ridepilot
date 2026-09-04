@@ -148,6 +148,8 @@ whether that is the bus they are sitting in.
 - New V2 custom report **Fixed Route Ridership**: date range, route, group by day / stop / rider category / fare type; HTML, CSV, PDF through the shared export path fixed in August. Seeded through `db/tasks/seed_v2_custom_reports.rb` like the others.
 
 ### WP8 — Seed, pilot, go live
+**Status: TOOLING BUILT 2026-09-04** — branch `fixed-route-wp8`. Sync + lookups done on production; `fixed_routes:seed_repeating_runs` dry-run reviewed but NOT run on production (that is D2 with Erika); training box (.15) has fixed runs for trainee05/06, a ridership day, and Red/Gold/Bay repeating blocks generating daily runs for dispatcher practice; driver guide updated. The seeder needs an assignment CSV (name,driver_username,unit) because a repeating run requires a driver and vehicle; generated fixed runs are published automatically and drop a driver whose operating hours do not cover the block. Pilot week not started.
+
 1. Run `fixed_routes:sync`; confirm 6 city routes + 7 commuter routes and their stop counts against the authoring tool.
 2. Seed rider categories and fare types from the confirmed list (D1).
 3. Create one repeating run per route block with Erika: driver, vehicle, days, span (D2). Nightly `scheduler:run` generates the daily runs from then on; check the first morning's runs exist.

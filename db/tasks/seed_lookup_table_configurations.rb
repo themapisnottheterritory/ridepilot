@@ -63,12 +63,14 @@
   {
     name: 'rider_categories',
     caption: 'Fixed Route Rider Category',
-    value_column_name: 'name'
+    value_column_name: 'name',
+    code_column_name: 'default_fare'      # one-trip fare in dollars, e.g. 1.00
   },
   {
     name: 'fare_types',
     caption: 'Fixed Route Fare Type',
-    value_column_name: 'name'
+    value_column_name: 'name',
+    code_column_name: 'fare_factor'       # 1 = fare collected, 0 = pass / free / transfer
   }
 ].each do | config_data|
   config = LookupTable.find_by(name: config_data[:name])

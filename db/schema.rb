@@ -475,6 +475,7 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.datetime "deleted_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.decimal "fare_factor", precision: 4, scale: 2, default: "1.0", null: false
   end
 
   create_table "fares", force: :cascade do |t|
@@ -1114,6 +1115,7 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.datetime "deleted_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.decimal "default_fare", precision: 6, scale: 2, default: "0.0", null: false
   end
 
   create_table "ridership_mobility_mappings", id: :serial, force: :cascade do |t|
