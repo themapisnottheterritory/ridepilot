@@ -80,8 +80,9 @@ namespace :training do
       # restore copied over; the busavl credentials must not sit here either.
       # Demo-friendly map: poll the simulated feed and refresh the dispatch map
       # every 5 s (production keeps its 15 s / 30 s).
-      ApplicationSetting.update_settings("opentransit.polling_interval_seconds" => 5, "cad_avl.cad_refresh_interval_seconds" => 5)
-      ApplicationSetting.apply! if ApplicationSetting.respond_to?(:apply!)
+      ApplicationSetting.opentransit_polling_interval_seconds = 5
+      ApplicationSetting.cad_avl_cad_refresh_interval_seconds = 5
+      Rails.cache.clear
       sql "UPDATE providers SET use_external_avl = true, avl_source = 'opentransit_api', opentransit_url = '#{ENV['TRAINING_AVL_URL'].presence || 'http://10.0.0.15:8090'}', busavl_host = NULL, busavl_username = NULL, busavl_password = NULL"
     end
     puts "scrubbed #{Customer.unscoped.count} riders in #{(Time.now - t0).round}s"
