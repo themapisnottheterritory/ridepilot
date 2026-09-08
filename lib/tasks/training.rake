@@ -210,7 +210,9 @@ namespace :training do
 
   def seed_trips(run, riders, destinations, mobility, funding, purpose, tz, date)
     pickups = %w[08:45 10:30 13:15]
-    pool = riders.order(Arel.sql("random()")).limit(pickups.size).to_a
+    # Sample ids in Ruby: "ORDER BY random()" came back with the same three
+    # riders for every run, so all trainees had identical manifests.
+    pool = Customer.where(id: riders.pluck(:id).sample(pickups.size)).to_a
     pool.each_with_index.map do |rider, i|
       pickup_at = tz.parse("#{date} #{pickups[i]}")
       trip = Trip.new(provider: run.provider, customer: rider, run: run,
