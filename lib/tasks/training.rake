@@ -75,6 +75,10 @@ namespace :training do
       sql "TRUNCATE versions"
       sql "TRUNCATE activities"
       sql "TRUNCATE gps_locations CASCADE" rescue sql("DELETE FROM gps_locations")
+      # Bus positions on the training box come from the simulated feed
+      # (ops/training/bus-sim.py), not from the real Pepwave/busavl source the
+      # restore copied over; the busavl credentials must not sit here either.
+      sql "UPDATE providers SET use_external_avl = true, avl_source = 'opentransit_api', opentransit_url = '#{ENV['TRAINING_AVL_URL'].presence || 'http://10.0.0.15:8090'}', busavl_host = NULL, busavl_username = NULL, busavl_password = NULL"
     end
     puts "scrubbed #{Customer.unscoped.count} riders in #{(Time.now - t0).round}s"
   end
