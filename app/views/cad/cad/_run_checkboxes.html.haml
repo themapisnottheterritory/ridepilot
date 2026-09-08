@@ -14,6 +14,8 @@
       - has_new_message = last_message_id && last_message_id != read_message_id
     %span.run_list{data: {run_id: run.id, read_message_id: read_message_id, last_message_id: last_message_id}, class: (is_active ? "is_active" : "")}
       %input{type: 'checkbox', data: {run_id: run.id, driver_id: run.driver_id}}
+        - if run.fixed_route? && run.fixed_route
+          %span{style: "display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 3px 0 1px;background:#{run.fixed_route.css_color || '#777'};border:1px solid rgba(0,0,0,.25);vertical-align:-1px;", title: "Fixed route: #{run.fixed_route.display_name}"}
         - if is_active
           %b= run.name
         - else

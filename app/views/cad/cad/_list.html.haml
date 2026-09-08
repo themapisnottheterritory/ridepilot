@@ -102,11 +102,12 @@
     var reporting_markers = {};
     var reporting_refresh_timer = null;
 
-    function reportingUnitIcon(unitId, speed) {
+    function reportingUnitIcon(unitId, speed, color) {
       var moving = speed > 1.0;
-      var bg = moving ? '#2677FF' : '#888';
+      var bg = color || '#2677FF';          // fixed route: its colour; paratransit: blue
       var html = '<div style="' +
         'background:' + bg + ';' +
+        (moving ? '' : 'opacity:0.55;') +
         'color:#fff;' +
         'font-size:11px;' +
         'font-weight:bold;' +
@@ -135,11 +136,13 @@
 
         data.forEach(function(v) {
           var marker = L.marker([v.lat, v.lon], {
-            icon: reportingUnitIcon(v.unit_id, v.speed),
+            icon: reportingUnitIcon(v.unit_id, v.speed, v.color),
             zIndexOffset: 500
           }).addTo(map);
 
-          var tooltip = v.vehicle_name + '<br>Speed: ' + v.speed.toFixed(1) + ' mph' +
+          var service = v.route_name ? ('Fixed route: ' + v.route_name) : (v.run_name ? 'Run: ' + v.run_name : 'No run today');
+          var tooltip = v.vehicle_name + '<br>' + service + (v.driver_name ? ' &middot; ' + v.driver_name : '') +
+            '<br>Speed: ' + v.speed.toFixed(1) + ' mph' +
             '<br>Heading: ' + v.heading.toFixed(0) + '°' +
             '<br>' + v.timestamp;
           marker.bindTooltip(tooltip);
@@ -148,6 +151,7 @@
             infoPopup.setLatLng(marker.getLatLng());
             infoPopup.setContent('<b>Vehicle ' + v.vehicle_name + '</b><br>' +
               'Unit: ' + v.unit_id + '<br>' +
+              service + (v.driver_name ? ' &middot; ' + v.driver_name : '') + '<br>' +
               'Speed: ' + v.speed.toFixed(1) + ' mph<br>' +
               'Heading: ' + v.heading.toFixed(0) + '&deg;<br>' +
               'Last update: ' + v.timestamp);
@@ -174,7 +178,7 @@
       if ($(this).is(':checked')) {
         loadReportingVehicles();
         // Auto-refresh every 15 seconds
-        reporting_refresh_timer = setInterval(loadReportingVehicles, 15000);
+        reporting_refresh_timer = setInterval(loadReportingVehicles, #{(ApplicationSetting.cad_avl_cad_refresh_interval_seconds || 30) * 1000});
       } else {
         clearReportingMarkers();
         $('#reporting_vehicle_count').text('');

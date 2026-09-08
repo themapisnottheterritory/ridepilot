@@ -6,9 +6,10 @@
   var OSRM_URL = $('meta[name="osrm-url"]').attr('content') || '/osrm';
 
   // draw run upcoming_path location on map via OSRM
-  function drawUpcomingPath(run_id, waypoints) {
+  function drawUpcomingPath(run_id, waypoints, color, keepExisting) {
+    color = color || '#2677FF';
     // remove previous polylines
-    removeUpcomingPath(run_id);
+    if (!keepExisting) removeUpcomingPath(run_id);
 
     if (!waypoints || waypoints.length < 2) {
       return;
@@ -25,14 +26,14 @@
       if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
         console.log('OSRM routing failed for run ' + run_id);
         // Fallback: draw straight lines
-        drawUpcomingPathFallback(run_id, waypoints);
+        drawUpcomingPathFallback(run_id, waypoints, color);
         return;
       }
 
       var geometry = data.routes[0].geometry;
       var polyline = L.geoJSON(geometry, {
         style: {
-          color: '#2677FF',
+          color: color,
           weight: 7,
           opacity: 0.7
         }
@@ -45,18 +46,18 @@
 
     }).fail(function() {
       console.log('OSRM request failed for run ' + run_id + ', drawing straight lines');
-      drawUpcomingPathFallback(run_id, waypoints);
+      drawUpcomingPathFallback(run_id, waypoints, color);
     });
   }
 
   // Fallback: draw straight lines when OSRM is unavailable
-  function drawUpcomingPathFallback(run_id, waypoints) {
+  function drawUpcomingPathFallback(run_id, waypoints, color) {
     var latlngs = waypoints.map(function(wp) {
       return L.latLng(wp[0], wp[1]);
     });
 
     var polyline = L.polyline(latlngs, {
-      color: '#2677FF',
+      color: color || '#2677FF',
       weight: 5,
       opacity: 0.5,
       dashArray: '10, 10'
@@ -66,6 +67,14 @@
       upcoming_path_lines[run_id] = [];
     }
     upcoming_path_lines[run_id].push(polyline);
+  }
+
+  // Fixed-route run: one road-following line per direction, in the route colour.
+  function drawRoutePaths(run_id, paths) {
+    removeUpcomingPath(run_id);
+    (paths || []).forEach(function(p) {
+      drawUpcomingPath(run_id, p.waypoints, p.color, true);
+    });
   }
 
   function removeUpcomingPath(run_id) {
