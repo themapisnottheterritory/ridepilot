@@ -33,7 +33,7 @@ DR_SPEED  = float(os.environ.get("DR_SPEED_MPS", 9))  # ~20 mph between paratran
 DWELL_S   = int(os.environ.get("DWELL_S", 90))        # at paratransit stops
 LAYOVER_S = int(os.environ.get("LAYOVER_S", 120))     # at the end of a fixed-route direction
 TZ        = timezone(timedelta(hours=-5))             # Central Daylight Time
-DEPOT     = (28.8140, -96.9836)
+DEPOT     = (28.812645, -96.989695)   # the bus yard at 1908 N Laurent (centre of the fenced lot)
 
 def haversine(lat1, lon1, lat2, lon2):
     R = 6371000.0
