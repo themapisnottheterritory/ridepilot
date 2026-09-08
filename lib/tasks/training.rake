@@ -135,7 +135,10 @@ namespace :training do
       user.current_provider = provider
       user.save!(validate: false)
       Role.where(provider: provider, user: user).first || Role.create!(provider: provider, user: user, level: Role::USER_LEVEL)
-      user.ensure_authentication_token if user.respond_to?(:ensure_authentication_token) && user.authentication_token.blank?
+      # Keep each trainee's API token the same across nightly resets, so a
+      # tablet signed in yesterday is still signed in today. Tokens live in
+      # tmp/training-tokens.json on the training box (outside the database).
+      user.authentication_token = training_tokens.fetch(uname) { training_tokens[uname] = user.authentication_token.presence || SecureRandom.urlsafe_base64(20) }
       user.save!(validate: false) if user.changed?
 
       driver = Driver.with_deleted.find_by(user_id: user.id) rescue Driver.find_by(user_id: user.id)
@@ -173,6 +176,7 @@ namespace :training do
       seed_prior_defect(provider, driver, vehicle, depot, today - 1, tz) if n == 1
     end
 
+    save_training_tokens
     puts
     puts "Training accounts (provider #{provider.name}):"
     accounts.each { |u, p, v, r, t| puts format("  %-10s %-14s unit %-6s run #%-5s %s", u, p, v, r, t) }
@@ -196,6 +200,18 @@ namespace :training do
   end
 
   # ---- helpers -------------------------------------------------------------
+
+  TOKENS_FILE = Rails.root.join("tmp", "training-tokens.json")
+
+  def training_tokens
+    @training_tokens ||= (File.exist?(TOKENS_FILE) ? JSON.parse(File.read(TOKENS_FILE)) : {}) rescue {}
+  end
+
+  def save_training_tokens
+    File.write(TOKENS_FILE, JSON.pretty_generate(training_tokens)) if @training_tokens
+  rescue => e
+    puts "  (could not save training tokens: #{e.message})"
+  end
 
   def build_training_run(provider, driver, vehicle, depot, date, name, tz, fixed_route = nil)
     run = Run.new(name: name, date: date, provider: provider, driver: driver, vehicle: vehicle, paid: true,
