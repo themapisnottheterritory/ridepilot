@@ -7,7 +7,7 @@
 
   // draw run upcoming_path location on map via OSRM
   function drawUpcomingPath(run_id, waypoints, color, keepExisting) {
-    color = color || '#2677FF';
+    color = color || '#12264F';   // paratransit: RidePilot navy (fixed routes pass their own colour)
     // remove previous polylines
     if (!keepExisting) removeUpcomingPath(run_id);
 
@@ -57,7 +57,7 @@
     });
 
     var polyline = L.polyline(latlngs, {
-      color: color || '#2677FF',
+      color: color || '#12264F',
       weight: 5,
       opacity: 0.5,
       dashArray: '10, 10'
