@@ -67,6 +67,15 @@ ops/training/training-reset.sh            # first restore + scrub + seed; watch 
 crontab -e   # 30 3 * * * /home/philz/rptest/ridepilot/ops/training/training-reset.sh >> /home/philz/ridepilot-training-reset.log 2>&1
 ```
 
+**Microsoft sign-in on the training box:** the restore copies production's Entra credentials, so
+the "Sign in with Microsoft" button appears, but Azure only accepts the registered https callback
+(`rp.internal.gcrpc.org`) and refuses plain-http addresses outright (AADSTS50011). Until the box has
+its https name, `config/application.yml` on `.15` carries `ENTRA_CLIENT_ID: ""`, which leaves the
+strategy unregistered and hides the button; staff use username + password. Once
+`training.internal.gcrpc.org` + cert exist, add
+`https://training.internal.gcrpc.org/users/auth/entra_id/callback` as a second redirect URI on the
+Entra app (bf27a70a…) in the Azure portal and remove the override.
+
 Web name and TLS, per the house standard (internal CA on `.23`):
 - DNS `training.internal.gcrpc.org → 10.0.0.15` on pfSense Unbound.
 - Leaf cert `training.key/.crt` minted from `~/plane-tls/` on `.23` (SAN = DNS name + IP 10.0.0.15),
