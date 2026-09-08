@@ -80,6 +80,10 @@ module Cad
 
         if raw_locations.present?
           provider_vehicles = provider.vehicles.where.not(name: [nil, '']).index_by { |v| v.name.strip }
+          # Today's live run per vehicle, so a bus can be labelled and coloured by
+          # its service: fixed routes get their route colour, paratransit stays blue.
+          runs_by_vehicle = Run.for_provider(provider.id).for_date(Date.today).where(end_odometer: nil)
+                               .includes(:fixed_route, driver: :user).index_by(&:vehicle_id)
 
           raw_locations.each do |loc|
             unit_id = loc['vehicle_id'].to_s.strip
@@ -88,6 +92,7 @@ module Cad
             lat = loc['lat'].to_f
             lon = loc['lon'].to_f
             next if lat == 0.0 && lon == 0.0
+            run = vehicle && runs_by_vehicle[vehicle.id]
 
             vehicles_data << {
               unit_id: unit_id,
@@ -97,7 +102,13 @@ module Cad
               lon: lon,
               speed: loc['speed'].to_f,
               heading: loc['heading'].to_f,
-              timestamp: loc['timestamp'].to_s
+              timestamp: loc['timestamp'].to_s,
+              run_id: run&.id,
+              run_name: run&.name,
+              driver_name: run&.driver.try(:user_name),
+              service_mode: run&.service_mode,
+              route_name: run&.fixed_route.try(:display_name),
+              color: run&.fixed_route.try(:css_color)
             }
           end
         end
@@ -170,6 +181,16 @@ module Cad
     end
 
     def prepare_upcoming_path_data
+      # A fixed-route run's path is the route itself: its stops in order per
+      # direction, drawn in the route colour (OSRM fills in the streets).
+      if @run && @run.fixed_route? && @run.fixed_route
+        route = @run.fixed_route
+        @route_paths = route.directions.map { |dir|
+          { color: route.css_color, direction: dir,
+            waypoints: route.stops.for_direction(dir).select(&:coordinates?).map { |st| [st.latitude.to_f, st.longitude.to_f] } }
+        }.select { |h| h[:waypoints].size >= 2 }
+        return
+      end
       if !@run.end_odometer
         if @run_in_progress
           @vehicle_location = GpsLocation.where(run_id: @run.id).reorder("log_time DESC").first
