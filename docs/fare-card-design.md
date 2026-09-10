@@ -538,3 +538,26 @@ category fare.
 **Everything in the plan is now built except hardware.** What remains is the pilot itself: order the
 readers and cards (section 12), issue cards at the desk, install 1.0.9 on the two pilot buses, and watch
 the Fare Card Activity report for a month.
+
+---
+
+## 14. Open questions for the transit team (2026-09-10)
+
+Checked the published fare pages at gcrpc.org (urban fare schedule, rural fare schedule, commuter,
+paratransit) against what is in production. Fixed route matches exactly. The rest needs decisions
+before the pilot buses go live; sent to the transit team by email the same day.
+
+| # | Question | Where it stands | Needs |
+|---|---|---|---|
+| 1 | Do fixed-route fares match the website? | Yes: Youth 0-5 free with paying adult, Youth 5-17 $0.75, Adult $1.00, Senior 60+ $0.50, Disabled $0.50. A tap charges exactly these. | nothing |
+| 2 | Transfer policy? | Website is silent. System gives a free transfer on a second bus within 90 minutes (`providers.fare_transfer_window_minutes`). Keep, change, or set to 0. Publish whichever. | **decision** |
+| 3 | Paratransit (ADA demand-response) fare? | Paratransit page lists no fare. ADA ceiling is 2x the fixed-route adult fare, $2.00. Goes in `providers.fare_udr_default` (or the distance schedule, see 4). | **decision** |
+| 4 | Demand-response and commuter fares with a card? | Website prices them by mileage band x rider category ($0.50 to $8.00); the Victoria/DeWitt rural table and the commuter table are nearly identical. Every trip already has `drive_distance`, so a per-provider schedule (band, category, price) can price a trip automatically. About a day of work; replaces the flat `fare_udr_default`. Guests priced as adults, attendants free. | build |
+| 5 | Senior is 60+ on fixed route, 65+ (plus a Medicare column) on the commuter. Which? | A rider has one category on the card, so a 62-year-old is a senior on the bus and an adult on the commuter. Align the threshold, or accept one category everywhere. | **decision** |
+| 6 | The website says 10-trip, 20-trip and monthly passes are "available soon". | Stored value already is the 10/20-trip pass (10 rides of value at the rider's category fare). Monthly is `fare_pass_expires_on`. Add "Sell 10-trip / 20-trip / monthly" buttons on the account page once told (a) whether 10/20-trip carry a discount, (b) the monthly price. | **decision**, then build |
+| 7 | Which services does the card cover? | Victoria Transit fixed route, and demand response in Victoria and DeWitt counties (the one active provider). Calhoun, Goliad, Lavaca, Jackson, Matagorda run their own schedules. Gonzales is free. | nothing |
+| 8 | How do riders reload? | Front desk, cash or check, printed receipt (live). Online by card is built (section 13) but off: needs a Stripe account, carries 2.9% + $0.30, steer riders to $20 loads. | decision on Stripe, later |
+| 9 | What happens when a card is low? | System refuses the tap at $0.00 (`providers.fare_negative_floor`). Could allow e.g. -$5.00 so nobody is left at the stop, settled at next reload. | **decision** |
+| 10 | What should the website say? | After 2, 3, 5, 6 and 9: describe the card, where to get and reload it, the transfer rule, pass prices; drop "available soon". Draft it with the pilot launch. | after decisions |
+
+Answers needed for 2, 3, 5, 6 and 9 to finish setup and order the pilot readers and cards.
