@@ -37,8 +37,14 @@ class FareSchedule
     row&.fare
   end
 
-  # The whole fare for a trip: rider plus guests. nil if it cannot be priced.
+  # The whole fare for a trip: rider plus guests, attendants free. nil if it
+  # cannot be priced. Paratransit comes first: an ADA-eligible rider on a trip
+  # inside the urban service area pays the flat paratransit fare (and so does
+  # each guest, as ADA companions do) whatever the distance.
   def trip_fare(trip, category: nil)
+    if paratransit?(trip)
+      return (provider.fare_paratransit.to_d * (1 + trip.guest_count.to_i)).round(2)
+    end
     return nil unless configured? && trip.drive_distance.to_f > 0
     category ||= category_for(trip.customer)
     rider = price(miles: trip.drive_distance, category: category)
@@ -46,6 +52,24 @@ class FareSchedule
     guests = trip.guest_count.to_i
     guest_fare = guests > 0 ? (price(miles: trip.drive_distance, category: adult_category) || rider) : 0
     (rider + guest_fare * guests).round(2)
+  end
+
+  # ADA-eligible rider, both ends of the trip in one of the provider's urban
+  # cities, and a paratransit fare set.
+  def paratransit?(trip)
+    return false unless provider.fare_paratransit.to_f > 0
+    return false unless trip.customer&.ada_eligible
+    urban_trip?(trip)
+  end
+
+  def urban_trip?(trip)
+    cities = urban_cities
+    return false if cities.empty?
+    [trip.pickup_address, trip.dropoff_address].all? { |a| a && cities.include?(a.city.to_s.strip.downcase) }
+  end
+
+  def urban_cities
+    provider.fare_urban_cities.to_s.split(",").map { |c| c.strip.downcase }.reject(&:blank?)
   end
 
   def category_for(customer)

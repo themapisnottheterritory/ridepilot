@@ -15,6 +15,14 @@
           = number_field_tag "provider[fare_udr_default]", @provider.fare_udr_default, step: 0.01, min: 0, style: 'width: 8em;'
           %span.text-muted{style: 'margin-left: 8px;'} charged on a card tap at pickup when the trip has no fare amount of its own
         %li
+          = label_tag "provider_fare_paratransit", "Fare card: ADA paratransit fare ($)"
+          = number_field_tag "provider[fare_paratransit]", @provider.fare_paratransit, step: 0.01, min: 0, style: 'width: 8em;'
+          %span.text-muted{style: 'margin-left: 8px;'} flat fare for an ADA-eligible rider whose trip stays inside the urban cities below; 0 turns the rule off
+        %li
+          = label_tag "provider_fare_urban_cities", "Fare card: urban service area cities"
+          = text_field_tag "provider[fare_urban_cities]", @provider.fare_urban_cities, size: 40
+          %span.text-muted{style: 'margin-left: 8px;'} comma separated; both ends of the trip must be in one of them
+        %li
           = label_tag "provider_fare_negative_floor", "Fare card: lowest balance allowed ($)"
           = number_field_tag "provider[fare_negative_floor]", @provider.fare_negative_floor, step: 0.01, max: 0, style: 'width: 8em;'
           %span.text-muted{style: 'margin-left: 8px;'} 0 refuses a tap that would go negative; -5.00 lets a rider owe up to $5

@@ -551,16 +551,19 @@ before the pilot buses go live; sent to the transit team by email the same day.
 |---|---|---|---|
 | 1 | Do fixed-route fares match the website? | Yes: Youth 0-5 free with paying adult, Youth 5-17 $0.75, Adult $1.00, Senior 60+ $0.50, Disabled $0.50. A tap charges exactly these. | nothing |
 | 2 | Transfer policy? | Website is silent. System gives a free transfer on a second bus within 90 minutes (`providers.fare_transfer_window_minutes`). Keep, change, or set to 0. Publish whichever. | **decision** |
-| 3 | Paratransit (ADA demand-response) fare? | Paratransit page lists no fare. ADA ceiling is 2x the fixed-route adult fare, $2.00. Goes in `providers.fare_udr_default` (or the distance schedule, see 4). | **decision** |
+| 3 | Paratransit (ADA demand-response) fare? | **Answered 2026-09-10: $1.50 flat**, from the "Fare Structure as of September 1st, 2026" sheet (photo `~/IMG_1917.HEIC`). Rule: rider is ADA eligible and both ends of the trip are in the urban service area. Built and set in production, see section 15. | done |
 | 4 | Demand-response and commuter fares with a card? | **Built 2026-09-10 (section 15).** Per-provider schedule of mileage band x rider category, seeded from the published Victoria/DeWitt rural table; prices a trip from its `drive_distance`, rider plus one adult fare per guest, attendants free. Editable on the provider page. Commuter service is the same table shape but not wired yet (fixed-route walk-ons have no per-rider distance). | done |
-| 5 | Senior is 60+ on fixed route, 65+ (plus a Medicare column) on the commuter. Which? | A rider has one category on the card, so a 62-year-old is a senior on the bus and an adult on the commuter. Align the threshold, or accept one category everywhere. | **decision** |
+| 5 | Senior is 60+ on fixed route, 65+ (plus a Medicare column) on the commuter. Which? | **Answered by the 2026-09-01 fare sheet: 60+ everywhere** ("Elderly/Disabled (60+)" for fixed route and rural). The commuter web page's 65+ is the outlier. One category on the card is right. | done |
 | 6 | The website says 10-trip, 20-trip and monthly passes are "available soon". | Stored value already is the 10/20-trip pass (10 rides of value at the rider's category fare). Monthly is `fare_pass_expires_on`. Add "Sell 10-trip / 20-trip / monthly" buttons on the account page once told (a) whether 10/20-trip carry a discount, (b) the monthly price. | **decision**, then build |
 | 7 | Which services does the card cover? | Victoria Transit fixed route, and demand response in Victoria and DeWitt counties (the one active provider). Calhoun, Goliad, Lavaca, Jackson, Matagorda run their own schedules. Gonzales is free. | nothing |
 | 8 | How do riders reload? | Front desk, cash or check, printed receipt (live). Online by card is built (section 13) but off: needs a Stripe account, carries 2.9% + $0.30, steer riders to $20 loads. | decision on Stripe, later |
 | 9 | What happens when a card is low? | System refuses the tap at $0.00 (`providers.fare_negative_floor`). Could allow e.g. -$5.00 so nobody is left at the stop, settled at next reload. | **decision** |
 | 10 | What should the website say? | After 2, 3, 5, 6 and 9: describe the card, where to get and reload it, the transfer rule, pass prices; drop "available soon". Draft it with the pilot launch. | after decisions |
 
-Answers needed for 2, 3, 5, 6 and 9 to finish setup and order the pilot readers and cards.
+Answers still needed for 2, 6 and 9 to finish setup and order the pilot readers and cards.
+
+The internal sheet "Fare Structure as of September 1st, 2026" (photo `~/IMG_1917.HEIC`, thumbnail only) also
+says Gonzales County fares are reinstated 2026-10-01; that is another provider's service, nothing to do here.
 
 ---
 
@@ -601,9 +604,17 @@ overwrite).
 | 20 mi | $4.00 | $2.00 | $2.00 | $2.50 | free |
 | over | $5.00 | $2.50 | $2.50 | $3.00 | free |
 
-**Note for question 3**: with this table in place an in-town ADA paratransit trip prices like any other
-demand-response trip, $1.00 adult under 5 miles. If paratransit is meant to have its own flat fare, that
-is a separate decision and would need a `paratransit` service on this table or a flag on the trip.
+**Paratransit (added the same day, answering question 3).** An ADA-eligible rider whose trip starts and
+ends inside the urban service area pays a flat fare whatever the distance; each guest pays the same, as
+ADA companions do; attendants ride free. Two provider settings on the same page: `fare_paratransit`
+($1.50 in production) and `fare_urban_cities` ("Victoria"; comma separated; both trip addresses must have
+one of these as their city, which is clean in the data: 771 of the last 90 days' pickups say Victoria).
+There is no urban polygon in the system (`regions` is empty and `in_district` means the eight-county
+area), so city names are the rule. `FareSchedule#trip_fare` checks paratransit before the distance
+table, so the tap at pickup and the tablet's fare box both get $1.50.
+
+**Office follow-up**: only **2** active riders carry the ADA eligible flag today. Paratransit riders must be
+flagged on their customer record (Eligibility panel) or they will be charged the distance fare.
 
 **Specs**: `spec/services/fare_schedule_spec.rb` (pricing, edges, guests, replace, tap precedence, grid
-save). 68 fare examples in all, green.
+save, paratransit). 71 fare examples in all, green.

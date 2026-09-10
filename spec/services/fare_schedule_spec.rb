@@ -98,3 +98,43 @@ RSpec.describe ProvidersController, "update_fare_schedule", type: :controller do
     expect(s.price(miles: 30, category: adult)).to eq 3.00
   end
 end
+
+RSpec.describe FareSchedule, "paratransit" do
+  let(:provider) { create(:provider, fare_paratransit: 1.50, fare_urban_cities: "Victoria, Bloomington") }
+  let(:adult)    { RiderCategory.find_or_create_by!(name: "Adult") { |c| c.default_fare = 1.00 } }
+  let(:rider)    { create_rider(provider, ada_eligible: true, default_rider_category_id: adult.id) }
+  let(:schedule) { FareSchedule.new(provider) }
+
+  def trip_between(from_city, to_city, **attrs)
+    trip, = build_udr_trip(provider, rider)
+    trip.pickup_address.update_columns(city: from_city)
+    trip.dropoff_address.update_columns(city: to_city)
+    trip.update_columns(**{ drive_distance: 12.0 }.merge(attrs))
+    trip.reload
+  end
+
+  before { schedule.replace!({ "5" => { adult.id => "1.00" }, "" => { adult.id => "5.00" } }) }
+
+  it "charges the flat paratransit fare inside the urban cities, whatever the distance, guests included" do
+    expect(schedule.trip_fare(trip_between("Victoria", "victoria "))).to eq 1.50
+    expect(schedule.trip_fare(trip_between("Victoria", "Bloomington", guest_count: 2, attendant_count: 1))).to eq 4.50
+  end
+
+  it "falls back to the distance table when either end is outside, or the rider is not ADA eligible, or the fare is off" do
+    expect(schedule.trip_fare(trip_between("Victoria", "Port Lavaca"))).to eq 5.00
+    rider.update_column(:ada_eligible, false)
+    expect(schedule.trip_fare(trip_between("Victoria", "Victoria"))).to eq 5.00
+    rider.update_column(:ada_eligible, true)
+    provider.update!(fare_paratransit: 0)
+    expect(FareSchedule.new(provider).trip_fare(trip_between("Victoria", "Victoria"))).to eq 5.00
+  end
+
+  it "prices paratransit through a card tap at pickup" do
+    trip = trip_between("Victoria", "Victoria")
+    token = FareToken.create!(provider: provider, customer: rider, kind: "rfid", uid: "04A3B2C1")
+    FareLedger.new(rider, provider: provider).load!(10, payment_method: "cash")
+    r = FareTap.new(provider: provider).trip!(trip: trip, uid: token.uid, client_uuid: SecureRandom.uuid)
+    expect(r.fare).to eq 1.50
+    expect(rider.reload.fare_balance).to eq 8.50
+  end
+end
