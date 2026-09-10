@@ -533,7 +533,7 @@ category fare.
 - Fee reminder from section 10: 2.9% + $0.30 card-not-present, so nudge riders to $20 loads.
 
 **Specs**: `spec/services/fare_tap_trip_spec.rb`, `spec/controllers/api/v1/driver/trips_token_tap_spec.rb`,
-`spec/services/stripe_reload_sync_spec.rb` (stubbed Stripe client). 71 fare examples in all, green.
+`spec/services/stripe_reload_sync_spec.rb` (stubbed Stripe client). 61 fare examples in all, green.
 
 **Everything in the plan is now built except hardware.** What remains is the pilot itself: order the
 readers and cards (section 12), issue cards at the desk, install 1.0.9 on the two pilot buses, and watch
