@@ -51,10 +51,9 @@ class FareLedger
     raise Error, "No monthly pass price is set for this provider." if price <= 0
     uuid = client_uuid || SecureRandom.uuid
     FareTransaction.transaction do
-      load!(price, payment_method: payment_method, reference: reference, client_uuid: "#{uuid}-load",
-            note: "Monthly pass through #{through.strftime('%m/%d/%Y')}")
-      tx = post!(kind: "pass", amount: -price, client_uuid: "#{uuid}-pass",
-                 note: "Monthly pass through #{through.strftime('%m/%d/%Y')}")
+      label = "Monthly pass (unlimited) through #{through.strftime('%m/%d/%Y')}"
+      load!(price, payment_method: payment_method, reference: reference, client_uuid: "#{uuid}-load", note: label)
+      tx = post!(kind: "pass", amount: -price, client_uuid: "#{uuid}-pass", note: label)
       customer.update_columns(fare_pass_expires_on: through)
       tx
     end

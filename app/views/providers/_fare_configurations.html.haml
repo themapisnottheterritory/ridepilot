@@ -25,7 +25,11 @@
         %li
           = label_tag "provider_fare_monthly_pass_price", "Fare card: monthly pass price ($)"
           = number_field_tag "provider[fare_monthly_pass_price]", @provider.fare_monthly_pass_price, step: 0.01, min: 0, style: 'width: 8em;'
-          %span.text-muted{style: 'margin-left: 8px;'} 0 hides the Sell monthly button
+          %span.text-muted{style: 'margin-left: 8px;'} unlimited rides through month end; 0 hides the Sell monthly button
+        %li
+          = label_tag "provider_fare_monthly_pass_price_reduced", "Fare card: reduced-fare monthly pass price ($)"
+          = number_field_tag "provider[fare_monthly_pass_price_reduced]", @provider.fare_monthly_pass_price_reduced, step: 0.01, min: 0, style: 'width: 8em;'
+          %span.text-muted{style: 'margin-left: 8px;'} for categories whose one-trip fare is below Adult's (senior, disabled, youth); 0 means same as full price
         %li
           = label_tag "provider_fare_pass_10_discount_pct", "Fare card: 10-ride pass discount (%)"
           = number_field_tag "provider[fare_pass_10_discount_pct]", @provider.fare_pass_10_discount_pct, step: 1, min: 0, max: 100, style: 'width: 8em;'

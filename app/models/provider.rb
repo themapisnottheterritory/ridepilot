@@ -1,4 +1,14 @@
 class Provider < ApplicationRecord
+  # Fare cards: the monthly pass price for a rider category. Reduced-fare
+  # categories (one-trip fare below Adult's) get the reduced price when one is
+  # set (docs/fare-card-design.md, section 16).
+  def monthly_pass_price_for(category)
+    return fare_monthly_pass_price.to_d if category.nil? || fare_monthly_pass_price_reduced.to_f <= 0
+    adult = RiderCategory.by_provider(self).where("lower(name) = 'adult'").first
+    reduced = adult && category.id != adult.id && category.default_fare.to_d < adult.default_fare.to_d
+    reduced ? fare_monthly_pass_price_reduced.to_d : fare_monthly_pass_price.to_d
+  end
+
   include PublicActivity::Common
   include Operatable
   has_paper_trail

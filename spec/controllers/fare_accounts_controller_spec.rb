@@ -130,3 +130,29 @@ RSpec.describe FareTransactionsController, "pass buttons", type: :controller do
     expect(flash[:alert]).to match(/No monthly pass price/)
   end
 end
+
+RSpec.describe FareTransactionsController, "reduced-fare monthly", type: :controller do
+  login_admin_as_current_user
+  let(:provider) { @current_user.current_provider }
+  let!(:adult)   { RiderCategory.find_or_create_by!(name: "Adult") { |c| c.default_fare = 1.00 } }
+  let(:senior)   { RiderCategory.find_or_create_by!(name: "Senior 60+") { |c| c.default_fare = 0.50 } }
+  let(:youth)    { RiderCategory.find_or_create_by!(name: "Youth 5-17") { |c| c.default_fare = 0.75 } }
+
+  before { provider.update!(fare_monthly_pass_price: 30, fare_monthly_pass_price_reduced: 15) }
+
+  it "charges $15 to a senior and a youth, $30 to an adult" do
+    expect(provider.monthly_pass_price_for(senior)).to eq 15
+    expect(provider.monthly_pass_price_for(youth)).to eq 15
+    expect(provider.monthly_pass_price_for(adult)).to eq 30
+    expect(provider.monthly_pass_price_for(nil)).to eq 30
+    rider = create_rider(provider, default_rider_category_id: senior.id)
+    post :create, params: { customer_id: rider.id, fare_transaction: { kind: "pass_monthly", pass_month: "this", payment_method: "cash" } }
+    expect(FareTransaction.last.amount).to eq(-15)
+    expect(rider.reload.fare_pass_expires_on).to eq Date.current.end_of_month
+  end
+
+  it "uses the full price for everyone when no reduced price is set" do
+    provider.update!(fare_monthly_pass_price_reduced: 0)
+    expect(provider.monthly_pass_price_for(senior)).to eq 30
+  end
+end

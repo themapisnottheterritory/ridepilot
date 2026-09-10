@@ -92,7 +92,7 @@
       - fare_each = category&.default_fare.to_d || 0
       - discounts = { 10 => @customer.provider.fare_pass_10_discount_pct.to_i, 20 => @customer.provider.fare_pass_20_discount_pct.to_i }
       - price = ->(n) { (fare_each * n * (100 - discounts[n]) / 100).round(2) }
-      - monthly = @customer.provider.fare_monthly_pass_price.to_d
+      - monthly = fare_each > 0 ? @customer.provider.monthly_pass_price_for(category) : 0.to_d
       - if fare_each > 0 || monthly > 0
         .panel.panel-primary#fare-pass-panel
           .panel-heading

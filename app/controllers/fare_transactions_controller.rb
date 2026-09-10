@@ -23,7 +23,7 @@ class FareTransactionsController < ApplicationController
                                   payment_method: p[:payment_method], reference: p[:reference].presence)
          when "pass_monthly"
            through = monthly_pass_through(p[:pass_month])
-           ledger.sell_monthly_pass!(price: current_provider.fare_monthly_pass_price, through: through,
+           ledger.sell_monthly_pass!(price: current_provider.monthly_pass_price_for(rider_category_for(@customer)), through: through,
                                      payment_method: p[:payment_method], reference: p[:reference].presence)
          when "load"
            ledger.load!(amount, payment_method: p[:payment_method], reference: p[:reference].presence, note: p[:note].presence)
