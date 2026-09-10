@@ -8,6 +8,8 @@ Fare today: $1.50, and the goal is to bring it down, not up.
 **Decisions so far**
 
 - Account-based ledger in RidePilot, token-agnostic (section 4). This is the part every option shares.
+- **Frequency: 13.56 MHz, decided 2026-09-10.** Philz and Andrew both concur (section 2.2). MIFARE / NTAG cards,
+  the ESP32 + RC522 prototype, and 13.56 MHz USB HID readers. The 125 kHz EH301 and its EM4100 cards are out.
 - Pilot two tokens on the same backend: RFID card on one bus, QR code on another (section 8).
 - Tap to pay (bank card / phone wallet) explored and **paused** (section 10). Percentage fees do not fit a $1.50 fare.
 - Connectivity is not the constraint. Every bus has a Pepwave MAX BR1 LTE router and the tablets have their own LTE.
@@ -55,7 +57,7 @@ on the card. Consequences:
 - The token does not have to be a card. A printed QR code, or later a bank-card reference, hangs off the same
   customer and the same ledger. Section 4 models this as `fare_tokens` with a `kind`.
 
-### 2.2 Pick one frequency: 13.56 MHz
+### 2.2 Frequency: 13.56 MHz (decided)
 
 The two prototypes use different frequencies and their cards are not interchangeable.
 
@@ -67,7 +69,7 @@ The two prototypes use different frequencies and their cards are not interchange
 | Clone difficulty | trivial (T5577 blanks, $20 cloner) | easy for UID-only, but harder |
 | Future options | none | rider self-check with phone, NTAG URL, secure sectors later |
 
-Go with **13.56 MHz**. The ESP32 + RC522 prototype is already on the right frequency. The EH301 is
+**Decided 2026-09-10: 13.56 MHz.** Andrew concurs. The ESP32 + RC522 prototype is already on the right frequency. The EH301 is
 still useful as a mounted, enclosed reader on a desk or at a balance-check station if you buy a
 13.56 MHz variant of the same style; the 125 kHz unit you have can stay a bench tool.
 
@@ -268,8 +270,8 @@ Offline works the same as fixed route because the trip fare is already on the ta
 2. Stored value only, or also a monthly unlimited pass?
 3. Is driver-handled reload cash acceptable?
 4. Does one tap cover guests and attendants on a UDR trip?
-5. Which interface does the EH301 on hand actually have (USB HID, Wiegand, RS232)? Its web page will
-   not serve to non-browser clients. Only matters if you want to reuse it at a desk.
+5. ~~Which interface does the EH301 on hand actually have?~~ Moot: it is 125 kHz and the frequency decision
+   retires it. Only revisit if a 13.56 MHz unit in the same enclosure is wanted for a desk.
 
 ---
 
