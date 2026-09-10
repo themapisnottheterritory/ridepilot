@@ -55,6 +55,7 @@ class Api::V1::Driver::TokenTapsController < Api::V1::Driver::BaseController
       run_id: @run.id,
       generated_at: Time.current,
       transfer_window_minutes: provider.fare_transfer_window_minutes,
+      transfer_different_route_only: provider.fare_transfer_different_route_only,
       negative_floor: provider.fare_negative_floor.to_f,
       tokens: tokens.map { |t|
         cat = (t.customer.default_rider_category_id && categories[t.customer.default_rider_category_id]) || default_cat

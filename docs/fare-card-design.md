@@ -186,8 +186,10 @@ Server:
    to the normal cash / pass buttons.
 2. Resolve customer -> default rider category -> fare from the fixed-route lookup amounts (already in
    `fare_types.fare_factor` and the route default fare added 2026-09-04).
-3. Transfer check: a debit for this customer inside `transfer_window_minutes` -> fare 0, still record
-   the boarding.
+3. Transfer check (decided 2026-09-10): a **paid** tap by this rider inside `transfer_window_minutes`
+   (90), on a **different route** when `fare_transfer_different_route_only` is set (it is), and no
+   transfer already used on that fare -> fare 0, boarding recorded as Free / Transfer. Chaining Red ->
+   Pink -> Red pays on the way home.
 4. Pass check: `pass_expires_on >= today` -> fare 0.
 5. Write one `FixedRouteBoarding` (boarded_count 1, fare_type Card, fare_amount) and one
    `fare_transactions` debit in a transaction. Return new balance so the tablet can show it for 2 seconds.
@@ -550,7 +552,7 @@ before the pilot buses go live; sent to the transit team by email the same day.
 | # | Question | Where it stands | Needs |
 |---|---|---|---|
 | 1 | Do fixed-route fares match the website? | Yes: Youth 0-5 free with paying adult, Youth 5-17 $0.75, Adult $1.00, Senior 60+ $0.50, Disabled $0.50. A tap charges exactly these. | nothing |
-| 2 | Transfer policy? | Website is silent. System gives a free transfer on a second bus within 90 minutes (`providers.fare_transfer_window_minutes`). Keep, change, or set to 0. Publish whichever. | **decision** |
+| 2 | Transfer policy? | **Decided 2026-09-10: 90 minutes, different route only, one transfer per paid fare.** A paid tap on Green then a tap on Pink inside 90 minutes is free; tapping Green again on the way home pays. Set in production (`fare_transfer_window_minutes`, `fare_transfer_different_route_only`). Still to publish on the fare page. | done |
 | 3 | Paratransit (ADA demand-response) fare? | **Answered 2026-09-10: $1.50 flat**, from the "Fare Structure as of September 1st, 2026" sheet (photo `~/IMG_1917.HEIC`). Rule: rider is ADA eligible and both ends of the trip are in the urban service area. Built and set in production, see section 15. | done |
 | 4 | Demand-response and commuter fares with a card? | **Built 2026-09-10 (section 15).** Per-provider schedule of mileage band x rider category, seeded from the published Victoria/DeWitt rural table; prices a trip from its `drive_distance`, rider plus one adult fare per guest, attendants free. Editable on the provider page. Commuter service is the same table shape but not wired yet (fixed-route walk-ons have no per-rider distance). | done |
 | 5 | Senior is 60+ on fixed route, 65+ (plus a Medicare column) on the commuter. Which? | **Answered by the 2026-09-01 fare sheet: 60+ everywhere** ("Elderly/Disabled (60+)" for fixed route and rural). The commuter web page's 65+ is the outlier. One category on the card is right. | done |
@@ -560,7 +562,7 @@ before the pilot buses go live; sent to the transit team by email the same day.
 | 9 | What happens when a card is low? | System refuses the tap at $0.00 (`providers.fare_negative_floor`). Could allow e.g. -$5.00 so nobody is left at the stop, settled at next reload. | **decision** |
 | 10 | What should the website say? | After 2, 3, 5, 6 and 9: describe the card, where to get and reload it, the transfer rule, pass prices; drop "available soon". Draft it with the pilot launch. | after decisions |
 
-Answers still needed for 2 (transfer window) and 9 (negative floor) to finish setup and order the pilot readers and cards.
+Answer still needed for 9 (negative floor) to finish setup and order the pilot readers and cards.
 
 The internal sheet "Fare Structure as of September 1st, 2026" (photo `~/IMG_1917.HEIC`, thumbnail only) also
 says Gonzales County fares are reinstated 2026-10-01; that is another provider's service, nothing to do here.

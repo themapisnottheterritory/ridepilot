@@ -9,7 +9,8 @@
 #   - unknown / blocked / lost token, or an inactive rider: refused
 #   - a second tap on the same run inside DOUBLE_TAP_SECONDS: ignored (no charge, no row)
 #   - a valid pass: boarding recorded with the Pass fare type, no charge
-#   - a debit inside the provider's transfer window: boarding recorded as a transfer, no charge
+#   - an earlier tap inside the provider's transfer window, on a different route when the
+#     provider says so: boarding recorded as a transfer, no charge
 #   - otherwise: fare = rider category default fare x Card fare type factor, debited
 #   - a debit that would go under the floor is refused, unless the tap already
 #     happened offline (offline: true), in which case it is recorded anyway.
@@ -90,7 +91,7 @@ class FareTap
     end
 
     pass     = customer.fare_pass_active?(recorded_at.to_date)
-    transfer = !pass && last_tap && last_tap.recorded_at > recorded_at - provider.fare_transfer_window_minutes.minutes
+    transfer = !pass && transfer_from_paid_tap?(customer, run, recorded_at)
     fare_type, fare =
       if pass         then [fare_type_named("Pass") || card_fare_type, 0.to_d]
       elsif transfer  then [fare_type_named("Free / Transfer", "Transfer") || card_fare_type, 0.to_d]
@@ -225,8 +226,24 @@ class FareTap
     nil
   end
 
-  # The rider's most recent fare-card boarding, for double-tap and transfer checks.
+  # The rider's most recent fare-card boarding, for the double-tap check.
   def last_fixed_route_tap(customer)
     FixedRouteBoarding.where(customer_id: customer.id, provider_id: provider.id).order(recorded_at: :desc, id: :desc).first
+  end
+
+  # One free transfer per paid fare: the rider paid on a bus inside the
+  # window, this bus is a different route (when the provider says so), and
+  # they have not already used a transfer on that fare. Chaining Red -> Pink
+  # -> Red therefore pays on the way home.
+  def transfer_from_paid_tap?(customer, run, recorded_at)
+    window_start = recorded_at - provider.fare_transfer_window_minutes.minutes
+    paid = FixedRouteBoarding.where(customer_id: customer.id, provider_id: provider.id)
+                             .where("fare_amount > 0").where("recorded_at > ?", window_start)
+                             .order(recorded_at: :desc, id: :desc).first
+    return false unless paid
+    return false if provider.fare_transfer_different_route_only && paid.fixed_route_id.present? && paid.fixed_route_id == run.fixed_route_id
+    used = FixedRouteBoarding.where(customer_id: customer.id, provider_id: provider.id)
+                             .where("recorded_at > ?", paid.recorded_at).where("fare_amount = 0 OR fare_amount IS NULL").exists?
+    !used
   end
 end

@@ -45,6 +45,11 @@
           = label_tag "provider_fare_transfer_window_minutes", "Fare card: transfer window (minutes)"
           = number_field_tag "provider[fare_transfer_window_minutes]", @provider.fare_transfer_window_minutes, step: 1, min: 0, style: 'width: 8em;'
           %span.text-muted{style: 'margin-left: 8px;'} a second fixed-route tap inside this window is a free transfer
+        %li
+          = label_tag "provider_fare_transfer_different_route_only", "Fare card: transfers only onto a different route"
+          = hidden_field_tag "provider[fare_transfer_different_route_only]", "0"
+          = check_box_tag "provider[fare_transfer_different_route_only]", "1", @provider.fare_transfer_different_route_only
+          %span.text-muted{style: 'margin-left: 8px;'} unchecked, a second tap on the same route inside the window is also free
       .actions
         = submit_tag translate_helper("update_fare_related_settings"), class: 'btn action-button'
 %hr

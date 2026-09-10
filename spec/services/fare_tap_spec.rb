@@ -47,18 +47,34 @@ RSpec.describe FareTap do
     expect(rider.reload.fare_balance).to eq 9.0
   end
 
-  it "makes the second bus inside the transfer window free" do
+  it "makes a different route inside the transfer window free, but not the same route, and not after the window" do
     t0 = Time.current
     tap!(recorded_at: t0)
-    other_run = create(:run, provider: provider, driver: driver, vehicle: run.vehicle, service_mode: "fixed_route", fixed_route_id: route.id)
-    r = tap.fixed_route!(run: other_run, uid: token.uid, client_uuid: SecureRandom.uuid, recorded_at: t0 + 30.minutes)
+    pink = FixedRoute.create!(provider: provider, name: "Pink", color: "FF69B4")
+    pink_run = create(:run, provider: provider, driver: driver, vehicle: run.vehicle, service_mode: "fixed_route", fixed_route_id: pink.id)
+    r = tap.fixed_route!(run: pink_run, uid: token.uid, client_uuid: SecureRandom.uuid, recorded_at: t0 + 30.minutes)
     expect(r.transfer).to be true
     expect(r.fare).to eq 0
     expect(r.rows.first.fare_type.name).to eq "Free / Transfer"
     expect(rider.reload.fare_balance).to eq 9.0
-    late = tap.fixed_route!(run: other_run, uid: token.uid, client_uuid: SecureRandom.uuid, recorded_at: t0 + 3.hours)
-    expect(late.transfer).to be false
+    # back onto Red (same route as the first tap) 20 minutes later: a ride home, charged
+    red_again = create(:run, provider: provider, driver: driver, vehicle: run.vehicle, service_mode: "fixed_route", fixed_route_id: route.id)
+    home = tap.fixed_route!(run: red_again, uid: token.uid, client_uuid: SecureRandom.uuid, recorded_at: t0 + 50.minutes)
+    expect(home.transfer).to be false
     expect(rider.reload.fare_balance).to eq 8.0
+    late = tap.fixed_route!(run: pink_run, uid: token.uid, client_uuid: SecureRandom.uuid, recorded_at: t0 + 4.hours)
+    expect(late.transfer).to be false
+    expect(rider.reload.fare_balance).to eq 7.0
+  end
+
+  it "lets the same route transfer when the provider allows it" do
+    provider.update!(fare_transfer_different_route_only: false)
+    t0 = Time.current
+    tap!(recorded_at: t0)
+    red_again = create(:run, provider: provider, driver: driver, vehicle: run.vehicle, service_mode: "fixed_route", fixed_route_id: route.id)
+    r = tap.fixed_route!(run: red_again, uid: token.uid, client_uuid: SecureRandom.uuid, recorded_at: t0 + 30.minutes)
+    expect(r.transfer).to be true
+    expect(rider.reload.fare_balance).to eq 9.0
   end
 
   it "does not charge a rider with a valid pass" do

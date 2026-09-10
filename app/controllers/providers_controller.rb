@@ -262,7 +262,7 @@ class ProvidersController < ApplicationController
 
   def change_fare_related_settings
     if params[:provider].present?
-      @provider.update(params.require(:provider).permit(:fare_udr_default, :fare_negative_floor, :fare_transfer_window_minutes, :fare_paratransit, :fare_urban_cities, :fare_monthly_pass_price, :fare_monthly_pass_price_reduced, :fare_pass_10_discount_pct, :fare_pass_20_discount_pct))
+      @provider.update(params.require(:provider).permit(:fare_udr_default, :fare_negative_floor, :fare_transfer_window_minutes, :fare_transfer_different_route_only, :fare_paratransit, :fare_urban_cities, :fare_monthly_pass_price, :fare_monthly_pass_price_reduced, :fare_pass_10_discount_pct, :fare_pass_20_discount_pct))
     end
     if @provider.fare
       @provider.fare.update(fare_related_params)

@@ -924,6 +924,7 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.integer "fare_pass_10_discount_pct", default: 0, null: false
     t.integer "fare_pass_20_discount_pct", default: 0, null: false
     t.decimal "fare_monthly_pass_price_reduced", precision: 6, scale: 2, default: "0.0", null: false
+    t.boolean "fare_transfer_different_route_only", default: true, null: false
     t.index ["business_address_id"], name: "index_providers_on_business_address_id"
     t.index ["deleted_at"], name: "index_providers_on_deleted_at"
     t.index ["fare_id"], name: "index_providers_on_fare_id"
