@@ -606,4 +606,4 @@ demand-response trip, $1.00 adult under 5 miles. If paratransit is meant to have
 is a separate decision and would need a `paratransit` service on this table or a flag on the trip.
 
 **Specs**: `spec/services/fare_schedule_spec.rb` (pricing, edges, guests, replace, tap precedence, grid
-save). 70 fare examples in all, green.
+save). 68 fare examples in all, green.
