@@ -70,6 +70,10 @@
   {
     name: 'fixed_route_ridership',
     title: 'Fixed Route Ridership'
+  },
+  {
+    name: 'fare_card_activity',
+    title: 'Fare Card Activity'
   }].each do |report_data|
   report = CustomReport.where(name: report_data[:name], version: '2').first_or_create 
   report.update(redirect_to_results: true, title: report_data[:title])

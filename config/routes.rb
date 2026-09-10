@@ -271,6 +271,17 @@ Rails.application.routes.draw do
 
     resources :fixed_route_boardings, only: [:update, :destroy]
 
+    # Fare cards (docs/fare-card-design.md): office pages for balances, tokens and the ledger.
+    get  "fare_accounts",        to: "fare_accounts#index",  as: :fare_accounts
+    get  "fare_accounts/lookup", to: "fare_accounts#lookup", as: :fare_account_lookup
+    get  "customers/:id/fare_account", to: "fare_accounts#show", as: :customer_fare_account
+    resources :customers, only: [] do
+      resources :fare_tokens, only: [:create]
+      resources :fare_transactions, only: [:create]
+    end
+    resources :fare_tokens, only: [:update]
+    resources :fare_transactions, only: [:show]
+
     resources :dispatchers,only: [:index] do
       collection do
         post :schedule
@@ -347,7 +358,7 @@ Rails.application.routes.draw do
       "customer_receiving_trips_in_range", "customers_report", "daily_manifest", "daily_manifest_by_half_hour", 
       "daily_manifest_by_half_hour_with_cab", "daily_manifest_with_cab", "daily_trips", "donations", 
       "driver_compliances_report", "driver_manifest", "driver_monthly_service_report", "driver_report", 
-      "export_trips_in_range", "fixed_route_ridership", "inactive_driver_status_report", "ineligible_customer_status_report", "manifest", 
+      "export_trips_in_range", "fare_card_activity", "fixed_route_ridership", "inactive_driver_status_report", "ineligible_customer_status_report", "manifest", 
       "missing_data_report", "monthlies", "ntd", "pre_run_inspections", "provider_common_location_report", "provider_service_productivity_report", 
       "service_summary", "show_runs_for_verification", "show_trips_for_verification", "update_runs_for_verification", 
       "update_trips_for_verification", "vehicle_monthly_service_report", "vehicle_report", "vehicle_5310_report", "vehicles_monthly"].each do |action|

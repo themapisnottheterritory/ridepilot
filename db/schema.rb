@@ -266,6 +266,10 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.integer "passenger_unload_min"
     t.boolean "sms_notifications_enabled", default: true
     t.string "preferred_language", default: "en"
+    t.decimal "fare_balance", precision: 8, scale: 2, default: "0.0", null: false
+    t.decimal "fare_balance_floor", precision: 8, scale: 2
+    t.date "fare_pass_expires_on"
+    t.integer "default_rider_category_id"
     t.index ["address_id"], name: "index_customers_on_address_id"
     t.index ["default_funding_source_id"], name: "index_customers_on_default_funding_source_id"
     t.index ["deleted_at"], name: "index_customers_on_deleted_at"
@@ -452,22 +456,47 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.index ["deleted_at"], name: "index_ethnicities_on_deleted_at"
   end
 
-  create_table "fare_card_data", force: :cascade do |t|
-    t.bigint "fare_card_id", null: false
-    t.integer "bus_id"
-    t.string "msg_direction"
-    t.decimal "latitude"
-    t.decimal "longitude"
+  create_table "fare_tokens", force: :cascade do |t|
+    t.integer "provider_id", null: false
+    t.integer "customer_id", null: false
+    t.string "kind", default: "rfid", null: false
+    t.string "uid", null: false
+    t.string "serial"
+    t.string "status", default: "active", null: false
+    t.string "note"
+    t.datetime "issued_at"
+    t.integer "issued_by_user_id"
+    t.datetime "deleted_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["fare_card_id"], name: "index_fare_card_data_on_fare_card_id"
+    t.index ["customer_id"], name: "index_fare_tokens_on_customer_id"
+    t.index ["provider_id", "serial"], name: "index_fare_tokens_on_provider_id_and_serial", unique: true, where: "((deleted_at IS NULL) AND (serial IS NOT NULL))"
+    t.index ["uid"], name: "index_fare_tokens_on_uid", unique: true, where: "(deleted_at IS NULL)"
   end
 
-  create_table "fare_cards", force: :cascade do |t|
-    t.string "card_id"
-    t.integer "customer_id"
+  create_table "fare_transactions", force: :cascade do |t|
+    t.integer "provider_id", null: false
+    t.integer "customer_id", null: false
+    t.integer "fare_token_id"
+    t.string "kind", null: false
+    t.decimal "amount", precision: 8, scale: 2, null: false
+    t.decimal "balance_after", precision: 8, scale: 2, null: false
+    t.string "payment_method"
+    t.string "reference"
+    t.string "note"
+    t.integer "run_id"
+    t.integer "trip_id"
+    t.integer "fixed_route_boarding_id"
+    t.integer "recorded_by_user_id"
+    t.integer "driver_id"
+    t.string "client_uuid", null: false
+    t.datetime "recorded_at", null: false
     t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.index ["client_uuid"], name: "index_fare_transactions_on_client_uuid", unique: true
+    t.index ["customer_id", "recorded_at"], name: "index_fare_transactions_on_customer_id_and_recorded_at"
+    t.index ["fixed_route_boarding_id"], name: "index_fare_transactions_on_fixed_route_boarding_id"
+    t.index ["provider_id", "recorded_at"], name: "index_fare_transactions_on_provider_id_and_recorded_at"
+    t.index ["trip_id"], name: "index_fare_transactions_on_trip_id"
   end
 
   create_table "fare_types", force: :cascade do |t|
@@ -871,6 +900,8 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.string "busavl_database"
     t.string "busavl_username"
     t.string "busavl_password"
+    t.decimal "fare_negative_floor", precision: 6, scale: 2, default: "0.0", null: false
+    t.integer "fare_transfer_window_minutes", default: 90, null: false
     t.index ["business_address_id"], name: "index_providers_on_business_address_id"
     t.index ["deleted_at"], name: "index_providers_on_deleted_at"
     t.index ["fare_id"], name: "index_providers_on_fare_id"
@@ -1660,7 +1691,6 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
   add_foreign_key "chat_read_receipts", "messages"
   add_foreign_key "chat_read_receipts", "runs"
   add_foreign_key "customer_auths", "customers"
-  add_foreign_key "fare_card_data", "fare_cards"
   add_foreign_key "gps_locations", "providers"
   add_foreign_key "gps_locations", "runs"
   add_foreign_key "lite_customers", "providers"

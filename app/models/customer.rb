@@ -18,6 +18,12 @@ class Customer < ApplicationRecord
   has_many   :trips, :dependent => :destroy, inverse_of: :customer
   has_many   :donations, :dependent => :destroy, inverse_of: :customer
 
+  # Fare cards (docs/fare-card-design.md). The balance is cached on the
+  # customer and only ever changed through FareLedger.
+  has_many   :fare_tokens, inverse_of: :customer
+  has_many   :fare_transactions, inverse_of: :customer
+  belongs_to :default_rider_category, class_name: "RiderCategory", optional: true
+
   has_many   :eligibilities, through: :customer_eligibilities
   has_many   :customer_eligibilities, dependent: :destroy
 
@@ -63,6 +69,14 @@ class Customer < ApplicationRecord
   after_initialize :set_defaults
 
   has_paper_trail
+
+  def fare_pass_active?(on = Date.current)
+    fare_pass_expires_on.present? && fare_pass_expires_on >= on
+  end
+
+  def active_fare_tokens
+    fare_tokens.active
+  end
 
   def name
     if group

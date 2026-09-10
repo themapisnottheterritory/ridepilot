@@ -79,6 +79,7 @@
         <% if show_scheduling? %><li class="trips"><%= link_to translate_helper("application_trips_link_text"), trips_path %></li><% end %>
         <% if show_scheduling? %><li class="runs"><%= link_to translate_helper("application_runs_link_text"), runs_path %></li><% end %>
         <% if show_scheduling? %><li class="customers"><%= link_to translate_helper("application_customers_link_text"), customers_path %></li><% end %>
+        <% if show_scheduling? && can?(:read, FareToken) %><li class="fare_accounts"><%= link_to "Fare Cards", fare_accounts_path %></li><% end %>
         <% if show_scheduling? %><li class="drivers"><%= link_to translate_helper("application_drivers_link_text"), drivers_path %></li><% end %>
         <% if show_scheduling? %><li class="vehicles"><%= link_to translate_helper("application_vehicles_link_text"), vehicles_path %></li><% end %>
         <% if show_scheduling? %><li class="reports"><%= link_to translate_helper("application_reports_link_text"), reporting.reports_path %></li><% end %>

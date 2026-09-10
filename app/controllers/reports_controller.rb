@@ -1334,6 +1334,53 @@ class ReportsController < ApplicationController
     apply_v2_response
   end
 
+  # Fare card ledger over a date range: what came in at the desk (by cash /
+  # check), what was taken in fares, refunds and corrections, and the balance
+  # riders hold at the end of the range. Groups by day, payment method, kind
+  # or the office user who posted it.
+  def fare_card_activity
+    query_params = params[:query] || {start_date: Date.today.prev_month + 1, end_date: Date.today + 1}
+    @query = Query.new(query_params)
+    @group_by = %w[day payment_method kind user rider].include?(@query.group_by) ? @query.group_by : 'day'
+
+    if params[:query]
+      @report_params = []
+      @report_params << ["Date Range", "#{@query.start_date.strftime('%m/%d/%Y')} - #{@query.before_end_date.strftime('%m/%d/%Y')}"]
+      @report_params << ["Grouped by", @group_by.humanize]
+
+      tz = Time.zone
+      rows = FareTransaction.for_provider(current_provider_id)
+                            .recorded_between(tz.local(@query.start_date.year, @query.start_date.month, @query.start_date.day),
+                                              tz.local(@query.end_date.year, @query.end_date.month, @query.end_date.day))
+                            .includes(:customer, :recorded_by, :driver).chronological.to_a
+
+      key = ->(t) {
+        case @group_by
+        when 'payment_method' then t.payment_label || (t.debit? ? 'Fare' : t.kind_label)
+        when 'kind'           then t.kind_label
+        when 'user'           then t.recorded_by.try(:email).to_s.split('@').first.presence || t.driver.try(:name) || '(tablet)'
+        when 'rider'          then t.customer.try(:name) || '(none)'
+        else                       t.recorded_at.to_date
+        end
+      }
+      sum = ->(g, kind) { g.select { |t| t.kind == kind }.sum { |t| t.amount.to_f } }
+      build = ->(g) {
+        { count: g.size, loads: sum.call(g, 'load'), cash: g.select { |t| t.load? && t.payment_method == 'cash' }.sum { |t| t.amount.to_f },
+          check: g.select { |t| t.load? && t.payment_method == 'check' }.sum { |t| t.amount.to_f },
+          fares: -sum.call(g, 'debit'), refunds: sum.call(g, 'refund'), adjustments: sum.call(g, 'adjust'),
+          net: g.sum { |t| t.amount.to_f } }
+      }
+      @report_data = rows.group_by { |t| key.call(t) }.sort_by { |k, _| k.to_s }.map { |k, g|
+        build.call(g).merge(label: @group_by == 'day' ? k.strftime('%a %m/%d/%Y') : k.to_s)
+      }
+      @grand = build.call(rows)
+      @grand[:days] = rows.map { |t| t.recorded_at.to_date }.uniq.size
+      @grand[:outstanding] = Customer.for_provider(current_provider_id).sum(:fare_balance).to_f
+    end
+
+    apply_v2_response
+  end
+
   def pre_run_inspections
     query_params = params[:query] || {start_date: Date.today.prev_month + 1, end_date: Date.today + 1}
     @query = Query.new(query_params)

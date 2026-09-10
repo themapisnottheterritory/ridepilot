@@ -94,6 +94,8 @@ class Ability
       can action,  RepeatingRun, :provider_id => provider.id
       can action,  Run, :provider_id => provider.id
       can action,  FixedRouteBoarding, :provider_id => provider.id   # correct/void walk-ons on a fixed run
+      can action,  FareToken, :provider_id => provider.id            # fare cards: issue / block
+      can action,  FareTransaction, :provider_id => provider.id      # fare cards: load / adjust / refund
       cannot_cancel_or_destroy_started_run
       cannot_destroy_completed_trip
     end

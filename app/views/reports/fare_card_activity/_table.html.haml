@@ -1,0 +1,54 @@
+- if @report_data.blank?
+  %h4 No record found
+- else
+  - group_label = { 'day' => 'Day', 'payment_method' => 'Payment method', 'kind' => 'Type', 'user' => 'Posted by', 'rider' => 'Rider' }[@group_by]
+  %p
+    %b Loaded at the desk:
+    = number_to_currency(@grand[:loads])
+    %span.text-muted= "(cash #{number_to_currency(@grand[:cash])}, check #{number_to_currency(@grand[:check])})"
+    &nbsp;&nbsp;
+    %b Fares taken:
+    = number_to_currency(@grand[:fares])
+    &nbsp;&nbsp;
+    %b Refunds:
+    = number_to_currency(@grand[:refunds])
+    &nbsp;&nbsp;
+    %b Adjustments:
+    = number_to_currency(@grand[:adjustments])
+    &nbsp;&nbsp;
+    %b Days:
+    = @grand[:days]
+    %br
+    %b Riders hold on account today:
+    = number_to_currency(@grand[:outstanding])
+  %table.table.table-condensed{style: 'margin-bottom: 14px;'}
+    %thead
+      %tr
+        %th= group_label
+        %th{style: 'text-align: right;'} Entries
+        %th{style: 'text-align: right;'} Cash in
+        %th{style: 'text-align: right;'} Checks in
+        %th{style: 'text-align: right;'} Fares
+        %th{style: 'text-align: right;'} Refunds
+        %th{style: 'text-align: right;'} Adjustments
+        %th{style: 'text-align: right;'} Net to balances
+    %tbody
+      - @report_data.each do |g|
+        %tr
+          %td= g[:label]
+          %td{style: 'text-align: right;'}= g[:count]
+          %td{style: 'text-align: right;'}= g[:cash] > 0 ? number_to_currency(g[:cash]) : ''
+          %td{style: 'text-align: right;'}= g[:check] > 0 ? number_to_currency(g[:check]) : ''
+          %td{style: 'text-align: right;'}= g[:fares] > 0 ? number_to_currency(g[:fares]) : ''
+          %td{style: 'text-align: right;'}= g[:refunds] > 0 ? number_to_currency(g[:refunds]) : ''
+          %td{style: 'text-align: right;'}= g[:adjustments] != 0 ? number_to_currency(g[:adjustments]) : ''
+          %td{style: 'text-align: right;'}= number_to_currency(g[:net])
+      %tr
+        %th Total
+        %th{style: 'text-align: right;'}= @grand[:count]
+        %th{style: 'text-align: right;'}= number_to_currency(@grand[:cash])
+        %th{style: 'text-align: right;'}= number_to_currency(@grand[:check])
+        %th{style: 'text-align: right;'}= number_to_currency(@grand[:fares])
+        %th{style: 'text-align: right;'}= number_to_currency(@grand[:refunds])
+        %th{style: 'text-align: right;'}= number_to_currency(@grand[:adjustments])
+        %th{style: 'text-align: right;'}= number_to_currency(@grand[:net])

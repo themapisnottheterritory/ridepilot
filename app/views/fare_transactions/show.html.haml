@@ -1,0 +1,40 @@
+-# Printable receipt for a load, opened in a new tab; the pdf layout has no nav.
+- provider = @fare_transaction.provider
+.container{style: 'max-width: 420px; padding: 24px; font-size: 14px;'}
+  %h3{style: 'margin-top: 0;'}= provider.name
+  %p
+    %strong Fare card receipt
+    %br
+    = @fare_transaction.recorded_at.strftime('%A %m/%d/%Y %l:%M %p')
+    %br
+    = "Receipt ##{@fare_transaction.id}"
+  %table.table.table-condensed{style: 'margin-bottom: 10px;'}
+    %tr
+      %td Rider
+      %td= @customer.name
+    - if @fare_transaction.fare_token
+      %tr
+        %td Card
+        %td= @fare_transaction.fare_token.label
+    %tr
+      %td= @fare_transaction.kind_label
+      %td= number_to_currency(@fare_transaction.amount.abs)
+    - if @fare_transaction.payment_method
+      %tr
+        %td Paid by
+        %td
+          = @fare_transaction.payment_label
+          - if @fare_transaction.reference.present?
+            = "##{@fare_transaction.reference}"
+    %tr
+      %td
+        %strong Balance
+      %td
+        %strong= number_to_currency(@fare_transaction.balance_after)
+  - if @fare_transaction.note.present?
+    %p= @fare_transaction.note
+  %p.text-muted{style: 'font-size: 12px;'}
+    Value on account is not refundable except by the provider. Keep this receipt.
+  %button.btn.btn-default.hidden-print{onclick: 'window.print()'} Print
+  :javascript
+    window.addEventListener('load', function(){ window.print(); });

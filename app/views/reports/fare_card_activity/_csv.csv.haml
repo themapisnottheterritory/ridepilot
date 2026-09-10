@@ -1,0 +1,12 @@
+- # common
+= render 'reports/common_csv_header'
+
+- if @report_data.blank?
+  = CSV.generate_line(["No record found"], row_sep: nil).html_safe
+- else
+  - group_label = { 'day' => 'Day', 'payment_method' => 'Payment method', 'kind' => 'Type', 'user' => 'Posted by', 'rider' => 'Rider' }[@group_by]
+  = CSV.generate_line(["Loaded", @grand[:loads].round(2), "Cash", @grand[:cash].round(2), "Check", @grand[:check].round(2), "Fares", @grand[:fares].round(2), "Refunds", @grand[:refunds].round(2), "Adjustments", @grand[:adjustments].round(2), "Days", @grand[:days], "Outstanding", @grand[:outstanding].round(2)], row_sep: nil).html_safe
+  = CSV.generate_line([group_label, "Entries", "Cash in", "Checks in", "Fares", "Refunds", "Adjustments", "Net"], row_sep: nil).html_safe
+  - @report_data.each do |g|
+    = CSV.generate_line([g[:label], g[:count], g[:cash].round(2), g[:check].round(2), g[:fares].round(2), g[:refunds].round(2), g[:adjustments].round(2), g[:net].round(2)], row_sep: nil).html_safe
+  = CSV.generate_line(["Total", @grand[:count], @grand[:cash].round(2), @grand[:check].round(2), @grand[:fares].round(2), @grand[:refunds].round(2), @grand[:adjustments].round(2), @grand[:net].round(2)], row_sep: nil).html_safe

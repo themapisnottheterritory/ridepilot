@@ -14,9 +14,10 @@ Check it took with `git config --get core.hooksPath`.
 Refuses a commit whose staged `db/schema.rb` **deletes** a table.
 
 `RAILS_ENV=test rails db:migrate` re-dumps `db/schema.rb` from the *test*
-database, which is missing tables that exist in production — `fare_cards`,
-`fare_card_data`, `lite_customers`, `lite_trips`, `lite_incidental_trips`,
-`lite_unique_riders`. The dump silently drops them, and committing that leaves
+database, which is missing tables that exist in production — `lite_customers`,
+`lite_trips`, `lite_incidental_trips`, `lite_unique_riders`. (`fare_cards` and
+`fare_card_data` used to be on this list; they were dropped for real by the
+2026-09-10 fare token migration.) The dump silently drops them, and committing that leaves
 anyone who later runs `db:schema:load` with a database missing those tables.
 
 It is easy to miss in review: the same diff also contains a plausible-looking

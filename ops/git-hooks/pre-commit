@@ -3,9 +3,9 @@
 #
 # Why this exists: `RAILS_ENV=test rails db:migrate` re-dumps db/schema.rb from
 # the TEST database. The test DB is missing tables that exist in production
-# (fare_cards, fare_card_data, lite_customers, lite_trips,
-# lite_incidental_trips, lite_unique_riders), so the dump silently deletes them
-# from the schema. Committing that hands anyone who later runs
+# (lite_customers, lite_trips, lite_incidental_trips, lite_unique_riders; the
+# old fare_cards / fare_card_data pair was dropped for real on 2026-09-10), so
+# the dump silently deletes them from the schema. Committing that hands anyone who later runs
 # `db:schema:load` a database with those tables missing.
 #
 # It is easy to miss: the diff also contains a legitimate-looking addition for

@@ -1,0 +1,20 @@
+-# Read-only glance at the rider's fare card balance; everything is done on
+-# the Fare account page so the customer form never posts ledger changes.
+- tokens = @customer.fare_tokens.active.to_a
+.panel.panel-primary#customer_fare_account_panel
+  .panel-heading
+    %h3.panel-title Fare card
+  .panel-body{style: 'padding: 5px 10px;'}
+    %strong Balance:
+    %span{style: (@customer.fare_balance < 0 ? 'color: #a94442;' : '')}= number_to_currency(@customer.fare_balance)
+    - if @customer.fare_pass_active?
+      &nbsp;·
+      = "pass through #{@customer.fare_pass_expires_on.strftime('%m/%d/%Y')}"
+    %br
+    %strong Cards:
+    - if tokens.empty?
+      %span.text-muted none issued
+    - else
+      = tokens.map(&:label).join(', ')
+    .pull-right
+      = link_to "Open fare account", customer_fare_account_path(@customer), class: 'btn action-button btn-sm'

@@ -53,6 +53,7 @@
       <%= render 'eligibility_panel', f: f, edit_mode: edit_mode %>
       <%= render 'providers_panel', f: f, edit_mode: edit_mode %>
       <%= render 'donations_panel', f: f, edit_mode: edit_mode  %>
+      <%= render 'fare_account_panel' if edit_mode == :show && @customer.persisted? && can?(:read, FareToken) %>
       <%= render 'comments_panel', f: f, edit_mode: edit_mode %>
       <%= render 'others_panel', f: f, edit_mode: edit_mode %>
       <% if edit_mode == :show %>

@@ -11,6 +11,7 @@ Fare today: $1.50, and the goal is to bring it down, not up.
 - **Frequency: 13.56 MHz, decided 2026-09-10.** Philz and Andrew both concur (section 2.2). MIFARE / NTAG cards,
   the ESP32 + RC522 prototype, and 13.56 MHz USB HID readers. The 125 kHz EH301 and its EM4100 cards are out.
 - Pilot two tokens on the same backend: RFID card on one bus, QR code on another (section 8).
+- **Phase 1 built 2026-09-10** (section 11): migration, ledger, office pages, activity report.
 - Tap to pay (bank card / phone wallet) explored and **paused** (section 10). Percentage fees do not fit a $1.50 fare.
 - Connectivity is not the constraint. Every bus has a Pepwave MAX BR1 LTE router and the tablets have their own LTE.
   Offline is a fallback path, not the design center.
@@ -339,3 +340,66 @@ removes cash from the bus, costs one fee per load, and needs no validator. In th
 `fare_transactions` load row with `payment_method: card_online` and the Stripe id in `reference`. The
 `bank_card_ref` token kind exists for the day a rider wants their bank card itself to act as their token,
 at which point the per-tap fee argument has to be re-run at whatever the fare is then.
+
+---
+
+## 11. Phase 1 as built (2026-09-10)
+
+Branch `fixed-route-wp8`, commit "Fare cards phase 1". Everything below is office-side; nothing touches the
+tablet yet.
+
+**Deploy**
+
+```sh
+docker exec ridepilot_app_1 sh -c 'cd /var/www/ridepilot && bin/rails db:migrate && bin/rake ridepilot:add_v2_custom_reports'
+```
+
+The migration drops `fare_cards` / `fare_card_data` (six test rows) and the pre-commit hook comment was
+updated to match. Commit the schema with `--no-verify`, as the hook says to for a real drop.
+
+**Schema** (as in section 4, with these names)
+
+- `fare_tokens`: provider_id, customer_id, kind (rfid | qr | bank_card_ref), uid, serial, status
+  (active | lost | blocked | retired), note, issued_at, issued_by_user_id, deleted_at. Unique uid among
+  live rows; unique serial per provider.
+- `fare_transactions`: append-only, no updated_at. provider_id, customer_id, fare_token_id, kind, signed
+  amount, balance_after, payment_method (cash | check | card_online, loads only), reference, note, run_id,
+  trip_id, fixed_route_boarding_id, recorded_by_user_id, driver_id, client_uuid (unique), recorded_at.
+- `customers`: fare_balance (cached), fare_balance_floor, fare_pass_expires_on, default_rider_category_id.
+- `providers`: fare_negative_floor (default 0), fare_transfer_window_minutes (default 90).
+- `fare_types`: a `Card` row, fare_factor 1.0.
+
+**Code**
+
+- `app/services/fare_ledger.rb` is the only thing that changes a balance: `load!`, `debit!`, `refund!`,
+  `adjust!`, `transfer!`. Row lock on the customer, floor check on debits (`allow_below_floor:` for a tap
+  that already happened offline), idempotent on `client_uuid`. Phase 2's tap endpoint calls `debit!`.
+- `FareToken.lookup(raw)` resolves what a reader typed: separators stripped, upcased, then the other
+  radix with the usual zero padding, so an office reader set to decimal still finds a card the bus reader
+  reads in hex. Serial lookup is done by the controller (`#55` or `55`).
+- QR tokens mint their own 12-character uid (no vowels, never starts with a digit). Printing the QR is
+  phase 2.
+- `FareTransaction` is read-only once saved. Corrections are further rows.
+
+**Pages**
+
+- Fare Cards (top nav): scan box with focus, so a USB HID reader goes straight to the rider. Today's
+  loads by method, balances outstanding, every rider with a token or a balance.
+- Rider fare account (`/customers/:id/fare_account`, also a button on the rider record): balance and
+  pass, tokens with Lost / Block / Reactivate / Retire, issue form (kind, uid from the reader, printed
+  serial), load form with $5 / $10 / $20 buttons and cash / check, refund and adjustment behind a
+  disclosure with a required reason, paged ledger. Optional printable receipt.
+- Fare Card Activity report (Reports): date range, grouped by day / payment method / type / posted by /
+  rider. Cash in, checks in, fares, refunds, adjustments, net, and the total riders hold on account.
+
+**Permissions**: editors at a scheduling provider get manage on FareToken and FareTransaction; read-only
+roles see the pages without the forms.
+
+**Specs**: `spec/models/fare_token_spec.rb`, `spec/services/fare_ledger_spec.rb`,
+`spec/controllers/fare_accounts_controller_spec.rb`, `spec/controllers/reports/fare_card_activity_controller_spec.rb`.
+`spec/support/fare_card_helpers.rb#create_rider` builds a customer with the associations Rails 7 now
+requires, because the old customer factory cannot.
+
+**Left for phase 2**: driver API tap endpoints (`debit!` is ready for them), tablet capture field, offline
+snapshot, QR printing, the pass product's office UI (the column exists), rider category on the customer
+form (the column exists).

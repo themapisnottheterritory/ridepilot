@@ -1,0 +1,205 @@
+-# One rider's fare account: balance, tokens, ledger, and the office forms
+-# (load, adjust, issue). Every posting goes through FareLedger.
+= render 'shared/highlight_active_tab_js', is_primary_nav: true, tab_class: 'fare_accounts'
+- floor = @ledger.floor
+- can_write = @can_write && @customer.active
+
+.clearfix.row#page-header{style: 'padding: 0px;'}
+  %h1.page-title
+    = "Fare account: #{@customer.name}"
+    - unless @customer.active
+      %span.label.label-default{style: 'font-size: 50%; vertical-align: middle;'} inactive rider
+  .action-buttons
+    = link_to "Rider record", customer_path(@customer), class: 'btn action-button'
+    = link_to "Fare cards", fare_accounts_path, class: 'btn action-button'
+
+.row
+  .col-sm-4
+    .panel.panel-primary
+      .panel-heading
+        %h3.panel-title Balance
+      .panel-body
+        %div{style: "font-size: 34px; font-weight: bold; #{'color: #a94442;' if @customer.fare_balance < 0}"}
+          = number_to_currency(@customer.fare_balance)
+        - if floor < 0
+          %span.text-muted= "May go as low as #{number_to_currency(floor)}"
+        - elsif @customer.fare_balance < 0
+          %span.text-danger Below zero: collect at next load.
+        %br
+        - if @customer.fare_pass_expires_on
+          %strong Pass:
+          - if @customer.fare_pass_active?
+            = "valid through #{@customer.fare_pass_expires_on.strftime('%m/%d/%Y')}"
+          - else
+            %span.text-muted= "expired #{@customer.fare_pass_expires_on.strftime('%m/%d/%Y')}"
+        - if @customer.default_rider_category
+          %br
+          %strong Rider category:
+          = @customer.default_rider_category.name
+
+    - if can_write
+      .panel.panel-primary#fare-load-panel
+        .panel-heading
+          %h3.panel-title Load value
+        .panel-body
+          = form_for FareTransaction.new, url: customer_fare_transactions_path(@customer), html: { id: 'fare-load-form' } do |f|
+            = f.hidden_field :kind, value: 'load'
+            .form-group
+              = f.label :amount, "Amount"
+              .input-group
+                .input-group-addon $
+                = f.number_field :amount, min: 0.01, step: 0.01, class: 'form-control', required: true, id: 'load-amount', autocomplete: 'off'
+              %div{style: 'margin-top: 6px;'}
+                - [5, 10, 20].each do |n|
+                  %button.btn.btn-default.btn-sm.quick-amount{type: 'button', data: { amount: n }}= "$#{n}"
+            .form-group
+              = f.label :payment_method, "Paid by"
+              = f.select :payment_method, [['Cash', 'cash'], ['Check', 'check']], {}, class: 'form-control', id: 'load-method'
+            .form-group
+              = f.label :reference, "Check # / reference"
+              = f.text_field :reference, class: 'form-control', autocomplete: 'off'
+            .form-group
+              = f.label :note, "Note"
+              = f.text_field :note, class: 'form-control', autocomplete: 'off'
+            .checkbox
+              %label
+                = check_box_tag 'fare_transaction[receipt]', '1', false, id: 'load-receipt'
+                Print a receipt
+            = f.submit "Post load", class: 'btn action-button'
+
+      .panel.panel-default#fare-adjust-panel
+        .panel-heading
+          %h3.panel-title
+            %a{href: '#fare-adjust-body', data: { toggle: 'collapse' }, style: 'color: inherit;'} Refund or adjustment ▸
+        #fare-adjust-body.panel-body.collapse
+          = form_for FareTransaction.new, url: customer_fare_transactions_path(@customer), namespace: 'adjust', html: { id: 'fare-adjust-form' } do |f|
+            .form-group
+              = f.label :kind, "Type"
+              = f.select :kind, [['Refund (money returned to rider)', 'refund'], ['Adjustment (signed correction)', 'adjust']], {}, class: 'form-control'
+            .form-group
+              = f.label :amount, "Amount (use a minus sign to take value off)"
+              .input-group
+                .input-group-addon $
+                = f.number_field :amount, step: 0.01, class: 'form-control', required: true, autocomplete: 'off'
+            .form-group
+              = f.label :note, "Reason (required)"
+              = f.text_field :note, class: 'form-control', required: true, autocomplete: 'off'
+            .form-group
+              = f.label :reference, "Reference"
+              = f.text_field :reference, class: 'form-control', autocomplete: 'off'
+            = f.submit "Post", class: 'btn action-button', data: { confirm: 'Post this correction to the ledger? It cannot be edited afterwards.' }
+
+  .col-sm-8
+    .panel.panel-primary#fare-tokens-panel
+      .panel-heading
+        %h3.panel-title Cards and codes
+      .panel-body{style: 'padding: 5px;'}
+        - if @tokens.empty?
+          %p.text-muted{style: 'margin: 6px;'} No card or QR code issued yet.
+        - else
+          %table.table.table-condensed{style: 'margin-bottom: 6px;'}
+            %thead
+              %tr
+                %th Serial
+                %th Type
+                %th UID
+                %th Status
+                %th Issued
+                %th Note
+                - if can_write
+                  %th
+            %tbody
+              - @tokens.each do |t|
+                %tr{class: (t.id == @highlight_token_id ? 'info' : nil)}
+                  %td
+                    %strong= t.label
+                  %td= t.kind_label
+                  %td
+                    %code= t.display_uid
+                  %td
+                    %span{class: "label #{t.active? ? 'label-success' : 'label-default'}"}= t.status
+                  %td
+                    = t.issued_at.try(:strftime, '%m/%d/%Y')
+                    - if t.issued_by
+                      %span.text-muted= "by #{t.issued_by.email.to_s.split('@').first}"
+                  %td= t.note
+                  - if can_write
+                    %td{style: 'white-space: nowrap;'}
+                      - if t.active?
+                        = button_to "Lost", fare_token_path(t, status: 'lost'), method: :patch, class: 'btn btn-default btn-xs', form: { style: 'display:inline;' }
+                        = button_to "Block", fare_token_path(t, status: 'blocked'), method: :patch, class: 'btn btn-default btn-xs', form: { style: 'display:inline;' }
+                      - elsif t.status != 'retired'
+                        = button_to "Reactivate", fare_token_path(t, status: 'active'), method: :patch, class: 'btn btn-default btn-xs', form: { style: 'display:inline;' }
+                        = button_to "Retire", fare_token_path(t, status: 'retired'), method: :patch, class: 'btn btn-default btn-xs', form: { style: 'display:inline;' }, data: { confirm: 'Retire this token for good?' }
+        - if can_write
+          %hr{style: 'margin: 8px 0;'}
+          = form_for @new_token, url: customer_fare_tokens_path(@customer), html: { class: 'form-inline', id: 'issue-token-form' } do |f|
+            %strong{style: 'margin-right: 8px;'} Issue:
+            = f.select :kind, [['RFID card', 'rfid'], ['QR code', 'qr']], {}, class: 'form-control input-sm', id: 'token-kind'
+            = f.text_field :uid, class: 'form-control input-sm', id: 'token-uid', placeholder: 'Tap card on reader', size: 22, autocomplete: 'off'
+            = f.text_field :serial, class: 'form-control input-sm', placeholder: 'Printed serial (optional)', size: 18, autocomplete: 'off'
+            = f.text_field :note, class: 'form-control input-sm', placeholder: 'Note', size: 16, autocomplete: 'off'
+            = f.submit "Issue", class: 'btn action-button btn-sm'
+          %p.text-muted{style: 'margin: 6px 0 0;'}
+            Click in the UID box and tap the card on the office reader. A QR code needs no UID; one is minted for it.
+            The balance stays with the rider, so a replacement card is just a new row here and "Lost" on the old one.
+
+    .panel.panel-primary#fare-ledger-panel
+      .panel-heading
+        %h3.panel-title Ledger
+      .panel-body{style: 'padding: 5px;'}
+        - if @transactions.empty?
+          %p.text-muted{style: 'margin: 6px;'} No activity yet.
+        - else
+          %table.table.table-condensed.table-striped{style: 'margin-bottom: 6px;'}
+            %thead
+              %tr
+                %th When
+                %th Type
+                %th{style: 'text-align: right;'} Amount
+                %th{style: 'text-align: right;'} Balance
+                %th Paid by / ref
+                %th Token
+                %th Where
+                %th By
+                %th Note
+            %tbody
+              - @transactions.each do |tx|
+                %tr{class: (tx.id == params[:tx_id].to_i ? 'info' : nil)}
+                  %td{style: 'white-space: nowrap;'}= tx.recorded_at.strftime('%m/%d/%Y %l:%M %p')
+                  %td
+                    = tx.kind_label
+                    - if tx.load?
+                      = link_to "receipt", fare_transaction_path(tx), target: '_blank', style: 'font-size: 85%;'
+                  %td{style: "text-align: right; #{'color: #a94442;' if tx.amount < 0}"}= number_to_currency(tx.amount)
+                  %td{style: 'text-align: right;'}= number_to_currency(tx.balance_after)
+                  %td
+                    = tx.payment_label
+                    - if tx.reference.present?
+                      %span.text-muted= "##{tx.reference}"
+                  %td= tx.fare_token.try(:label)
+                  %td
+                    - if tx.run
+                      = link_to tx.run.name, run_path(tx.run)
+                    - elsif tx.trip
+                      = link_to "Trip #{tx.trip.id}", trip_path(tx.trip)
+                    - elsif tx.driver
+                      = tx.driver.name
+                  %td= tx.recorded_by.try(:email).to_s.split('@').first || tx.driver.try(:name)
+                  %td= tx.note
+          = will_paginate @transactions
+
+:javascript
+  $(document).ready(function() {
+    $('.quick-amount').on('click', function() { $('#load-amount').val($(this).data('amount')).focus(); });
+    $('#load-method').on('change', function() {
+      $('#fare_transaction_reference').attr('placeholder', $(this).val() === 'check' ? 'Check number' : '');
+    });
+    function tokenKind() {
+      var qr = $('#token-kind').val() === 'qr';
+      $('#token-uid').prop('disabled', qr).attr('placeholder', qr ? 'minted on issue' : 'Tap card on reader');
+    }
+    $('#token-kind').on('change', tokenKind); tokenKind();
+    // A reader ends its burst with Enter; that submits the issue form, which is what we want.
+    if ($('#token-uid').val()) { $('#token-uid').focus(); }
+  });

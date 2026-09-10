@@ -1,0 +1,99 @@
+-# Fare cards, office landing page. The scan box has focus so a USB reader
+-# (which types the UID and Enter) goes straight to the rider's account.
+= render 'shared/highlight_active_tab_js', is_primary_nav: true, tab_class: 'fare_accounts'
+
+.clearfix.row#page-header{style: 'padding: 0px;'}
+  %h1.page-title Fare Cards
+  .action-buttons
+    - report = CustomReport.find_by(name: 'fare_card_activity')
+    - if report
+      = link_to "Activity report", custom_report_path(report), class: 'btn action-button'
+
+.row.col-sm-12
+  = form_tag fare_account_lookup_path, method: :get, class: 'form-inline', id: 'fare-scan-form', style: 'margin: 6px 0 10px;' do
+    %label{for: 'fare-scan'} Scan a card, or enter a serial or name:
+    = text_field_tag :q, params[:unknown_uid], id: 'fare-scan', class: 'form-control', size: 36, autofocus: true, autocomplete: 'off', placeholder: 'Tap card on reader'
+    = submit_tag "Find", class: 'btn action-button', name: nil
+    - if params[:unknown_uid].present?
+      %span.text-danger{style: 'margin-left: 10px;'}
+        Unknown card. Open the rider's account below and paste this UID to issue it.
+
+.row.col-sm-12{style: 'margin: 6px 0 12px;'}
+  .col-sm-3{style: 'padding-left: 0;'}
+    %strong Riders with cards or balances:
+    = @accounts_count
+    %br
+    %strong Active tokens:
+    = @active_tokens
+  .col-sm-3
+    %strong Balances outstanding:
+    = number_to_currency(@outstanding)
+    %br
+    %span.text-muted Money riders hold on account
+  .col-sm-6
+    %strong Today:
+    - if @today_count.zero? && @today_fares.zero?
+      %span.text-muted nothing yet
+    - else
+      = "#{@today_count} #{'load'.pluralize(@today_count)}"
+      - @today_loads.each do |method, amount|
+        &nbsp;·
+        = "#{FareTransaction::PAYMENT_LABELS[method] || method} #{number_to_currency(amount)}"
+      - if @today_fares > 0
+        &nbsp;·
+        = "fares taken #{number_to_currency(@today_fares)}"
+
+.row.col-sm-12
+  - if params[:term].present?
+    %p
+      Showing riders matching
+      %strong= params[:term]
+      = link_to "(clear)", fare_accounts_path
+  - if @accounts.empty?
+    %p.text-muted No riders have a fare card or a balance yet. Open a rider from Customers and issue one from their Fare account page.
+  - else
+    %table.table.table-striped.table-condensed#fare-accounts-table
+      %thead
+        %tr
+          %th Rider
+          %th Tokens
+          %th{style: 'text-align: right;'} Balance
+          %th Pass
+          %th Last activity
+      %tbody
+        - @accounts.each do |c|
+          - tokens = c.fare_tokens.reject(&:deleted_at)
+          - last = c.fare_transactions.newest_first.first
+          %tr
+            %td
+              = link_to c.name, customer_fare_account_path(c)
+              - unless c.active
+                %span.label.label-default inactive
+            %td
+              - if tokens.empty?
+                %span.text-muted none
+              - else
+                - tokens.each do |t|
+                  %span{class: "label #{t.active? ? 'label-success' : 'label-default'}", title: "#{t.kind_label} #{t.display_uid}"}= t.label
+                  &nbsp;
+            %td{style: "text-align: right; #{'color: #a94442;' if c.fare_balance < 0}"}= number_to_currency(c.fare_balance)
+            %td
+              - if c.fare_pass_expires_on
+                - if c.fare_pass_active?
+                  = "through #{c.fare_pass_expires_on.strftime('%m/%d/%Y')}"
+                - else
+                  %span.text-muted= "expired #{c.fare_pass_expires_on.strftime('%m/%d/%Y')}"
+            %td
+              - if last
+                = "#{last.recorded_at.strftime('%m/%d/%Y %l:%M %p')} #{last.kind_label.downcase} #{number_to_currency(last.amount.abs)}"
+    = will_paginate @accounts
+
+:javascript
+  $(document).ready(function() {
+    var box = $('#fare-scan');
+    box.focus().select();
+    // Keep the reader's keystrokes landing in the box unless the user is typing elsewhere.
+    $(document).on('click', function(e) {
+      if (!$(e.target).is('input, textarea, select, a, button')) { box.focus(); }
+    });
+  });
