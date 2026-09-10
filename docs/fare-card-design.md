@@ -1,7 +1,7 @@
 # Fare Card Design Recommendation
 
 Written 2026-09-10 for RidePilot at GCRPC / Victoria Transit. Updated same day after reviewing tap to pay.
-Status: phases 1 to 3 and the distance-band schedule built (sections 11 to 15). Awaiting transit team decisions (section 14).
+Status: everything built and configured (sections 11 to 16); all policy questions answered (section 14). Pilot hardware next.
 Budget assumption: near zero. Existing driver tablets, existing RidePilot server, cheap off-the-shelf parts.
 Fare today: $1.50, and the goal is to bring it down, not up.
 
@@ -559,10 +559,10 @@ before the pilot buses go live; sent to the transit team by email the same day.
 | 6 | The website says 10-trip, 20-trip and monthly passes are "available soon". | **Built and priced 2026-09-10 (section 16).** Philz's prepay table adopted: 10-ride 10% off, 20-ride 20% off, monthly $30. Set in production. **Reduced-fare monthly $15** for senior, disabled and youth added the same day. Monthly is unlimited rides through month end. | done |
 | 7 | Which services does the card cover? | Victoria Transit fixed route, and demand response in Victoria and DeWitt counties (the one active provider). Calhoun, Goliad, Lavaca, Jackson, Matagorda run their own schedules. Gonzales is free. | nothing |
 | 8 | How do riders reload? | Front desk, cash or check, printed receipt (live). Online by card is built (section 13) but off: needs a Stripe account, carries 2.9% + $0.30, steer riders to $20 loads. | decision on Stripe, later |
-| 9 | What happens when a card is low? | System refuses the tap at $0.00 (`providers.fare_negative_floor`). Could allow e.g. -$5.00 so nobody is left at the stop, settled at next reload. | **decision** |
+| 9 | What happens when a card is low? | **Decided 2026-09-10: floor is -$5.00** (`providers.fare_negative_floor`, set in production). A rider can owe up to $5.00 and is settled at the next reload; below that the tap is refused and the driver takes cash. The office sees negative balances in red on the Fare Cards page. | done |
 | 10 | What should the website say? | After 2, 3, 5, 6 and 9: describe the card, where to get and reload it, the transfer rule, pass prices; drop "available soon". Draft it with the pilot launch. | after decisions |
 
-Answer still needed for 9 (negative floor) to finish setup and order the pilot readers and cards.
+**All ten answered.** Setup is complete; what remains is ordering the pilot readers and cards (section 12) and the fare page text (question 10).
 
 The internal sheet "Fare Structure as of September 1st, 2026" (photo `~/IMG_1917.HEIC`, thumbnail only) also
 says Gonzales County fares are reinstated 2026-10-01; that is another provider's service, nothing to do here.
