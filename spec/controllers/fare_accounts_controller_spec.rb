@@ -98,3 +98,30 @@ RSpec.describe FareTokensController, type: :controller do
     expect(t.reload.status).to eq "lost"
   end
 end
+
+RSpec.describe FareTransactionsController, "pass buttons", type: :controller do
+  login_admin_as_current_user
+  let(:provider) { @current_user.current_provider }
+  let(:senior)   { RiderCategory.find_or_create_by!(name: "Senior 60+") { |c| c.default_fare = 0.50 } }
+  let(:rider)    { create_rider(provider, default_rider_category_id: senior.id) }
+
+  it "sells a 10-trip pass from the rider's category" do
+    post :create, params: { customer_id: rider.id, fare_transaction: { kind: "pass_10", payment_method: "cash" } }
+    expect(response).to redirect_to(customer_fare_account_path(rider, tx_id: FareTransaction.last.id))
+    expect(rider.reload.fare_balance).to eq 5.0
+    expect(flash[:notice]).to include("10-trip pass")
+  end
+
+  it "sells a monthly pass for next month at the provider price and prints a receipt" do
+    provider.update!(fare_monthly_pass_price: 30)
+    post :create, params: { customer_id: rider.id, fare_transaction: { kind: "pass_monthly", pass_month: "next", payment_method: "check", reference: "44", receipt: "1" } }
+    expect(response).to redirect_to(fare_transaction_path(FareTransaction.last))
+    expect(rider.reload.fare_pass_expires_on).to eq Date.current.next_month.end_of_month
+    expect(rider.fare_balance).to eq 0
+  end
+
+  it "refuses a monthly pass with no price set" do
+    post :create, params: { customer_id: rider.id, fare_transaction: { kind: "pass_monthly", pass_month: "this", payment_method: "cash" } }
+    expect(flash[:alert]).to match(/No monthly pass price/)
+  end
+end

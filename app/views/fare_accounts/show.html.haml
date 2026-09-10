@@ -88,6 +88,43 @@
                 Print a receipt
             = f.submit "Post load", class: 'btn action-button'
 
+      - category = @customer.default_rider_category || @rider_categories.first
+      - fare_each = category&.default_fare.to_d || 0
+      - discount = @customer.provider.fare_multi_trip_discount_pct.to_i
+      - price = ->(n) { (fare_each * n * (100 - discount) / 100).round(2) }
+      - monthly = @customer.provider.fare_monthly_pass_price.to_d
+      - if fare_each > 0 || monthly > 0
+        .panel.panel-primary#fare-pass-panel
+          .panel-heading
+            %h3.panel-title Sell a pass
+          .panel-body
+            = form_for FareTransaction.new, url: customer_fare_transactions_path(@customer), namespace: 'pass', html: { id: 'fare-pass-form' } do |f|
+              = f.hidden_field :kind, value: '', id: 'pass-kind'
+              %p.text-muted{style: 'margin-bottom: 8px;'}
+                = "#{category&.name || 'Rider'} fare #{number_to_currency(fare_each)} a trip."
+                - if discount > 0
+                  = "Multi-trip passes are #{discount}% off; the card still gets the full trips' value."
+              %div{style: 'display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;'}
+                - if fare_each > 0
+                  %button.btn.btn-default.pass-choice{type: 'button', data: { kind: 'pass_10' }}= "10-trip #{number_to_currency(price.call(10))}"
+                  %button.btn.btn-default.pass-choice{type: 'button', data: { kind: 'pass_20' }}= "20-trip #{number_to_currency(price.call(20))}"
+                - if monthly > 0
+                  %button.btn.btn-default.pass-choice{type: 'button', data: { kind: 'pass_monthly' }}= "Monthly #{number_to_currency(monthly)}"
+              #pass-month-row.form-group{style: 'display: none;'}
+                = f.label :pass_month, "Month"
+                = f.select :pass_month, [["This month (through #{Date.current.end_of_month.strftime('%m/%d')})", 'this'], ["Next month (through #{Date.current.next_month.end_of_month.strftime('%m/%d')})", 'next']], { selected: (Date.current.day >= 24 ? 'next' : 'this') }, class: 'form-control'
+              .form-group
+                = f.label :payment_method, "Paid by"
+                = f.select :payment_method, [['Cash', 'cash'], ['Check', 'check']], {}, class: 'form-control'
+              .form-group
+                = f.label :reference, "Check # / reference"
+                = f.text_field :reference, class: 'form-control', autocomplete: 'off'
+              .checkbox
+                %label
+                  = check_box_tag 'fare_transaction[receipt]', '1', false, id: 'pass-receipt'
+                  Print a receipt
+              = f.submit "Sell", class: 'btn action-button', id: 'pass-submit', disabled: true
+
       .panel.panel-default#fare-adjust-panel
         .panel-heading
           %h3.panel-title
@@ -224,6 +261,14 @@
       $('#token-uid').prop('disabled', qr).attr('placeholder', qr ? 'minted on issue' : 'Tap card on reader');
     }
     $('#token-kind').on('change', tokenKind); tokenKind();
+    $('.pass-choice').on('click', function() {
+      $('.pass-choice').removeClass('btn-primary').addClass('btn-default');
+      $(this).removeClass('btn-default').addClass('btn-primary');
+      var kind = $(this).data('kind');
+      $('#pass-kind').val(kind);
+      $('#pass-month-row').toggle(kind === 'pass_monthly');
+      $('#pass-submit').prop('disabled', false).val('Sell ' + $(this).text());
+    });
     // A reader ends its burst with Enter; that submits the issue form, which is what we want.
     if ($('#token-uid').val()) { $('#token-uid').focus(); }
   });

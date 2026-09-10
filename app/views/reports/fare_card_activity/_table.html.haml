@@ -10,6 +10,9 @@
     %b Fares taken:
     = number_to_currency(@grand[:fares])
     &nbsp;&nbsp;
+    %b Monthly passes:
+    = number_to_currency(@grand[:passes])
+    &nbsp;&nbsp;
     %b Refunds:
     = number_to_currency(@grand[:refunds])
     &nbsp;&nbsp;
@@ -29,6 +32,7 @@
         %th{style: 'text-align: right;'} Cash in
         %th{style: 'text-align: right;'} Checks in
         %th{style: 'text-align: right;'} Fares
+        %th{style: 'text-align: right;'} Passes
         %th{style: 'text-align: right;'} Refunds
         %th{style: 'text-align: right;'} Adjustments
         %th{style: 'text-align: right;'} Net to balances
@@ -40,6 +44,7 @@
           %td{style: 'text-align: right;'}= g[:cash] > 0 ? number_to_currency(g[:cash]) : ''
           %td{style: 'text-align: right;'}= g[:check] > 0 ? number_to_currency(g[:check]) : ''
           %td{style: 'text-align: right;'}= g[:fares] > 0 ? number_to_currency(g[:fares]) : ''
+          %td{style: 'text-align: right;'}= g[:passes] > 0 ? number_to_currency(g[:passes]) : ''
           %td{style: 'text-align: right;'}= g[:refunds] > 0 ? number_to_currency(g[:refunds]) : ''
           %td{style: 'text-align: right;'}= g[:adjustments] != 0 ? number_to_currency(g[:adjustments]) : ''
           %td{style: 'text-align: right;'}= number_to_currency(g[:net])
@@ -49,6 +54,7 @@
         %th{style: 'text-align: right;'}= number_to_currency(@grand[:cash])
         %th{style: 'text-align: right;'}= number_to_currency(@grand[:check])
         %th{style: 'text-align: right;'}= number_to_currency(@grand[:fares])
+        %th{style: 'text-align: right;'}= number_to_currency(@grand[:passes])
         %th{style: 'text-align: right;'}= number_to_currency(@grand[:refunds])
         %th{style: 'text-align: right;'}= number_to_currency(@grand[:adjustments])
         %th{style: 'text-align: right;'}= number_to_currency(@grand[:net])

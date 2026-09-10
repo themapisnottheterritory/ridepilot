@@ -3,7 +3,7 @@
 # ledger always explains customers.fare_balance. Create rows through
 # FareLedger, which takes the customer lock and keeps balance_after right.
 class FareTransaction < ApplicationRecord
-  KINDS = %w[load debit refund adjust transfer_in transfer_out].freeze
+  KINDS = %w[load debit refund adjust transfer_in transfer_out pass].freeze   # pass: a monthly pass sale, debited right after its load
   PAYMENT_METHODS = %w[cash check card_online].freeze
   PAYMENT_LABELS = { "cash" => "Cash", "check" => "Check", "card_online" => "Card / online" }.freeze
 
@@ -36,10 +36,17 @@ class FareTransaction < ApplicationRecord
 
   def load?;   kind == "load";   end
   def debit?;  kind == "debit";  end
+  def pass?;   kind == "pass";   end
+
+  # Cash that actually changed hands on a load: the tendered amount when a
+  # pass was discounted, else the value credited.
+  def cash_in
+    load? ? (tendered || amount) : 0
+  end
 
   def kind_label
     { "load" => "Load", "debit" => "Fare", "refund" => "Refund", "adjust" => "Adjustment",
-      "transfer_in" => "Transfer in", "transfer_out" => "Transfer out" }[kind] || kind
+      "transfer_in" => "Transfer in", "transfer_out" => "Transfer out", "pass" => "Pass" }[kind] || kind
   end
 
   def payment_label
@@ -53,7 +60,7 @@ class FareTransaction < ApplicationRecord
     case kind
     when "load", "refund", "transfer_in"
       errors.add(:amount, "must be positive for a #{kind_label.downcase}") if amount < 0
-    when "debit", "transfer_out"
+    when "debit", "transfer_out", "pass"
       errors.add(:amount, "must be negative for a #{kind_label.downcase}") if amount > 0
     end
   end

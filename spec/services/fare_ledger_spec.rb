@@ -71,3 +71,44 @@ RSpec.describe FareLedger do
     expect(other.fare_transactions.last.kind).to eq "transfer_in"
   end
 end
+
+RSpec.describe FareLedger, "pass sales" do
+  let(:provider) { create(:provider) }
+  let(:rider)    { create_rider(provider) }
+  let(:ledger)   { FareLedger.new(rider, provider: provider) }
+
+  it "sells a 10-trip pass as stored value at the rider's fare" do
+    tx = ledger.sell_trip_pass!(trips: 10, fare_each: 0.50, category_name: "Senior 60+", payment_method: "cash")
+    expect(tx.amount).to eq 5.0
+    expect(tx.tendered).to be_nil
+    expect(tx.cash_in).to eq 5.0
+    expect(tx.note).to eq "10-trip pass (Senior 60+ @ 0.50)"
+    expect(rider.reload.fare_balance).to eq 5.0
+  end
+
+  it "credits the full value but records the discounted cash" do
+    tx = ledger.sell_trip_pass!(trips: 20, fare_each: 1.00, payment_method: "check", reference: "9", discount_pct: 10)
+    expect(tx.amount).to eq 20.0
+    expect(tx.tendered).to eq 18.0
+    expect(tx.cash_in).to eq 18.0
+    expect(tx.note).to include("paid 18.00")
+    expect(rider.reload.fare_balance).to eq 20.0
+  end
+
+  it "refuses a trip pass for a $0 fare" do
+    expect { ledger.sell_trip_pass!(trips: 10, fare_each: 0, payment_method: "cash") }.to raise_error(FareLedger::Error)
+  end
+
+  it "sells a monthly pass: money on the ledger, balance unchanged, expiry set" do
+    ledger.load!(3, payment_method: "cash")
+    through = Date.current.next_month.end_of_month
+    tx = ledger.sell_monthly_pass!(price: 30, through: through, payment_method: "cash")
+    expect(tx.kind).to eq "pass"
+    expect(tx.amount).to eq(-30)
+    expect(rider.reload.fare_balance).to eq 3.0
+    expect(rider.fare_pass_expires_on).to eq through
+    expect(rider.fare_pass_active?(through)).to be true
+    expect(rider.fare_transactions.loads.sum(:amount)).to eq 33.0
+    expect { ledger.sell_monthly_pass!(price: 0, through: through, payment_method: "cash") }.to raise_error(FareLedger::Error)
+  end
+end

@@ -503,6 +503,7 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.string "client_uuid", null: false
     t.datetime "recorded_at", null: false
     t.datetime "created_at", null: false
+    t.decimal "tendered", precision: 8, scale: 2
     t.index ["client_uuid"], name: "index_fare_transactions_on_client_uuid", unique: true
     t.index ["customer_id", "recorded_at"], name: "index_fare_transactions_on_customer_id_and_recorded_at"
     t.index ["fixed_route_boarding_id"], name: "index_fare_transactions_on_fixed_route_boarding_id"
@@ -919,6 +920,8 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.decimal "fare_udr_default", precision: 6, scale: 2, default: "0.0", null: false
     t.decimal "fare_paratransit", precision: 6, scale: 2, default: "0.0", null: false
     t.string "fare_urban_cities", default: "Victoria", null: false
+    t.decimal "fare_monthly_pass_price", precision: 6, scale: 2, default: "0.0", null: false
+    t.integer "fare_multi_trip_discount_pct", default: 0, null: false
     t.index ["business_address_id"], name: "index_providers_on_business_address_id"
     t.index ["deleted_at"], name: "index_providers_on_deleted_at"
     t.index ["fare_id"], name: "index_providers_on_fare_id"

@@ -11,10 +11,19 @@ class FareTransactionsController < ApplicationController
     ledger = FareLedger.new(@customer, by: current_user, provider: current_provider)
     amount = BigDecimal(p[:amount].to_s.gsub(/[$,\s]/, "")) rescue nil
     if amount.nil? || amount.zero?
-      return redirect_to customer_fare_account_path(@customer), alert: "Enter an amount."
+      return redirect_to customer_fare_account_path(@customer), alert: "Enter an amount." unless p[:kind].to_s.start_with?("pass_")
     end
 
     tx = case p[:kind]
+         when "pass_10", "pass_20"
+           category = rider_category_for(@customer)
+           ledger.sell_trip_pass!(trips: (p[:kind] == "pass_10" ? 10 : 20), fare_each: category&.default_fare.to_d,
+                                  category_name: category&.name, discount_pct: current_provider.fare_multi_trip_discount_pct,
+                                  payment_method: p[:payment_method], reference: p[:reference].presence)
+         when "pass_monthly"
+           through = monthly_pass_through(p[:pass_month])
+           ledger.sell_monthly_pass!(price: current_provider.fare_monthly_pass_price, through: through,
+                                     payment_method: p[:payment_method], reference: p[:reference].presence)
          when "load"
            ledger.load!(amount, payment_method: p[:payment_method], reference: p[:reference].presence, note: p[:note].presence)
          when "refund"
@@ -25,8 +34,12 @@ class FareTransactionsController < ApplicationController
            return redirect_to customer_fare_account_path(@customer), alert: "Unknown transaction type."
          end
 
-    msg = "#{tx.kind_label} of #{view_context.number_to_currency(tx.amount.abs)} posted. Balance is now #{view_context.number_to_currency(tx.balance_after)}."
-    if tx.load? && p[:receipt] == "1"
+    msg = if tx.pass?
+            "Monthly pass sold through #{@customer.reload.fare_pass_expires_on.strftime('%m/%d/%Y')} for #{view_context.number_to_currency(tx.amount.abs)}."
+          else
+            "#{tx.note.presence || tx.kind_label} #{view_context.number_to_currency(tx.amount.abs)} posted. Balance is now #{view_context.number_to_currency(tx.balance_after)}."
+          end
+    if (tx.load? || tx.pass?) && p[:receipt] == "1"
       redirect_to fare_transaction_path(tx), notice: msg
     else
       redirect_to customer_fare_account_path(@customer, tx_id: tx.id), notice: msg
@@ -46,7 +59,20 @@ class FareTransactionsController < ApplicationController
   private
 
   def tx_params
-    params.require(:fare_transaction).permit(:kind, :amount, :payment_method, :reference, :note, :receipt)
+    params.require(:fare_transaction).permit(:kind, :amount, :payment_method, :reference, :note, :receipt, :pass_month)
+  end
+
+  def rider_category_for(customer)
+    visible = RiderCategory.by_provider(current_provider)
+    (customer.default_rider_category_id && visible.find_by(id: customer.default_rider_category_id)) || visible.default_order.first
+  end
+
+  # "this" month, or "next"; a pass bought in the last week of a month
+  # defaults to next month on the form.
+  def monthly_pass_through(choice)
+    base = Date.current
+    base = base.next_month if choice.to_s == "next"
+    base.end_of_month
   end
 
   def fare_transaction_params

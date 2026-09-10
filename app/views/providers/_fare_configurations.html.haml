@@ -23,6 +23,14 @@
           = text_field_tag "provider[fare_urban_cities]", @provider.fare_urban_cities, size: 40
           %span.text-muted{style: 'margin-left: 8px;'} comma separated; both ends of the trip must be in one of them
         %li
+          = label_tag "provider_fare_monthly_pass_price", "Fare card: monthly pass price ($)"
+          = number_field_tag "provider[fare_monthly_pass_price]", @provider.fare_monthly_pass_price, step: 0.01, min: 0, style: 'width: 8em;'
+          %span.text-muted{style: 'margin-left: 8px;'} 0 hides the Sell monthly button
+        %li
+          = label_tag "provider_fare_multi_trip_discount_pct", "Fare card: 10 / 20-trip pass discount (%)"
+          = number_field_tag "provider[fare_multi_trip_discount_pct]", @provider.fare_multi_trip_discount_pct, step: 1, min: 0, max: 100, style: 'width: 8em;'
+          %span.text-muted{style: 'margin-left: 8px;'} the card still gets the full trips' value; the rider pays this much less
+        %li
           = label_tag "provider_fare_negative_floor", "Fare card: lowest balance allowed ($)"
           = number_field_tag "provider[fare_negative_floor]", @provider.fare_negative_floor, step: 0.01, max: 0, style: 'width: 8em;'
           %span.text-muted{style: 'margin-left: 8px;'} 0 refuses a tap that would go negative; -5.00 lets a rider owe up to $5

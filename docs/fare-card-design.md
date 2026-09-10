@@ -554,13 +554,13 @@ before the pilot buses go live; sent to the transit team by email the same day.
 | 3 | Paratransit (ADA demand-response) fare? | **Answered 2026-09-10: $1.50 flat**, from the "Fare Structure as of September 1st, 2026" sheet (photo `~/IMG_1917.HEIC`). Rule: rider is ADA eligible and both ends of the trip are in the urban service area. Built and set in production, see section 15. | done |
 | 4 | Demand-response and commuter fares with a card? | **Built 2026-09-10 (section 15).** Per-provider schedule of mileage band x rider category, seeded from the published Victoria/DeWitt rural table; prices a trip from its `drive_distance`, rider plus one adult fare per guest, attendants free. Editable on the provider page. Commuter service is the same table shape but not wired yet (fixed-route walk-ons have no per-rider distance). | done |
 | 5 | Senior is 60+ on fixed route, 65+ (plus a Medicare column) on the commuter. Which? | **Answered by the 2026-09-01 fare sheet: 60+ everywhere** ("Elderly/Disabled (60+)" for fixed route and rural). The commuter web page's 65+ is the outlier. One category on the card is right. | done |
-| 6 | The website says 10-trip, 20-trip and monthly passes are "available soon". | Stored value already is the 10/20-trip pass (10 rides of value at the rider's category fare). Monthly is `fare_pass_expires_on`. Add "Sell 10-trip / 20-trip / monthly" buttons on the account page once told (a) whether 10/20-trip carry a discount, (b) the monthly price. | **decision**, then build |
+| 6 | The website says 10-trip, 20-trip and monthly passes are "available soon". | **Buttons built 2026-09-10 (section 16).** 10/20-trip is stored value at the rider's category fare; monthly sets the expiry. Two provider settings still wait on the team: the multi-trip discount (0% today) and the monthly price ($0 today, which hides the monthly button). | **decision** on the two prices |
 | 7 | Which services does the card cover? | Victoria Transit fixed route, and demand response in Victoria and DeWitt counties (the one active provider). Calhoun, Goliad, Lavaca, Jackson, Matagorda run their own schedules. Gonzales is free. | nothing |
 | 8 | How do riders reload? | Front desk, cash or check, printed receipt (live). Online by card is built (section 13) but off: needs a Stripe account, carries 2.9% + $0.30, steer riders to $20 loads. | decision on Stripe, later |
 | 9 | What happens when a card is low? | System refuses the tap at $0.00 (`providers.fare_negative_floor`). Could allow e.g. -$5.00 so nobody is left at the stop, settled at next reload. | **decision** |
 | 10 | What should the website say? | After 2, 3, 5, 6 and 9: describe the card, where to get and reload it, the transfer rule, pass prices; drop "available soon". Draft it with the pilot launch. | after decisions |
 
-Answers still needed for 2, 6 and 9 to finish setup and order the pilot readers and cards.
+Answers still needed for 2 (transfer window), 6 (pass prices) and 9 (negative floor) to finish setup and order the pilot readers and cards.
 
 The internal sheet "Fare Structure as of September 1st, 2026" (photo `~/IMG_1917.HEIC`, thumbnail only) also
 says Gonzales County fares are reinstated 2026-10-01; that is another provider's service, nothing to do here.
@@ -618,3 +618,30 @@ flagged on their customer record (Eligibility panel) or they will be charged the
 
 **Specs**: `spec/services/fare_schedule_spec.rb` (pricing, edges, guests, replace, tap precedence, grid
 save, paratransit). 71 fare examples in all, green.
+
+---
+
+## 16. Pass sales as built (2026-09-10)
+
+Answers the mechanics of question 6; the prices are still the team's call. Commit "Fare cards: sell
+10-trip, 20-trip and monthly passes" on `fixed-route-wp8`. Live in production, with both prices at their
+defaults (no discount, no monthly price, so the monthly button is hidden until one is set).
+
+**10-trip and 20-trip** are stored value. The card is credited trips x the rider's category fare (a
+senior's 10-trip is $5.00 of value; the tap takes $0.50 a ride). If the provider sets a multi-trip
+discount, the card still gets the full value and the office takes less cash; the ledger row records the
+cash actually taken in a new `tendered` column, and the activity report's cash and check totals sum from
+it. Refuses a rider whose category fare is $0.00.
+
+**Monthly** is the expiry date on the customer. Selling one posts a load of the pass price and a `pass`
+debit of the same amount in one transaction, so the money is on the ledger, the balance is unchanged, and
+the report shows pass revenue in its own column. The form offers this month or next (defaulting to next
+from the 24th); expiry is the last day of that month. Both the fixed-route tap and the pickup tap already
+honour the expiry (free, still recorded).
+
+**Office**: "Sell a pass" panel on the rider's fare account page with the three buttons priced for that
+rider, paid by cash or check, reference, optional receipt (which shows the pass and, if discounted, what
+was paid). Provider fare page: `fare_monthly_pass_price`, `fare_multi_trip_discount_pct`.
+
+**Specs**: pass sales in `spec/services/fare_ledger_spec.rb` and the buttons in
+`spec/controllers/fare_accounts_controller_spec.rb`. 78 fare examples in all, green.

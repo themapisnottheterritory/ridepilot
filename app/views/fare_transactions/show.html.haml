@@ -17,8 +17,12 @@
         %td Card
         %td= @fare_transaction.fare_token.label
     %tr
-      %td= @fare_transaction.kind_label
+      %td= @fare_transaction.note.presence || @fare_transaction.kind_label
       %td= number_to_currency(@fare_transaction.amount.abs)
+    - if @fare_transaction.tendered && @fare_transaction.tendered != @fare_transaction.amount
+      %tr
+        %td Paid
+        %td= number_to_currency(@fare_transaction.tendered)
     - if @fare_transaction.payment_method
       %tr
         %td Paid by
@@ -26,6 +30,12 @@
           = @fare_transaction.payment_label
           - if @fare_transaction.reference.present?
             = "##{@fare_transaction.reference}"
+    - if @fare_transaction.pass?
+      %tr
+        %td
+          %strong Pass valid through
+        %td
+          %strong= @customer.fare_pass_expires_on&.strftime('%m/%d/%Y')
     %tr
       %td
         %strong Balance

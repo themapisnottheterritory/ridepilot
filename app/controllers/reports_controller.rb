@@ -1365,9 +1365,9 @@ class ReportsController < ApplicationController
       }
       sum = ->(g, kind) { g.select { |t| t.kind == kind }.sum { |t| t.amount.to_f } }
       build = ->(g) {
-        { count: g.size, loads: sum.call(g, 'load'), cash: g.select { |t| t.load? && t.payment_method == 'cash' }.sum { |t| t.amount.to_f },
-          check: g.select { |t| t.load? && t.payment_method == 'check' }.sum { |t| t.amount.to_f },
-          fares: -sum.call(g, 'debit'), refunds: sum.call(g, 'refund'), adjustments: sum.call(g, 'adjust'),
+        { count: g.size, loads: sum.call(g, 'load'), cash: g.select { |t| t.load? && t.payment_method == 'cash' }.sum { |t| t.cash_in.to_f },
+          check: g.select { |t| t.load? && t.payment_method == 'check' }.sum { |t| t.cash_in.to_f },
+          fares: -sum.call(g, 'debit'), passes: -sum.call(g, 'pass'), refunds: sum.call(g, 'refund'), adjustments: sum.call(g, 'adjust'),
           net: g.sum { |t| t.amount.to_f } }
       }
       @report_data = rows.group_by { |t| key.call(t) }.sort_by { |k, _| k.to_s }.map { |k, g|

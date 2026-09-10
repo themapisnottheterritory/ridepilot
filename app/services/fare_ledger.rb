@@ -26,9 +26,38 @@ class FareLedger
     @by = by
   end
 
-  def load!(amount, payment_method:, reference: nil, note: nil, token: nil, client_uuid: nil, recorded_at: nil)
+  def load!(amount, payment_method:, reference: nil, note: nil, token: nil, client_uuid: nil, recorded_at: nil, tendered: nil)
     post!(kind: "load", amount: money(amount).abs, payment_method: payment_method, reference: reference,
-          note: note, fare_token: token, client_uuid: client_uuid, recorded_at: recorded_at)
+          note: note, fare_token: token, client_uuid: client_uuid, recorded_at: recorded_at,
+          tendered: (tendered.nil? ? nil : money(tendered)))
+  end
+
+  # A 10- or 20-trip pass is stored value: trips x the rider's category fare
+  # goes on the card; the cash taken may be less if the provider discounts.
+  def sell_trip_pass!(trips:, fare_each:, payment_method:, reference: nil, category_name: nil, discount_pct: 0, client_uuid: nil)
+    value = (money(fare_each) * trips).round(2)
+    raise Error, "This rider's category fare is $0.00; nothing to sell." if value <= 0
+    price = (value * (100 - discount_pct.to_i) / 100).round(2)
+    load!(value, payment_method: payment_method, reference: reference, client_uuid: client_uuid,
+          tendered: (price == value ? nil : price),
+          note: "#{trips}-trip pass#{category_name ? " (#{category_name} @ #{'%.2f' % fare_each})" : ''}#{price == value ? '' : ", paid #{'%.2f' % price}"}")
+  end
+
+  # A monthly pass: the price is loaded and debited in one go, so the ledger
+  # carries the money and the balance is unchanged; the pass itself is the
+  # expiry date on the customer.
+  def sell_monthly_pass!(price:, through:, payment_method:, reference: nil, client_uuid: nil)
+    price = money(price)
+    raise Error, "No monthly pass price is set for this provider." if price <= 0
+    uuid = client_uuid || SecureRandom.uuid
+    FareTransaction.transaction do
+      load!(price, payment_method: payment_method, reference: reference, client_uuid: "#{uuid}-load",
+            note: "Monthly pass through #{through.strftime('%m/%d/%Y')}")
+      tx = post!(kind: "pass", amount: -price, client_uuid: "#{uuid}-pass",
+                 note: "Monthly pass through #{through.strftime('%m/%d/%Y')}")
+      customer.update_columns(fare_pass_expires_on: through)
+      tx
+    end
   end
 
   def refund!(amount, note:, reference: nil, client_uuid: nil, recorded_at: nil)
