@@ -275,11 +275,14 @@ Rails.application.routes.draw do
     get  "fare_accounts",        to: "fare_accounts#index",  as: :fare_accounts
     get  "fare_accounts/lookup", to: "fare_accounts#lookup", as: :fare_account_lookup
     get  "customers/:id/fare_account", to: "fare_accounts#show", as: :customer_fare_account
+    patch "customers/:id/fare_account", to: "fare_accounts#update"
     resources :customers, only: [] do
       resources :fare_tokens, only: [:create]
       resources :fare_transactions, only: [:create]
     end
-    resources :fare_tokens, only: [:update]
+    resources :fare_tokens, only: [:update] do
+      member { get :print }   # QR code sheet
+    end
     resources :fare_transactions, only: [:show]
 
     resources :dispatchers,only: [:index] do
@@ -471,6 +474,9 @@ Rails.application.routes.draw do
             get  'fixed_route', to: 'boardings#route'
             get  'boardings',   to: 'boardings#index'
             post 'boardings',   to: 'boardings#create'
+            # Fare cards: a tap at the door, and the offline snapshot
+            post 'token_taps',  to: 'token_taps#create'
+            get  'fare_tokens', to: 'token_taps#index'
           end
         end
         resources :vehicles, only: [:index]

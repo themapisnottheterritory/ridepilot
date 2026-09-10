@@ -79,6 +79,7 @@ gem 'momentjs-rails'
 gem 'phony_rails'
 # Printing
 gem 'wicked_pdf'
+gem 'rqrcode'   # fare card QR tokens, printed from the office (docs/fare-card-design.md)
 # In-line editing
 gem 'bootstrap-editable-rails'
 

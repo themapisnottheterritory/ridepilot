@@ -68,6 +68,23 @@ class FareAccountsController < ApplicationController
     @new_token = FareToken.new(kind: "rfid", uid: params[:uid])
     @ledger = FareLedger.new(@customer, provider: current_provider)
     @can_write = can?(:create, FareTransaction)
+    @rider_categories = RiderCategory.by_provider(current_provider).default_order
+  end
+
+  # Rider category (drives the fixed-route fare on a tap), pass expiry and a
+  # per-rider floor. Plain customer columns, kept off the big customer form.
+  def update
+    @customer = Customer.for_provider(current_provider_id).find(params[:id])
+    authorize! :update, @customer
+    attrs = params.require(:customer).permit(:default_rider_category_id, :fare_pass_expires_on, :fare_balance_floor)
+    attrs[:fare_balance_floor] = attrs[:fare_balance_floor].presence
+    attrs[:fare_pass_expires_on] = attrs[:fare_pass_expires_on].presence
+    attrs[:default_rider_category_id] = attrs[:default_rider_category_id].presence
+    if @customer.update(attrs)
+      redirect_to customer_fare_account_path(@customer), notice: "Fare settings saved."
+    else
+      redirect_to customer_fare_account_path(@customer), alert: "Not saved: #{@customer.errors.full_messages.to_sentence}"
+    end
   end
 
   private

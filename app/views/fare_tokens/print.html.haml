@@ -1,0 +1,23 @@
+-# One QR token on a card-sized sheet. Opened in a new tab and printed.
+- provider = @fare_token.provider
+.qr-card
+  .qr-head
+    %strong= provider.name
+    %br
+    %span Fare card
+  .qr-code= @svg.html_safe
+  .qr-foot
+    %strong= @customer.name
+    %br
+    = "No. #{@fare_token.serial}" if @fare_token.serial.present?
+    %br
+    %code{style: 'font-size: 11px; letter-spacing: 1px;'}= @fare_token.uid
+  %p.hidden-print{style: 'margin-top: 12px;'}
+    %button.btn.btn-default{onclick: 'window.print()'} Print
+    = link_to "Back to account", customer_fare_account_path(@customer), class: 'btn btn-link'
+:css
+  .qr-card { width: 3.375in; border: 1px dashed #999; border-radius: 10px; padding: 12px; margin: 18px; font-family: Helvetica, Arial, sans-serif; text-align: center; }
+  .qr-head { font-size: 14px; margin-bottom: 6px; }
+  .qr-code svg { width: 2.2in; height: 2.2in; }
+  .qr-foot { font-size: 14px; margin-top: 6px; }
+  @media print { .qr-card { border-style: solid; margin: 0; } .hidden-print { display: none; } }

@@ -179,6 +179,7 @@ GEM
     childprocess (5.1.0)
       logger (~> 1.5)
     chronic (0.10.2)
+    chunky_png (1.4.0)
     climate_control (0.2.0)
     coffee-rails (5.0.0)
       coffee-script (>= 2.2.0)
@@ -538,6 +539,10 @@ GEM
     rgeo-proj4 (4.0.0)
       rgeo (~> 3.0.0)
     rouge (4.7.0)
+    rqrcode (3.2.0)
+      chunky_png (~> 1.0)
+      rqrcode_core (~> 2.0)
+    rqrcode_core (2.1.0)
     rspec-core (3.13.6)
       rspec-support (~> 3.13.0)
     rspec-expectations (3.13.5)
@@ -719,6 +724,7 @@ DEPENDENCIES
   responders (~> 3.0)
   rgeo
   rgeo-proj4
+  rqrcode
   rspec-rails
   rubyXL
   sass-rails

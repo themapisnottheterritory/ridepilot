@@ -546,7 +546,10 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.datetime "deleted_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "customer_id"
+    t.integer "fare_token_id"
     t.index ["client_uuid", "rider_category_id"], name: "idx_fixed_route_boardings_client", unique: true
+    t.index ["customer_id"], name: "index_fixed_route_boardings_on_customer_id"
     t.index ["fixed_route_id"], name: "index_fixed_route_boardings_on_fixed_route_id"
     t.index ["recorded_at"], name: "index_fixed_route_boardings_on_recorded_at"
     t.index ["run_id"], name: "index_fixed_route_boardings_on_run_id"

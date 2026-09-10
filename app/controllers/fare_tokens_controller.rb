@@ -3,7 +3,7 @@
 # customer and follows them to a replacement token.
 class FareTokensController < ApplicationController
   load_and_authorize_resource :customer, only: :create
-  load_and_authorize_resource :fare_token, only: :update
+  load_and_authorize_resource :fare_token, only: [:update, :print]
 
   def create
     @fare_token = @customer.fare_tokens.build(token_params)
@@ -30,6 +30,15 @@ class FareTokensController < ApplicationController
     end
     redirect_to customer_fare_account_path(@fare_token.customer, token_id: @fare_token.id),
                 notice: "#{@fare_token.label} is now #{status}."
+  end
+
+  # A printable QR sheet: the code, the rider's name and the serial. Cut it
+  # out, or laminate it; the tablet's scanner reads the same uid a card would.
+  def print
+    authorize! :read, @fare_token
+    @customer = @fare_token.customer
+    @svg = RQRCode::QRCode.new(@fare_token.uid, level: :m).as_svg(module_size: 6, standalone: true, use_path: true, viewbox: true)
+    render layout: "pdf"
   end
 
   private

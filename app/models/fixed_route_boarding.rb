@@ -16,6 +16,10 @@ class FixedRouteBoarding < ApplicationRecord
   belongs_to :vehicle, optional: true
   belongs_to :rider_category
   belongs_to :fare_type, optional: true
+  # Set by a fare card tap; nil for a walk-on the driver keyed by hand.
+  belongs_to :customer, optional: true
+  belongs_to :fare_token, optional: true
+  has_one    :fare_transaction   # the debit a tap posted, if the fare was not free
 
   validates :client_uuid, :recorded_at, presence: true
   validates :boarded_count, :alighted_count, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
