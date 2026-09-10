@@ -456,6 +456,17 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.index ["deleted_at"], name: "index_ethnicities_on_deleted_at"
   end
 
+  create_table "fare_schedule_rows", force: :cascade do |t|
+    t.integer "provider_id", null: false
+    t.string "service", default: "demand_response", null: false
+    t.decimal "up_to_miles", precision: 6, scale: 1
+    t.integer "rider_category_id", null: false
+    t.decimal "fare", precision: 6, scale: 2, default: "0.0", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["provider_id", "service", "up_to_miles", "rider_category_id"], name: "idx_fare_schedule_rows_cell", unique: true
+  end
+
   create_table "fare_tokens", force: :cascade do |t|
     t.integer "provider_id", null: false
     t.integer "customer_id", null: false

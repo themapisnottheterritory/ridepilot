@@ -1,0 +1,68 @@
+-# Distance-band fare table for demand-response trips (docs/fare-card-design.md, 15).
+-# One row per band, one column per rider category; the last band is open-ended.
+- categories = RiderCategory.by_provider(@provider).default_order.to_a
+- schedule = FareSchedule.new(@provider)
+- bands = schedule.bands
+- bands = [5, 10, 15, 20, nil] if bands.empty?
+- cell = ->(edge, cat) { schedule.rows.find { |r| r.up_to_miles == (edge && edge.to_d) && r.rider_category_id == cat.id }&.fare }
+%h2.section-header#fare_schedule Demand-response fare schedule
+- if categories.empty?
+  %p.text-muted Add rider categories under Lookup Tables first.
+- elsif can? :edit, @provider
+  %p.text-muted{style: 'margin: 4px 0 8px;'}
+    What a rider pays by trip distance and rider category. A card tap at pickup and the fare box on the tablet use this
+    (rider's fare plus one adult fare per guest; attendants ride free). Leave the last "up to" blank for anything longer.
+    - unless schedule.configured?
+      %strong Not set: taps fall back to the flat demand-response fare above.
+  = form_tag update_fare_schedule_provider_path(@provider), id: 'fare-schedule-form' do
+    = hidden_field_tag :service, 'demand_response'
+    %table.table.table-condensed{style: 'width: auto; margin-bottom: 8px;'}
+      %thead
+        %tr
+          %th Up to (miles)
+          - categories.each do |c|
+            %th{style: 'text-align: right;'}= c.name
+          %th
+      %tbody#fare-schedule-rows
+        - bands.each_with_index do |edge, i|
+          %tr.band-row
+            %td
+              = text_field_tag "schedule[#{i}][edge]", (edge.nil? ? '' : (edge.to_f == edge.to_i ? edge.to_i : edge.to_f)), size: 6, class: 'form-control input-sm', placeholder: 'and over', style: 'width: 7em;', autocomplete: 'off'
+            - categories.each do |c|
+              %td
+                = text_field_tag "schedule[#{i}][fares][#{c.id}]", (v = cell.call(edge, c)) ? ('%.2f' % v) : '', size: 6, class: 'form-control input-sm', style: 'width: 6em; text-align: right;', autocomplete: 'off', inputmode: 'decimal'
+            %td
+              = hidden_field_tag "schedule[#{i}][remove]", '0', class: 'remove-flag'
+              %button.btn.btn-default.btn-xs.remove-band{type: 'button', title: 'Remove band'} ×
+    %button.btn.btn-default.btn-sm#add-band{type: 'button'} Add band
+    = submit_tag "Save fare schedule", class: 'btn action-button btn-sm', style: 'margin-left: 8px;'
+  :javascript
+    $(function() {
+      $('#fare-schedule-form').on('click', '.remove-band', function() {
+        var tr = $(this).closest('tr'); tr.find('.remove-flag').val('1'); tr.hide();
+      });
+      $('#add-band').on('click', function() {
+        var rows = $('#fare-schedule-rows tr'), last = rows.last(), n = rows.length;
+        var clone = last.clone();
+        clone.find('input').each(function() {
+          this.name = this.name.replace(/schedule\[\d+\]/, 'schedule[' + n + ']');
+          if (this.type !== 'hidden') this.value = ''; else this.value = '0';
+        });
+        clone.show();
+        $('#fare-schedule-rows').append(clone);
+      });
+    });
+- else
+  %table.table.table-condensed{style: 'width: auto;'}
+    %thead
+      %tr
+        %th Band
+        - categories.each do |c|
+          %th{style: 'text-align: right;'}= c.name
+    %tbody
+      - bands.each do |edge|
+        %tr
+          %td= edge.nil? ? 'and over' : "up to #{edge.to_f == edge.to_i ? edge.to_i : edge.to_f} mi"
+          - categories.each do |c|
+            %td{style: 'text-align: right;'}= (v = cell.call(edge, c)) ? number_to_currency(v) : '—'
+%hr

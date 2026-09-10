@@ -98,7 +98,7 @@ class ItinerarySerializer
         amount: fare_amount,
         collected_time: collected_time,
         # Fare cards: what to prefill, whether to expect a tap, and whether the card already paid.
-        default_amount: (trip.fare_amount.to_f > 0 ? trip.fare_amount.to_f : trip.provider&.fare_udr_default.to_f),
+        default_amount: (trip.fare_amount.to_f > 0 ? trip.fare_amount.to_f : (trip.provider && (FareSchedule.new(trip.provider).trip_fare(trip)&.to_f || trip.provider.fare_udr_default.to_f))),
         card_on_file: (customer ? customer.fare_tokens.active.exists? : false),
         card_balance: customer&.fare_balance&.to_f,
         paid_by_card: FareTransaction.where(trip_id: trip.id, kind: "debit").exists?

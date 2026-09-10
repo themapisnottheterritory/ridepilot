@@ -195,11 +195,14 @@ class FareTap
   private
 
   # Explicit amount from the driver, else what dispatch put on the trip, else
-  # the provider's card fare for demand response, else the rider's category fare.
+  # the distance-band schedule (rider plus guests), else the provider's flat
+  # card fare for demand response, else the rider's category fare.
   def trip_fare_amount(trip, customer, amount)
     explicit = amount.to_s.strip.presence && (BigDecimal(amount.to_s.gsub(/[$,\s]/, "")) rescue nil)
     return explicit.round(2) if explicit && explicit > 0
     return trip.fare_amount.to_d.round(2) if trip.fare_amount.to_f > 0
+    scheduled = FareSchedule.new(provider).trip_fare(trip, category: rider_category_for(customer))
+    return scheduled if scheduled && scheduled > 0
     return provider.fare_udr_default.to_d if provider.fare_udr_default.to_f > 0
     rider_category_for(customer)&.default_fare.to_d || 0.to_d
   end

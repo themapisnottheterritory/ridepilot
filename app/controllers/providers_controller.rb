@@ -243,6 +243,23 @@ class ProvidersController < ApplicationController
     redirect_to general_provider_path(@provider, anchor: "eta_related_settings")
   end
 
+  # The distance-band fare table, posted as a grid:
+  #   schedule[<row index>][edge]  = "5" | "10" | "" (open-ended)
+  #   schedule[<row index>][fares][<rider_category_id>] = "1.00"
+  def update_fare_schedule
+    authorize! :edit, @provider
+    service = FareScheduleRow::SERVICES.include?(params[:service]) ? params[:service] : "demand_response"
+    grid = {}
+    (params[:schedule] || {}).each_value do |row|
+      next if row[:remove] == "1"
+      grid[row[:edge].to_s] = (row[:fares] || {}).to_unsafe_h
+    end
+    FareSchedule.new(@provider, service: service).replace!(grid, by: current_user)
+    redirect_to general_provider_path(@provider, anchor: "fare_schedule"), notice: "Fare schedule saved."
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_to general_provider_path(@provider, anchor: "fare_schedule"), alert: "Not saved: #{e.record.errors.full_messages.to_sentence}"
+  end
+
   def change_fare_related_settings
     if params[:provider].present?
       @provider.update(params.require(:provider).permit(:fare_udr_default, :fare_negative_floor, :fare_transfer_window_minutes))

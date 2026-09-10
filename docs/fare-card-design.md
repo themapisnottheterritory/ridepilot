@@ -1,7 +1,7 @@
 # Fare Card Design Recommendation
 
 Written 2026-09-10 for RidePilot at GCRPC / Victoria Transit. Updated same day after reviewing tap to pay.
-Status: phases 1, 2 and 3 built (sections 11 to 13). Pilot hardware next.
+Status: phases 1 to 3 and the distance-band schedule built (sections 11 to 15). Awaiting transit team decisions (section 14).
 Budget assumption: near zero. Existing driver tablets, existing RidePilot server, cheap off-the-shelf parts.
 Fare today: $1.50, and the goal is to bring it down, not up.
 
@@ -552,7 +552,7 @@ before the pilot buses go live; sent to the transit team by email the same day.
 | 1 | Do fixed-route fares match the website? | Yes: Youth 0-5 free with paying adult, Youth 5-17 $0.75, Adult $1.00, Senior 60+ $0.50, Disabled $0.50. A tap charges exactly these. | nothing |
 | 2 | Transfer policy? | Website is silent. System gives a free transfer on a second bus within 90 minutes (`providers.fare_transfer_window_minutes`). Keep, change, or set to 0. Publish whichever. | **decision** |
 | 3 | Paratransit (ADA demand-response) fare? | Paratransit page lists no fare. ADA ceiling is 2x the fixed-route adult fare, $2.00. Goes in `providers.fare_udr_default` (or the distance schedule, see 4). | **decision** |
-| 4 | Demand-response and commuter fares with a card? | Website prices them by mileage band x rider category ($0.50 to $8.00); the Victoria/DeWitt rural table and the commuter table are nearly identical. Every trip already has `drive_distance`, so a per-provider schedule (band, category, price) can price a trip automatically. About a day of work; replaces the flat `fare_udr_default`. Guests priced as adults, attendants free. | build |
+| 4 | Demand-response and commuter fares with a card? | **Built 2026-09-10 (section 15).** Per-provider schedule of mileage band x rider category, seeded from the published Victoria/DeWitt rural table; prices a trip from its `drive_distance`, rider plus one adult fare per guest, attendants free. Editable on the provider page. Commuter service is the same table shape but not wired yet (fixed-route walk-ons have no per-rider distance). | done |
 | 5 | Senior is 60+ on fixed route, 65+ (plus a Medicare column) on the commuter. Which? | A rider has one category on the card, so a 62-year-old is a senior on the bus and an adult on the commuter. Align the threshold, or accept one category everywhere. | **decision** |
 | 6 | The website says 10-trip, 20-trip and monthly passes are "available soon". | Stored value already is the 10/20-trip pass (10 rides of value at the rider's category fare). Monthly is `fare_pass_expires_on`. Add "Sell 10-trip / 20-trip / monthly" buttons on the account page once told (a) whether 10/20-trip carry a discount, (b) the monthly price. | **decision**, then build |
 | 7 | Which services does the card cover? | Victoria Transit fixed route, and demand response in Victoria and DeWitt counties (the one active provider). Calhoun, Goliad, Lavaca, Jackson, Matagorda run their own schedules. Gonzales is free. | nothing |
@@ -561,3 +561,49 @@ before the pilot buses go live; sent to the transit team by email the same day.
 | 10 | What should the website say? | After 2, 3, 5, 6 and 9: describe the card, where to get and reload it, the transfer rule, pass prices; drop "available soon". Draft it with the pilot launch. | after decisions |
 
 Answers needed for 2, 3, 5, 6 and 9 to finish setup and order the pilot readers and cards.
+
+---
+
+## 15. Distance-band fare schedule as built (2026-09-10)
+
+Answers question 4 of section 14. Commit "Fare cards: distance-band fare schedule" on `fixed-route-wp8`.
+**Seeded into production the same day** from the published Victoria / DeWitt rural table, so the pickup
+screen's fare box and a card tap at pickup now price demand-response trips by distance.
+
+**Model**: `fare_schedule_rows` (provider_id, service, up_to_miles, rider_category_id, fare). One row is one
+cell of the published table. `up_to_miles` is the band's upper edge and NULL is "anything longer"; a trip
+falls in the first band, in edge order, that its `drive_distance` (OSRM, miles) does not exceed. `service`
+is `demand_response` today; `commuter` is allowed for later.
+
+**Pricing** (`app/services/fare_schedule.rb`): the rider pays their category's fare for the band; each
+guest pays the Adult fare for the same band; attendants ride free. Returns nil when the provider has no
+rows or the trip has no distance, so the flat `fare_udr_default` still applies as the fallback.
+
+**Where it is used**
+
+- A card tap at pickup: amount precedence is now driver-typed, then the amount on the trip, then the
+  schedule, then the flat default, then the rider's category fare.
+- The itinerary JSON's `default_amount`, so the tablet's fare box prefills the scheduled amount for
+  cash riders too.
+
+**Office**: Providers -> General -> "Demand-response fare schedule", a grid with one row per band and one
+column per rider category, add / remove bands, blank cells are $0.00. Saving replaces the table and is
+paper-trailed. `rake fare_cards:seed_schedule PROVIDER_ID=1` loads the published table (FORCE=1 to
+overwrite).
+
+**Seeded table** (gcrpc.org rural fare schedule, DeWitt & Victoria, read 2026-09-10)
+
+| Up to | Adult | Senior 60+ | Disabled | Youth 5-17 | Youth 0-5 |
+|---|---|---|---|---|---|
+| 5 mi | $1.00 | $0.50 | $0.50 | $0.75 | free |
+| 10 mi | $2.00 | $1.00 | $1.00 | $1.75 | free |
+| 15 mi | $3.00 | $1.50 | $1.50 | $2.50 | free |
+| 20 mi | $4.00 | $2.00 | $2.00 | $2.50 | free |
+| over | $5.00 | $2.50 | $2.50 | $3.00 | free |
+
+**Note for question 3**: with this table in place an in-town ADA paratransit trip prices like any other
+demand-response trip, $1.00 adult under 5 miles. If paratransit is meant to have its own flat fare, that
+is a separate decision and would need a `paratransit` service on this table or a flag on the trip.
+
+**Specs**: `spec/services/fare_schedule_spec.rb` (pricing, edges, guests, replace, tap precedence, grid
+save). 70 fare examples in all, green.
