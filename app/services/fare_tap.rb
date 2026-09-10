@@ -22,6 +22,14 @@ class FareTap
     attr_reader :token
     def initialize(token, msg); @token = token; super(msg); end
   end
+  class Mismatch < Error
+    attr_reader :token, :trip
+    def initialize(token, trip)
+      @token, @trip = token, trip
+      super("This card belongs to #{token.customer.name}, not #{trip.customer&.name || 'the booked rider'}.")
+    end
+  end
+  class AlreadyCollected < Error; end
   class BelowFloor < Error
     attr_reader :balance, :fare, :customer
     def initialize(customer, balance, fare)
@@ -117,6 +125,63 @@ class FareTap
                transaction: tx, rows: rows, transfer: !!transfer, pass: pass, double_tap: false, duplicate: false)
   end
 
+  # Demand response (section 5.2): the trip already knows the rider and the
+  # fare, so the tap is a confirmation and a debit. Someone else's card pays
+  # for the trip only when the driver confirms the mismatch. One tap covers
+  # the whole trip fare, guests and attendants included. A valid pass makes it
+  # free but still marks the fare collected.
+  def trip!(trip:, uid:, client_uuid:, recorded_at: nil, amount: nil, confirm_mismatch: false, offline: false)
+    recorded_at ||= Time.current
+    if (existing = FareTransaction.find_by(client_uuid: client_uuid))
+      return Result.new(customer: existing.customer, token: existing.fare_token, fare: existing.amount.abs,
+                        transaction: existing, rows: [], duplicate: true)
+    end
+    raise AlreadyCollected, "Fare already collected for this trip." if trip.fare_collected_time.present?
+    fare_setting = trip.fare || provider.fare
+    raise Error, "This trip has no fare to collect." if fare_setting.nil? || fare_setting.is_free?
+    raise Error, "This trip takes a donation, not a fare." if fare_setting.is_donation?
+
+    token = resolve!(uid)
+    customer = token.customer
+    raise Mismatch.new(token, trip) if trip.customer_id != customer.id && !confirm_mismatch
+
+    pass = customer.fare_pass_active?(recorded_at.to_date)
+    fare = pass ? 0.to_d : trip_fare_amount(trip, customer, amount)
+    raise Error, "No fare amount is set for this trip or provider." if !pass && fare <= 0
+
+    tx = nil
+    Trip.transaction do
+      if fare > 0
+        begin
+          tx = FareLedger.new(customer, by: @by, provider: provider)
+                         .debit!(fare, token: token, run: trip.run, trip: trip, driver: driver, client_uuid: client_uuid,
+                                 recorded_at: recorded_at, allow_below_floor: offline,
+                                 note: (trip.customer_id != customer.id ? "Paid for #{trip.customer&.name}" : nil))
+        rescue FareLedger::BelowFloor
+          raise BelowFloor.new(customer, customer.fare_balance, fare)
+        end
+      end
+      trip.fare ||= fare_setting.dup
+      trip.fare_amount = fare.to_f
+      trip.fare_collected_time = recorded_at
+      trip.save(validate: false)
+    end
+
+    Result.new(customer: customer, token: token, fare: fare, transaction: tx, rows: [], pass: pass,
+               transfer: false, double_tap: false, duplicate: false)
+  end
+
+  # The pickup was undone, or the driver asked to void the card payment:
+  # refund the trip's card debit and clear the collected mark. Idempotent.
+  def refund_trip!(trip)
+    tx = FareTransaction.where(trip_id: trip.id, kind: "debit").order(:id).last
+    return nil unless tx
+    refund = FareLedger.new(tx.customer, by: @by, provider: provider)
+                       .refund!(tx.amount.abs, note: "Card payment undone on the bus", client_uuid: "#{tx.client_uuid}-undo", recorded_at: Time.current)
+    trip.update_columns(fare_collected_time: nil) if trip.fare_collected_time.present?
+    refund
+  end
+
   # Undo a tapped walk-on: the boarding rows are voided by the caller; this
   # returns the money. Idempotent on the derived client_uuid.
   def refund_boarding!(rows)
@@ -128,6 +193,16 @@ class FareTap
   end
 
   private
+
+  # Explicit amount from the driver, else what dispatch put on the trip, else
+  # the provider's card fare for demand response, else the rider's category fare.
+  def trip_fare_amount(trip, customer, amount)
+    explicit = amount.to_s.strip.presence && (BigDecimal(amount.to_s.gsub(/[$,\s]/, "")) rescue nil)
+    return explicit.round(2) if explicit && explicit > 0
+    return trip.fare_amount.to_d.round(2) if trip.fare_amount.to_f > 0
+    return provider.fare_udr_default.to_d if provider.fare_udr_default.to_f > 0
+    rider_category_for(customer)&.default_fare.to_d || 0.to_d
+  end
 
   def rider_category_for(customer)
     visible = RiderCategory.by_provider(provider)

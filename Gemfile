@@ -80,6 +80,7 @@ gem 'phony_rails'
 # Printing
 gem 'wicked_pdf'
 gem 'rqrcode'   # fare card QR tokens, printed from the office (docs/fare-card-design.md)
+gem 'stripe'    # fare card online reloads: pull paid Payment Link sessions (docs/fare-card-design.md, phase 3)
 # In-line editing
 gem 'bootstrap-editable-rails'
 

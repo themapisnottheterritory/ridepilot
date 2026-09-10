@@ -905,6 +905,7 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.string "busavl_password"
     t.decimal "fare_negative_floor", precision: 6, scale: 2, default: "0.0", null: false
     t.integer "fare_transfer_window_minutes", default: 90, null: false
+    t.decimal "fare_udr_default", precision: 6, scale: 2, default: "0.0", null: false
     t.index ["business_address_id"], name: "index_providers_on_business_address_id"
     t.index ["deleted_at"], name: "index_providers_on_deleted_at"
     t.index ["fare_id"], name: "index_providers_on_fare_id"

@@ -91,11 +91,17 @@ class ItinerarySerializer
         fare_amount = trip.donation.try(:amount)
       end
 
+      customer = trip.customer
       {
         fare_type: fare.fare_type,
         pre_trip: fare.pre_trip,
         amount: fare_amount,
-        collected_time: collected_time
+        collected_time: collected_time,
+        # Fare cards: what to prefill, whether to expect a tap, and whether the card already paid.
+        default_amount: (trip.fare_amount.to_f > 0 ? trip.fare_amount.to_f : trip.provider&.fare_udr_default.to_f),
+        card_on_file: (customer ? customer.fare_tokens.active.exists? : false),
+        card_balance: customer&.fare_balance&.to_f,
+        paid_by_card: FareTransaction.where(trip_id: trip.id, kind: "debit").exists?
       }
     end
   end

@@ -42,3 +42,24 @@ end
 RSpec.configure do |config|
   config.include FareTapHelpers
 end
+
+# A demand-response trip for the rider on a run driven today by the driver,
+# with the provider set to collect a payment fare at pickup.
+module FareTripHelpers
+  def build_udr_trip(provider, rider, driver: nil, fare_amount: nil)
+    driver ||= create(:driver, provider: provider)
+    provider.fare ||= Fare.create!(fare_type: :payment, pre_trip: true)
+    provider.fare.update!(fare_type: :payment, pre_trip: true)
+    provider.save!(validate: false)
+    vehicle = build(:vehicle, provider: provider)
+    vehicle.save!(validate: false)
+    run = create(:run, provider: provider, driver: driver, vehicle: vehicle)
+    trip = build(:trip, provider: provider, customer: rider, run: run, pickup_time: Time.current, appointment_time: Time.current + 30.minutes, fare_amount: fare_amount)
+    trip.save!(validate: false)
+    [trip, run, driver]
+  end
+end
+
+RSpec.configure do |config|
+  config.include FareTripHelpers
+end

@@ -10,6 +10,18 @@
         %li{style: (fare.is_free? ? "display: none;" : "") }
           = label_tag translate_helper("pre_or_post_trip")
           = select_tag "pre_or_post_trip", options_for_select( [["Pre-trip", true], ["Post-trip", false]], fare.pre_trip), name: "fare[pre_trip]"
+        %li
+          = label_tag "provider_fare_udr_default", "Fare card: demand-response fare ($)"
+          = number_field_tag "provider[fare_udr_default]", @provider.fare_udr_default, step: 0.01, min: 0, style: 'width: 8em;'
+          %span.text-muted{style: 'margin-left: 8px;'} charged on a card tap at pickup when the trip has no fare amount of its own
+        %li
+          = label_tag "provider_fare_negative_floor", "Fare card: lowest balance allowed ($)"
+          = number_field_tag "provider[fare_negative_floor]", @provider.fare_negative_floor, step: 0.01, max: 0, style: 'width: 8em;'
+          %span.text-muted{style: 'margin-left: 8px;'} 0 refuses a tap that would go negative; -5.00 lets a rider owe up to $5
+        %li
+          = label_tag "provider_fare_transfer_window_minutes", "Fare card: transfer window (minutes)"
+          = number_field_tag "provider[fare_transfer_window_minutes]", @provider.fare_transfer_window_minutes, step: 1, min: 0, style: 'width: 8em;'
+          %span.text-muted{style: 'margin-left: 8px;'} a second fixed-route tap inside this window is a free transfer
       .actions
         = submit_tag translate_helper("update_fare_related_settings"), class: 'btn action-button'
 %hr

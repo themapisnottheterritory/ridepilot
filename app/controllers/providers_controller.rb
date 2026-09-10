@@ -244,6 +244,9 @@ class ProvidersController < ApplicationController
   end
 
   def change_fare_related_settings
+    if params[:provider].present?
+      @provider.update(params.require(:provider).permit(:fare_udr_default, :fare_negative_floor, :fare_transfer_window_minutes))
+    end
     if @provider.fare
       @provider.fare.update(fare_related_params)
     else

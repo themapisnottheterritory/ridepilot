@@ -504,6 +504,8 @@ Rails.application.routes.draw do
         resources :trips, only: [] do
           member do
             put 'update_fare'
+            post   'token_tap'                              # fare card at pickup
+            delete 'token_tap', action: :undo_token_tap
           end
         end
       end

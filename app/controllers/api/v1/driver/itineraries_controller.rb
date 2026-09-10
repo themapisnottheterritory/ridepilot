@@ -107,12 +107,14 @@ class Api::V1::Driver::ItinerariesController < Api::V1::Driver::BaseController
       trip = @itin.trip
 
       if fare && trip && @itin.is_pickup? && @itin.finish_time && trip.fare_collected_time
+        FareTap.new(provider: trip.provider, driver: @driver).refund_trip!(trip)   # a card payment goes back on the card
         trip.fare_collected_time = nil
       elsif fare && @itin.is_pickup? && @itin.finish_time && !trip.fare_collected_time
         @itin.finish_time = nil
         @itin.status_code = Itinerary::STATUS_IN_PROGRESS
         revert_trip_result = true
       elsif fare && @itin.is_dropoff? && !@itin.finish_time && trip.fare_collected_time
+        FareTap.new(provider: trip.provider, driver: @driver).refund_trip!(trip)
         trip.fare_collected_time = nil
       elsif fare && @itin.is_dropoff? && !@itin.finish_time && @itin.arrival_time && !trip.fare_collected_time
         @itin.arrival_time = nil
