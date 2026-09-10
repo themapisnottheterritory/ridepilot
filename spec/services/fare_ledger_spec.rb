@@ -82,7 +82,7 @@ RSpec.describe FareLedger, "pass sales" do
     expect(tx.amount).to eq 5.0
     expect(tx.tendered).to be_nil
     expect(tx.cash_in).to eq 5.0
-    expect(tx.note).to eq "10-trip pass (Senior 60+ @ 0.50)"
+    expect(tx.note).to eq "10-ride pass (Senior 60+ @ 0.50)"
     expect(rider.reload.fare_balance).to eq 5.0
   end
 

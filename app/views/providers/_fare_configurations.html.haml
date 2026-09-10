@@ -27,9 +27,12 @@
           = number_field_tag "provider[fare_monthly_pass_price]", @provider.fare_monthly_pass_price, step: 0.01, min: 0, style: 'width: 8em;'
           %span.text-muted{style: 'margin-left: 8px;'} 0 hides the Sell monthly button
         %li
-          = label_tag "provider_fare_multi_trip_discount_pct", "Fare card: 10 / 20-trip pass discount (%)"
-          = number_field_tag "provider[fare_multi_trip_discount_pct]", @provider.fare_multi_trip_discount_pct, step: 1, min: 0, max: 100, style: 'width: 8em;'
-          %span.text-muted{style: 'margin-left: 8px;'} the card still gets the full trips' value; the rider pays this much less
+          = label_tag "provider_fare_pass_10_discount_pct", "Fare card: 10-ride pass discount (%)"
+          = number_field_tag "provider[fare_pass_10_discount_pct]", @provider.fare_pass_10_discount_pct, step: 1, min: 0, max: 100, style: 'width: 8em;'
+          %span.text-muted{style: 'margin-left: 8px;'} the card still gets the full rides' value; the rider pays this much less
+        %li
+          = label_tag "provider_fare_pass_20_discount_pct", "Fare card: 20-ride pass discount (%)"
+          = number_field_tag "provider[fare_pass_20_discount_pct]", @provider.fare_pass_20_discount_pct, step: 1, min: 0, max: 100, style: 'width: 8em;'
         %li
           = label_tag "provider_fare_negative_floor", "Fare card: lowest balance allowed ($)"
           = number_field_tag "provider[fare_negative_floor]", @provider.fare_negative_floor, step: 0.01, max: 0, style: 'width: 8em;'

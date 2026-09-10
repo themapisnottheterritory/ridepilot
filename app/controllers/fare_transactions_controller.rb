@@ -17,8 +17,9 @@ class FareTransactionsController < ApplicationController
     tx = case p[:kind]
          when "pass_10", "pass_20"
            category = rider_category_for(@customer)
-           ledger.sell_trip_pass!(trips: (p[:kind] == "pass_10" ? 10 : 20), fare_each: category&.default_fare.to_d,
-                                  category_name: category&.name, discount_pct: current_provider.fare_multi_trip_discount_pct,
+           trips = (p[:kind] == "pass_10" ? 10 : 20)
+           ledger.sell_trip_pass!(trips: trips, fare_each: category&.default_fare.to_d, category_name: category&.name,
+                                  discount_pct: (trips == 10 ? current_provider.fare_pass_10_discount_pct : current_provider.fare_pass_20_discount_pct),
                                   payment_method: p[:payment_method], reference: p[:reference].presence)
          when "pass_monthly"
            through = monthly_pass_through(p[:pass_month])

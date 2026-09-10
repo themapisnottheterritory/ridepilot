@@ -40,7 +40,7 @@ class FareLedger
     price = (value * (100 - discount_pct.to_i) / 100).round(2)
     load!(value, payment_method: payment_method, reference: reference, client_uuid: client_uuid,
           tendered: (price == value ? nil : price),
-          note: "#{trips}-trip pass#{category_name ? " (#{category_name} @ #{'%.2f' % fare_each})" : ''}#{price == value ? '' : ", paid #{'%.2f' % price}"}")
+          note: "#{trips}-ride pass#{category_name ? " (#{category_name} @ #{'%.2f' % fare_each})" : ''}#{price == value ? '' : ", paid #{'%.2f' % price}"}")
   end
 
   # A monthly pass: the price is loaded and debited in one go, so the ledger

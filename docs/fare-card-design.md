@@ -554,13 +554,13 @@ before the pilot buses go live; sent to the transit team by email the same day.
 | 3 | Paratransit (ADA demand-response) fare? | **Answered 2026-09-10: $1.50 flat**, from the "Fare Structure as of September 1st, 2026" sheet (photo `~/IMG_1917.HEIC`). Rule: rider is ADA eligible and both ends of the trip are in the urban service area. Built and set in production, see section 15. | done |
 | 4 | Demand-response and commuter fares with a card? | **Built 2026-09-10 (section 15).** Per-provider schedule of mileage band x rider category, seeded from the published Victoria/DeWitt rural table; prices a trip from its `drive_distance`, rider plus one adult fare per guest, attendants free. Editable on the provider page. Commuter service is the same table shape but not wired yet (fixed-route walk-ons have no per-rider distance). | done |
 | 5 | Senior is 60+ on fixed route, 65+ (plus a Medicare column) on the commuter. Which? | **Answered by the 2026-09-01 fare sheet: 60+ everywhere** ("Elderly/Disabled (60+)" for fixed route and rural). The commuter web page's 65+ is the outlier. One category on the card is right. | done |
-| 6 | The website says 10-trip, 20-trip and monthly passes are "available soon". | **Buttons built 2026-09-10 (section 16).** 10/20-trip is stored value at the rider's category fare; monthly sets the expiry. Two provider settings still wait on the team: the multi-trip discount (0% today) and the monthly price ($0 today, which hides the monthly button). | **decision** on the two prices |
+| 6 | The website says 10-trip, 20-trip and monthly passes are "available soon". | **Built and priced 2026-09-10 (section 16).** Philz's prepay table adopted: 10-ride 10% off, 20-ride 20% off, monthly $30. Set in production. One follow-up: the monthly price is the same for every category; a senior's rides are $0.50, so $30 is 60 rides to break even. Decide whether reduced-fare riders get a reduced monthly (e.g. $15). | monthly price for reduced-fare riders |
 | 7 | Which services does the card cover? | Victoria Transit fixed route, and demand response in Victoria and DeWitt counties (the one active provider). Calhoun, Goliad, Lavaca, Jackson, Matagorda run their own schedules. Gonzales is free. | nothing |
 | 8 | How do riders reload? | Front desk, cash or check, printed receipt (live). Online by card is built (section 13) but off: needs a Stripe account, carries 2.9% + $0.30, steer riders to $20 loads. | decision on Stripe, later |
 | 9 | What happens when a card is low? | System refuses the tap at $0.00 (`providers.fare_negative_floor`). Could allow e.g. -$5.00 so nobody is left at the stop, settled at next reload. | **decision** |
 | 10 | What should the website say? | After 2, 3, 5, 6 and 9: describe the card, where to get and reload it, the transfer rule, pass prices; drop "available soon". Draft it with the pilot launch. | after decisions |
 
-Answers still needed for 2 (transfer window), 6 (pass prices) and 9 (negative floor) to finish setup and order the pilot readers and cards.
+Answers still needed for 2 (transfer window), 9 (negative floor) and the reduced-fare monthly price under 6 to finish setup and order the pilot readers and cards.
 
 The internal sheet "Fare Structure as of September 1st, 2026" (photo `~/IMG_1917.HEIC`, thumbnail only) also
 says Gonzales County fares are reinstated 2026-10-01; that is another provider's service, nothing to do here.
@@ -627,11 +627,23 @@ Answers the mechanics of question 6; the prices are still the team's call. Commi
 10-trip, 20-trip and monthly passes" on `fixed-route-wp8`. Live in production, with both prices at their
 defaults (no discount, no monthly price, so the monthly button is hidden until one is set).
 
-**10-trip and 20-trip** are stored value. The card is credited trips x the rider's category fare (a
-senior's 10-trip is $5.00 of value; the tap takes $0.50 a ride). If the provider sets a multi-trip
-discount, the card still gets the full value and the office takes less cash; the ledger row records the
-cash actually taken in a new `tendered` column, and the activity report's cash and check totals sum from
-it. Refuses a rider whose category fare is $0.00.
+**10-ride and 20-ride** are stored value. The card is credited rides x the rider's category fare (a
+senior's 10-ride is $5.00 of value; the tap takes $0.50 a ride). Each pass has its own provider discount;
+the card still gets the full value and the office takes less cash; the ledger row records the cash
+actually taken in a new `tendered` column, and the activity report's cash and check totals sum from it.
+Refuses a rider whose category fare is $0.00.
+
+**Prices adopted 2026-09-10** (Philz's prepay table, set on Victoria Transit): 10-ride 10% off, 20-ride
+20% off, monthly $30.00. What each rider pays at the desk:
+
+| Category (fare) | 10-ride, value / price | 20-ride, value / price | Monthly |
+|---|---|---|---|
+| Adult ($1.00) | $10.00 / **$9.00** | $20.00 / **$16.00** | $30.00 |
+| Youth 5-17 ($0.75) | $7.50 / **$6.75** | $15.00 / **$12.00** | $30.00 |
+| Senior 60+, Disabled ($0.50) | $5.00 / **$4.50** | $10.00 / **$8.00** | $30.00 |
+
+Break-even on the monthly: 30 adult rides, 40 youth rides, 60 senior rides. The reduced-fare monthly is
+the open point under question 6.
 
 **Monthly** is the expiry date on the customer. Selling one posts a load of the pass price and a `pass`
 debit of the same amount in one transaction, so the money is on the ledger, the balance is unchanged, and
@@ -641,7 +653,7 @@ honour the expiry (free, still recorded).
 
 **Office**: "Sell a pass" panel on the rider's fare account page with the three buttons priced for that
 rider, paid by cash or check, reference, optional receipt (which shows the pass and, if discounted, what
-was paid). Provider fare page: `fare_monthly_pass_price`, `fare_multi_trip_discount_pct`.
+was paid). Provider fare page: `fare_monthly_pass_price`, `fare_pass_10_discount_pct`, `fare_pass_20_discount_pct`.
 
 **Specs**: pass sales in `spec/services/fare_ledger_spec.rb` and the buttons in
 `spec/controllers/fare_accounts_controller_spec.rb`. 78 fare examples in all, green.

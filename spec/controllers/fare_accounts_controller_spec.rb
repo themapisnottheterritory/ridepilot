@@ -105,11 +105,16 @@ RSpec.describe FareTransactionsController, "pass buttons", type: :controller do
   let(:senior)   { RiderCategory.find_or_create_by!(name: "Senior 60+") { |c| c.default_fare = 0.50 } }
   let(:rider)    { create_rider(provider, default_rider_category_id: senior.id) }
 
-  it "sells a 10-trip pass from the rider's category" do
+  it "sells a 10-ride pass from the rider's category, at that pass's own discount" do
+    provider.update!(fare_pass_10_discount_pct: 10, fare_pass_20_discount_pct: 20)
     post :create, params: { customer_id: rider.id, fare_transaction: { kind: "pass_10", payment_method: "cash" } }
     expect(response).to redirect_to(customer_fare_account_path(rider, tx_id: FareTransaction.last.id))
     expect(rider.reload.fare_balance).to eq 5.0
-    expect(flash[:notice]).to include("10-trip pass")
+    expect(FareTransaction.last.tendered).to eq 4.5
+    expect(flash[:notice]).to include("10-ride pass")
+    post :create, params: { customer_id: rider.id, fare_transaction: { kind: "pass_20", payment_method: "cash" } }
+    expect(rider.reload.fare_balance).to eq 15.0
+    expect(FareTransaction.last.tendered).to eq 8.0
   end
 
   it "sells a monthly pass for next month at the provider price and prints a receipt" do

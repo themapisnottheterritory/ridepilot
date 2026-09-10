@@ -90,8 +90,8 @@
 
       - category = @customer.default_rider_category || @rider_categories.first
       - fare_each = category&.default_fare.to_d || 0
-      - discount = @customer.provider.fare_multi_trip_discount_pct.to_i
-      - price = ->(n) { (fare_each * n * (100 - discount) / 100).round(2) }
+      - discounts = { 10 => @customer.provider.fare_pass_10_discount_pct.to_i, 20 => @customer.provider.fare_pass_20_discount_pct.to_i }
+      - price = ->(n) { (fare_each * n * (100 - discounts[n]) / 100).round(2) }
       - monthly = @customer.provider.fare_monthly_pass_price.to_d
       - if fare_each > 0 || monthly > 0
         .panel.panel-primary#fare-pass-panel
@@ -102,12 +102,12 @@
               = f.hidden_field :kind, value: '', id: 'pass-kind'
               %p.text-muted{style: 'margin-bottom: 8px;'}
                 = "#{category&.name || 'Rider'} fare #{number_to_currency(fare_each)} a trip."
-                - if discount > 0
-                  = "Multi-trip passes are #{discount}% off; the card still gets the full trips' value."
+                - if discounts.values.any? { |d| d > 0 }
+                  = "Ride passes are #{discounts[10]}% / #{discounts[20]}% off; the card still gets the full rides' value."
               %div{style: 'display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;'}
                 - if fare_each > 0
-                  %button.btn.btn-default.pass-choice{type: 'button', data: { kind: 'pass_10' }}= "10-trip #{number_to_currency(price.call(10))}"
-                  %button.btn.btn-default.pass-choice{type: 'button', data: { kind: 'pass_20' }}= "20-trip #{number_to_currency(price.call(20))}"
+                  %button.btn.btn-default.pass-choice{type: 'button', data: { kind: 'pass_10' }}= "10-ride #{number_to_currency(price.call(10))}"
+                  %button.btn.btn-default.pass-choice{type: 'button', data: { kind: 'pass_20' }}= "20-ride #{number_to_currency(price.call(20))}"
                 - if monthly > 0
                   %button.btn.btn-default.pass-choice{type: 'button', data: { kind: 'pass_monthly' }}= "Monthly #{number_to_currency(monthly)}"
               #pass-month-row.form-group{style: 'display: none;'}
