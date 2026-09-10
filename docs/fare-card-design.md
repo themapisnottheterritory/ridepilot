@@ -1,7 +1,7 @@
 # Fare Card Design Recommendation
 
 Written 2026-09-10 for RidePilot at GCRPC / Victoria Transit. Updated same day after reviewing tap to pay.
-Status: phases 1 and 2 built (sections 11, 12). Phase 3 (UDR) next.
+Status: phases 1, 2 and 3 built (sections 11 to 13). Pilot hardware next.
 Budget assumption: near zero. Existing driver tablets, existing RidePilot server, cheap off-the-shelf parts.
 Fare today: $1.50, and the goal is to bring it down, not up.
 
@@ -12,6 +12,7 @@ Fare today: $1.50, and the goal is to bring it down, not up.
   the ESP32 + RC522 prototype, and 13.56 MHz USB HID readers. The 125 kHz EH301 and its EM4100 cards are out.
 - Pilot two tokens on the same backend: RFID card on one bus, QR code on another (section 8).
 - **Phase 1 built 2026-09-10** (section 11): migration, ledger, office pages, activity report.
+- **Phase 3 built 2026-09-10** (section 13): demand-response pickup tap, online reload job (Stripe pull, not yet configured).
 - **Phase 2 built 2026-09-10** (section 12): tap endpoint, tablet scanner, offline queue, QR sheets, fare settings.
   QR codes are read by a **USB 2D barcode scanner**, not the tablet camera: same keyboard-wedge path as the RFID reader.
 - Tap to pay (bank card / phone wallet) explored and **paused** (section 10). Percentage fees do not fit a $1.50 fare.
@@ -262,8 +263,8 @@ Offline works the same as fixed route because the trip fare is already on the ta
 | 0 | Buy 2 USB HID 13.56 MHz readers, 50 cards, OTG cable. Confirm the UID types correctly into a tablet field and a Windows browser field. | Hardware path |
 | 1 | Migration for `fare_cards`, `fare_transactions`, customer columns, `Card` fare type. Drop the two orphan tables. Staff pages: issue card, load value, balance, history, block/replace. Balance and daily cash reports. | Office can run it |
 | 2 | **Done 2026-09-10.** Fixed-route tap endpoint plus tablet capture on the walk-on screen. **Pilot two tokens on the same backend: RFID reader on one bus, a USB 2D barcode scanner for QR sheets on another.** Offline queue as fallback. Watch which one riders and drivers reach for. | Bus side, token choice |
-| 3 | UDR pickup tap, mismatch confirm, guest rule. | Demand response |
-| 4 | Stripe pull job for online loads. Lobby balance-check station. ESP32 rider-facing validator if wanted. | Nice to have |
+| 3 | **Done 2026-09-10.** UDR pickup tap, mismatch confirm, guest rule. | Demand response |
+| 4 | Stripe pull job for online loads (**built 2026-09-10**, needs a Stripe account and key). Lobby balance-check station. ESP32 rider-facing validator if wanted. | Nice to have |
 
 ---
 
@@ -476,3 +477,64 @@ the server copes with decimal too, but hex is the canonical form.
 
 **Left for phase 3**: UDR pickup tap (`POST trips/:id/token_tap`, mismatch confirm, guest rule), and the
 online reload job.
+
+---
+
+## 13. Phase 3 as built (2026-09-10)
+
+RidePilot branch `fixed-route-wp8`, commit "Fare cards phase 3 (server)". Tablet: rideavl-v2 **1.0.9**,
+APK at `~/ridepilot-ops/rideavl-1.0.9-fare-cards.apk` (supersedes 1.0.8; still not copied to
+`public/rideavl-pilot.apk`).
+
+**Deploy**
+
+```sh
+docker exec ridepilot_app_1 sh -c 'cd /var/www/ridepilot && bundle install && bin/rails db:migrate'
+```
+
+Then set the demand-response card fare on the provider page (General, Fare related settings): three new
+fields, the card fare per demand-response trip, the lowest balance allowed, and the transfer window.
+Until the card fare is set, a tap at pickup uses the amount on the trip, and failing that the rider's
+category fare.
+
+**Demand-response pickup tap** (section 5.2 as designed, with these details)
+
+- `POST /api/v1/trips/:id/token_tap` `{ uid, client_uuid, recorded_at?, amount?, confirm_mismatch? }`.
+  The trip must be on one of the driver's runs. Amount precedence: what the driver typed, the amount on
+  the trip, the provider's demand-response card fare, the rider's category fare.
+- Someone else's card answers **409 `mismatch`** with both names. The tablet asks "Charge X's card for
+  Y's trip?" and resends with `confirm_mismatch: true`; the ledger row notes who it paid for.
+- **One tap covers the whole trip**, guests and attendants included. A valid pass is free but still marks
+  the fare collected. Free and donation trips refuse a tap. Already collected refuses a tap.
+- `DELETE /api/v1/trips/:id/token_tap` refunds and clears the collected mark. Undoing the pickup itself on
+  the tablet does the same, so the ledger never disagrees with the trip.
+- The itinerary JSON now carries `default_amount`, `card_on_file`, `card_balance` and `paid_by_card`, so
+  the pickup screen prefills the fare box, shows "has a card · $12.50" when a tap is expected, and shows
+  "paid by card" with an undo afterwards.
+- Card payments at pickup are **online only**, like every other manifest action. Offline the tablet says
+  take cash. The Pepwave makes this rare.
+
+**Online reloads** (section 6.3 as designed)
+
+- `StripeReloadSync` and `rake fare_cards:sync_online_reloads` pull paid Checkout Sessions from the last
+  7 days and post one `card_online` load per session, idempotent on the session id
+  (`client_uuid = stripe-<session id>`). Nothing inbound; the job runs from cron inside the network.
+- The rider is matched by the **card number** they type into the Payment Link's custom field (the printed
+  serial). A number nobody has, or a non-USD session, is listed as UNMATCHED in the job output for the
+  office to load by hand from the receipt email.
+- Not yet configured: there is no Stripe account or key. To turn it on:
+  1. Create a Stripe account for the provider. Products: "Fare card reload $10" and "$20" (or one product
+     with customer-chosen amount).
+  2. Payment Link -> Advanced -> **custom field**, type text, label "Fare card number", required.
+  3. Put `STRIPE_SECRET_KEY=sk_live_...` in `docker/.env` and recreate the app container.
+  4. Cron, next to the nightly scheduler:
+     `*/30 * * * * /usr/bin/docker exec ridepilot_app_1 bundle exec rake fare_cards:sync_online_reloads PROVIDER_ID=1 >> /home/philz/ridepilot-fare-reloads.log 2>&1`
+  5. Print the link's QR on the card sheet and the balance receipt.
+- Fee reminder from section 10: 2.9% + $0.30 card-not-present, so nudge riders to $20 loads.
+
+**Specs**: `spec/services/fare_tap_trip_spec.rb`, `spec/controllers/api/v1/driver/trips_token_tap_spec.rb`,
+`spec/services/stripe_reload_sync_spec.rb` (stubbed Stripe client). 71 fare examples in all, green.
+
+**Everything in the plan is now built except hardware.** What remains is the pilot itself: order the
+readers and cards (section 12), issue cards at the desk, install 1.0.9 on the two pilot buses, and watch
+the Fare Card Activity report for a month.
