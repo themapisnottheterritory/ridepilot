@@ -50,6 +50,8 @@ class FareTap
   # What a reader typed -> a usable token, or a typed error.
   def resolve!(uid)
     token = FareToken.for_provider(provider.id).lookup(uid)
+    # The driver may have typed the printed serial instead (reader down, QR sheet).
+    token ||= FareToken.for_provider(provider.id).find_by(serial: uid.to_s.strip.sub(/\A#/, "")) if uid.to_s.strip.length <= 8
     raise UnknownToken, "Unknown card." unless token
     raise TokenNotUsable.new(token, "This card is marked #{token.status}.") unless token.active?
     customer = token.customer

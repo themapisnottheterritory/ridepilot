@@ -1,7 +1,7 @@
 # Fare Card Design Recommendation
 
 Written 2026-09-10 for RidePilot at GCRPC / Victoria Transit. Updated same day after reviewing tap to pay.
-Status: phase 1 built (section 11), phase 2 next.
+Status: phases 1 and 2 built (sections 11, 12). Phase 3 (UDR) next.
 Budget assumption: near zero. Existing driver tablets, existing RidePilot server, cheap off-the-shelf parts.
 Fare today: $1.50, and the goal is to bring it down, not up.
 
@@ -12,6 +12,8 @@ Fare today: $1.50, and the goal is to bring it down, not up.
   the ESP32 + RC522 prototype, and 13.56 MHz USB HID readers. The 125 kHz EH301 and its EM4100 cards are out.
 - Pilot two tokens on the same backend: RFID card on one bus, QR code on another (section 8).
 - **Phase 1 built 2026-09-10** (section 11): migration, ledger, office pages, activity report.
+- **Phase 2 built 2026-09-10** (section 12): tap endpoint, tablet scanner, offline queue, QR sheets, fare settings.
+  QR codes are read by a **USB 2D barcode scanner**, not the tablet camera: same keyboard-wedge path as the RFID reader.
 - Tap to pay (bank card / phone wallet) explored and **paused** (section 10). Percentage fees do not fit a $1.50 fare.
 - Connectivity is not the constraint. Every bus has a Pepwave MAX BR1 LTE router and the tablets have their own LTE.
   Offline is a fallback path, not the design center.
@@ -259,7 +261,7 @@ Offline works the same as fixed route because the trip fare is already on the ta
 |---|---|---|
 | 0 | Buy 2 USB HID 13.56 MHz readers, 50 cards, OTG cable. Confirm the UID types correctly into a tablet field and a Windows browser field. | Hardware path |
 | 1 | Migration for `fare_cards`, `fare_transactions`, customer columns, `Card` fare type. Drop the two orphan tables. Staff pages: issue card, load value, balance, history, block/replace. Balance and daily cash reports. | Office can run it |
-| 2 | Fixed-route tap endpoint plus tablet capture on the walk-on screen. **Pilot two tokens on the same backend: RFID reader on one bus, QR via the tablet camera on another.** Offline queue as fallback. Watch which one riders and drivers reach for. | Bus side, token choice |
+| 2 | **Done 2026-09-10.** Fixed-route tap endpoint plus tablet capture on the walk-on screen. **Pilot two tokens on the same backend: RFID reader on one bus, a USB 2D barcode scanner for QR sheets on another.** Offline queue as fallback. Watch which one riders and drivers reach for. | Bus side, token choice |
 | 3 | UDR pickup tap, mismatch confirm, guest rule. | Demand response |
 | 4 | Stripe pull job for online loads. Lobby balance-check station. ESP32 rider-facing validator if wanted. | Nice to have |
 
@@ -403,3 +405,74 @@ requires, because the old customer factory cannot.
 **Left for phase 2**: driver API tap endpoints (`debit!` is ready for them), tablet capture field, offline
 snapshot, QR printing, the pass product's office UI (the column exists), rider category on the customer
 form (the column exists).
+
+---
+
+## 12. Phase 2 as built (2026-09-10)
+
+RidePilot branch `fixed-route-wp8`, commit "Fare cards phase 2 (server)". Tablet: rideavl-v2 **1.0.8**,
+commit "Fare card taps on the fixed-route screen", APK at `~/ridepilot-ops/rideavl-1.0.8-fare-cards.apk`
+(not yet copied to `public/rideavl-pilot.apk`; that is the deploy step).
+
+**One decision changed from the plan: QR is read by a USB 2D barcode scanner, not the tablet camera.**
+A $25 keyboard-wedge scanner types the QR's text exactly the way the RFID reader types a UID, so both
+tokens share one code path on the tablet and nothing needs the camera, a Capacitor plugin or a
+permission prompt. Camera scanning can still come later if a bus wants it.
+
+**Deploy**
+
+```sh
+docker exec ridepilot_app_1 sh -c 'cd /var/www/ridepilot && bundle install && bin/rails db:migrate'
+# tablets: install ~/ridepilot-ops/rideavl-1.0.8-fare-cards.apk (or copy it to public/rideavl-pilot.apk and commit)
+```
+
+`bundle install` is for `rqrcode`; gems live in the `bundle_cache` volume, so no image rebuild.
+
+**Server**
+
+- `POST /api/v1/runs/:id/token_taps` `{ uid, client_uuid, recorded_at, stop_id?, stop_name?, direction?,
+  latitude?, longitude?, offline? }`. Answers with the usual boardings payload plus `tap:` (rider name,
+  category, fare type, fare, balance, transfer / pass / double_tap / duplicate flags). Failures carry a
+  `code`: `unknown_token` (404, with the normalised uid), `token_not_usable`, `below_floor` (with balance
+  and fare), `tap_failed`.
+- `GET /api/v1/runs/:id/fare_tokens`: every active token with rider name, category fare, balance, floor
+  and pass status. The tablet caches it per run for offline answers.
+- `app/services/fare_tap.rb` holds the rules from section 5.1: unknown / blocked / inactive refused;
+  same run inside 2 minutes ignored; valid pass -> Pass fare type, $0; earlier tap inside the provider's
+  transfer window -> Free / Transfer, $0; otherwise category default fare x Card factor, debited through
+  FareLedger. Below the floor is refused unless `offline: true`. A printed serial works in place of a uid.
+  Phase 3's UDR trip tap reuses `resolve!`.
+- Undoing a tapped walk-on (`DELETE boardings/:client_uuid`) refunds the debit, idempotently.
+- `fixed_route_boardings` gained `customer_id` and `fare_token_id`; `submission_json` now carries
+  `rider_name` and `tapped`.
+- Office: rider category, pass expiry and per-rider floor on the fare account page (`PATCH
+  customers/:id/fare_account`). `GET fare_tokens/:id/print` is a card-sized QR sheet (rqrcode SVG).
+
+**Tablet (rideavl-v2 1.0.8)**
+
+- `HidScannerService`: document-level keydown listener. A burst of keys under 80 ms apart, at least 4
+  long, ending in Enter, is a scan. Keys typed into a real input are ignored, and the soft keyboard never
+  appears because nothing holds focus.
+- `TokenTapService` + `TokenTapSyncService`: post the tap, or queue it in IndexedDB and replay with
+  `offline: true`. Same idempotency as walk-ons.
+- Fixed-route screen: green card (name, category, fare, balance; pass / transfer / already tapped) for
+  4 s, red card (unknown, refused, balance too low, take cash) for 7 s. A toolbar card button lets the
+  driver type the printed number. Tapped walk-ons show the rider's name in Recent, and undo refunds.
+- Version 1.0.8 / code 9.
+
+**Specs**: `spec/services/fare_tap_spec.rb`, `spec/controllers/api/v1/driver/token_taps_controller_spec.rb`
+(45 fare examples in all, green). The tablet has no automated tests for this; the pilot bus is the test.
+
+**Hardware to order for the pilot**
+
+| Bus | Reader | Cards |
+|---|---|---|
+| RFID pilot bus | USB 13.56 MHz HID reader, hex output, Enter suffix | MIFARE Classic 1K or NTAG213 blanks |
+| QR pilot bus | USB 2D barcode scanner (HID keyboard mode, Enter suffix) | QR sheets printed from the account page, laminated |
+| Office | one of each, same models | |
+
+Both readers plug into the tablet with a USB-C OTG cable. Set the RFID reader to output the UID in hex;
+the server copes with decimal too, but hex is the canonical form.
+
+**Left for phase 3**: UDR pickup tap (`POST trips/:id/token_tap`, mismatch confirm, guest rule), and the
+online reload job.
