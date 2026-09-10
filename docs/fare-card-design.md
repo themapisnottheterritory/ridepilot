@@ -12,9 +12,9 @@ Fare today: $1.50, and the goal is to bring it down, not up.
   the ESP32 + RC522 prototype, and 13.56 MHz USB HID readers. The 125 kHz EH301 and its EM4100 cards are out.
 - Pilot two tokens on the same backend: RFID card on one bus, QR code on another (section 8).
 - **Phase 1 built 2026-09-10** (section 11): migration, ledger, office pages, activity report.
-- **Phase 3 built 2026-09-10** (section 13): demand-response pickup tap, online reload job (Stripe pull, not yet configured).
 - **Phase 2 built 2026-09-10** (section 12): tap endpoint, tablet scanner, offline queue, QR sheets, fare settings.
   QR codes are read by a **USB 2D barcode scanner**, not the tablet camera: same keyboard-wedge path as the RFID reader.
+- **Phase 3 built 2026-09-10** (section 13): demand-response pickup tap, online reload job (Stripe pull, not yet configured).
 - Tap to pay (bank card / phone wallet) explored and **paused** (section 10). Percentage fees do not fit a $1.50 fare.
 - Connectivity is not the constraint. Every bus has a Pepwave MAX BR1 LTE router and the tablets have their own LTE.
   Offline is a fallback path, not the design center.
