@@ -18,6 +18,10 @@ Fare today: $1.50, and the goal is to bring it down, not up.
 - Tap to pay (bank card / phone wallet) explored and **paused** (section 10). Percentage fees do not fit a $1.50 fare.
 - Connectivity is not the constraint. Every bus has a Pepwave MAX BR1 LTE router and the tablets have their own LTE.
   Offline is a fallback path, not the design center.
+- **Fare policy settled 2026-09-10** (section 17): published fixed-route fares; distance-band rural table; ADA
+  paratransit $1.50 flat inside Victoria; 60+ is the senior threshold everywhere; 10-ride 10% off, 20-ride 20% off,
+  monthly unlimited $30 / $15 reduced; transfers 90 minutes onto a different route, one per paid fare; balance
+  may go to -$5.00. All set in production.
 
 ---
 
@@ -661,3 +665,34 @@ was paid). Provider fare page: `fare_monthly_pass_price`, `fare_monthly_pass_pri
 
 **Specs**: pass sales in `spec/services/fare_ledger_spec.rb` and the buttons in
 `spec/controllers/fare_accounts_controller_spec.rb`. 80 fare examples in all, green.
+
+---
+
+## 17. Policy as configured (2026-09-10)
+
+One table of everything the transit team decided, where it is set, and where it is described. All of it is
+live on Victoria Transit (provider 1) in production. Sources: gcrpc.org fare pages, the internal "Fare
+Structure as of September 1st, 2026" sheet, Philz's prepay proposal, and the decisions in this session.
+
+| Policy | Chosen | Where it is set | Section |
+|---|---|---|---|
+| **Fixed-route one-trip fares** | Under 5 free (with paying adult), Youth 5-17 $0.75, Adult 18-59 $1.00, Senior 60+ $0.50, Disabled $0.50 | Lookup Tables -> Rider categories (`default_fare`) | 5.1, 14 q1 |
+| **Senior threshold** | 60+ on every service (the commuter page's 65+ is superseded) | rider category name | 14 q5 |
+| **Rural / demand-response fares** | Distance bands x category from the published Victoria-DeWitt table: up to 5 mi $1.00 / $0.75 / $0.50; up to 10 mi $2.00 / $1.75 / $1.00; up to 15 mi $3.00 / $2.50 / $1.50; up to 20 mi $4.00 / $2.50 / $2.00; over $5.00 / $3.00 / $2.50 (Adult / Youth / Senior-Disabled), under 5 free | Providers -> General -> Demand-response fare schedule | 15 |
+| **Guests and attendants** | Each guest pays the Adult fare for the band (paratransit: the same flat fare); attendants ride free | in the pricing rule | 15 |
+| **ADA paratransit** | $1.50 flat when the rider is ADA eligible and both ends of the trip are in Victoria | Providers -> General -> Fare related settings: paratransit fare $1.50, urban cities "Victoria"; rider's ADA flag on the customer record | 15 |
+| **Card fare at pickup, fallback order** | driver-typed amount, then amount on the trip, then paratransit rule, then distance table, then flat default ($0, unused), then category fare | code (`FareTap`, `FareSchedule`) | 13, 15 |
+| **10-ride pass** | 10 rides of value at the rider's fare, 10% off: Adult $9.00, Youth $6.75, Senior/Disabled $4.50 | provider: 10-ride discount 10% | 16 |
+| **20-ride pass** | 20 rides of value, 20% off: Adult $16.00, Youth $12.00, Senior/Disabled $8.00 | provider: 20-ride discount 20% | 16 |
+| **Monthly pass** | Unlimited rides through month end, fixed route and demand response. $30.00 adult, $15.00 senior / disabled / youth | provider: monthly $30, reduced monthly $15 | 16 |
+| **Transfers** | Free within 90 minutes of a paid tap, onto a different route only, one transfer per paid fare | provider: transfer window 90, different route only on | 5.1, 14 q2 |
+| **Double tap** | A second tap on the same run within 2 minutes is ignored | code (`FareTap::DOUBLE_TAP_SECONDS`) | 5.1 |
+| **Low balance** | May go as low as -$5.00; below that the tap is refused and cash is taken; settled at next reload | provider: lowest balance -5.00 (per-rider override on the account page) | 14 q9 |
+| **Reload channels** | Front desk cash or check with receipt (live); online by card via Stripe pull (built, not configured) | office pages; `STRIPE_SECRET_KEY` | 6, 13 |
+| **Tokens** | 13.56 MHz RFID card or printed QR sheet, both read by USB keyboard-wedge readers on the tablet's OTG cable; a printed serial works when the reader is down | Fare account page: issue / print QR | 2, 12 |
+| **Services covered** | Victoria Transit fixed route; demand response in Victoria and DeWitt counties | one active provider | 14 q7 |
+| **Tap to pay (bank card)** | Paused | none | 10 |
+
+**Still to do, none of it software**: order the pilot readers and cards (section 12), install rideavl 1.0.9 on the
+two pilot buses, flag ADA-eligible riders on their customer records (2 flagged today), and write the fare page
+text for the website (question 10).
