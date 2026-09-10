@@ -1,7 +1,7 @@
 # Fare Card Design Recommendation
 
 Written 2026-09-10 for RidePilot at GCRPC / Victoria Transit. Updated same day after reviewing tap to pay.
-Status: proposal, nothing built yet.
+Status: phase 1 built (section 11), phase 2 next.
 Budget assumption: near zero. Existing driver tablets, existing RidePilot server, cheap off-the-shelf parts.
 Fare today: $1.50, and the goal is to bring it down, not up.
 
