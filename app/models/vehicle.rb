@@ -9,15 +9,18 @@ class Vehicle < ApplicationRecord
 
   has_paper_trail
 
-  belongs_to :default_driver, -> { with_deleted }, :class_name => "Driver"
+  # Rails 7 made belongs_to required by default; none of the fleet has these
+  # three set and the Vehicles page could not save an edit until they were
+  # marked optional (2026-09-11).
+  belongs_to :default_driver, -> { with_deleted }, :class_name => "Driver", optional: true
   belongs_to :provider, -> { with_deleted }
-  belongs_to :garage_address, -> { with_deleted }, class_name: 'GarageAddress', foreign_key: 'garage_address_id'
+  belongs_to :garage_address, -> { with_deleted }, class_name: 'GarageAddress', foreign_key: 'garage_address_id', optional: true
   accepts_nested_attributes_for :garage_address, update_only: true
   
   has_one :device_pool_driver, :dependent => :destroy
   has_one :device_pool, :through => :device_pool_driver
 
-  belongs_to :vehicle_maintenance_schedule_type
+  belongs_to :vehicle_maintenance_schedule_type, optional: true
   belongs_to :vehicle_type
   
   has_many :documents, as: :documentable, dependent: :destroy, inverse_of: :documentable
