@@ -1,9 +1,9 @@
 {
-  "version": "1.0.10",
-  "version_code": 11,
+  "version": "1.0.12",
+  "version_code": 13,
   "url": "/rideavl-pilot.apk",
   "required": false,
-  "notes": "Fare card taps on both screens, plus over-the-air updates from now on.",
-  "published_at": "2026-09-11T19:53:09Z",
-  "sha256": "4a60569f5d216ab01c814706653b41f57911ffff393f46b6c862d0bd07378076"
+  "notes": "Fare card taps on both screens; updates now arrive over the air.",
+  "published_at": "2026-09-11T20:15:32Z",
+  "sha256": "e05f590b4e81ccea37c266dddbfb70fd0c16e628d0c2071db376d6ebb393521a"
 }

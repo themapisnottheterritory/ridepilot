@@ -21,8 +21,16 @@ Install.
 The first Update tap opens that settings page; flip the switch and come back, and the installer opens by
 itself. Fold this into the last manual round (installing 1.0.10), after which no tablet needs touching.
 
+**Google Play Protect** (Samsung tablets, Android 11): on each install it may show "App scan
+recommended" with Scan app / Don't install app. Tap **More details**, then **Install without scanning**.
+Scan app also works (it uploads the APK to Google and then installs). To stop the prompt for good on a
+tablet: Play Store -> profile -> Play Protect -> settings -> turn off "Scan apps with Play Protect".
+
 Fully silent installs need device-owner mode, which these tablets cannot have. One Install tap per
-release is as far as Android allows without an MDM.
+release (plus the Play Protect tap) is as far as Android allows without an MDM.
+
+**Tested 2026-09-11** on a Galaxy Tab Active Pro (SM-T547U, Android 11): 1.0.10 installed by USB, then
+1.0.11 and 1.0.12 arrived through the banner. Download took about a second on the office Wi-Fi.
 
 ## Publishing a release
 
@@ -48,7 +56,9 @@ the app. The QR code and the browser download still work for a fresh tablet.
   `src/app/services/app-update.service.ts`; `src/app/components/update-banner.component.ts`; banner on
   the sign-in and runs pages.
 - ridepilot: `ops/release-rideavl.sh`, `public/rideavl-version.json` (un-ignored in `.gitignore`), the
-  existing `\.apk$` nginx location (the JSON goes through the Rails public file server).
+  existing `\.apk$` nginx location (the JSON goes through the Rails public file server), and a
+  `/rideavl-*.json` entry in `config/initializers/cors.rb` (the WebView's origin is localhost; without
+  the CORS header the check fails silently and no banner appears).
 - The training flavour reads `rideavl-training-version.json` from its own host (10.0.0.15); publish there
   the same way when a training build goes out.
 
