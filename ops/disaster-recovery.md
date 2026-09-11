@@ -64,9 +64,15 @@ Runs Docker + Docker Compose. The repo is checked out at
   `busavl`; on that box use `sudo mysql busavl`, the app account is remote-only). The token in
   `~/yard_portal/fleet_sync.env` on `.32` must equal `FLEET_SYNC_TOKEN` in RidePilot's
   `application.yml`; if you regenerate one, update the other. See `ops/fleet-sync-plan.md`.
-- **Driver tablets download the pilot APK from RidePilot**: `public/rideavl-pilot.apk` (committed;
-  1.0.9 with fare card taps as of 2026-09-11). Source is the `rideavl-v2` repo, branch
-  `fixed-route-wp6`, built with `npm run apk` on this host (Android SDK at `~/android-sdk`).
+- **Driver tablets update themselves from RidePilot** (from RideAVL 1.0.10, 2026-09-11; the tablets
+  have no MDM). The app reads `public/rideavl-version.json` and downloads `public/rideavl-pilot.apk`
+  (both committed; 1.0.12 as of 2026-09-11), shows an Update banner, and opens the Android installer.
+  Publish a release with `ops/release-rideavl.sh` (bumps nothing itself: bump `versionCode` /
+  `versionName` in the `rideavl-v2` repo, `npm run apk` there, then run the script here and commit). The
+  release file needs the `/rideavl-*.json` CORS entry in `config/initializers/cors.rb` or the banner never
+  appears. Full detail: `ops/rideavl-ota-updates.md`. Source is the `rideavl-v2` repo, branch
+  `fixed-route-wp6`, built on this host (Android SDK at `~/android-sdk`, `adb` in
+  `~/android-sdk/platform-tools` for a tablet on USB).
 
 ### How a request flows
 Tablet/browser → nginx (`web`, TLS on :443, plain :80) → Rails (`app`) → Postgres (`db`).
@@ -347,6 +353,9 @@ to explain *why* they exist so nobody "cleans them up."
 | Fare card tap shows "Unknown card" on the tablet | card not issued, or reader typing decimal vs hex (lookup tries both), or wrong provider | rider's Fare account page; `docs/fare-card-design.md` §12 |
 | Fare card QR print page 500s | `rqrcode` not loaded in the running app | `bundle install` then `docker-compose restart app` |
 | Vehicle edit won't save, "must exist" | a Vehicle `belongs_to` lost `optional: true` | `app/models/vehicle.rb`, §6 |
+| Tablets don't see a new RideAVL release | `version_code` in `public/rideavl-version.json` not higher than the tablet's build; CORS entry for `/rideavl-*.json` missing; tablet off the tunnel | `curl -H 'Origin: http://localhost' -D - http://10.0.0.16/rideavl-version.json`, `ops/rideavl-ota-updates.md` |
+| Update tap opens Settings instead of the installer | first update on that tablet: flip "Allow from this source" for RideAVL, go back | one-time per tablet |
+| Installer shows "App scan recommended" | Google Play Protect on a Samsung tablet | More details → Install without scanning |
 
 ---
 
