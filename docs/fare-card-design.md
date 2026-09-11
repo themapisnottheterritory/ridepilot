@@ -354,7 +354,7 @@ at which point the per-tap fee argument has to be re-run at whatever the fare is
 
 ## 11. Phase 1 as built (2026-09-10)
 
-Branch `fixed-route-wp8`, commit "Fare cards phase 1". Everything below is office-side; nothing touches the
+Commit "Fare cards phase 1" (on `master` at the time; that branch was fast-forwarded into `master` and deleted on 2026-09-11, so every commit named in this doc is on master). Everything below is office-side; nothing touches the
 tablet yet.
 
 **Deploy**
@@ -417,7 +417,7 @@ form (the column exists).
 
 ## 12. Phase 2 as built (2026-09-10)
 
-RidePilot branch `fixed-route-wp8`, commit "Fare cards phase 2 (server)". Tablet: rideavl-v2 **1.0.8**,
+RidePilot commit "Fare cards phase 2 (server)". Tablet: rideavl-v2 **1.0.8**,
 commit "Fare card taps on the fixed-route screen", APK at `~/ridepilot-ops/rideavl-1.0.8-fare-cards.apk`
 (not yet copied to `public/rideavl-pilot.apk`; that is the deploy step).
 
@@ -488,7 +488,7 @@ online reload job.
 
 ## 13. Phase 3 as built (2026-09-10)
 
-RidePilot branch `fixed-route-wp8`, commit "Fare cards phase 3 (server)". Tablet: rideavl-v2 **1.0.9**,
+RidePilot commit "Fare cards phase 3 (server)". Tablet: rideavl-v2 **1.0.9**,
 APK at `~/ridepilot-ops/rideavl-1.0.9-fare-cards.apk` (supersedes 1.0.8; still not copied to
 `public/rideavl-pilot.apk`).
 
@@ -575,7 +575,7 @@ says Gonzales County fares are reinstated 2026-10-01; that is another provider's
 
 ## 15. Distance-band fare schedule as built (2026-09-10)
 
-Answers question 4 of section 14. Commit "Fare cards: distance-band fare schedule" on `fixed-route-wp8`.
+Answers question 4 of section 14. Commit "Fare cards: distance-band fare schedule".
 **Seeded into production the same day** from the published Victoria / DeWitt rural table, so the pickup
 screen's fare box and a card tap at pickup now price demand-response trips by distance.
 
@@ -630,7 +630,7 @@ save, paratransit). 71 fare examples in all, green.
 ## 16. Pass sales as built (2026-09-10)
 
 Answers the mechanics of question 6; the prices are still the team's call. Commit "Fare cards: sell
-10-trip, 20-trip and monthly passes" on `fixed-route-wp8`. Live in production, with both prices at their
+10-trip, 20-trip and monthly passes". Live in production, with both prices at their
 defaults (no discount, no monthly price, so the monthly button is hidden until one is set).
 
 **10-ride and 20-ride** are stored value. The card is credited rides x the rider's category fare (a

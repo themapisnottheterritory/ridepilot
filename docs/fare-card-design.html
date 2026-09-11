@@ -300,7 +300,7 @@ providers  (add, or a fare_settings table)
 <h3>If it comes back</h3>
 <p>The cheap re-entry is Stripe Tap to Pay on the tablet <strong>as a reload channel</strong>: the driver taps a rider's bank card once to add $10 or $20 to their account, then the rider uses their RFID card or QR for each ride. It removes cash from the bus, costs one fee per load, and needs no validator. In the schema it is one <code>fare_transactions</code> load row with payment method card_online and the Stripe id in the reference field. The bank_card_ref token kind exists for the day a rider wants the bank card itself to be their token, at which point the per-tap fee argument gets re-run at whatever the fare is then.</p>
 <h2><span class="n">11</span>Phase 1 as built</h2>
-<p>Branch fixed-route-wp8, commit "Fare cards phase 1", 2026-09-10. Everything here is office-side. Nothing touches the tablet yet.</p>
+<p>Commit "Fare cards phase 1", 2026-09-10. It was on the master branch at the time. That branch was fast-forwarded into master and deleted on 2026-09-11, so every commit named on this page is on master. Everything here is office-side. Nothing touches the tablet yet.</p>
 <h3>Deploy</h3>
 <pre><code>docker exec ridepilot_app_1 sh -c 'cd /var/www/ridepilot &amp;&amp; bin/rails db:migrate &amp;&amp; bin/rake ridepilot:add_v2_custom_reports'</code></pre>
 <p>The migration drops the old fare_cards and fare_card_data tables, six test rows, and the pre-commit hook comment was updated to match.</p>
@@ -320,7 +320,7 @@ providers  (add, or a fare_settings table)
 <p><strong>Permissions.</strong> Editors at a scheduling provider can manage tokens and postings. Read-only roles see the pages without the forms.</p>
 <p><strong>Left for phase 2.</strong> Driver API tap endpoints, tablet capture field, offline snapshot, QR printing, an office UI for the pass product and the rider category. The columns for those last two already exist.</p>
 <h2><span class="n">12</span>Phase 2 as built</h2>
-<p>RidePilot branch fixed-route-wp8, commit "Fare cards phase 2 (server)". Tablet rideavl-v2 version 1.0.8, commit "Fare card taps on the fixed-route screen". The APK sits at <code>~/ridepilot-ops/rideavl-1.0.8-fare-cards.apk</code> and has not yet been copied to the pilot download slot. That copy is the deploy step.</p>
+<p>RidePilot commit "Fare cards phase 2 (server)". Tablet rideavl-v2 version 1.0.8, commit "Fare card taps on the fixed-route screen". The APK sits at <code>~/ridepilot-ops/rideavl-1.0.8-fare-cards.apk</code> and has not yet been copied to the pilot download slot. That copy is the deploy step.</p>
 <div class="callout"><p><strong>One decision changed from the plan.</strong> QR is read by a USB 2D barcode scanner, not the tablet camera. A $25 keyboard-wedge scanner types the QR's text exactly the way the RFID reader types a UID, so both tokens share one code path on the tablet, and nothing needs the camera, a Capacitor plugin or a permission prompt. Camera scanning can still come later if a bus wants it.</p></div>
 <h3>Deploy</h3>
 <pre><code>docker exec ridepilot_app_1 sh -c 'cd /var/www/ridepilot &amp;&amp; bundle install &amp;&amp; bin/rails db:migrate'
@@ -352,7 +352,7 @@ providers  (add, or a fare_settings table)
 <p><strong>Specs.</strong> 45 fare examples across the ledger, tokens, tap service, driver API, office pages and the report, all green. The tablet has no automated tests for this. The pilot bus is the test.</p>
 <p><strong>Left for phase 3.</strong> The UDR pickup tap with mismatch confirmation and the guest rule, and the online reload job.</p>
 <h2><span class="n">13</span>Phase 3 as built</h2>
-<p>RidePilot branch fixed-route-wp8, commit "Fare cards phase 3 (server)". Tablet rideavl-v2 version 1.0.9 at <code>~/ridepilot-ops/rideavl-1.0.9-fare-cards.apk</code>, superseding 1.0.8 and still not copied to the pilot download slot.</p>
+<p>RidePilot commit "Fare cards phase 3 (server)". Tablet rideavl-v2 version 1.0.9 at <code>~/ridepilot-ops/rideavl-1.0.9-fare-cards.apk</code>, superseding 1.0.8 and still not copied to the pilot download slot.</p>
 <h3>Deploy</h3>
 <pre><code>docker exec ridepilot_app_1 sh -c 'cd /var/www/ridepilot &amp;&amp; bundle install &amp;&amp; bin/rails db:migrate'</code></pre>
 <p>Then set the demand-response card fare on the provider page under Fare related settings. Three fields are new there: the card fare per demand-response trip, the lowest balance allowed, and the transfer window. Until the card fare is set, a tap at pickup uses the amount on the trip, and failing that the rider's category fare.</p>
@@ -389,7 +389,7 @@ providers  (add, or a fare_settings table)
 </table></div>
 <p><strong>All ten answered.</strong> Setup is complete. What remains is ordering the pilot readers and cards from section 12 and the fare page text under question 10. The internal fare sheet also says Gonzales County fares are reinstated 2026-10-01, which is another provider's service.</p>
 <h2><span class="n">15</span>Distance-band fare schedule as built</h2>
-<p>Answers question 4 of section 14. Commit "Fare cards: distance-band fare schedule" on fixed-route-wp8. Seeded into production the same day from the published Victoria and DeWitt rural table, so the pickup screen's fare box and a card tap at pickup now price demand-response trips by distance.</p>
+<p>Answers question 4 of section 14. Commit "Fare cards: distance-band fare schedule". Seeded into production the same day from the published Victoria and DeWitt rural table, so the pickup screen's fare box and a card tap at pickup now price demand-response trips by distance.</p>
 <ul>
 <li><strong>Model.</strong> One row per cell of the published table: provider, service, band upper edge in miles, rider category, fare. A blank edge means anything longer. A trip falls in the first band, in edge order, that its OSRM driving distance does not exceed. The service is demand response today, with commuter allowed for later.</li>
 <li><strong>Pricing.</strong> The rider pays their category's fare for the band. Each guest pays the adult fare for the same band. Attendants ride free. When the provider has no table or the trip has no distance, the flat demand-response fare still applies.</li>
