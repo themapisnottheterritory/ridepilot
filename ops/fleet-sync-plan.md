@@ -1,6 +1,6 @@
 # Fleet record sync: RidePilot → AVL `busavl.fleet`
 
-Written 2026-09-11 after the wheelchair-lift cleanup. Status: proposal, not built.
+Written 2026-09-11 after the wheelchair-lift cleanup. **Built and running the same day**; see "As built" at the end.
 
 ## Why
 
@@ -92,3 +92,23 @@ until it is.
   `sudo mysql busavl`. `mysql -h 127.0.0.1` still counts as localhost and is refused.
 - The portal's MariaDB client in the nextcloud container cannot reach 10.0.0.40 (it insists on TLS the
   server does not offer).
+
+## As built (2026-09-11)
+
+- **RidePilot** (commit "Fleet sync (RidePilot side)"): `vehicles.wheelchair_lift` boolean, backfilled to
+  the 41; checkbox and "Wheelchair positions" on the vehicle form's Additional Info panel;
+  `GET /api/v1/fleet?provider_id=1` behind `X-Fleet-Token` (`FLEET_SYNC_TOKEN` in
+  `config/application.yml`, not in git; app restarted to load it). Spec in
+  `spec/controllers/api/v1/fleet_controller_spec.rb`.
+- **Puller**: `/home/philz/yard_portal/fleet_sync.py` on 10.0.0.32 (copy in `ops/fleet-sync/fleet_sync.py`
+  here), token in `fleet_sync.env` beside it (mode 600), database credentials imported from the portal's
+  `ic2_poller.py` so there is one copy on that host. Cron for philz, hourly at :20, log
+  `~/yard_portal/fleet_sync.log`. `--dry-run` shows the change set without writing.
+- **Rules that came out of the first dry run**: a blank in RidePilot never erases an AVL value (RidePilot
+  has no seating capacities yet; AVL had five, of doubtful quality: a 35-seat Tahoe); AVL-only units
+  (RC1, RC2) are listed and left alone; make/model/year/active/lift follow RidePilot.
+- **First run** inserted 221, 223 and C-10, set 1701, 1708 and 1727 inactive to match RidePilot, and
+  corrected three model strings. Second run: 58 unchanged. No sudo on 10.0.0.32, hence cron rather than
+  a systemd timer.
+- **Still open**: add RC1 and RC2 to RidePilot (then the sync owns them) or drop them from AVL; fill in
+  seating capacity and wheelchair positions on the RidePilot vehicle records.
