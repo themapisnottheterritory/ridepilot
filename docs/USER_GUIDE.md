@@ -684,6 +684,27 @@ To enable SMS notifications for a customer:
 
 ---
 
+
+### 7.5 Trip Planner (plan.gcrpc.org)
+
+Riders can plan a fixed-route bus trip on their phone or computer at **https://plan.gcrpc.org**. It is the standard OpenTripPlanner engine with a Victoria Transit front end, using the same FY2027 route schedule the buses run.
+
+**For riders**
+
+1. Enter where you are starting (or tap the ◎ button to use your phone's location) and where you are going. Pick from the suggestions.
+2. Leave it on **Leave now**, or choose **Depart at** / **Arrive by** and set a time.
+3. Tap **Find my bus**. Up to four options appear with the total time, which routes to take, where to board and get off, and the walk at each end. Tap an option to see it on the map.
+
+If no bus works, the page says so and gives the office number. Fixed routes run Monday to Friday; demand-response and paratransit trips are still booked by phone, not on this page.
+
+**For staff**
+
+- Give riders the link, or point them to the "Plan your trip" link on the Victoria Transit page of gcrpc.org.
+- It uses the published schedule, not live bus positions. If a route or time changes, the planner is rebuilt from the new GTFS feed (an IT task, under a minute; `ops/trip-planner/README.md`).
+- Addresses come from our own map data; if an address will not autocomplete, try the nearest cross street or a landmark.
+
+---
+
 ## Appendix: Keyboard Shortcuts & Tips
 
 ### Address Entry Tips
