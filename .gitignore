@@ -51,3 +51,6 @@ destinations_FINAL.csv
 *.bak
 *.swp
 *.swo
+
+# RideAVL over-the-air release file (ops/release-rideavl.sh); the rest of *.json stays ignored
+!public/rideavl-version.json
