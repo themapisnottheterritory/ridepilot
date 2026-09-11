@@ -115,5 +115,26 @@ until it is.
 - **Found on the way**: since the Rails 7 upgrade the Vehicles page could not save any edit, because
   default driver, garage address and maintenance schedule type had become required and no vehicle has
   them. Fixed (commit "Vehicles: ... optional again"). The lift checkbox depends on this.
-- **Still open**: fill in seating capacity and wheelchair positions on the RidePilot vehicle records; they
-  flow to AVL on the next hour.
+- **Capacities filled with best guesses (2026-09-11)** on all 60 units, per model, and synced to AVL the
+  same hour (58 rows updated). The five AVL capacities that existed before (30 to 40 on a Tahoe and four
+  Aerotechs) were wrong and are overwritten.
+
+  | Model | Seats | W/C | Lift | Basis |
+  |---|---|---|---|---|
+  | E450 Eldorado Aerotech 240 | 16 | 2 | yes | manufacturer lift layout (20 seated or 16 + 2) |
+  | E350 Eldorado Aerotech 200 | 10 | 2 | yes | 12 to 14 ambulatory, less two positions |
+  | E450 Eldorado Glaval Universal 27 | 20 | 2 | yes | 27-foot body; was typed 16-passenger, check |
+  | F550 Champion Defender | 25 | 2 | yes | manufacturer up to 33, 25 to 29 high-back |
+  | IC PC515 (RC1, RC2) | 40 | 2 | yes | AVL import |
+  | International CE, CE S | 44 (1797: 32, its type) | 2 | yes | vehicle type; 1797 vs 1727/1798 inconsistent |
+  | Chevrolet Express 4500 | 12 | 2 | yes | cutaway van |
+  | Dodge Grand Caravan | 7 | 0 | no | stock; converted ones are 5 + ramp |
+  | RAM Promaster | 10 | 0 | no | |
+  | Tahoe / F-250s | 7 / 5 | 0 | no | not passenger vehicles |
+
+  Lift-equipped went from 43 to 50: the Glaval, the four Internationals and the two Express cutaways were
+  added on the "almost everything has a lift" rule.
+- **Review sheet for the transit team to redline**: `docs/fleet-capacity-review.html` (printable, a
+  correction column per unit) and `docs/fleet-capacity-review.csv`; published at
+  https://claude.ai/code/artifact/9f74b725-7f3d-4eeb-91ee-32c9ac80ce89. Corrections go into RidePilot on
+  the Vehicles page and reach the portal within the hour.
