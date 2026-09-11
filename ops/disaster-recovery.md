@@ -51,12 +51,16 @@ Runs Docker + Docker Compose. The repo is checked out at
   (`gcrpc-root.crt` / `gcrpc-root.key`). This CA signs the TLS leaf cert. Workstations
   already trust the root org-wide.
 - **pfSense firewall** — hosts the **WireGuard tunnel** the ~25 driver tablets use to
-  reach `10.0.0.16`, and the **Unbound DNS resolver** that maps
-  `rp.internal.gcrpc.org → 10.0.0.16` for workstation browsers.
+  reach `10.0.0.16`. (Checked 2026-09-11: the internal names such as
+  `rp.internal.gcrpc.org → 10.0.0.16` are answered by the **Technitium DNS container on
+  `10.0.0.32`**, port 53, which the office DHCP hands out; pfSense's resolver does not carry them.)
 - **Microsoft Entra ID / Azure** — O365 SSO for web dispatchers (app registration in the
   gcrpc.org tenant). Local password login is kept as a fallback.
 - **Intune** — manages the tablets and their always-on per-app VPN (Andrew administers).
 - **GitHub (gcrpc org)** — the code.
+- **`10.0.0.32`** also serves the public **trip planner, https://plan.gcrpc.org** (OpenTripPlanner in
+  Docker + static client in `~/otp`, `ops/trip-planner/README.md`); it reads the map tiles from this
+  host's `osm-tiles` and geocodes through Nominatim on `10.0.0.18`.
 - **`10.0.0.32`** — the **Transit Team Portal** (yard.gcrpc.org / transit.internal.gcrpc.org, Express app
   in `~/yard_portal`). It **pulls the fleet from RidePilot hourly** (`GET /api/v1/fleet`, header
   `X-Fleet-Token`) with `~/yard_portal/fleet_sync.py` from philz's crontab (:20 past the hour, log

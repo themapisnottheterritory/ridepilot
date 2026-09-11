@@ -1,6 +1,9 @@
 # Victoria Transit trip planner (plan.gcrpc.org)
 
-OpenTripPlanner 2 with a GCRPC-branded, phone-first web client. Built 2026-09-11 on 10.0.0.32.
+OpenTripPlanner 2 with a GCRPC-branded, phone-first web client. Built 2026-09-11 on 10.0.0.32 and
+**live at https://plan.gcrpc.org the same day** (Let's Encrypt via certbot, auto-renews; http redirects).
+The public A record points at 64.123.96.229, which pfSense forwards to 10.0.0.32; the LAN hairpins the
+public address, so no internal DNS override is needed.
 Repo copy of everything here: `ridepilot/ops/trip-planner/`.
 
     data/   gcrpc-fixed.gtfs.zip         the FY2027 feed (from ~/gtfs_fy2027/GCRPC-Fixed-FY2027.zip)
