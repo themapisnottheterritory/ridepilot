@@ -76,6 +76,8 @@
                 = @driver.user.try(:name_with_username)
               - elsif @driver.persisted?
                 = f.collection_select :user_id, @available_users, :id, :name_with_username, { include_blank: true }
+              - elsif !can?(:create, User)
+                = f.collection_select :user_id, @available_users, :id, :name_with_username, { include_blank: true }
               - else
                 -# New driver: pick an existing login, or make one here so Kristie
                 -# never has to visit the Users page first (the tablet signs in
