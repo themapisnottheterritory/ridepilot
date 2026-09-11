@@ -469,6 +469,26 @@ Set the maximum time (in minutes) any passenger should be on the vehicle. The ro
 
 ---
 
+### 5.8 Adding a Driver and Their Tablet Login
+
+Every driver needs a login: it is what they type into the RideAVL tablet. You no longer have to create that login on the Users page first. Everything happens on **Drivers → New Driver**.
+
+1. Fill in the driver's phone, address and the rest as usual.
+2. Under **Associated User**, choose **Create a login for this driver**.
+3. Type the driver's **first name** and **last name**. The **username** fills itself in as first name plus last initial (for example *kristiek*); you can change it. If that username is taken, the next free number is added.
+4. **Email** is optional. Leave it blank and a placeholder address is used; RidePilot never emails drivers, so nothing is lost.
+5. Click **Save**. The login, its basic role and the driver record are created together. If anything is wrong, nothing is saved and the form shows why.
+
+After saving, the driver's page shows the **username and a generated password once**, with a **Copy** button. Write it down or tell the driver in person before leaving the page; it is not shown again and is not emailed.
+
+**Forgotten password.** Open the driver's page and click **Reset tablet password**. A new password is generated and shown once the same way. The old one stops working immediately.
+
+**Existing login.** If the person already has a RidePilot login (for example a dispatcher who also drives), choose **Existing login** and pick them from the list instead.
+
+> Creating logins needs the Administrator role. Editors see only the Existing login list.
+
+---
+
 ## 6. For Administrators: AVL / GPS Tracking
 
 ### 6.1 Overview
