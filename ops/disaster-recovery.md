@@ -7,7 +7,7 @@ and explicit. Follow it top to bottom.
 **Goal:** rebuild the RidePilot service on a fresh host and get it serving Victoria
 Transit dispatchers and driver tablets again, then prove it with the health check.
 
-**Last verified against production:** 2026-08-13.
+**Last verified against production:** 2026-08-13. Updated 2026-09-11 for the production branch, the fleet sync, and fare cards.
 
 ---
 
@@ -17,7 +17,9 @@ Transit dispatchers and driver tablets again, then prove it with the health chec
   Lose that host and you rebuild from this doc + the git repo + your data backups.
 - The **git repo is the source of truth for all code and most config.** Remote:
   `git@github.com:themapisnottheterritory/ridepilot.git` (GitHub org `themapisnottheterritory`,
-  referred to internally as **gcrpc**). Working branch: **`master`**.
+  referred to internally as **gcrpc**). **Production runs branch `fixed-route-wp8`** (fixed route,
+  fare cards, fleet sync, all of September 2026); `master` is ~70 commits behind it as of 2026-09-11.
+  Restore that branch, not master, until it is merged.
 - **Three things are NOT in git** and must come from a backup or be recreated (see §3):
   the database, user-uploaded files, and the secrets/certs. Everything else you can
   `git clone`.
@@ -55,6 +57,16 @@ Runs Docker + Docker Compose. The repo is checked out at
   gcrpc.org tenant). Local password login is kept as a fallback.
 - **Intune** — manages the tablets and their always-on per-app VPN (Andrew administers).
 - **GitHub (gcrpc org)** — the code.
+- **`10.0.0.32`** — the **Transit Team Portal** (yard.gcrpc.org / transit.internal.gcrpc.org, Express app
+  in `~/yard_portal`). It **pulls the fleet from RidePilot hourly** (`GET /api/v1/fleet`, header
+  `X-Fleet-Token`) with `~/yard_portal/fleet_sync.py` from philz's crontab (:20 past the hour, log
+  `~/yard_portal/fleet_sync.log`) and upserts `busavl.fleet` on **`10.0.0.40`** (MariaDB, database
+  `busavl`; on that box use `sudo mysql busavl`, the app account is remote-only). The token in
+  `~/yard_portal/fleet_sync.env` on `.32` must equal `FLEET_SYNC_TOKEN` in RidePilot's
+  `application.yml`; if you regenerate one, update the other. See `ops/fleet-sync-plan.md`.
+- **Driver tablets download the pilot APK from RidePilot**: `public/rideavl-pilot.apk` (committed;
+  1.0.9 with fare card taps as of 2026-09-11). Source is the `rideavl-v2` repo, branch
+  `fixed-route-wp6`, built with `npm run apk` on this host (Android SDK at `~/android-sdk`).
 
 ### How a request flows
 Tablet/browser → nginx (`web`, TLS on :443, plain :80) → Rails (`app`) → Postgres (`db`).
@@ -85,7 +97,9 @@ run as Sidekiq jobs and the Python `optimizer` sidecar.
 `GOOGLE_DIRECTIONS_WAYPOINT_LIMIT`, `GOOGLE_ROAD_POINT_LIMIT`, `NOMINATIM_URL`,
 `OPEN_TRIP_PLANNER_URL`, `OSRM_URL`, `TRIP_PLANNER_TYPE`, `RIDEPILOT_HOST`,
 `SMTP_MAIL_*` (address/domain/port/user/password), `SYSTEM_ADMIN_EMAIL`,
-`SYSTEM_ADMIN_PASSWORD`, `SYSTEM_SEND_FROM_ADDRESS`.
+`SYSTEM_ADMIN_PASSWORD`, `SYSTEM_SEND_FROM_ADDRESS`, **`FLEET_SYNC_TOKEN`** (shared with the
+portal host, see §1). Planned, not set yet: `STRIPE_SECRET_KEY` in `docker/.env` for fare card online
+reloads (`docs/fare-card-design.md` §13).
 Keep a copy of this file in your password manager / secrets store. For self-hosted
 routing set `TRIP_PLANNER_TYPE: OSRM` and `OSRM_URL: http://osrm:5000`.
 
@@ -134,7 +148,7 @@ repo (SSH deploy key), and your backup files.
 ```sh
 mkdir -p /home/philz/rptest && cd /home/philz/rptest
 git clone git@github.com:themapisnottheterritory/ridepilot.git
-cd ridepilot && git checkout master
+cd ridepilot && git checkout fixed-route-wp8   # NOT master until the September 2026 work is merged
 ```
 > If the checkout path differs from `/home/philz/rptest/ridepilot`, update the crontab and
 > the Claude hook paths in §4.7–4.8 accordingly.
@@ -277,16 +291,30 @@ to explain *why* they exist so nobody "cleans them up."
 - `rubyxl_convenience.rb` — RubyXL 3.x split its convenience API into a separate require;
   needed for the NTD `.xlsx` report.
 - **`belongs_to` is required by default in Rails 7.** Several models needed
-  `optional: true` (Run, RepeatingTrip, and the ridership-mobility join models). Symptom
-  of a missing one: `"... is invalid"` / `"... must exist"` on a create form.
+  `optional: true` (Run, RepeatingTrip, the ridership-mobility join models, and since 2026-09-11
+  **Vehicle**: default driver, garage address, maintenance schedule type — without it no vehicle
+  could be saved from the Vehicles page). Symptom of a missing one: `"... is invalid"` /
+  `"... must exist"` on a create **or edit** form. The Customer and Vehicle **factories** in
+  `spec/` still fail for this reason; the fare card specs build their own records
+  (`spec/support/fare_card_helpers.rb`).
+- **Gems added after the image was built** (`rqrcode` for fare card QR sheets, `stripe` for
+  online reloads, both 2026-09-10) live in the `ridepilot_bundle_cache` volume via
+  `bundle install` inside `ridepilot_app_1`. After a `bundle install` the app must be
+  **restarted** (`docker-compose restart app sidekiq`) or the running Puma will not have the gem
+  (QR print page 500s with `uninitialized constant RQRCode`).
+- **`ops/git-hooks/pre-commit`** refuses a commit whose `db/schema.rb` drops a table (the test
+  DB dump lacks the `lite_*` tables). The 2026-09-10 fare card migration really did drop
+  `fare_cards` / `fare_card_data`; that commit used `--no-verify`, as the hook says to.
 - **`connection_pool` is pinned `~> 2.5` in the Gemfile.** connection_pool 3.0 breaks
   Sidekiq 7.3.9's scheduler thread (`wrong number of arguments (given 1, expected 0)`),
   which silently kills all scheduled/retry jobs. Do **not** unpin it. The daily health
   check watches for this specifically.
 
 ### Operational gotchas
+- **This host has Compose v1: the command is `docker-compose`** (1.25). `docker compose` (v2
+  plugin) is not installed; every `docker compose ...` in this doc means `docker-compose ...`.
 - **Recreate a single compose service with `--no-deps`**, e.g.
-  `docker compose up -d --no-deps --force-recreate web`. Without it, Compose also recreates
+  `docker-compose up -d --no-deps --force-recreate web`. Without it, Compose also recreates
   dependencies (redis/db), yanking connections out from under long-running Sidekiq.
 - **The nginx config is a single-file bind mount.** After editing `docker/web/nginx.conf`,
   a plain reload won't pick it up (inode swap) — you must
@@ -314,7 +342,11 @@ to explain *why* they exist so nobody "cleans them up."
 | Report `.xlsx` 500s | RubyXL convenience require | `config/initializers/rubyxl_convenience.rb` |
 | `"Provider is not available for the trip"` | pickup outside the provider's operating hours | Provider settings → operating hours (Victoria = 6am–7pm) |
 | Tablet can't reach the app | not on the WireGuard tunnel, or using DNS name instead of IP | tunnel status (Intune), use `http://10.0.0.16` |
-| A boot-time fix "isn't taking" | it's an initializer; needs an app restart | `docker compose restart app sidekiq` |
+| A boot-time fix "isn't taking" | it's an initializer; needs an app restart | `docker-compose restart app sidekiq` |
+| Portal fleet report disagrees with RidePilot Vehicles page | fleet sync cron on `10.0.0.32` not running, or token mismatch | `ssh philz@10.0.0.32`, `tail ~/yard_portal/fleet_sync.log`, run `python3 ~/yard_portal/fleet_sync.py --dry-run` |
+| Fare card tap shows "Unknown card" on the tablet | card not issued, or reader typing decimal vs hex (lookup tries both), or wrong provider | rider's Fare account page; `docs/fare-card-design.md` §12 |
+| Fare card QR print page 500s | `rqrcode` not loaded in the running app | `bundle install` then `docker-compose restart app` |
+| Vehicle edit won't save, "must exist" | a Vehicle `belongs_to` lost `optional: true` | `app/models/vehicle.rb`, §6 |
 
 ---
 
