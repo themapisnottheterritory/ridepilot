@@ -110,5 +110,10 @@ until it is.
 - **First run** inserted 221, 223 and C-10, set 1701, 1708 and 1727 inactive to match RidePilot, and
   corrected three model strings. Second run: 58 unchanged. No sudo on 10.0.0.32, hence cron rather than
   a systemd timer.
-- **Still open**: add RC1 and RC2 to RidePilot (then the sync owns them) or drop them from AVL; fill in
-  seating capacity and wheelchair positions on the RidePilot vehicle records.
+- **RC1 and RC2 added to RidePilot** the same day (IC PC515, 2023 and 2024, 40 seats, lift, VINs from AVL,
+  type Bus (44 Passenger)); the sync now reports 60 units, none AVL-only.
+- **Found on the way**: since the Rails 7 upgrade the Vehicles page could not save any edit, because
+  default driver, garage address and maintenance schedule type had become required and no vehicle has
+  them. Fixed (commit "Vehicles: ... optional again"). The lift checkbox depends on this.
+- **Still open**: fill in seating capacity and wheelchair positions on the RidePilot vehicle records; they
+  flow to AVL on the next hour.
