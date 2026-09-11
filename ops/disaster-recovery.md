@@ -7,7 +7,7 @@ and explicit. Follow it top to bottom.
 **Goal:** rebuild the RidePilot service on a fresh host and get it serving Victoria
 Transit dispatchers and driver tablets again, then prove it with the health check.
 
-**Last verified against production:** 2026-08-13. Updated 2026-09-11 for the production branch, the fleet sync, and fare cards.
+**Last verified against production:** 2026-08-13. Updated 2026-09-11 for the fleet sync and fare cards.
 
 ---
 
@@ -17,9 +17,8 @@ Transit dispatchers and driver tablets again, then prove it with the health chec
   Lose that host and you rebuild from this doc + the git repo + your data backups.
 - The **git repo is the source of truth for all code and most config.** Remote:
   `git@github.com:themapisnottheterritory/ridepilot.git` (GitHub org `themapisnottheterritory`,
-  referred to internally as **gcrpc**). **Production runs branch `fixed-route-wp8`** (fixed route,
-  fare cards, fleet sync, all of September 2026); `master` is ~70 commits behind it as of 2026-09-11.
-  Restore that branch, not master, until it is merged.
+  referred to internally as **gcrpc**). Working branch: **`master`** (`fixed-route-wp8` was
+  fast-forwarded into it on 2026-09-11; the checkout on `10.0.0.16` is on master again).
 - **Three things are NOT in git** and must come from a backup or be recreated (see §3):
   the database, user-uploaded files, and the secrets/certs. Everything else you can
   `git clone`.
@@ -148,7 +147,7 @@ repo (SSH deploy key), and your backup files.
 ```sh
 mkdir -p /home/philz/rptest && cd /home/philz/rptest
 git clone git@github.com:themapisnottheterritory/ridepilot.git
-cd ridepilot && git checkout fixed-route-wp8   # NOT master until the September 2026 work is merged
+cd ridepilot && git checkout master
 ```
 > If the checkout path differs from `/home/philz/rptest/ridepilot`, update the crontab and
 > the Claude hook paths in §4.7–4.8 accordingly.
