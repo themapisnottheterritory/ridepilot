@@ -1,0 +1,519 @@
+<title>RidePilot Fare Card Plan</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#F1F3F0; --ink:#1B2220; --muted:#5B6662; --rule:#C6CDC8; --panel:#E4E9E5;
+  --accent:#1E6E76; --accent-ink:#FFFFFF; --warn:#9A4A1E; --code:#E8ECE9;
+  --display:"IBM Plex Sans Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#151A19; --ink:#E3E8E5; --muted:#9AA5A0; --rule:#334340; --panel:#1E2624;
+    --accent:#5DB4BB; --accent-ink:#0F1A1B; --warn:#E0955F; --code:#1C2422;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#151A19; --ink:#E3E8E5; --muted:#9AA5A0; --rule:#334340; --panel:#1E2624;
+  --accent:#5DB4BB; --accent-ink:#0F1A1B; --warn:#E0955F; --code:#1C2422;
+}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55;
+  padding-inline:clamp(16px,4vw,48px);padding-block:32px 80px}
+.wrap{max-width:74ch;margin:0 auto}
+header{border-top:6px solid var(--accent);padding-top:18px;margin-bottom:40px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-weight:600;font-size:clamp(34px,6vw,52px);line-height:1.02;margin:8px 0 14px;text-wrap:balance;letter-spacing:-.01em}
+.meta{display:flex;flex-wrap:wrap;gap:8px 28px;color:var(--muted);font-size:14px}
+.stub{margin-top:26px;display:grid;grid-template-columns:auto 1fr;gap:0 18px;align-items:center;
+  border:1px solid var(--rule);border-radius:10px;padding:14px 18px;background:var(--panel);max-width:100%}
+.stub .chip{width:42px;height:32px;border-radius:6px;background:linear-gradient(135deg,var(--accent),transparent 140%);border:1px solid var(--rule)}
+.stub .uid{font-family:var(--mono);font-size:15px;letter-spacing:.12em}
+.stub .who{font-size:13px;color:var(--muted)}
+h2{font-family:var(--display);font-weight:600;font-size:28px;line-height:1.1;margin:56px 0 14px;text-wrap:balance;
+  display:flex;align-items:baseline;gap:14px}
+h2 .n{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:.06em;font-weight:500}
+h3{font-family:var(--display);font-weight:600;font-size:20px;margin:30px 0 8px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 16px;padding-left:22px}
+li{margin-bottom:6px}
+strong{font-weight:600}
+code{font-family:var(--mono);font-size:.9em;background:var(--code);padding:1px 5px;border-radius:4px}
+pre{font-family:var(--mono);font-size:13.5px;line-height:1.5;background:var(--code);border:1px solid var(--rule);border-radius:8px;padding:16px 18px;overflow-x:auto;margin:0 0 18px}
+pre code{background:none;padding:0;font-size:inherit}
+.tbl{overflow-x:auto;margin:0 0 18px}
+table{border-collapse:collapse;width:100%;font-size:14.5px;font-variant-numeric:tabular-nums}
+th{text-align:left;font-family:var(--display);font-weight:600;font-size:15px;border-bottom:2px solid var(--ink);padding:8px 12px 8px 0;vertical-align:bottom}
+td{border-bottom:1px solid var(--rule);padding:9px 12px 9px 0;vertical-align:top}
+td:last-child,th:last-child{padding-right:0}
+.callout{border-left:4px solid var(--accent);background:var(--panel);padding:12px 16px;border-radius:0 8px 8px 0;margin:18px 0}
+.callout.warn{border-left-color:var(--warn)}
+.callout p:last-child{margin:0}
+.tag{display:inline-block;font-family:var(--mono);font-size:12px;background:var(--accent);color:var(--accent-ink);padding:2px 8px;border-radius:999px;letter-spacing:.04em}
+.phase td:first-child{font-family:var(--mono);color:var(--accent);font-weight:500;white-space:nowrap}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (max-width:520px){ .stub{grid-template-columns:1fr} h2{flex-direction:column;gap:4px} }
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">RidePilot · GCRPC / Victoria Transit · design recommendation</div>
+  <h1>Fare cards on no budget</h1>
+  <div class="meta"><span>Written 2026-09-10, updated same day after reviewing tap to pay</span><span>Status: built and configured, all policy questions answered, pilot hardware next</span><span>Fare today $1.50, goal is lower</span><span>Also at <code>docs/fare-card-design.md</code> in rptest</span></div>
+  <div class="stub" aria-label="Example fare card">
+    <div class="chip"></div>
+    <div><div class="uid">04 31 53 95 25 21 49 87</div><div class="who">Elmer Street · balance $12.50 · card carries only its factory UID</div></div>
+  </div>
+  <div class="callout" style="margin-top:22px">
+    <p><strong>Decisions so far</strong></p>
+    <ul style="margin-bottom:0">
+      <li>Account-based ledger in RidePilot, token-agnostic (section 4). Every option shares this part.</li>
+      <li><strong>Frequency: 13.56 MHz, decided 2026-09-10.</strong> Philz and Andrew both concur (section 2). MIFARE / NTAG cards, the ESP32 + RC522 prototype, and 13.56 MHz USB HID readers. The 125 kHz EH301 and its EM4100 cards are out.</li>
+      <li>Pilot two tokens on one backend: RFID card on one bus, QR code on another (section 8).</li>
+      <li><strong>Phase 1 built 2026-09-10</strong> (section 11): migration, ledger, office pages, activity report.</li>
+      <li><strong>Phase 2 built 2026-09-10</strong> (section 12): tap endpoint, tablet scanner, offline queue, QR sheets, fare settings. QR codes are read by a USB 2D barcode scanner, not the tablet camera, so both tokens share one path.</li>
+      <li><strong>Phase 3 built 2026-09-10</strong> (section 13): demand-response pickup tap, online reload job (Stripe pull, not yet configured).</li>
+      <li>Tap to pay with bank card or phone wallet explored and <strong>paused</strong> (section 10). Percentage fees do not fit a $1.50 fare.</li>
+      <li>Connectivity is not the constraint. Every bus has a Pepwave MAX BR1 LTE router and the tablets have their own LTE. Offline is a fallback, not the design center.</li>
+      <li><strong>Fare policy settled 2026-09-10</strong> (section 17): published fixed-route fares, the distance-band rural table, ADA paratransit $1.50 inside Victoria, 60+ everywhere, 10-ride 10% off, 20-ride 20% off, monthly unlimited $30 or $15 reduced, transfers 90 minutes onto a different route once per paid fare, balance may go to -$5.00. All set in production.</li>
+    </ul>
+  </div>
+</header>
+
+<h2><span class="n">1</span>What is left of the earlier attempt</h2>
+<p>Searched every checkout on 10.0.0.16 (rptest, rpmaster, rplite, pzdev, ~/ridepilot), plus git history, branches and stashes.</p>
+<div class="tbl"><table>
+<tr><th>Where</th><th>What</th></tr>
+<tr><td><code>db/schema.rb</code></td><td>Two orphan tables: <code>fare_cards</code> (card_id, customer_id) and <code>fare_card_data</code> (fare_card_id, bus_id, msg_direction, latitude, longitude). No model, migration, controller, view or route uses them. They came in through the Rails 7 upgrade schema dump, so a database built from migrations would not have them.</td></tr>
+<tr><td><code>ops/git-hooks/pre-commit</code></td><td>Names both tables explicitly so the test-DB schema dump does not silently delete them.</td></tr>
+<tr><td>Production DB</td><td>6 rows in <code>fare_cards</code>, all for test customers (Gabriel Acosta, Thalia Acosta, Elmer Street), issued 2023-12-21 to 2024-01-05. <code>fare_card_data</code> is empty.</td></tr>
+<tr><td>Older checkouts</td><td>Nothing.</td></tr>
+</table></div>
+<p>The six stored card IDs say which prototype produced them:</p>
+<div class="tbl"><table>
+<tr><th>card_id</th><th>Looks like</th></tr>
+<tr><td><code>0009350016</code></td><td>10-digit decimal, classic 125 kHz EM4100 output. The FissaiD EH301.</td></tr>
+<tr><td><code>0431539525214987</code><br><code>1579487351240384</code><br><code>3034190240013754</code></td><td>7-byte MIFARE UID in decimal. The ESP32 + RC522 at 13.56 MHz.</td></tr>
+<tr><td><code>12345678910123457</code><br><code>12345678910123356</code></td><td>Typed by hand.</td></tr>
+</table></div>
+<div class="callout"><p><strong>Recommendation:</strong> drop both tables in a real migration when the new schema in section 4 lands. The old design had no balance, no ledger and no reload path. The only idea worth keeping is "card maps to customer, log every tap".</p></div>
+
+<h2><span class="n">2</span>Core decisions</h2>
+<h3>Account-based, not card-based</h3>
+<p>The card carries nothing but its factory UID. The balance lives in RidePilot on the <strong>customer</strong>, not on the card.</p>
+<ul>
+<li>No writers, ever. Every cheap reader can read a UID.</li>
+<li>No keys, no encryption, no personalisation step. Issuing a card is "scan it, pick the customer".</li>
+<li>Lost card: flip the row to blocked, hand out a new one, balance follows the customer.</li>
+<li>Several active cards per customer is fine, for a rider and a caregiver, say.</li>
+<li>The token does not have to be a card. A printed QR code, or later a bank-card reference, hangs off the same customer and ledger. Section 4 models this as <code>fare_tokens</code> with a kind.</li>
+</ul>
+
+<h3>Frequency: 13.56 MHz, decided</h3>
+<p>The two prototypes use different frequencies and their cards are not interchangeable.</p>
+<div class="tbl"><table>
+<tr><th></th><th>125 kHz<br><span style="font-weight:400;color:var(--muted)">EH301, EM4100 cards</span></th><th>13.56 MHz<br><span style="font-weight:400;color:var(--muted)">RC522, MIFARE / NTAG cards</span></th></tr>
+<tr><td>Blank card cost</td><td>similar</td><td>similar, $0.15 to $0.40, printable</td></tr>
+<tr><td>USB HID keyboard readers</td><td>plentiful</td><td>plentiful</td></tr>
+<tr><td>Phone can read it</td><td>no</td><td>yes, Android NFC and iPhone</td></tr>
+<tr><td>Clone difficulty</td><td>trivial, T5577 blanks and a $20 cloner</td><td>easy for UID-only, harder beyond that</td></tr>
+<tr><td>Future options</td><td>none</td><td>rider self-check by phone, NTAG URL, secure sectors later</td></tr>
+</table></div>
+<p><strong>Decided 2026-09-10: 13.56 MHz.</strong> Andrew concurs. The ESP32 + RC522 prototype is already on the right frequency. The EH301 form factor, an enclosed mounted reader, is still useful at a desk or a lobby station if you buy a 13.56 MHz variant. The 125 kHz unit you have becomes a bench tool.</p>
+<p>Whatever the reader, it must emit the UID in <strong>one canonical format</strong>. Standardise on uppercase hex, for example <code>04A3B2C1D9E6F0</code>, and convert on the way in if a reader insists on decimal. Store the canonical form once and look up by it.</p>
+
+<h3>No Pi on the bus, at least to start</h3>
+<p>The driver tablets already run the RideAVL app and talk to the driver API. A USB HID reader on an OTG cable behaves as a keyboard and types the UID into whatever field has focus. The driver app adds a hidden, always-focused capture field and posts the UID.</p>
+<ul>
+<li>One cable and one reader per bus. No second device to power, network, mount or patch.</li>
+<li>Run context, driver identity and GPS all come free from the tablet.</li>
+<li>Connectivity: Pepwave MAX BR1 on every bus plus LTE in the tablet. Taps go straight to the server. The offline queue only covers dead spots and router reboots.</li>
+<li>The ESP32 + RC522 build becomes the <strong>rider-facing validator</strong> later. An ESP32-S2 or S3 has native USB and can act as a HID keyboard itself, beep, light green or red, and still just type the UID into the tablet. The tablet stays the only thing that talks to the server.</li>
+</ul>
+<p>A Pi only earns its place as a standalone station (section 6), never as bus-side middleware.</p>
+
+<h2><span class="n">3</span>Hardware and cost</h2>
+<div class="tbl"><table>
+<tr><th>Item</th><th>Qty</th><th>Unit cost</th><th>Notes</th></tr>
+<tr><td>USB 13.56 MHz HID reader, reads MIFARE / NTAG UID as keystrokes</td><td>1 per bus + 2 office</td><td>$10 to $20</td><td>Buy one model everywhere. Confirm hex UID output, or that it is configurable.</td></tr>
+<tr><td>USB-C OTG cable</td><td>1 per bus</td><td>$5</td><td>Match the tablet port.</td></tr>
+<tr><td>Blank PVC MIFARE Classic 1K or NTAG213 cards</td><td>200</td><td>$0.15 to $0.40</td><td>Printable if you want a logo. A Sharpie serial is fine to start.</td></tr>
+<tr><td>ESP32-S3 + RC522 rider-facing validator, buzzer and LED</td><td>optional, per bus</td><td>$8 to $15</td><td>Already working. The enclosure is the real cost.</td></tr>
+<tr><td>Pi Zero 2 W + reader + small display, balance-check station</td><td>optional</td><td>$50 to $60</td><td>Transit center lobby.</td></tr>
+</table></div>
+<p>A six-bus pilot with the office end comes in well under $300.</p>
+<div class="callout warn"><p><strong>Do not buy:</strong> card writers, encoders, cash-accepting kiosks (the bill validator alone is $150 to $300 plus a vandal-proof enclosure), or any reader tied to vendor software.</p></div>
+
+<h2><span class="n">4</span>Data model</h2>
+<p>Replace the two orphan tables with an append-only ledger. Balance is the sum of the ledger, with a cached copy on the customer for speed.</p>
+<pre><code>fare_tokens                   was fare_cards; renamed so QR and RFID share one table
+  id
+  kind             enum: rfid | qr | bank_card_ref
+  uid              string, unique, canonical form per kind:
+                     rfid           uppercase hex UID, e.g. 04A3B2C1D9E6F0
+                     qr             random 12-char base32 token, printed as the QR payload
+                     bank_card_ref  processor token (Stripe pm_...), never a PAN. Unused while paused.
+  serial           string, short printed number on the card or QR sheet, unique
+  customer_id      -> customers
+  status           enum: active | lost | blocked | retired
+  issued_at, issued_by_user_id
+  deleted_at (acts_as_paranoid), timestamps, paper_trail
+
+fare_transactions             append only, never updated or deleted
+  id
+  customer_id      -> customers
+  fare_token_id    -> fare_tokens, nullable (office adjustments have no token)
+  kind             enum: load | debit | refund | adjust | transfer_in | transfer_out
+  amount           decimal(8,2), + for load/refund/transfer_in, - for debit/transfer_out
+  balance_after    decimal(8,2)
+  provider_id
+  run_id                    nullable
+  trip_id                   nullable   (UDR)
+  fixed_route_boarding_id   nullable   (fixed route)
+  payment_method   enum: cash | check | card_online | none   (loads only)
+  reference        string   (check number, Stripe payment id, receipt number)
+  recorded_by_user_id / driver_id
+  client_uuid      string, unique   (idempotent tablet retries, same as boardings)
+  recorded_at, created_at
+
+customers  (add)
+  fare_balance              decimal(8,2), default 0, cached from ledger
+  fare_balance_floor        decimal(8,2), nullable, per-customer override
+  pass_expires_on           date, nullable   (monthly unlimited, no debit while valid)
+  default_rider_category_id -> rider_categories   (drives the fixed-route fare)
+
+providers  (add, or a fare_settings table)
+  card_fare_default         decimal(6,2)
+  card_negative_floor       decimal(6,2), e.g. -5.00
+  transfer_window_minutes   integer, e.g. 90</code></pre>
+<p>Add a <span class="tag">Card</span> row to the existing <code>fare_types</code> lookup so fixed-route reports separate card boardings from cash and pass.</p>
+
+<h2><span class="n">5</span>Tap flow</h2>
+<h3>Fixed route, the easy one</h3>
+<p>One tap is one boarding. The driver app is on the walk-on screen. An RFID reader types the UID, a QR is read by the tablet camera, and both land on the same endpoint.</p>
+<pre><code>POST /api/v1/runs/:id/token_taps
+{ uid, client_uuid, recorded_at, latitude, longitude, stop_id? }</code></pre>
+<ol>
+<li>Look up the token by uid. Unknown, lost or blocked: 404 or 422, tablet shows red, driver falls back to the normal cash and pass buttons.</li>
+<li>Resolve customer, then default rider category, then fare from the fixed-route lookup amounts already in <code>fare_types.fare_factor</code> and the route default fare added 2026-09-04.</li>
+<li>Transfer check, decided 2026-09-10: a paid tap by this rider inside the 90-minute window, on a different route, with no transfer already used on that fare, means fare 0 and the boarding is recorded as Free / Transfer. Chaining Red to Pink to Red pays on the way home.</li>
+<li>Pass check: a valid pass means fare 0.</li>
+<li>Write one FixedRouteBoarding (boarded_count 1, fare type Card, fare_amount) and one ledger debit in a transaction. Return the new balance so the tablet can flash it.</li>
+<li>Below the negative floor: 422 with the balance. Tablet shows red plus the balance, driver takes cash.</li>
+</ol>
+<p><strong>Offline, as a fallback only given the Pepwave and tablet LTE.</strong> At run start the tablet fetches uid, customer name, rider category, balance and pass status for all active tokens, a few hundred rows. Taps are accepted locally and queued with a client_uuid, same as boardings today. On sync the server recomputes. A tap that ends up under the floor is recorded anyway and the account is flagged for the office.</p>
+
+<h3>UDR / demand response, a little more complex</h3>
+<p>The trip already knows the customer and the fare, and has <code>fare_collected_time</code>. A tap at pickup is a <strong>confirmation and a debit</strong>, not a lookup.</p>
+<pre><code>POST /api/v1/trips/:id/token_tap
+{ uid, client_uuid, recorded_at }</code></pre>
+<ol>
+<li>Resolve token to customer.</li>
+<li>If it is the trip's customer: debit the trip fare, set fare_collected_time, set the trip fare to a payment fare. This reuses the logic already in <code>update_fare</code>.</li>
+<li>If the card belongs to someone else: 409 with both names. Tablet asks "Charge Elmer Street's card for Thalia Acosta's trip?" Yes debits that customer and records both ids. This covers caregivers paying for riders.</li>
+<li>Guests and attendants are a policy decision. Simplest rule: <strong>one tap covers the whole trip fare</strong> as RidePilot already computes it. Per-person taps can come later.</li>
+<li>Below floor: same as fixed route. Never strand anyone. Flag the account.</li>
+</ol>
+<p>Offline works the same way because the trip fare is already on the tablet.</p>
+
+<h2><span class="n">6</span>Recharge, cheapest first</h2>
+<ol>
+<li><strong>Front desk in RidePilot.</strong> A staff page: scan the card with the same USB reader on the PC, or type the printed serial. See customer and balance, enter amount, pick cash or check, print a receipt. One reader. This is the whole MVP.</li>
+<li><strong>Driver reload on the bus.</strong> Same ledger. Driver enters the amount and takes cash, reconciled against the run's cash total in the existing driver run reports. Common in rural systems, but it puts cash in drivers' hands. Your call.</li>
+<li><strong>Online.</strong> Stripe or Square payment links, no monthly fee. A scheduled job inside the network pulls completed payments and posts load transactions. <strong>Nothing inbound</strong>, which keeps to the house rule that internal apps never face the internet. The rider identifies the account with the printed card serial. Card-not-present fees are 2.9% + $0.30, so a $10 load costs $0.59 (5.9%) and a $20 load $0.88 (4.4%). Nudge riders toward $20 loads if it matters.</li>
+<li><strong>Balance-check station.</strong> Pi Zero 2 W, reader, small screen, in the lobby. Shows balance and the last five rides. Cheap, riders like it, no cash inside so no security problem.</li>
+<li><strong>Cash kiosk: skip it.</strong> The bill validator and a vandal-resistant enclosure cost more than the rest of this project combined, and the front desk already takes cash.</li>
+</ol>
+
+<h2><span class="n">7</span>Risks accepted</h2>
+<ul>
+<li><strong>UID cloning.</strong> A phone can clone a UID-only card. At a couple of dollars a ride, with a ledger that makes duplicate patterns visible, this is not worth engineering against. If it ever is, NTAG and MIFARE secure sectors work on the same cards and readers with a firmware change on the ESP32 validator.</li>
+<li><strong>Reader output drift.</strong> Decimal versus hex, with or without leading zeros. Solved by normalising to hex on the server and buying one reader model.</li>
+<li><strong>Negative balances.</strong> Bounded by the floor and visible on a report.</li>
+<li><strong>Tablet port wear.</strong> The OTG cable stays plugged in. Strain-relieve it.</li>
+</ul>
+
+<h2><span class="n">8</span>Build order</h2>
+<div class="tbl"><table class="phase">
+<tr><th>Phase</th><th>What</th><th>Proves</th></tr>
+<tr><td>0</td><td>Buy 2 USB HID 13.56 MHz readers, 50 cards, an OTG cable. Confirm the UID types correctly into a tablet field and a Windows browser field.</td><td>Hardware path</td></tr>
+<tr><td>1</td><td><strong>Done 2026-09-10.</strong> Migration for fare_tokens, fare_transactions, customer columns, Card fare type. Drop the two orphan tables. Staff pages: issue, load, balance, history, block and replace. Balance and daily cash reports.</td><td>Office can run it</td></tr>
+<tr><td>2</td><td><strong>Done 2026-09-10.</strong> Fixed-route tap endpoint plus tablet capture on the walk-on screen. <strong>Pilot two tokens on the same backend: RFID reader on one bus, a USB 2D barcode scanner for QR sheets on another.</strong> Offline queue as fallback. Watch which one riders and drivers reach for.</td><td>Bus side, token choice</td></tr>
+<tr><td>3</td><td><strong>Done 2026-09-10.</strong> UDR pickup tap, mismatch confirm, guest rule.</td><td>Demand response</td></tr>
+<tr><td>4</td><td>Stripe pull job for online loads (<strong>built 2026-09-10</strong>, needs a Stripe account and key). Lobby balance-check station. ESP32 rider-facing validator if wanted.</td><td>Nice to have</td></tr>
+</table></div>
+
+<h2><span class="n">9</span>Open questions</h2>
+<p>None of these block phases 0 and 1.</p>
+<ol>
+<li><s>Are the driver tablets on LTE, or Wi-Fi only?</s> Answered: Pepwave MAX BR1 on every bus, LTE in the tablets. Offline is a fallback.</li>
+<li>Stored value only, or also a monthly unlimited pass?</li>
+<li>Is driver-handled reload cash acceptable?</li>
+<li>Does one tap cover guests and attendants on a UDR trip?</li>
+<li><s>Which interface does the EH301 on hand have?</s> Moot: it is 125 kHz and the frequency decision retires it. Only revisit if a 13.56 MHz unit in the same enclosure is wanted for a desk.</li>
+</ol>
+<h2><span class="n">10</span>Tap to pay: explored and paused</h2>
+<p>"Tap to pay" here means the rider taps a bank card or phone wallet. Two ways to do it were looked at on 2026-09-10 and both are parked. The ledger in section 4 is built so either can be added later without touching the tables.</p>
+<h3>What was looked at</h3>
+<div class="tbl"><table>
+<tr><th>Option</th><th>How it works</th><th>Recurring cost</th><th>Hardware</th></tr>
+<tr><td>Stripe or Square Tap to Pay on Android</td><td>The driver tablet's own NFC becomes a card terminal. Driver starts a charge, rider taps. Needs internet at the moment of the tap.</td><td>2.7% + $0.15 per tap, no monthly fee</td><td>none</td></tr>
+<tr><td>Transit open loop, Littlepay-type processor plus bus validator</td><td>Rider taps a validator. The processor aggregates and applies fare capping and transfers.</td><td>about $0.25 per tap, roughly 7% of revenue at Far North Transit Group, four rural California agencies</td><td>validator per bus at several hundred dollars each, plus a merchant acquirer</td></tr>
+<tr><td>Mobile ticketing app, Token Transit and similar</td><td>Rider buys in the app, driver validates by looking at the phone.</td><td>a percentage of sales, quote needed</td><td>none</td></tr>
+</table></div>
+
+<h3>Why it is paused: the numbers at a $1.50 fare</h3>
+<p>Percentage-plus-fixed fees are designed for coffee, not for a fare we are trying to push below $1.50.</p>
+<div class="tbl"><table>
+<tr><th>Channel</th><th>Fee on one $1.50 fare</th><th>Share of fare</th><th>Net to agency</th></tr>
+<tr><td>Cash, or RFID / QR tap on closed loop</td><td>$0.00</td><td>0%</td><td>$1.50</td></tr>
+<tr><td>Stripe Tap to Pay on Android</td><td>$0.19</td><td>12.7%</td><td>$1.31</td></tr>
+<tr><td>Transit open loop, Far North figure</td><td>$0.25</td><td>16.7%</td><td>$1.25</td></tr>
+<tr><td>Same Stripe fee if the fare drops to $1.00</td><td>$0.18</td><td>17.7%</td><td>$0.82</td></tr>
+</table></div>
+<p>Scaled to 10,000 fares, which is $15,000 gross:</p>
+<div class="tbl"><table>
+<tr><th>Channel</th><th>Fees on 10,000 fares</th><th>Left over</th></tr>
+<tr><td>Closed loop RFID / QR, after about $300 one-time hardware</td><td>$0</td><td>$15,000</td></tr>
+<tr><td>Stripe Tap to Pay, per fare</td><td>$1,905</td><td>$13,095</td></tr>
+<tr><td>Transit open loop, per fare</td><td>$2,500</td><td>$12,500</td></tr>
+<tr><td>Stripe tap used only to <strong>reload</strong> $10 at a time</td><td>$630</td><td>$14,370</td></tr>
+<tr><td>Stripe tap used only to reload $20 at a time</td><td>$518</td><td>$14,482</td></tr>
+<tr><td>Online Stripe link, $10 loads at 2.9% + $0.30</td><td>$885</td><td>$14,115</td></tr>
+<tr><td>Online Stripe link, $20 loads</td><td>$660</td><td>$14,340</td></tr>
+</table></div>
+<p>Three things fall out of that table:</p>
+<ol>
+<li><strong>Per-fare card processing costs an eighth to a sixth of revenue.</strong> That is the same money a fare cut would give riders. It goes to the processor instead.</li>
+<li><strong>The fixed cents hurt more than the percentage.</strong> The $0.15 alone is 10% of a $1.50 fare. Charging a bank card once per $10 or $20 load instead of once per ride brings the fee down to 3 to 4%.</li>
+<li><strong>Closed loop is free per tap</strong> and the whole hardware bill is under $300. The trade is front-desk time taking cash and checks, which we already spend today.</li>
+</ol>
+
+<h3>The other reasons</h3>
+<ul>
+<li><strong>Riders.</strong> A rural, older, disabled and lower-income ridership carries fewer bank cards and smartphones. A token we issue at the desk works for everyone. A bank card does not.</li>
+<li><strong>Transit logic.</strong> Stripe and Square terminals know nothing about transfers, reduced fares or passes. All of that would still be built in RidePilot, so tap to pay saves no engineering. It only changes the token.</li>
+<li><strong>Flow.</strong> A merchant terminal makes the driver start a charge for an amount before the rider taps. That is slower at the door than a reader that just reads.</li>
+</ul>
+
+<h3>If it comes back</h3>
+<p>The cheap re-entry is Stripe Tap to Pay on the tablet <strong>as a reload channel</strong>: the driver taps a rider's bank card once to add $10 or $20 to their account, then the rider uses their RFID card or QR for each ride. It removes cash from the bus, costs one fee per load, and needs no validator. In the schema it is one <code>fare_transactions</code> load row with payment method card_online and the Stripe id in the reference field. The bank_card_ref token kind exists for the day a rider wants the bank card itself to be their token, at which point the per-tap fee argument gets re-run at whatever the fare is then.</p>
+<h2><span class="n">11</span>Phase 1 as built</h2>
+<p>Branch fixed-route-wp8, commit "Fare cards phase 1", 2026-09-10. Everything here is office-side. Nothing touches the tablet yet.</p>
+<h3>Deploy</h3>
+<pre><code>docker exec ridepilot_app_1 sh -c 'cd /var/www/ridepilot &amp;&amp; bin/rails db:migrate &amp;&amp; bin/rake ridepilot:add_v2_custom_reports'</code></pre>
+<p>The migration drops the old fare_cards and fare_card_data tables, six test rows, and the pre-commit hook comment was updated to match.</p>
+<h3>Code</h3>
+<ul>
+<li><code>app/services/fare_ledger.rb</code> is the only thing that changes a balance: load, debit, refund, adjust, transfer. Row lock on the customer, floor check on debits with an override for a tap that already happened offline, idempotent on client_uuid. Phase 2's tap endpoint calls debit.</li>
+<li>FareToken lookup resolves what a reader typed: separators stripped, upcased, then the other radix with the usual zero padding, so an office reader set to decimal still finds a card the bus reader reads in hex. Serial lookup accepts #55 or 55.</li>
+<li>QR tokens mint their own 12-character uid, no vowels, never starting with a digit. Printing the QR is phase 2.</li>
+<li>A posted ledger row is read-only. Corrections are further rows.</li>
+</ul>
+<h3>Pages</h3>
+<ul>
+<li><strong>Fare Cards</strong> in the top nav. The scan box holds focus so a USB HID reader goes straight to the rider. Today's loads by method, balances outstanding, every rider with a token or a balance.</li>
+<li><strong>Rider fare account</strong>, also a button on the rider record. Balance and pass, tokens with Lost, Block, Reactivate and Retire, an issue form that takes the UID from the reader plus the printed serial, a load form with $5, $10 and $20 buttons and cash or check, refund and adjustment behind a disclosure with a required reason, a paged ledger, and an optional printable receipt.</li>
+<li><strong>Fare Card Activity</strong> under Reports. Date range, grouped by day, payment method, type, posted by, or rider. Cash in, checks in, fares, refunds, adjustments, net, and the total riders hold on account.</li>
+</ul>
+<p><strong>Permissions.</strong> Editors at a scheduling provider can manage tokens and postings. Read-only roles see the pages without the forms.</p>
+<p><strong>Left for phase 2.</strong> Driver API tap endpoints, tablet capture field, offline snapshot, QR printing, an office UI for the pass product and the rider category. The columns for those last two already exist.</p>
+<h2><span class="n">12</span>Phase 2 as built</h2>
+<p>RidePilot branch fixed-route-wp8, commit "Fare cards phase 2 (server)". Tablet rideavl-v2 version 1.0.8, commit "Fare card taps on the fixed-route screen". The APK sits at <code>~/ridepilot-ops/rideavl-1.0.8-fare-cards.apk</code> and has not yet been copied to the pilot download slot. That copy is the deploy step.</p>
+<div class="callout"><p><strong>One decision changed from the plan.</strong> QR is read by a USB 2D barcode scanner, not the tablet camera. A $25 keyboard-wedge scanner types the QR's text exactly the way the RFID reader types a UID, so both tokens share one code path on the tablet, and nothing needs the camera, a Capacitor plugin or a permission prompt. Camera scanning can still come later if a bus wants it.</p></div>
+<h3>Deploy</h3>
+<pre><code>docker exec ridepilot_app_1 sh -c 'cd /var/www/ridepilot &amp;&amp; bundle install &amp;&amp; bin/rails db:migrate'
+# tablets: install rideavl-1.0.8-fare-cards.apk, or copy it to public/rideavl-pilot.apk and commit</code></pre>
+<p>The bundle install is for rqrcode. Gems live in the bundle_cache volume, so no image rebuild.</p>
+<h3>Server</h3>
+<ul>
+<li><strong>Tap endpoint.</strong> <code>POST /api/v1/runs/:id/token_taps</code> takes the uid, a client UUID, the time, the nearest stop and the GPS fix. It answers with the usual boardings payload plus the rider's name, category, fare type, fare, balance, and pass, transfer, double-tap and duplicate flags. Failures carry a code: unknown token with the normalised uid, token not usable, below floor with balance and fare, or tap failed.</li>
+<li><strong>Offline snapshot.</strong> <code>GET /api/v1/runs/:id/fare_tokens</code> lists every active token with rider name, category fare, balance, floor and pass status. The tablet caches it per run.</li>
+<li><strong>Rules</strong> live in one service, FareTap, exactly as section 5.1 says. Unknown, blocked or inactive is refused. A second tap on the same run inside two minutes is ignored. A valid pass records the boarding under the Pass fare type at no charge. An earlier tap inside the provider's transfer window records it under Free / Transfer at no charge. Otherwise the rider category's default fare times the Card factor is debited through the ledger. Below the floor is refused unless the tap already happened offline. A printed serial works in place of a uid. Phase 3's trip tap reuses the same resolver.</li>
+<li><strong>Undo refunds.</strong> Undoing a tapped walk-on from the tablet puts the fare back, idempotently.</li>
+<li>Boardings gained customer and token columns, so reports can say who rode. The walk-on JSON carries the rider's name and a tapped flag.</li>
+<li><strong>Office.</strong> Rider category, pass expiry and a per-rider floor are editable on the fare account page. Each QR token has a card-sized print sheet.</li>
+</ul>
+<h3>Tablet, rideavl-v2 1.0.8</h3>
+<ul>
+<li><strong>Keyboard wedge.</strong> A document-level key listener treats a burst of keys under 80 ms apart, at least four long and ending in Enter, as a scan. Keys typed into a real input are ignored, and the soft keyboard never appears because nothing holds focus.</li>
+<li><strong>Tap flow.</strong> The scan posts to the tap endpoint, or queues in IndexedDB and replays flagged offline. A green card shows name, category, fare and balance for four seconds, with pass, transfer and already-tapped variants. A red card shows unknown, refused, or balance too low with "take cash" for seven seconds. While offline the cached snapshot greets the rider by name and estimates the balance.</li>
+<li><strong>Fallback.</strong> A toolbar card button lets the driver type the printed number when the reader is down. Tapped walk-ons show the rider's name in Recent.</li>
+</ul>
+<h3>Hardware to order for the pilot</h3>
+<div class="tbl"><table>
+<tr><th>Where</th><th>Reader</th><th>Tokens</th></tr>
+<tr><td>RFID pilot bus</td><td>USB 13.56 MHz HID reader, hex output, Enter suffix</td><td>MIFARE Classic 1K or NTAG213 blanks</td></tr>
+<tr><td>QR pilot bus</td><td>USB 2D barcode scanner in HID keyboard mode, Enter suffix</td><td>QR sheets printed from the account page, laminated</td></tr>
+<tr><td>Office</td><td>One of each, same models</td><td></td></tr>
+</table></div>
+<p>Both readers plug into the tablet with a USB-C OTG cable. Set the RFID reader to output the UID in hex. The server copes with decimal too, but hex is the canonical form.</p>
+<p><strong>Specs.</strong> 45 fare examples across the ledger, tokens, tap service, driver API, office pages and the report, all green. The tablet has no automated tests for this. The pilot bus is the test.</p>
+<p><strong>Left for phase 3.</strong> The UDR pickup tap with mismatch confirmation and the guest rule, and the online reload job.</p>
+<h2><span class="n">13</span>Phase 3 as built</h2>
+<p>RidePilot branch fixed-route-wp8, commit "Fare cards phase 3 (server)". Tablet rideavl-v2 version 1.0.9 at <code>~/ridepilot-ops/rideavl-1.0.9-fare-cards.apk</code>, superseding 1.0.8 and still not copied to the pilot download slot.</p>
+<h3>Deploy</h3>
+<pre><code>docker exec ridepilot_app_1 sh -c 'cd /var/www/ridepilot &amp;&amp; bundle install &amp;&amp; bin/rails db:migrate'</code></pre>
+<p>Then set the demand-response card fare on the provider page under Fare related settings. Three fields are new there: the card fare per demand-response trip, the lowest balance allowed, and the transfer window. Until the card fare is set, a tap at pickup uses the amount on the trip, and failing that the rider's category fare.</p>
+<h3>Demand-response pickup tap</h3>
+<ul>
+<li><strong>Endpoint.</strong> <code>POST /api/v1/trips/:id/token_tap</code> with the uid, a client UUID, and optionally the amount the driver typed and a mismatch confirmation. The trip must be on one of the driver's runs. Amount precedence is what the driver typed, then the amount on the trip, then the provider's card fare, then the rider's category fare.</li>
+<li><strong>Someone else's card</strong> answers 409 with both names. The tablet asks "Charge X's card for Y's trip?" and resends confirmed. The ledger row notes who it paid for.</li>
+<li><strong>One tap covers the whole trip</strong>, guests and attendants included. A valid pass is free but still marks the fare collected. Free and donation trips refuse a tap, as does an already collected one.</li>
+<li><strong>Undo refunds.</strong> Deleting the tap, or undoing the pickup itself on the tablet, refunds and clears the collected mark, so the ledger never disagrees with the trip.</li>
+<li><strong>Pickup screen.</strong> The fare box prefills, a badge says "has a card" with the balance when a tap is expected, and afterwards the trip shows "paid by card" with an undo. Card payments at pickup are online only, like every other manifest action. Offline the tablet says take cash.</li>
+</ul>
+<h3>Online reloads</h3>
+<ul>
+<li>A rake task, <code>fare_cards:sync_online_reloads</code>, pulls paid Stripe Checkout Sessions from the last seven days and posts one online load per session, idempotent on the session id. Nothing inbound. It runs from cron inside the network.</li>
+<li>The rider is matched by the card number they type into the Payment Link's custom field, which is the printed serial. A number nobody has is listed as unmatched in the job output for the office to load by hand from the receipt email.</li>
+<li><strong>Not yet configured.</strong> There is no Stripe account or key. To turn it on: create the account and a Payment Link with a required text field labelled "Fare card number", put the secret key in the app environment, add a half-hourly cron line next to the nightly scheduler, and print the link's QR on the card sheet and receipt. Fee reminder from section 10: nudge riders to $20 loads.</li>
+</ul>
+<p><strong>Specs.</strong> 61 fare examples across the ledger, tokens, both tap flows, the driver API, the office pages, the report and the Stripe sync with a stubbed client, all green.</p>
+<div class="callout"><p><strong>Everything in the plan is now built except hardware.</strong> What remains is the pilot itself: order the readers and cards from section 12, issue cards at the desk, install 1.0.9 on the two pilot buses, and watch the Fare Card Activity report for a month.</p></div>
+<h2><span class="n">14</span>Open questions for the transit team</h2>
+<p>Checked the published fare pages at gcrpc.org against production on 2026-09-10. Fixed route matches exactly. The rest needs decisions before the pilot buses go live. Sent to the transit team by email the same day.</p>
+<div class="tbl"><table>
+<tr><th>#</th><th>Question</th><th>Where it stands</th><th>Needs</th></tr>
+<tr><td>1</td><td>Do fixed-route fares match the website?</td><td>Yes. Youth 0-5 free with a paying adult, Youth 5-17 $0.75, Adult $1.00, Senior 60+ $0.50, Disabled $0.50. A tap charges exactly these.</td><td>nothing</td></tr>
+<tr><td>2</td><td>Transfer policy?</td><td><strong>Decided 2026-09-10: 90 minutes, different route only, one transfer per paid fare.</strong> A paid tap on Green then a tap on Pink inside 90 minutes is free. Tapping Green again on the way home pays. Set in production. Still to publish on the fare page.</td><td>done</td></tr>
+<tr><td>3</td><td>Paratransit fare?</td><td><strong>Answered 2026-09-10: $1.50 flat</strong>, from the internal "Fare Structure as of September 1st, 2026" sheet. Rule: rider is ADA eligible and both ends of the trip are in the urban service area. Built and set in production, section 15.</td><td>done</td></tr>
+<tr><td>4</td><td>Demand-response and commuter fares with a card?</td><td><strong>Built 2026-09-10, section 15.</strong> A per-provider schedule of mileage band by rider category, seeded from the published rural table, prices a trip from its driving distance. Rider plus one adult fare per guest, attendants free. Editable on the provider page.</td><td>done</td></tr>
+<tr><td>5</td><td>Senior is 60+ on fixed route and 65+ on the commuter. Which?</td><td><strong>Answered by the 2026-09-01 fare sheet: 60+ everywhere.</strong> The commuter web page's 65+ is the outlier. One category on the card is right.</td><td>done</td></tr>
+<tr><td>6</td><td>Passes "available soon" on the website?</td><td><strong>Built and priced 2026-09-10, section 16.</strong> The prepay table is adopted: 10-ride 10% off, 20-ride 20% off, monthly $30, set in production. <strong>Reduced-fare monthly $15</strong> for senior, disabled and youth added the same day. Monthly is unlimited rides through month end.</td><td>done</td></tr>
+<tr><td>7</td><td>Which services does the card cover?</td><td>Victoria Transit fixed route and demand response in Victoria and DeWitt counties. Other counties run their own schedules. Gonzales is free.</td><td>nothing</td></tr>
+<tr><td>8</td><td>How do riders reload?</td><td>Front desk with cash or check, live now. Online by card is built but off: needs a Stripe account and carries a fee.</td><td>Stripe decision, later</td></tr>
+<tr><td>9</td><td>What happens when a card is low?</td><td><strong>Decided 2026-09-10: floor is -$5.00</strong>, set in production. A rider can owe up to $5.00 and settles at the next reload. Below that the tap is refused and the driver takes cash. Negative balances show in red on the Fare Cards page.</td><td>done</td></tr>
+<tr><td>10</td><td>What should the website say?</td><td>After the decisions: the card, where to get and reload it, the transfer rule, pass prices. Drop "available soon".</td><td>after decisions</td></tr>
+</table></div>
+<p><strong>All ten answered.</strong> Setup is complete. What remains is ordering the pilot readers and cards from section 12 and the fare page text under question 10. The internal fare sheet also says Gonzales County fares are reinstated 2026-10-01, which is another provider's service.</p>
+<h2><span class="n">15</span>Distance-band fare schedule as built</h2>
+<p>Answers question 4 of section 14. Commit "Fare cards: distance-band fare schedule" on fixed-route-wp8. Seeded into production the same day from the published Victoria and DeWitt rural table, so the pickup screen's fare box and a card tap at pickup now price demand-response trips by distance.</p>
+<ul>
+<li><strong>Model.</strong> One row per cell of the published table: provider, service, band upper edge in miles, rider category, fare. A blank edge means anything longer. A trip falls in the first band, in edge order, that its OSRM driving distance does not exceed. The service is demand response today, with commuter allowed for later.</li>
+<li><strong>Pricing.</strong> The rider pays their category's fare for the band. Each guest pays the adult fare for the same band. Attendants ride free. When the provider has no table or the trip has no distance, the flat demand-response fare still applies.</li>
+<li><strong>Where it is used.</strong> A card tap at pickup, after a driver-typed amount and an amount already on the trip and ahead of the flat default. The tablet's fare box prefills the scheduled amount for cash riders too.</li>
+<li><strong>Office.</strong> Providers, General, "Demand-response fare schedule": a grid with one row per band and one column per rider category, add or remove bands, blank cells are free. Saving replaces the table and is audited. A rake task loads the published table.</li>
+</ul>
+<div class="tbl"><table>
+<tr><th>Up to</th><th>Adult</th><th>Senior 60+</th><th>Disabled</th><th>Youth 5-17</th><th>Youth 0-5</th></tr>
+<tr><td>5 mi</td><td>$1.00</td><td>$0.50</td><td>$0.50</td><td>$0.75</td><td>free</td></tr>
+<tr><td>10 mi</td><td>$2.00</td><td>$1.00</td><td>$1.00</td><td>$1.75</td><td>free</td></tr>
+<tr><td>15 mi</td><td>$3.00</td><td>$1.50</td><td>$1.50</td><td>$2.50</td><td>free</td></tr>
+<tr><td>20 mi</td><td>$4.00</td><td>$2.00</td><td>$2.00</td><td>$2.50</td><td>free</td></tr>
+<tr><td>over</td><td>$5.00</td><td>$2.50</td><td>$2.50</td><td>$3.00</td><td>free</td></tr>
+</table></div>
+<h3>Paratransit</h3><p>Added the same day, answering question 3. An ADA-eligible rider whose trip starts and ends inside the urban service area pays a flat fare whatever the distance. Each guest pays the same, as ADA companions do. Attendants ride free. Two provider settings on the fare page: the paratransit fare, $1.50 in production, and the urban cities, "Victoria", comma separated. Both trip addresses must have one of those as their city, and the data is clean: 771 of the last 90 days' pickups say Victoria. There is no urban polygon in the system, so city names are the rule. Paratransit is checked before the distance table, so the tap at pickup and the tablet's fare box both get $1.50.</p><div class="callout warn"><p><strong>Office follow-up.</strong> Only two active riders carry the ADA eligible flag today. Paratransit riders must be flagged on their customer record or they will be charged the distance fare.</p></div>
+<p><strong>Specs.</strong> Pricing, band edges, guests, replace, tap precedence, the grid save and paratransit. 71 fare examples in all, green.</p>
+<h2><span class="n">16</span>Pass sales as built</h2>
+<p>Answers the mechanics of question 6. The prices are still the team's call. Live in production with both prices at their defaults, so no discount and no monthly button until a price is set.</p>
+<ul>
+<li><strong>10-ride and 20-ride</strong> are stored value. The card is credited rides times the rider's category fare, so a senior's 10-ride is $5.00 of value and the tap takes $0.50 a ride. Each pass has its own discount. The card still gets the full value and the office takes less cash. The ledger records the cash actually taken separately, and the activity report's cash and check totals come from that.</li>
+<li><strong>Monthly</strong> is the expiry date on the customer. Selling one loads the pass price and debits it again in one transaction, so the money is on the ledger, the balance is unchanged, and the report shows pass revenue in its own column. The form offers this month or next, defaulting to next from the 24th, and expiry is the last day of that month. Both taps already honour it.</li>
+<li><strong>Office.</strong> A "Sell a pass" panel on the rider's fare account page with the three buttons priced for that rider, paid by cash or check, with an optional receipt that shows the pass and what was paid. The two prices live on the provider fare page.</li>
+</ul>
+<h3>Prices adopted 2026-09-10</h3>
+<p>Philz's prepay table, set on Victoria Transit: 10-ride 10% off, 20-ride 20% off, monthly $30.00. What each rider pays at the desk:</p>
+<div class="tbl"><table>
+<tr><th>Category (fare)</th><th>10-ride value / price</th><th>20-ride value / price</th><th>Monthly (unlimited)</th></tr>
+<tr><td>Adult ($1.00)</td><td>$10.00 / <strong>$9.00</strong></td><td>$20.00 / <strong>$16.00</strong></td><td>$30.00</td></tr>
+<tr><td>Youth 5-17 ($0.75)</td><td>$7.50 / <strong>$6.75</strong></td><td>$15.00 / <strong>$12.00</strong></td><td><strong>$15.00</strong></td></tr>
+<tr><td>Senior 60+, Disabled ($0.50)</td><td>$5.00 / <strong>$4.50</strong></td><td>$10.00 / <strong>$8.00</strong></td><td><strong>$15.00</strong></td></tr>
+</table></div>
+<p>The monthly is unlimited rides through the end of the month on both fixed route and demand response. The reduced price applies to any category whose one-trip fare is below Adult's, so it follows the fare sheet with no extra flag. Youth 0-5 ride free and get no monthly button. Break-even is 30 rides for everyone.</p>
+<p><strong>Specs.</strong> 80 fare examples in all, green.</p>
+<h2><span class="n">17</span>Policy as configured</h2>
+<p>One table of everything the transit team decided, where it is set, and where it is described. All of it is live on Victoria Transit in production as of 2026-09-10. Sources: the gcrpc.org fare pages, the internal "Fare Structure as of September 1st, 2026" sheet, Philz's prepay proposal, and the decisions in this session.</p>
+<div class="tbl"><table>
+<tr><th>Policy</th><th>Chosen</th><th>Where it is set</th><th>Section</th></tr>
+<tr><td><strong>Fixed-route fares</strong></td><td>Under 5 free with a paying adult, Youth 5-17 $0.75, Adult 18-59 $1.00, Senior 60+ $0.50, Disabled $0.50</td><td>Lookup Tables, Rider categories</td><td>5.1, 14 q1</td></tr>
+<tr><td><strong>Senior threshold</strong></td><td>60+ on every service. The commuter page's 65+ is superseded.</td><td>rider category name</td><td>14 q5</td></tr>
+<tr><td><strong>Rural and demand-response fares</strong></td><td>Distance bands by category from the published Victoria and DeWitt table: up to 5 mi $1.00 / $0.75 / $0.50, up to 10 mi $2.00 / $1.75 / $1.00, up to 15 mi $3.00 / $2.50 / $1.50, up to 20 mi $4.00 / $2.50 / $2.00, over $5.00 / $3.00 / $2.50 for Adult / Youth / Senior and Disabled. Under 5 free.</td><td>Providers, General, Demand-response fare schedule</td><td>15</td></tr>
+<tr><td><strong>Guests and attendants</strong></td><td>Each guest pays the Adult fare for the band, or the flat paratransit fare. Attendants ride free.</td><td>pricing rule</td><td>15</td></tr>
+<tr><td><strong>ADA paratransit</strong></td><td>$1.50 flat when the rider is ADA eligible and both ends of the trip are in Victoria</td><td>Provider fare settings: paratransit fare and urban cities; the rider's ADA flag</td><td>15</td></tr>
+<tr><td><strong>Card fare at pickup, fallback order</strong></td><td>Driver-typed amount, then the amount on the trip, then the paratransit rule, then the distance table, then the flat default, then the category fare</td><td>code</td><td>13, 15</td></tr>
+<tr><td><strong>10-ride pass</strong></td><td>10 rides of value at the rider's fare, 10% off: Adult $9.00, Youth $6.75, Senior and Disabled $4.50</td><td>Provider: 10-ride discount</td><td>16</td></tr>
+<tr><td><strong>20-ride pass</strong></td><td>20 rides of value, 20% off: Adult $16.00, Youth $12.00, Senior and Disabled $8.00</td><td>Provider: 20-ride discount</td><td>16</td></tr>
+<tr><td><strong>Monthly pass</strong></td><td>Unlimited rides through month end on fixed route and demand response. $30.00 adult, $15.00 senior, disabled and youth.</td><td>Provider: monthly and reduced monthly price</td><td>16</td></tr>
+<tr><td><strong>Transfers</strong></td><td>Free within 90 minutes of a paid tap, onto a different route only, one transfer per paid fare</td><td>Provider: transfer window and different-route switch</td><td>5.1, 14 q2</td></tr>
+<tr><td><strong>Double tap</strong></td><td>A second tap on the same run within 2 minutes is ignored</td><td>code</td><td>5.1</td></tr>
+<tr><td><strong>Low balance</strong></td><td>May go as low as -$5.00. Below that the tap is refused and cash is taken. Settled at the next reload.</td><td>Provider: lowest balance, with a per-rider override</td><td>14 q9</td></tr>
+<tr><td><strong>Reload channels</strong></td><td>Front desk cash or check with receipt, live. Online by card via Stripe, built but not configured.</td><td>office pages; Stripe key</td><td>6, 13</td></tr>
+<tr><td><strong>Tokens</strong></td><td>13.56 MHz RFID card or printed QR sheet, both read by USB keyboard-wedge readers on the tablet. A printed serial works when the reader is down.</td><td>Fare account page</td><td>2, 12</td></tr>
+<tr><td><strong>Services covered</strong></td><td>Victoria Transit fixed route, and demand response in Victoria and DeWitt counties</td><td>one active provider</td><td>14 q7</td></tr>
+<tr><td><strong>Tap to pay with a bank card</strong></td><td>Paused</td><td>none</td><td>10</td></tr>
+</table></div>
+<div class="callout"><p><strong>Still to do, none of it software.</strong> Order the pilot readers and cards from section 12, install rideavl 1.0.9 on the two pilot buses, flag ADA-eligible riders on their customer records (two are flagged today), and publish the fare page text from section 18 on gcrpc.org. The shopping list is section 19.</p></div>
+<h2><span class="n">18</span>Fare page draft for gcrpc.org</h2>
+<p>Answers question 10. Also kept on its own at <code>docs/fare-page-draft.md</code> for whoever maintains the website, which is a Next.js app rather than WordPress. It replaces the current Victoria Transit fare schedule page and its "available soon" pass note. Three deliberate choices: the office address is a placeholder, the $5.00 credit is not advertised so it stays an office courtesy, and transfers are described for the card only, since cash riders cannot prove a paid trip without paper transfers.</p>
+<div class="callout" style="padding:18px 22px">
+<h3 style="margin-top:0">Fares effective September 1, 2026</h3>
+<p><strong>Victoria Transit fixed route</strong></p>
+<div class="tbl"><table>
+<tr><th>Rider</th><th>One trip</th></tr>
+<tr><td>Under 5 (with a paying adult)</td><td>Free</td></tr>
+<tr><td>Youth 5 to 17</td><td>$0.75</td></tr>
+<tr><td>Adult 18 to 59</td><td>$1.00</td></tr>
+<tr><td>Senior 60 and over</td><td>$0.50</td></tr>
+<tr><td>Riders with a disability</td><td>$0.50</td></tr>
+</table></div>
+<p>Exact change, please. Drivers do not carry change.</p>
+<p><strong>ADA paratransit in Victoria.</strong> $1.50 per trip for ADA-eligible riders. One personal care attendant rides free. Companions pay the same fare.</p>
+<p><strong>Golden Crescent Transit rural service, Victoria and DeWitt counties.</strong> Fares are by trip distance and rider category.</p>
+<div class="tbl"><table>
+<tr><th>Trip distance</th><th>Youth 5 to 17</th><th>Adult 18 to 59</th><th>Senior 60+ / Disability</th></tr>
+<tr><td>Up to 5 miles</td><td>$0.75</td><td>$1.00</td><td>$0.50</td></tr>
+<tr><td>6 to 10 miles</td><td>$1.75</td><td>$2.00</td><td>$1.00</td></tr>
+<tr><td>11 to 15 miles</td><td>$2.50</td><td>$3.00</td><td>$1.50</td></tr>
+<tr><td>16 to 20 miles</td><td>$2.50</td><td>$4.00</td><td>$2.00</td></tr>
+<tr><td>Over 20 miles</td><td>$3.00</td><td>$5.00</td><td>$2.50</td></tr>
+</table></div>
+<p>Children under 5 ride free with a paying adult. Guests pay the adult fare for the same distance. One personal care attendant rides free with a rider with a disability.</p>
+<p>Fares for Calhoun, Goliad, Gonzales, Jackson, Lavaca and Matagorda counties are set by those providers and listed on the Golden Crescent Transit rural fare page. Gonzales County fares resume October 1, 2026.</p>
+<h3>The Victoria Transit fare card</h3>
+<p>No more exact change. Load money on a card at the transit office, then tap the card on the reader as you board. The fare comes off your balance and the driver's screen shows what is left.</p>
+<p><strong>Getting a card.</strong> Bring a photo ID to the transit office at [ADDRESS]. Tell us your rider category (senior, disability, youth) and we will set it on the card so you always pay the right fare. Cards are free. Lost your card? Tell us and we will block it and give you a new one. Your balance moves to the new card.</p>
+<p><strong>Loading money.</strong> At the transit office with cash or check. Any amount. You get a printed receipt with your balance.</p>
+<p><strong>Rides and passes.</strong> Buy ten or twenty rides at once and save, or ride all you want for a month.</p>
+<div class="tbl"><table>
+<tr><th></th><th>Adult</th><th>Youth 5 to 17</th><th>Senior 60+ / Disability</th></tr>
+<tr><td>Single ride</td><td>$1.00</td><td>$0.75</td><td>$0.50</td></tr>
+<tr><td>10 rides, 10% off</td><td>$9.00</td><td>$6.75</td><td>$4.50</td></tr>
+<tr><td>20 rides, 20% off</td><td>$16.00</td><td>$12.00</td><td>$8.00</td></tr>
+<tr><td>Monthly pass, unlimited rides</td><td>$30.00</td><td>$15.00</td><td>$15.00</td></tr>
+</table></div>
+<p>The monthly pass is good through the last day of the month on every Victoria Transit bus and on rural demand-response trips in Victoria and DeWitt counties.</p>
+<p><strong>Transfers.</strong> Changing buses to finish one trip is free. Tap your card on the second bus within 90 minutes of paying on the first. The transfer is good for a different route only, once per paid fare. Riding the same route back is a new fare.</p>
+<p><strong>Using the card on demand-response and paratransit trips.</strong> Tap the card when the driver picks you up. The trip fare comes off your balance.</p>
+<p><strong>Checking your balance.</strong> The driver's screen shows it every time you tap, and it is on every receipt. Or call the office.</p>
+<p><strong>Running low.</strong> If your balance cannot cover a fare, the driver will tell you. You can pay cash for that ride and reload at the office.</p>
+<p>Questions: 361-578-8775, Monday to Friday, 8:00 a.m. to 5:00 p.m.</p>
+</div>
+<h2><span class="n">19</span>Pilot shopping list</h2>
+<p>Two pilot buses plus the office. Prices as seen 2026-09-11, rounded. Total under $250.</p>
+<div class="tbl"><table>
+<tr><th>Item</th><th>Qty</th><th>Each</th><th>Notes</th></tr>
+<tr><td>USB 13.56 MHz RFID reader, keyboard emulation</td><td>2</td><td>$20 to $35</td><td>One for the RFID bus, one for the office.</td></tr>
+<tr><td>USB 2D barcode scanner, handheld, wired</td><td>2</td><td>$30 to $50</td><td>One for the QR bus, one for the office.</td></tr>
+<tr><td>USB-C OTG adapter, USB-A female</td><td>3</td><td>$5 to $8</td><td>One per bus and a spare. Confirm the tablets are USB-C first.</td></tr>
+<tr><td>MIFARE-compatible blank white PVC cards</td><td>100</td><td>$0.20 to $0.40</td><td>Generic Fudan-chip cards, not genuine NXP.</td></tr>
+<tr><td>Laminating pouches, card size</td><td>1 box</td><td>$10</td><td>For the printed QR sheets.</td></tr>
+</table></div>
+<ul>
+<li><strong>RFID reader.</strong> Sold as keyboard emulation or HID, with no driver or app. Candidates are the Fongwah 13.56 MHz keyboard emulator, the YARONGTECH 13.56 MHz reader, and the TagTix IC06 with configurable output. Buy one first and check on a tablet that it reads MIFARE Classic and NTAG, can be set to plain hex with an Enter suffix and no byte reversal, and types the same UID as the office reader.</li>
+<li><strong>Barcode scanner.</strong> Any wired 2D scanner in keyboard-wedge mode, Tera, Inateck or NADAMOO class, with an Enter suffix after each scan. Handheld for the pilot. A hands-free presentation scanner by the door is the same price class if QR wins.</li>
+<li><strong>Cards.</strong> UID-only reading, so generic MIFARE-compatible cards at $20 to $40 per 100 read the same as genuine NXP at $150 per 100. Plain white, serial in marker, print later if the card stays.</li>
+<li><strong>Skip.</strong> Card writers or encoders, since the card carries only its factory UID. NTAG stickers or fobs for the QR bus, since the QR is a printed, laminated sheet.</li>
+<li><strong>First day with the parts.</strong> OTG adapter and RFID reader into the pilot bus tablet, open a fixed-route run, tap a card. Issue the first cards at the desk with the office reader, load a few dollars, try a tap and a transfer. Then order more cards.</li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+
