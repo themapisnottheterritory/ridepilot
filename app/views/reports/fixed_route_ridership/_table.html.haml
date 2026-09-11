@@ -1,0 +1,50 @@
+- if @report_data.blank?
+  %h4 No record found
+- else
+  - group_label = { 'day' => 'Day', 'stop' => 'Stop', 'rider_category' => 'Rider category', 'fare_type' => 'Fare type', 'run' => 'Run' }[@group_by]
+  %p
+    %b Boarded:
+    = @grand[:boarded]
+    &nbsp;&nbsp;
+    %b Alighted:
+    = @grand[:alighted]
+    &nbsp;&nbsp;
+    %b Walk-ons logged:
+    = @grand[:walk_ons]
+    &nbsp;&nbsp;
+    %b Days:
+    = @grand[:days]
+    - if @grand[:fares] > 0
+      &nbsp;&nbsp;
+      %b Fares:
+      = number_to_currency(@grand[:fares])
+  - @report_data.each do |route_name, groups|
+    %h3.vehicle-heading
+      %u= "Route: #{route_name}"
+    %table.table.table-condensed{style: 'margin-bottom: 14px;'}
+      %thead
+        %tr
+          %th= group_label
+          %th{style: 'text-align: right;'} Boarded
+          %th{style: 'text-align: right;'} Alighted
+          %th{style: 'text-align: right;'} Walk-ons
+          %th{style: 'text-align: right;'} Fares
+      %tbody
+        - groups.each do |g|
+          %tr
+            %td= g[:label]
+            %td{style: 'text-align: right;'}= g[:boarded]
+            %td{style: 'text-align: right;'}= g[:alighted]
+            %td{style: 'text-align: right;'}= g[:walk_ons]
+            %td{style: 'text-align: right;'}= g[:fares] > 0 ? number_to_currency(g[:fares]) : ''
+        %tr
+          %td
+            %b Route total
+          %td{style: 'text-align: right;'}
+            %b= groups.sum { |g| g[:boarded] }
+          %td{style: 'text-align: right;'}
+            %b= groups.sum { |g| g[:alighted] }
+          %td{style: 'text-align: right;'}
+            %b= groups.sum { |g| g[:walk_ons] }
+          %td{style: 'text-align: right;'}
+            %b= (t = groups.sum { |g| g[:fares] }) > 0 ? number_to_currency(t) : ''

@@ -1,18 +1,32 @@
 # NTD Report
 # Modify an existing blank template
+#
+# One workbook per service mode (NTD reports demand response and fixed route
+# as separate modes):
+#   demand_response — the original path: runs + trips + run_distances.
+#   fixed_route     — runs + walk-on boardings: miles from the odometer,
+#                     hours from the clock, unlinked passenger trips from
+#                     boarded counts, passenger miles left blank (decision D4
+#                     in ops/fixed-route-phase1-plan.md).
 
 class NtdReport
 
   TEMPLATE_PATH = "#{Rails.root}/public/ntd_template.xlsx"
-  
-  attr_reader :workbook
+  MODES = Run::SERVICE_MODES
 
-  def initialize(provider, year, month)
+  attr_reader :workbook, :mode
+
+  def initialize(provider, year, month, mode: 'demand_response')
     @provider = provider
     @year = year
     @month = month
+    @mode = MODES.include?(mode.to_s) ? mode.to_s : 'demand_response'
     @start_date = Date.new(year, 1, 1)
     @end_date = Date.new(year, month, 1).at_end_of_month + 1.day
+  end
+
+  def fixed_route?
+    @mode == 'fixed_route'
   end
 
   def export!
@@ -23,25 +37,40 @@ class NtdReport
 
     process_periods_of_service
     process_year_month_headers
-    process_operations
-    process_miles_and_hours
-    
+    if fixed_route?
+      process_fixed_route_operations
+      process_fixed_route_miles_and_hours
+    else
+      process_operations
+      process_miles_and_hours
+    end
+
     @workbook.calc_pr.full_calc_on_load = true
     @workbook
   end
 
   def get_base_data
-    @runs = Run.complete.for_provider(@provider.try(:id)).for_date_range(@start_date, @end_date)
+    @runs = Run.complete.for_provider(@provider.try(:id)).for_date_range(@start_date, @end_date).where(service_mode: @mode)
     @weekday_runs = @runs.where("extract(dow from date) in (?)", (1..5).to_a)
     @sat_runs = @runs.where("extract(dow from date) = ?", 6)
     @sun_runs = @runs.where("extract(dow from date) = ?", 0)
 
-    @trips = Trip.for_provider(@provider.try(:id)).completed.joins(:run, :funding_source)
-      .where("runs.complete = ?", true).for_date_range(@start_date, @end_date)
-      .where(funding_sources: {ntd_reportable: true})
-    @weekday_trips = @trips.where("extract(dow from pickup_time) in (?)", (1..5).to_a)
-    @sat_trips = @trips.where("extract(dow from pickup_time) = ?", 6)
-    @sun_trips = @trips.where("extract(dow from pickup_time) = ?", 0)
+    if fixed_route?
+      @boardings = FixedRouteBoarding.joins(:run).where(provider_id: @provider.try(:id))
+        .where(runs: { complete: true, service_mode: 'fixed_route' })
+        .where("runs.date >= ? and runs.date < ?", @start_date, @end_date)
+      @weekday_boardings = @boardings.where("extract(dow from runs.date) in (?)", (1..5).to_a)
+      @sat_boardings = @boardings.where("extract(dow from runs.date) = ?", 6)
+      @sun_boardings = @boardings.where("extract(dow from runs.date) = ?", 0)
+    else
+      @trips = Trip.for_provider(@provider.try(:id)).completed.joins(:run, :funding_source)
+        .where("runs.complete = ?", true).where(runs: { service_mode: 'demand_response' })
+        .for_date_range(@start_date, @end_date)
+        .where(funding_sources: {ntd_reportable: true})
+      @weekday_trips = @trips.where("extract(dow from pickup_time) in (?)", (1..5).to_a)
+      @sat_trips = @trips.where("extract(dow from pickup_time) = ?", 6)
+      @sun_trips = @trips.where("extract(dow from pickup_time) = ?", 0)
+    end
   end
 
   def process_periods_of_service
@@ -61,14 +90,15 @@ class NtdReport
   end
 
   def process_year_month_headers
-    # update row 4 with reporting year and month names
+    # year
     @worksheet[4][3].change_contents @year
-
+    # month
     (1..12).each do |m|
       @worksheet[4][m + 4].change_contents Date.new(@year, m, 1)
     end
-    
   end
+
+  # ---- demand response (unchanged) -------------------------------------------
 
   def process_operations
     @num_max_operated_vehicles = @trips.group("extract(month from runs.date)").count("distinct(runs.vehicle_id)")
@@ -81,6 +111,44 @@ class NtdReport
     @days_operated_sat = count_monthly_days_operated @sat_trips
     @days_operated_sun = count_monthly_days_operated @sun_trips
 
+    write_operations
+  end
+
+  def process_miles_and_hours
+    @weekday_stats = monthly_miles_hours @weekday_trips
+    @sat_stats = monthly_miles_hours @sat_trips
+    @sun_stats = monthly_miles_hours @sun_trips
+
+    write_miles_and_hours
+  end
+
+  # ---- fixed route -----------------------------------------------------------
+
+  def process_fixed_route_operations
+    @num_max_operated_vehicles = @runs.group("extract(month from runs.date)").count("distinct(runs.vehicle_id)")
+
+    @num_unlinked_passenger_weekday_trips = sum_monthly_boardings @weekday_boardings
+    @num_unlinked_passenger_sat_trips = sum_monthly_boardings @sat_boardings
+    @num_unlinked_passenger_sun_trips = sum_monthly_boardings @sun_boardings
+
+    @days_operated_weekday = count_monthly_run_days @weekday_runs
+    @days_operated_sat = count_monthly_run_days @sat_runs
+    @days_operated_sun = count_monthly_run_days @sun_runs
+
+    write_operations
+  end
+
+  def process_fixed_route_miles_and_hours
+    @weekday_stats = monthly_fixed_miles_hours @weekday_runs
+    @sat_stats = monthly_fixed_miles_hours @sat_runs
+    @sun_stats = monthly_fixed_miles_hours @sun_runs
+
+    write_miles_and_hours
+  end
+
+  # ---- shared cell writers ---------------------------------------------------
+
+  def write_operations
     (1..12).each do |m|
       # Vehicles operated in maximum service
       max_vehicles = @num_max_operated_vehicles[m.to_f]
@@ -108,11 +176,7 @@ class NtdReport
     end
   end
 
-  def process_miles_and_hours
-    @weekday_stats = monthly_miles_hours @weekday_trips
-    @sat_stats = monthly_miles_hours @sat_trips
-    @sun_stats = monthly_miles_hours @sun_trips
-
+  def write_miles_and_hours
     @total_miles_weekday = @weekday_stats[:total_miles]
     @total_miles_sat = @sat_stats[:total_miles]
     @total_miles_sun = @sun_stats[:total_miles]
@@ -155,7 +219,7 @@ class NtdReport
       @worksheet[39][m + 4].change_value(revenue_miles_sat) unless revenue_miles_sat.nil?
       @worksheet[40][m + 4].change_value(revenue_miles_sun) unless revenue_miles_sun.nil?
 
-      # Passenger Miles (Ops Research)
+      # Passenger Miles (Ops Research) — left blank on the fixed-route workbook
       passenger_miles_weekday = @passenger_miles_weekday[m.to_f]
       @worksheet[43][m + 4].change_value(passenger_miles_weekday) unless passenger_miles_weekday.nil?
       passenger_miles_sat = @passenger_miles_sat[m.to_f]
@@ -183,10 +247,10 @@ class NtdReport
   end
 
 
-  private 
+  private
 
   def get_average_time(times_by_date)
-    day_count = times_by_date.count 
+    day_count = times_by_date.count
     if day_count == 0
       'N/A'
     else
@@ -199,12 +263,10 @@ class NtdReport
 
       sum_mins = total_hours * 60 + total_mins
       average_mins = sum_mins / day_count
-
       hour = average_mins / 60
       min = average_mins - hour * 60
-
       DateTime.new(@year, 1, 1, hour, min)
-    end 
+    end
   end
 
   def sum_monthly_trip_size(trips)
@@ -227,4 +289,36 @@ class NtdReport
     }
   end
 
+  # ---- fixed-route helpers (keys are month Floats, like extract(month) gives) --
+
+  # Unlinked passenger trips = riders who boarded.
+  def sum_monthly_boardings(boardings)
+    boardings.group("extract(month from runs.date)").sum(:boarded_count)
+  end
+
+  def count_monthly_run_days(runs)
+    runs.group("extract(month from runs.date)").count("distinct(runs.date)")
+  end
+
+  # Miles from the odometer (revenue service starts and ends at the depot,
+  # decision D3, so revenue miles = total miles); hours from the clock, actual
+  # when the driver started and ended the run, scheduled otherwise; revenue
+  # hours = hours minus the unpaid break. Passenger miles are not computable
+  # from boardings alone (D4) and stay blank.
+  def monthly_fixed_miles_hours(runs)
+    stats = { total_miles: Hash.new(0), revenue_miles: Hash.new(0), passenger_miles: {}, total_hours: Hash.new(0.0), total_revenue_hours: Hash.new(0.0) }
+    runs.each do |run|
+      m = run.date.month.to_f
+      if run.start_odometer && run.end_odometer && run.end_odometer > run.start_odometer
+        miles = run.end_odometer - run.start_odometer
+        stats[:total_miles][m] += miles
+        stats[:revenue_miles][m] += miles
+      end
+      hours = run.duration_in_hours.to_f
+      stats[:total_hours][m] += hours
+      stats[:total_revenue_hours][m] += [hours - run.unpaid_driver_break_time.to_i / 60.0, 0].max
+    end
+    stats.each_value { |h| h.default = nil if h.is_a?(Hash) }
+    stats
+  end
 end

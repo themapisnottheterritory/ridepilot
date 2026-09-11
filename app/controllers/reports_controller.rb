@@ -17,6 +17,9 @@ class Query
   attr_accessor :address_group_id
   attr_accessor :ntd_year
   attr_accessor :ntd_month
+  attr_accessor :ntd_mode
+  attr_accessor :fixed_route_id
+  attr_accessor :group_by
   attr_accessor :run_inspection_type
   attr_accessor :report_format
   attr_accessor :report_type
@@ -80,6 +83,15 @@ class Query
       end
       if params["ntd_month"]
         @ntd_month = params["ntd_month"].to_i unless params["ntd_month"].blank?
+      end
+      if params["ntd_mode"]
+        @ntd_mode = params["ntd_mode"] if Run::SERVICE_MODES.include?(params["ntd_mode"])
+      end
+      if params["fixed_route_id"]
+        @fixed_route_id = params["fixed_route_id"].to_i unless params["fixed_route_id"].blank?
+      end
+      if params["group_by"]
+        @group_by = params["group_by"] unless params["group_by"].blank?
       end
       if params["run_inspection_type"]
         @run_inspection_type = params["run_inspection_type"]
@@ -1265,8 +1277,58 @@ class ReportsController < ApplicationController
     @query = Query.new(query_params)
 
     if params[:query]
-      @excel_file_name = "NTD_#{@query.ntd_year}_#{@query.ntd_month}"
-      @workbook = NtdReport.new(current_provider, @query.ntd_year, @query.ntd_month).export!
+      mode = @query.ntd_mode || 'demand_response'
+      @excel_file_name = "NTD_#{@query.ntd_year}_#{@query.ntd_month}_#{mode}"
+      @workbook = NtdReport.new(current_provider, @query.ntd_year, @query.ntd_month, mode: mode).export!
+    end
+
+    apply_v2_response
+  end
+
+  # Fixed Route Ridership: walk-ons by route, grouped by day / stop / rider
+  # category / fare type / run. Boardings come from the driver tablet
+  # (api/v1/driver/boardings); voided rows are excluded.
+  def fixed_route_ridership
+    query_params = params[:query] || {start_date: Date.today.prev_month + 1, end_date: Date.today + 1}
+    @query = Query.new(query_params)
+    @fixed_routes = FixedRoute.for_provider(current_provider_id).default_order
+    @group_by = %w[day stop rider_category fare_type run].include?(@query.group_by) ? @query.group_by : 'day'
+
+    if params[:query]
+      route = @query.fixed_route_id && @fixed_routes.find_by(id: @query.fixed_route_id)
+      @report_params = []
+      @report_params << ["Date Range", "#{@query.start_date.strftime('%m/%d/%Y')} - #{@query.before_end_date.strftime('%m/%d/%Y')}"]
+      @report_params << ["Route", route ? route.display_name : "All"]
+      @report_params << ["Grouped by", @group_by.humanize]
+
+      scope = FixedRouteBoarding.joins(:run).where(provider_id: current_provider_id)
+                .where("runs.date >= ? and runs.date < ?", @query.start_date, @query.end_date)
+                .includes(:rider_category, :fare_type, :fixed_route, :run, :stop)
+      scope = scope.where(fixed_route_id: route.id) if route
+      rows = scope.to_a
+
+      key = ->(b) {
+        case @group_by
+        when 'stop'           then [b.direction.to_s, b.stop_name.presence || b.stop.try(:name) || '(no stop)']
+        when 'rider_category' then [b.rider_category.try(:name) || '—']
+        when 'fare_type'      then [b.fare_type.try(:name) || '(none)']
+        when 'run'            then [b.run.date, "#{b.run.name} (#{b.run.date.strftime('%m/%d/%Y')})"]
+        else                       [b.run.date]
+        end
+      }
+      label = ->(k) { @group_by == 'day' ? k.first.strftime('%a %m/%d/%Y') : (@group_by == 'run' ? k.last : k.join(' — ').sub(/\A — /, '')) }
+
+      @report_data = {}
+      rows.group_by { |b| b.fixed_route.try(:display_name) || '(no route)' }.sort.each do |route_name, route_rows|
+        groups = route_rows.group_by { |b| key.call(b) }.sort_by { |k, _| k.map(&:to_s) }
+        @report_data[route_name] = groups.map { |k, g|
+          { label: label.call(k), boarded: g.sum(&:boarded_count), alighted: g.sum(&:alighted_count),
+            fares: g.sum { |b| b.fare_amount.to_f }, walk_ons: g.map(&:client_uuid).uniq.size }
+        }
+      end
+      @grand = { boarded: rows.sum(&:boarded_count), alighted: rows.sum(&:alighted_count),
+                 fares: rows.sum { |b| b.fare_amount.to_f }, walk_ons: rows.map(&:client_uuid).uniq.size,
+                 days: rows.map { |b| b.run.date }.uniq.size }
     end
 
     apply_v2_response

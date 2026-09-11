@@ -1,0 +1,15 @@
+- # common
+= render 'reports/common_csv_header'
+
+- if @report_data.blank?
+  = CSV.generate_line(["No record found"], row_sep: nil).html_safe
+- else
+  - group_label = { 'day' => 'Day', 'stop' => 'Stop', 'rider_category' => 'Rider category', 'fare_type' => 'Fare type', 'run' => 'Run' }[@group_by]
+  = CSV.generate_line(["Boarded", @grand[:boarded], "Alighted", @grand[:alighted], "Walk-ons logged", @grand[:walk_ons], "Days", @grand[:days], "Fares", @grand[:fares].round(2)], row_sep: nil).html_safe
+  - @report_data.each do |route_name, groups|
+    = CSV.generate_line([""], row_sep: nil).html_safe
+    = CSV.generate_line(["Route: #{route_name}"], row_sep: nil).html_safe
+    = CSV.generate_line([group_label, "Boarded", "Alighted", "Walk-ons", "Fares"], row_sep: nil).html_safe
+    - groups.each do |g|
+      = CSV.generate_line([g[:label], g[:boarded], g[:alighted], g[:walk_ons], g[:fares].round(2)], row_sep: nil).html_safe
+    = CSV.generate_line(["Route total", groups.sum { |g| g[:boarded] }, groups.sum { |g| g[:alighted] }, groups.sum { |g| g[:walk_ons] }, groups.sum { |g| g[:fares] }.round(2)], row_sep: nil).html_safe
