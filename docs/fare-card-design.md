@@ -695,7 +695,7 @@ Structure as of September 1st, 2026" sheet, Philz's prepay proposal, and the dec
 
 **Still to do, none of it software**: order the pilot readers and cards (section 12), install rideavl 1.0.9 on the
 two pilot buses, flag ADA-eligible riders on their customer records (2 flagged today), and publish the fare page
-text (section 18) on gcrpc.org.
+text (section 18) on gcrpc.org. Shopping list in section 19.
 
 ---
 
@@ -786,3 +786,37 @@ and reload at the office.
 ---
 
 Questions: 361-578-8775, Monday to Friday, 8:00 a.m. to 5:00 p.m.
+
+---
+
+## 19. Pilot shopping list (2026-09-11)
+
+Two pilot buses plus the office. Prices as seen 2026-09-11, rounded. Total under $250.
+
+| Item | Qty | Each | Notes |
+|---|---|---|---|
+| USB 13.56 MHz RFID reader, keyboard emulation | 2 | $20 to $35 | One for the RFID bus, one for the office. |
+| USB 2D barcode scanner, handheld, wired | 2 | $30 to $50 | One for the QR bus, one for the office. |
+| USB-C OTG adapter, USB-A female | 3 | $5 to $8 | One per bus and a spare. Confirm the tablets are USB-C first. |
+| MIFARE-compatible blank white PVC cards | 100 | $0.20 to $0.40 | Generic Fudan-chip cards, not genuine NXP. |
+| Laminating pouches, card size | 1 box | $10 | For the printed QR sheets. |
+
+**RFID reader.** Sold as "keyboard emulation" or "HID"; no driver, no app. Candidates: Fongwah 13.56 MHz
+keyboard emulator (Amazon B0BRX7Y1SQ), YARONGTECH 13.56 MHz reader (Amazon B07Q5KXM6J), TagTix IC06
+(configurable output). Buy one first and check on a tablet: reads MIFARE Classic and NTAG; can be set to
+plain hex with an Enter suffix and no byte reversal; types the same UID as the office reader. The server
+copes with decimal, but hex is canonical (section 2.2).
+
+**Barcode scanner.** Any wired 2D scanner in keyboard-wedge mode: Tera, Inateck, NADAMOO class. Enter
+suffix after each scan (usually the factory default). Handheld for the pilot; a hands-free presentation
+scanner by the door is the same price class if QR wins.
+
+**Cards.** UID-only reading, so generic MIFARE-compatible cards ($20 to $40 per 100) read the same as
+genuine NXP ($150 per 100). Plain white; serial in marker, print later if the card stays.
+
+**Skip**: card writers or encoders (the card carries only its factory UID); NTAG stickers or fobs for the
+QR bus (the QR is a printed, laminated sheet from the account page).
+
+**First day with the parts**: OTG adapter and RFID reader into the pilot bus tablet, open a fixed-route run,
+tap a card (no tablet setup needed). Issue the first cards at the desk with the office reader, load a few
+dollars, try a tap and a transfer. Then order more cards.
