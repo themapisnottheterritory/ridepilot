@@ -300,7 +300,7 @@ providers  (add, or a fare_settings table)
 <h3>If it comes back</h3>
 <p>The cheap re-entry is Stripe Tap to Pay on the tablet <strong>as a reload channel</strong>: the driver taps a rider's bank card once to add $10 or $20 to their account, then the rider uses their RFID card or QR for each ride. It removes cash from the bus, costs one fee per load, and needs no validator. In the schema it is one <code>fare_transactions</code> load row with payment method card_online and the Stripe id in the reference field. The bank_card_ref token kind exists for the day a rider wants the bank card itself to be their token, at which point the per-tap fee argument gets re-run at whatever the fare is then.</p>
 <h2><span class="n">11</span>Phase 1 as built</h2>
-<p>Commit "Fare cards phase 1", 2026-09-10. It was on the master branch at the time. That branch was fast-forwarded into master and deleted on 2026-09-11, so every commit named on this page is on master. Everything here is office-side. Nothing touches the tablet yet.</p>
+<p>Commit "Fare cards phase 1", 2026-09-10. All the September work was done on a branch called fixed-route-wp8, which was fast-forwarded into master and deleted on 2026-09-11, so every commit named on this page is on master. Everything here is office-side. Nothing touches the tablet yet.</p>
 <h3>Deploy</h3>
 <pre><code>docker exec ridepilot_app_1 sh -c 'cd /var/www/ridepilot &amp;&amp; bin/rails db:migrate &amp;&amp; bin/rake ridepilot:add_v2_custom_reports'</code></pre>
 <p>The migration drops the old fare_cards and fare_card_data tables, six test rows, and the pre-commit hook comment was updated to match.</p>

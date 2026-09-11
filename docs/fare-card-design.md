@@ -354,7 +354,7 @@ at which point the per-tap fee argument has to be re-run at whatever the fare is
 
 ## 11. Phase 1 as built (2026-09-10)
 
-Commit "Fare cards phase 1" (on `master` at the time; that branch was fast-forwarded into `master` and deleted on 2026-09-11, so every commit named in this doc is on master). Everything below is office-side; nothing touches the
+Commit "Fare cards phase 1". All the September work was done on a branch called fixed-route-wp8; it was fast-forwarded into `master` and deleted on 2026-09-11, so every commit named in this doc is on master. Everything below is office-side; nothing touches the
 tablet yet.
 
 **Deploy**
