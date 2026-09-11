@@ -17,8 +17,9 @@ Transit dispatchers and driver tablets again, then prove it with the health chec
   Lose that host and you rebuild from this doc + the git repo + your data backups.
 - The **git repo is the source of truth for all code and most config.** Remote:
   `git@github.com:themapisnottheterritory/ridepilot.git` (GitHub org `themapisnottheterritory`,
-  referred to internally as **gcrpc**). Working branch: **`master`** (`fixed-route-wp8` was
-  fast-forwarded into it on 2026-09-11; the checkout on `10.0.0.16` is on master again).
+  referred to internally as **gcrpc**). Working branch: **`master`**. The September 2026 work
+  (fixed route, fare cards, fleet sync) was done on `fixed-route-wp8`, fast-forwarded into master on
+  2026-09-11, and that branch was then **deleted** locally and on GitHub. Only master exists now.
 - **Three things are NOT in git** and must come from a backup or be recreated (see §3):
   the database, user-uploaded files, and the secrets/certs. Everything else you can
   `git clone`.
