@@ -489,6 +489,24 @@ After saving, the driver's page shows the **username and a generated password on
 
 ---
 
+### 5.9 Vehicles: Wheelchair Lift, Positions, and the Transit Team Portal
+
+RidePilot is the master record for the fleet. What you enter on **Vehicles** flows to the AVL system and the Transit Team Portal (yard.gcrpc.org) automatically, once an hour. You no longer need to have the same change made in the AVL database by hand.
+
+On a vehicle's **Additional Info** panel:
+
+- **Wheelchair lift** — tick it if the vehicle has a lift. The portal's fleet-maintenance report counts these. All Eldorado Aerotech and Champion Defender units are already ticked.
+- **Wheelchair positions** — how many tie-down spots the vehicle has. The route optimizer uses this when it plans runs; when it is blank it assumes two.
+- **Accessibility Equipment** — free text for anything else (ramp, kneeling, securements).
+
+Make, model, year, seating capacity, and active/inactive also flow to the portal. Anything the portal knows that RidePilot does not (modem, GPS, radio mapping) stays where it is.
+
+> If a vehicle looks wrong on the portal, fix it in RidePilot and wait for the top of the next hour, plus twenty minutes.
+
+> **Note (2026-09-11):** vehicle edits had been failing to save with "Default driver must exist" and similar messages since the spring upgrade. That is fixed. Those three fields are optional.
+
+---
+
 ## 6. For Administrators: AVL / GPS Tracking
 
 ### 6.1 Overview
