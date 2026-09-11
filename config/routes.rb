@@ -211,6 +211,7 @@ Rails.application.routes.draw do
     end
 
     resources :drivers do
+      member { post :reset_password }   # dispatcher sets a new tablet password; nothing is emailed
       collection do 
         get :availability_forecast
         get :daily_availability_forecast

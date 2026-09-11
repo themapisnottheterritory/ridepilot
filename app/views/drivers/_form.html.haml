@@ -74,8 +74,58 @@
             .form-field
               - if @readonly
                 = @driver.user.try(:name_with_username)
-              - else
+              - elsif @driver.persisted?
                 = f.collection_select :user_id, @available_users, :id, :name_with_username, { include_blank: true }
+              - else
+                -# New driver: pick an existing login, or make one here so Kristie
+                -# never has to visit the Users page first (the tablet signs in
+                -# with this username; RidePilot never emails drivers).
+                - nu = @new_user_attrs || {}
+                - mode = nu[:mode].presence || (@available_users.any? ? 'existing' : 'new')
+                .radio{style: 'margin-top: 0;'}
+                  %label
+                    = radio_button_tag 'driver[new_user][mode]', 'existing', mode == 'existing', id: 'login-mode-existing', disabled: @available_users.empty?
+                    Existing login
+                  %label{style: 'margin-left: 14px;'}
+                    = radio_button_tag 'driver[new_user][mode]', 'new', mode == 'new', id: 'login-mode-new'
+                    Create a login for this driver
+                #login-existing{style: (mode == 'existing' ? '' : 'display: none;')}
+                  = f.collection_select :user_id, @available_users, :id, :name_with_username, { include_blank: true }
+                #login-new{style: (mode == 'new' ? '' : 'display: none;')}
+                  %table{style: 'margin-top: 4px;'}
+                    %tr
+                      %td{style: 'padding: 2px 8px 2px 0;'}= label_tag 'driver_new_user_first_name', 'First name'
+                      %td{style: 'padding: 2px 0;'}= text_field_tag 'driver[new_user][first_name]', nu[:first_name], id: 'driver_new_user_first_name', class: 'form-control input-sm', autocomplete: 'off'
+                    %tr
+                      %td{style: 'padding: 2px 8px 2px 0;'}= label_tag 'driver_new_user_last_name', 'Last name'
+                      %td{style: 'padding: 2px 0;'}= text_field_tag 'driver[new_user][last_name]', nu[:last_name], id: 'driver_new_user_last_name', class: 'form-control input-sm', autocomplete: 'off'
+                    %tr
+                      %td{style: 'padding: 2px 8px 2px 0;'}= label_tag 'driver_new_user_username', 'Username'
+                      %td{style: 'padding: 2px 0;'}
+                        = text_field_tag 'driver[new_user][username]', nu[:username], id: 'driver_new_user_username', class: 'form-control input-sm', autocomplete: 'off', autocapitalize: 'none'
+                        %span.text-muted{style: 'font-size: 85%;'} what the driver types on the tablet; filled in from the name
+                    %tr
+                      %td{style: 'padding: 2px 8px 2px 0;'}= label_tag 'driver_new_user_email', 'Email (optional)'
+                      %td{style: 'padding: 2px 0;'}= email_field_tag 'driver[new_user][email]', nu[:email], id: 'driver_new_user_email', class: 'form-control input-sm', autocomplete: 'off', placeholder: 'left blank: a placeholder address is used'
+                  %p.text-muted{style: 'margin: 6px 0 0; font-size: 85%;'}
+                    A password is generated and shown once after you save. Write it on the driver's card or tell them in person; nothing is emailed.
+                :javascript
+                  $(function() {
+                    function loginMode() {
+                      var isNew = $('#login-mode-new').is(':checked');
+                      $('#login-new').toggle(isNew); $('#login-existing').toggle(!isNew);
+                    }
+                    $('#login-mode-existing, #login-mode-new').on('change', loginMode); loginMode();
+                    // Username convention already in the users table: first name + last initial (kristiek, andrewv).
+                    var touched = !!$('#driver_new_user_username').val();
+                    $('#driver_new_user_username').on('input', function() { touched = true; });
+                    $('#driver_new_user_first_name, #driver_new_user_last_name').on('input', function() {
+                      if (touched) return;
+                      var f = ($('#driver_new_user_first_name').val() || '').toLowerCase().replace(/[^a-z]/g, '');
+                      var l = ($('#driver_new_user_last_name').val() || '').toLowerCase().replace(/[^a-z]/g, '');
+                      $('#driver_new_user_username').val(f + l.charAt(0));
+                    });
+                  });
         / END .panel-body
       / END .panel
       = render 'address_panel', f: f

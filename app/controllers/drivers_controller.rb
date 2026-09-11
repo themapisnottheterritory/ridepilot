@@ -104,20 +104,56 @@ class DriversController < ApplicationController
     end
 
     @driver.provider = current_provider
-    if !@driver.is_all_valid?(current_provider_id)
+
+    # "Create a login for this driver": build the user here so the whole
+    # driver is set up on one page. The user and the driver save together.
+    @new_user_attrs = new_user_params
+    new_user = nil
+    new_password = nil
+    if @new_user_attrs[:mode] == "new"
+      authorize! :create, User
+      new_user, new_password = build_driver_user(@new_user_attrs)
+      @driver.user = new_user
+    end
+
+    if !@driver.is_all_valid?(current_provider_id) || (new_user && !new_user.valid?)
+      @driver.errors.add(:user, "could not be created: #{new_user.errors.full_messages.to_sentence}") if new_user && !new_user.valid?
       prep_edit
       render action: :new
     else
       begin
         Driver.transaction do
+          if new_user
+            new_user.save!
+            Role.create!(user: new_user, provider: current_provider, level: Role::USER_LEVEL)
+          end
           @driver.save!
         end
+        flash[:driver_password] = new_password if new_password
         redirect_to @driver, notice: 'Driver was successfully created.'
       rescue ActiveRecord::RecordInvalid => e
         Rails.logger.debug e.message
+        @driver.errors.add(:base, e.message)
         prep_edit
         render action: :new
       end
+    end
+  end
+
+  # No email ever reaches a driver, so a forgotten tablet password is fixed
+  # here by a dispatcher: a new one is generated and shown once.
+  def reset_password
+    user = @driver.user
+    return redirect_to(@driver, alert: "This driver has no login.") unless user && !user.deleted?
+    authorize! :edit, user
+    password = User.generate_password
+    user.password = password
+    user.password_confirmation = password
+    if user.save
+      flash[:driver_password] = password
+      redirect_to @driver, notice: "New password set for #{user.username}."
+    else
+      redirect_to @driver, alert: "Could not reset the password: #{user.errors.full_messages.to_sentence}"
     end
   end
 
@@ -228,7 +264,41 @@ class DriversController < ApplicationController
   end
 
   private
-  
+
+  DRIVER_EMAIL_DOMAIN = "drivers.gcrpc.org".freeze   # placeholder addresses, same as ops/maintenance/provision-driver-users.rb
+
+  def new_user_params
+    raw = params.dig(:driver, :new_user)
+    return {} unless raw.respond_to?(:permit)
+    raw.permit(:mode, :first_name, :last_name, :username, :email).to_h.symbolize_keys
+  end
+
+  def build_driver_user(attrs)
+    password = User.generate_password
+    username = attrs[:username].to_s.strip.downcase
+    username = default_username(attrs[:first_name], attrs[:last_name]) if username.blank?
+    email = attrs[:email].to_s.strip.presence || "#{username}@#{DRIVER_EMAIL_DOMAIN}"
+    user = User.new(first_name: attrs[:first_name].to_s.strip, last_name: attrs[:last_name].to_s.strip,
+                    username: username, email: email, password: password, password_confirmation: password,
+                    current_provider: current_provider)
+    user.user_address = nil if user.respond_to?(:user_address=)
+    [user, password]
+  end
+
+  def default_username(first, last)
+    f = first.to_s.downcase.gsub(/[^a-z]/, "")
+    l = last.to_s.downcase.gsub(/[^a-z]/, "")
+    base = "#{f}#{l[0]}"
+    base = "driver" if base.blank?
+    candidate = base
+    n = 1
+    while User.with_deleted.exists?(username: candidate)
+      n += 1
+      candidate = "#{base}#{n}"
+    end
+    candidate
+  end
+
   def prep_edit(readonly: false)
     @readonly = readonly
     
