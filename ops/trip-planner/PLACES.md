@@ -13,8 +13,12 @@ Each entry:
 - `aliases` are other things people type. Every word typed must appear in the name or an alias.
 - `lat`/`lon`: the front door or the closest curb, not the middle of a parking lot. Get them from
   Google Maps (right-click, copy coordinates) or the geocoder.
-- `"verify": true` marks entries placed by street address without a check on the ground. Five of the
-  first 25 are marked; remove the flag once someone confirms the pin.
+- `"source": "RidePilot"` means the pin came from dispatch's common-address list in RidePilot
+  (Providers -> Common addresses), which is the best source: those coordinates have been driven to.
+  To add a place riders ask for, look it up there first:
+  `select name, address, st_y(the_geom::geometry), st_x(the_geom::geometry) from addresses where type='ProviderCommonAddress' and name ilike '%thing%'`.
+- `"verify": true` marks an entry someone should confirm. Today: the two Victoria Transit entries
+  (1502 E Airline Suite 6 and 4902 N John Stockbauer); which one is the public office for fare cards?
 
 `web/stops.json` is every bus stop from the GTFS feed with the routes that serve it. Regenerate it
 when the feed changes (see README, rebuild section); do not edit by hand.
