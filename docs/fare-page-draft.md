@@ -83,4 +83,13 @@ and reload at the office.
 
 ---
 
+## Plan your trip
+
+Not sure which bus to take? Use the trip planner at **[plan.gcrpc.org](https://plan.gcrpc.org)**. Enter
+where you are and where you are going, and it shows which route to ride, where to board, and when the bus
+comes. It works on your phone and can use your location. Fixed routes only; call 361-578-8775 for a
+demand-response or paratransit ride.
+
+---
+
 Questions: 361-578-8775, Monday to Friday, 8:00 a.m. to 5:00 p.m.
