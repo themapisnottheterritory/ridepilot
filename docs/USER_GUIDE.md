@@ -701,6 +701,7 @@ If no bus works, the page says so and gives the office number. Fixed routes run 
 
 - Give riders the link, or point them to the "Plan your trip" link on the Victoria Transit page of gcrpc.org.
 - It uses the published schedule, not live bus positions. If a route or time changes, the planner is rebuilt from the new GTFS feed (an IT task, under a minute; `ops/trip-planner/README.md`).
+- Common destinations (H-E-B, the hospitals, the mall, the courthouse, the library, Walmart, the transit office and so on) and every bus stop appear at the top of the suggestions as you type. The list of destinations is a file the office can add to; ask IT to add a place riders keep asking about (`ops/trip-planner/PLACES.md`).
 - Addresses come from our own map data; if an address will not autocomplete, try the nearest cross street or a landmark.
 
 ---

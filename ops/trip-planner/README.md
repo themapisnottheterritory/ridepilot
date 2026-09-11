@@ -12,6 +12,8 @@ Repo copy of everything here: `ridepilot/ops/trip-planner/`.
             router-config.json           walk speed, transfer slack
             graph.obj                    the built graph (regenerate when the feed or the map changes)
     web/    index.html, gcrpc-seal.png   the client; nginx serves it as static files
+            places.json                  common destinations the office maintains (PLACES.md)
+            stops.json                   every bus stop with its routes, generated from the feed
     otp-planner.service                  systemd unit: runs OTP in Docker on 127.0.0.1:8081
     nginx-plan.gcrpc.org.conf            the site; nginx-plan-http.conf goes in conf.d (rate limit, tile cache)
 
@@ -22,7 +24,8 @@ Repo copy of everything here: `ridepilot/ops/trip-planner/`.
       opentripplanner/opentripplanner:2.6.0 --build --save
     sudo systemctl restart otp-planner
 
-Takes a minute or two for this area. `--build --save` writes `data/graph.obj`; the service starts with
+Takes a minute or two for this area. Also regenerate `web/stops.json` from the new feed
+(`ops/trip-planner/make_stops.py` in the RidePilot repo). `--build --save` writes `data/graph.obj`; the service starts with
 `--load --serve`.
 
 ## Refresh the map (yearly is plenty)

@@ -41,6 +41,8 @@ form{display:flex;flex-direction:column;gap:8px}
 .sugg{position:absolute;left:0;right:0;top:100%;z-index:1000;background:var(--paper);border:1px solid var(--rule);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);max-height:240px;overflow:auto;margin-top:4px}
 .sugg div{padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--rule);font-size:15px}
 .sugg div:last-child{border-bottom:0} .sugg div:hover,.sugg div.on{background:var(--panel-cool)}
+.sugg .k{display:inline-block;width:22px;color:var(--brand)}
+.sugg small{color:var(--muted);margin-left:4px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .row select,.row input[type=datetime-local]{padding:9px 10px;border:1px solid var(--rule);border-radius:10px;font-size:15px;background:var(--paper)}
 button.go{background:var(--gold);color:var(--gold-ink);border:0;border-radius:10px;padding:13px;font-size:17px;font-weight:700;cursor:pointer;margin-top:4px;letter-spacing:.02em}
@@ -89,14 +91,14 @@ button.swap{border:1px solid var(--rule);background:var(--paper);border-radius:1
     <form id="f" autocomplete="off">
       <div class="field">
         <label for="from">From</label>
-        <input type="text" id="from" placeholder="Address, place, or bus stop" inputmode="text">
+        <input type="text" id="from" placeholder="Address, place, or bus stop (try HEB, hospital, mall)" inputmode="text">
         <button type="button" class="loc" id="useloc" title="Use my location" aria-label="Use my location">◎</button>
         <div class="sugg" id="from-s" hidden></div>
       </div>
       <div class="row" style="justify-content:flex-end"><button type="button" class="swap" id="swap">⇅ Swap</button></div>
       <div class="field">
         <label for="to">To</label>
-        <input type="text" id="to" placeholder="Where are you going?" inputmode="text">
+        <input type="text" id="to" placeholder="Where are you going? (try HEB, hospital, mall)" inputmode="text">
         <div class="sugg" id="to-s" hidden></div>
       </div>
       <div class="row">
@@ -130,7 +132,30 @@ button.swap{border:1px solid var(--rule);background:var(--paper);border-radius:1
   const from = { input: $('from'), box: $('from-s'), pt: null }, to = { input: $('to'), box: $('to-s'), pt: null };
   const out = $('out');
 
-  // ---- address suggestions (Nominatim behind /geocode, boxed to the service area)
+  // ---- common destinations and bus stops, matched before the geocoder
+  let places = [], stops = [];
+  fetch('/places.json').then(r => r.json()).then(j => { places = j; }).catch(() => {});
+  fetch('/stops.json').then(r => r.json()).then(j => { stops = j; }).catch(() => {});
+  const norm = t => t.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+  function localMatches(q) {
+    const n = norm(q); if (n.length < 2) return [];
+    const words = n.split(' ');
+    const hit = (text) => { const t = norm(text); return words.every(w => t.includes(w)); };
+    const pl = places.filter(p => hit(p.name) || (p.aliases || []).some(hit)).slice(0, 4)
+      .map(p => ({ label: p.name, sub: p.address || '', icon: '📍', lat: p.lat, lon: p.lon }));
+    const st = stops.filter(s => hit(s.name)).slice(0, pl.length ? 3 : 5)
+      .map(s => ({ label: s.name, sub: 'Bus stop · ' + s.routes.join(', '), icon: '🚌', lat: s.lat, lon: s.lon }));
+    return pl.concat(st);
+  }
+  function option(f, label, sub, icon, lat, lon) {
+    const d = document.createElement('div');
+    d.innerHTML = `<span class="k">${icon}</span>${escapeHtml(label)}${sub ? `<small>${escapeHtml(sub)}</small>` : ''}`;
+    d.onclick = () => { f.input.value = label; f.pt = { lat, lon }; f.box.hidden = true; };
+    return d;
+  }
+  function escapeHtml(t) { return String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+  // ---- address suggestions: local places and stops first, then Nominatim (boxed to the service area)
   function wire(f) {
     let timer = null, last = '';
     f.input.addEventListener('input', () => {
@@ -138,20 +163,20 @@ button.swap{border:1px solid var(--rule);background:var(--paper);border-radius:1
       const q = f.input.value.trim();
       clearTimeout(timer);
       if (q.length < 3) { f.box.hidden = true; return; }
+      // Local matches show at once; the geocoder's answers are appended when they arrive.
+      const local = localMatches(q);
+      f.box.innerHTML = '';
+      local.forEach(m => f.box.appendChild(option(f, m.label, m.sub, m.icon, m.lat, m.lon)));
+      f.box.hidden = local.length === 0;
       timer = setTimeout(async () => {
         if (q === last) return; last = q;
         try {
           const r = await fetch('/geocode?q=' + encodeURIComponent(q + ' Victoria TX'));
           const rows = await r.json();
-          f.box.innerHTML = '';
-          rows.slice(0, 6).forEach(p => {
-            const d = document.createElement('div');
-            d.textContent = shortName(p);
-            d.onclick = () => { f.input.value = shortName(p); f.pt = { lat: +p.lat, lon: +p.lon }; f.box.hidden = true; };
-            f.box.appendChild(d);
-          });
-          f.box.hidden = rows.length === 0;
-        } catch { f.box.hidden = true; }
+          if (f.input.value.trim() !== q) return;
+          rows.slice(0, local.length ? 3 : 6).forEach(p => f.box.appendChild(option(f, shortName(p), '', '🏠', +p.lat, +p.lon)));
+          f.box.hidden = f.box.childElementCount === 0;
+        } catch { f.box.hidden = f.box.childElementCount === 0; }
       }, 280);
     });
     f.input.addEventListener('blur', () => setTimeout(() => { f.box.hidden = true; }, 150));
@@ -191,6 +216,8 @@ button.swap{border:1px solid var(--rule);background:var(--paper);border-radius:1
     if (f.pt) return f.pt;
     const q = f.input.value.trim();
     if (!q) return null;
+    const local = localMatches(q);
+    if (local.length && norm(local[0].label) === norm(q)) { f.input.value = local[0].label; return (f.pt = { lat: local[0].lat, lon: local[0].lon }); }
     const r = await fetch('/geocode?q=' + encodeURIComponent(q + ' Victoria TX'));
     const rows = await r.json();
     if (!rows.length) return null;
