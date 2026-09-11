@@ -1,0 +1,18 @@
+# systemd unit for the trip planner (needs sudo to install; see ~/otp/README.md)
+[Unit]
+Description=OpenTripPlanner for Victoria Transit (plan.gcrpc.org)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Restart=always
+RestartSec=10
+ExecStartPre=-/usr/bin/docker rm -f otp
+ExecStart=/usr/bin/docker run --name otp --rm -p 127.0.0.1:8081:8080 \
+  -v /home/philz/otp/data:/var/opentripplanner \
+  -e JAVA_OPTS=-Xmx4G \
+  opentripplanner/opentripplanner:2.6.0 --load --serve
+ExecStop=/usr/bin/docker stop otp
+
+[Install]
+WantedBy=multi-user.target

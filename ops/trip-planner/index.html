@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Victoria Transit Trip Planner</title>
+<meta name="description" content="Plan a bus trip on Victoria Transit: enter where you are and where you're going and see which bus to take.">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<link rel="icon" href="/gcrpc-seal.png">
+<style>
+/* ---- GCRPC brand book (docs/GCRPC Brand Book.pdf): navy + gold, Copperplate Gothic + Open Sans ---- */
+:root{
+  --brand:#12264F;        /* Color 1, navy: header */
+  --brand-ink:#FFFFFF;
+  --gold:#CC9900;         /* Color 2: the action button, selected trip */
+  --gold-ink:#131313;
+  --accent:#FEB303;       /* Color 6 amber: focus ring */
+  --ink:#131313; --muted:#656565; --rule:#C7CAD4; --paper:#FFFFFF; --panel:#F2E5C0;
+  --panel-cool:#EEF0F4;
+  --bad:#D22D2D;
+  --display:"Copperplate Gothic","Copperplate Gothic Light","Copperplate",Georgia,serif;
+  --body:"Open Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--paper);color:var(--ink);font:16px/1.45 var(--body)}
+header{background:var(--brand);color:var(--brand-ink);padding:10px 16px;display:flex;align-items:center;gap:14px;border-bottom:4px solid var(--gold)}
+header img{width:46px;height:46px;flex:none;background:#fff;border-radius:50%;padding:2px}
+header h1{font-size:19px;margin:0;font-weight:700;letter-spacing:.06em;font-family:var(--display);text-transform:uppercase}
+header .sub{font-size:13px;opacity:.9}
+header a{color:var(--gold);margin-left:auto;font-size:13px;font-weight:600;text-decoration:underline;white-space:nowrap}
+main{display:grid;grid-template-columns:400px 1fr;height:calc(100% - 58px)}
+#side{overflow:auto;border-right:1px solid var(--rule);padding:12px 14px 40px}
+#map{min-height:280px}
+form{display:flex;flex-direction:column;gap:8px}
+.field{position:relative}
+.field label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--brand);font-weight:600;margin:0 0 3px 2px}
+.field input[type=text]{width:100%;padding:11px 44px 11px 12px;border:1px solid var(--rule);border-radius:10px;font-size:16px;background:var(--paper)}
+.field input:focus{outline:2px solid var(--accent);border-color:transparent}
+.field .loc{position:absolute;right:6px;top:22px;border:0;background:none;font-size:20px;cursor:pointer;padding:6px;color:var(--brand)}
+.sugg{position:absolute;left:0;right:0;top:100%;z-index:1000;background:var(--paper);border:1px solid var(--rule);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);max-height:240px;overflow:auto;margin-top:4px}
+.sugg div{padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--rule);font-size:15px}
+.sugg div:last-child{border-bottom:0} .sugg div:hover,.sugg div.on{background:var(--panel-cool)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row select,.row input[type=datetime-local]{padding:9px 10px;border:1px solid var(--rule);border-radius:10px;font-size:15px;background:var(--paper)}
+button.go{background:var(--gold);color:var(--gold-ink);border:0;border-radius:10px;padding:13px;font-size:17px;font-weight:700;cursor:pointer;margin-top:4px;letter-spacing:.02em}
+button.go:hover{filter:brightness(1.05)}
+button.go[disabled]{opacity:.6}
+button.swap{border:1px solid var(--rule);background:var(--paper);border-radius:10px;padding:6px 10px;cursor:pointer;font-size:14px}
+.msg{padding:12px;border-radius:10px;background:var(--panel-cool);margin:12px 0;font-size:15px}
+.msg.bad{background:#FBE9E7;color:var(--bad)}
+.itins{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.itin{border:1px solid var(--rule);border-radius:12px;padding:12px;cursor:pointer}
+.itin.on{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold) inset;background:#FFFDF6}
+.itin .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.itin .dur{font-size:22px;font-weight:700;color:var(--brand)}
+.itin .times{color:var(--muted);font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:14px;padding:4px 9px;border-radius:999px;background:var(--panel-cool)}
+.chip.bus{color:#fff;font-weight:700}
+.chip .arrow{color:var(--muted)}
+.legs{display:none;margin-top:10px;border-top:1px solid var(--rule);padding-top:8px}
+.itin.on .legs{display:block}
+.leg{display:grid;grid-template-columns:58px 1fr;gap:8px;padding:6px 0;font-size:15px}
+.leg .t{color:var(--muted);font-variant-numeric:tabular-nums}
+.leg b{display:block}
+.leg .d{color:var(--muted);font-size:14px}
+.foot{margin-top:18px;font-size:13px;color:var(--muted)}
+.foot a{color:var(--brand)}
+@media (max-width:760px){
+  main{grid-template-columns:1fr;grid-template-rows:auto 1fr;height:auto}
+  #side{border-right:0;border-bottom:1px solid var(--rule);padding-bottom:12px}
+  #map{height:52vh;min-height:300px}
+  header .sub{display:none}
+}
+</style>
+</head>
+<body>
+<header>
+  <img src="/gcrpc-seal.png" alt="Golden Crescent Regional Planning Commission seal">
+  <div>
+    <h1>Victoria Transit Trip Planner</h1>
+    <div class="sub">Which bus, from where, and when. Fixed routes run Monday to Friday.</div>
+  </div>
+  <a href="https://www.gcrpc.org/services-programs/overview/transit-operations/victoria-transit-urban/" target="_blank" rel="noopener">Route maps &amp; fares</a>
+</header>
+<main>
+  <section id="side">
+    <form id="f" autocomplete="off">
+      <div class="field">
+        <label for="from">From</label>
+        <input type="text" id="from" placeholder="Address, place, or bus stop" inputmode="text">
+        <button type="button" class="loc" id="useloc" title="Use my location" aria-label="Use my location">◎</button>
+        <div class="sugg" id="from-s" hidden></div>
+      </div>
+      <div class="row" style="justify-content:flex-end"><button type="button" class="swap" id="swap">⇅ Swap</button></div>
+      <div class="field">
+        <label for="to">To</label>
+        <input type="text" id="to" placeholder="Where are you going?" inputmode="text">
+        <div class="sugg" id="to-s" hidden></div>
+      </div>
+      <div class="row">
+        <select id="when">
+          <option value="now">Leave now</option>
+          <option value="depart">Depart at</option>
+          <option value="arrive">Arrive by</option>
+        </select>
+        <input type="datetime-local" id="dt" hidden>
+      </div>
+      <button type="submit" class="go" id="go">Find my bus</button>
+    </form>
+    <div id="out"></div>
+    <div class="foot">
+      Questions or a ride you can't plan here? Call Victoria Transit at <a href="tel:13615788775">361-578-8775</a>, Monday to Friday 8 to 5.
+      Demand-response and paratransit trips are booked by phone, not here.
+    </div>
+  </section>
+  <div id="map" role="img" aria-label="Map of the planned trip"></div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function () {
+  const CENTER = [28.805, -97.004], ZOOM = 12;               // Victoria, TX
+  const map = L.map('map', { zoomControl: true }).setView(CENTER, ZOOM);
+  L.tileLayer('/tiles/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap contributors' }).addTo(map);
+  const layer = L.layerGroup().addTo(map);
+
+  const $ = id => document.getElementById(id);
+  const from = { input: $('from'), box: $('from-s'), pt: null }, to = { input: $('to'), box: $('to-s'), pt: null };
+  const out = $('out');
+
+  // ---- address suggestions (Nominatim behind /geocode, boxed to the service area)
+  function wire(f) {
+    let timer = null, last = '';
+    f.input.addEventListener('input', () => {
+      f.pt = null;
+      const q = f.input.value.trim();
+      clearTimeout(timer);
+      if (q.length < 3) { f.box.hidden = true; return; }
+      timer = setTimeout(async () => {
+        if (q === last) return; last = q;
+        try {
+          const r = await fetch('/geocode?q=' + encodeURIComponent(q + ' Victoria TX'));
+          const rows = await r.json();
+          f.box.innerHTML = '';
+          rows.slice(0, 6).forEach(p => {
+            const d = document.createElement('div');
+            d.textContent = shortName(p);
+            d.onclick = () => { f.input.value = shortName(p); f.pt = { lat: +p.lat, lon: +p.lon }; f.box.hidden = true; };
+            f.box.appendChild(d);
+          });
+          f.box.hidden = rows.length === 0;
+        } catch { f.box.hidden = true; }
+      }, 280);
+    });
+    f.input.addEventListener('blur', () => setTimeout(() => { f.box.hidden = true; }, 150));
+  }
+  function shortName(p) {
+    const a = p.address || {};
+    const street = [a.house_number, a.road].filter(Boolean).join(' ');
+    const place = p.name && p.name !== street ? p.name : '';
+    const city = a.city || a.town || a.village || a.county || '';
+    return [place, street, city].filter(Boolean).join(', ') || p.display_name.split(',').slice(0, 3).join(',');
+  }
+  wire(from); wire(to);
+
+  $('useloc').onclick = () => {
+    if (!navigator.geolocation) return;
+    from.input.value = 'Finding you…';
+    navigator.geolocation.getCurrentPosition(async pos => {
+      from.pt = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+      try {
+        const r = await fetch(`/reverse?lat=${from.pt.lat}&lon=${from.pt.lon}`);
+        const p = await r.json(); from.input.value = shortName(p);
+      } catch { from.input.value = 'My location'; }
+    }, () => { from.input.value = ''; show('Could not get your location. Type an address instead.', true); }, { enableHighAccuracy: true, timeout: 8000 });
+  };
+  $('swap').onclick = () => {
+    [from.input.value, to.input.value] = [to.input.value, from.input.value];
+    [from.pt, to.pt] = [to.pt, from.pt];
+  };
+  $('when').onchange = () => {
+    const dt = $('dt'); dt.hidden = $('when').value === 'now';
+    if (!dt.hidden && !dt.value) dt.value = localIso(new Date(Date.now() + 15 * 60000));
+  };
+  function localIso(d) { const p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; }
+
+  // ---- resolve a typed address the user did not pick from the list
+  async function resolve(f) {
+    if (f.pt) return f.pt;
+    const q = f.input.value.trim();
+    if (!q) return null;
+    const r = await fetch('/geocode?q=' + encodeURIComponent(q + ' Victoria TX'));
+    const rows = await r.json();
+    if (!rows.length) return null;
+    f.input.value = shortName(rows[0]);
+    return (f.pt = { lat: +rows[0].lat, lon: +rows[0].lon });
+  }
+
+  // ---- plan
+  $('f').onsubmit = async e => {
+    e.preventDefault();
+    $('go').disabled = true; layer.clearLayers(); from.box.hidden = true; to.box.hidden = true;
+    show('Looking for buses…');
+    try {
+      const a = await resolve(from), b = await resolve(to);
+      if (!a) return show('Where are you starting from? Pick an address from the list.', true);
+      if (!b) return show('Where are you going? Pick an address from the list.', true);
+      const mode = $('when').value;
+      const when = mode === 'now' ? new Date() : new Date($('dt').value);
+      const q = `query($from: InputCoordinates!, $to: InputCoordinates!, $date: String!, $time: String!, $arriveBy: Boolean!) {
+        plan(from: $from, to: $to, date: $date, time: $time, arriveBy: $arriveBy, numItineraries: 4,
+             transportModes: [{mode: WALK}, {mode: TRANSIT}], walkReluctance: 2.0) {
+          messageStrings
+          itineraries { duration startTime endTime walkDistance waitingTime
+            legs { mode startTime endTime duration distance headsign realTime
+              from { name lat lon stop { name code } } to { name lat lon stop { name code } }
+              route { shortName longName color textColor } trip { tripHeadsign }
+              legGeometry { points } intermediateStops { name } } } } }`;
+      const p = n => String(n).padStart(2, '0');
+      const vars = { from: { lat: a.lat, lon: a.lon }, to: { lat: b.lat, lon: b.lon },
+        date: `${when.getFullYear()}-${p(when.getMonth()+1)}-${p(when.getDate())}`, time: `${p(when.getHours())}:${p(when.getMinutes())}`, arriveBy: mode === 'arrive' };
+      const r = await fetch('/otp/gtfs/v1', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: q, variables: vars }) });
+      const j = await r.json();
+      const plan = j.data && j.data.plan;
+      const its = (plan && plan.itineraries || []).filter(it => it.legs.some(l => l.mode !== 'WALK'));
+      if (!its.length) {
+        const walkOnly = plan && plan.itineraries && plan.itineraries.length;
+        return show(walkOnly
+          ? 'No bus works for this trip at that time, but it is walkable: ' + Math.round(plan.itineraries[0].duration / 60) + ' minutes on foot. Buses run Monday to Friday, roughly 8 to 11 and 1 to 4. Try another time, or call 361-578-8775.'
+          : 'No trip found. Check both addresses are in Victoria, or try another time. Buses run Monday to Friday. Call 361-578-8775 for help.', true);
+      }
+      render(its, a, b);
+    } catch (err) {
+      show('The planner is not answering right now. Please try again in a minute, or call 361-578-8775.', true);
+    } finally { $('go').disabled = false; }
+  };
+
+  function show(text, bad) { out.innerHTML = `<div class="msg${bad ? ' bad' : ''}">${text}</div>`; }
+  const fmt = ms => new Date(ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const mins = s => Math.round(s / 60) + ' min';
+
+  function render(its, a, b) {
+    out.innerHTML = '<div class="itins"></div>';
+    const box = out.firstChild;
+    its.forEach((it, i) => {
+      const d = document.createElement('div'); d.className = 'itin' + (i === 0 ? ' on' : '');
+      const chips = it.legs.map(l => l.mode === 'WALK'
+        ? `<span class="chip">🚶 ${mins(l.duration)}</span>`
+        : `<span class="chip bus" style="background:#${(l.route && l.route.color) || '12264F'};color:#${(l.route && l.route.textColor) || 'fff'}">🚌 ${busName(l)}</span>`).join('<span class="chip-arrow arrow">›</span>');
+      const legs = it.legs.map(l => l.mode === 'WALK'
+        ? `<div class="leg"><span class="t">${fmt(l.startTime)}</span><span><b>Walk ${mins(l.duration)}</b><span class="d">to ${l.to.stop ? 'stop: ' + l.to.stop.name : l.to.name === 'Destination' ? 'your destination' : l.to.name} (${Math.round(l.distance)} m)</span></span></div>`
+        : `<div class="leg"><span class="t">${fmt(l.startTime)}</span><span><b>Take the ${busName(l)}${l.headsign ? ' toward ' + l.headsign : ''}</b><span class="d">Board at ${l.from.stop ? l.from.stop.name : l.from.name}. Ride ${l.intermediateStops.length + 1} stop${l.intermediateStops.length ? 's' : ''}, ${mins(l.duration)}. Get off at ${l.to.stop ? l.to.stop.name : l.to.name} at ${fmt(l.endTime)}.</span></span></div>`).join('');
+      d.innerHTML = `<div class="top"><span class="dur">${mins(it.duration)}</span><span class="times">${fmt(it.startTime)} → ${fmt(it.endTime)}</span></div>
+        <div class="chips">${chips}</div>
+        <div class="legs">${legs}<div class="leg"><span class="t">${fmt(it.endTime)}</span><span><b>Arrive</b><span class="d">${to.input.value}</span></span></div></div>`;
+      d.onclick = () => { box.querySelectorAll('.itin').forEach(x => x.classList.remove('on')); d.classList.add('on'); draw(it, a, b); };
+      box.appendChild(d);
+    });
+    draw(its[0], a, b);
+  }
+  function busName(l) { return l.route ? (l.route.shortName || '') + (l.route.longName ? ' ' + l.route.longName : '') : 'bus'; }
+
+  function draw(it, a, b) {
+    layer.clearLayers();
+    const all = [];
+    it.legs.forEach(l => {
+      const pts = decode(l.legGeometry.points); all.push(...pts);
+      const walk = l.mode === 'WALK';
+      L.polyline(pts, { color: walk ? '#656565' : '#' + ((l.route && l.route.color) || '12264F'), weight: walk ? 4 : 6, dashArray: walk ? '6 8' : null, opacity: .9 }).addTo(layer);
+      if (!walk) {
+        L.circleMarker([l.from.lat, l.from.lon], { radius: 7, color: '#fff', fillColor: '#111', fillOpacity: 1, weight: 2 }).bindTooltip('Board: ' + (l.from.stop ? l.from.stop.name : l.from.name)).addTo(layer);
+        L.circleMarker([l.to.lat, l.to.lon], { radius: 7, color: '#fff', fillColor: '#111', fillOpacity: 1, weight: 2 }).bindTooltip('Get off: ' + (l.to.stop ? l.to.stop.name : l.to.name)).addTo(layer);
+      }
+    });
+    L.marker([a.lat, a.lon]).bindTooltip('Start').addTo(layer);
+    L.marker([b.lat, b.lon]).bindTooltip('Destination').addTo(layer);
+    if (all.length) map.fitBounds(L.latLngBounds(all).pad(0.15));
+    if (window.innerWidth <= 760) $('map').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  // Google encoded polyline, as OTP returns it.
+  function decode(str) {
+    let i = 0, lat = 0, lng = 0; const out = [];
+    while (i < str.length) {
+      let b, s = 0, r = 0;
+      do { b = str.charCodeAt(i++) - 63; r |= (b & 0x1f) << s; s += 5; } while (b >= 0x20);
+      lat += (r & 1) ? ~(r >> 1) : (r >> 1); s = 0; r = 0;
+      do { b = str.charCodeAt(i++) - 63; r |= (b & 0x1f) << s; s += 5; } while (b >= 0x20);
+      lng += (r & 1) ? ~(r >> 1) : (r >> 1);
+      out.push([lat / 1e5, lng / 1e5]);
+    }
+    return out;
+  }
+})();
+</script>
+</body>
+</html>
