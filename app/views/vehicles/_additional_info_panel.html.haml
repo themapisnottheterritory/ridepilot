@@ -29,6 +29,18 @@
         = f.text_area :insurance_coverage_details, class: "form-control", rows: 3, disabled: @readonly 
     .form-group
       .form-label
+        = f.label :wheelchair_lift, "Wheelchair lift", class: "col-md-2 control-label"
+      .form-field
+        = f.check_box :wheelchair_lift, disabled: @readonly
+        %span.text-muted{style: 'margin-left: 8px;'} lift-equipped; feeds the AVL fleet table and the Transit Team Portal
+    .form-group
+      .form-label
+        = f.label :mobility_device_accommodations, "Wheelchair positions", class: "col-md-2 control-label"
+      .form-field
+        = f.number_field :mobility_device_accommodations, min: 0, step: 1, class: "form-control", style: 'width: 8em;', disabled: @readonly
+        %span.text-muted{style: 'margin-left: 8px;'} tie-down spots; the route optimizer assumes 2 when blank
+    .form-group
+      .form-label
         = f.label :accessibility_equipment, translate_helper("vehicle_form_accessibility_equipment_label"), class: "col-md-2 control-label"
       .form-field
         = f.text_area :accessibility_equipment, class: "form-control", rows: 3, disabled: @readonly 

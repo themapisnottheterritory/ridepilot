@@ -169,6 +169,8 @@ class VehiclesController < ApplicationController
       :responsible_party, 
       :registration_expiration_date, 
       :accessibility_equipment, 
+      :wheelchair_lift,
+      :mobility_device_accommodations,
       :initial_mileage,
       :garage_phone_number,
       :vehicle_maintenance_schedule_type_id,
