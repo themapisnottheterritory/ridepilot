@@ -48,6 +48,12 @@ cat > public/rideavl-version.json <<JSON
 }
 JSON
 
+# Also list it on the tablet-apps page (fixedroute.internal.gcrpc.org/static/apk/), the place
+# Ron goes for every tablet build; the publisher checks the signing key first.
+if [ -f "$HOME/gcrpc-fixedroute/ops/publish-apk.py" ]; then
+  python3 "$HOME/gcrpc-fixedroute/ops/publish-apk.py" --app rideavl public/rideavl-pilot.apk | head -1 || echo "warning: tablet-apps page not updated"
+fi
+
 git add public/rideavl-pilot.apk public/rideavl-version.json
 echo "staged RideAVL ${VERSION} (code ${CODE}), required=${REQUIRED}. Now:"
 echo "  git commit -m \"Pilot APK: RideAVL ${VERSION}\" && git push"
