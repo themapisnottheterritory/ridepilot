@@ -49,6 +49,14 @@ The script copies the APK into `public/`, backs the previous one up to `~/ridepi
 release file from the gradle version, and stages both. Tablets see the banner within a minute of opening
 the app. The QR code and the browser download still work for a fresh tablet.
 
+## The one place for tablet software
+
+**https://fixedroute.internal.gcrpc.org/static/apk/** lists both tablet apps (RideAVL and GCRPC
+Driver) with QR codes, checksums and signing certificates; it is linked from apps.internal.gcrpc.org
+("Tablet Apps"). `ops/release-rideavl.sh` publishes there as well as to `public/`, so Ron and the
+over-the-air updater always see the same build. GCRPC Driver updates the same way; see
+`gcrpc-fixedroute/ops/tablet-ota.md`.
+
 ## Pieces
 
 - rideavl-v2: `android/.../AppUpdaterPlugin.java` (download, canInstall, install), registered in
