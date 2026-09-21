@@ -39,15 +39,11 @@ a proper release build (not debuggable, WebView not inspectable) signed with the
 same key as GCRPC Driver (`~/keystores/gcrpc-fixedroute.keystore`, alias `gcrpc-driver`, certificate
 `8f744b22…`). One key to back up and rotate for both apps.
 
-Android will not install a fleet-signed build over a debug-signed one. **Each tablet switches once:
-uninstall RideAVL, then install 1.0.13** (InTouch can do both; or by hand from the tablet-apps page).
-After that, updates arrive over the air as before. The uninstall clears the app's sign-in and the
-"Install unknown apps" switch, so the driver signs in again and allows installs once more.
-
-Until the tablets are switched, `public/rideavl-pilot.apk` (the slot the app polls) still holds the
-debug-signed 1.0.12. Publishing 1.0.13 there before a tablet is switched would show that tablet a banner
-whose install fails, so the fleet-signed build is on the tablet-apps page only. Run `release-rideavl.sh`
-for 1.0.13 once the switch is done.
+Android will not install a fleet-signed build over a debug-signed one. No tablet was running RideAVL in
+service at the switch (2026-09-21), so InTouch installs 1.0.13 fresh and nothing needs uninstalling. The
+exception is any test tablet that still has the debug-signed 1.0.12 or older: uninstall RideAVL there,
+then install. `public/rideavl-pilot.apk` (the slot the app polls) has held the fleet-signed 1.0.13 since
+2026-09-21.
 
 ## Publishing a release
 

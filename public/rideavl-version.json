@@ -1,9 +1,9 @@
 {
-  "version": "1.0.12",
-  "version_code": 13,
+  "version": "1.0.13",
+  "version_code": 14,
   "url": "/rideavl-pilot.apk",
   "required": false,
-  "notes": "Fare card taps on both screens; updates now arrive over the air.",
-  "published_at": "2026-09-11T20:15:32Z",
-  "sha256": "e05f590b4e81ccea37c266dddbfb70fd0c16e628d0c2071db376d6ebb393521a"
+  "notes": "Release build on the fleet key.",
+  "published_at": "2026-09-21T15:54:35Z",
+  "sha256": "8a73e0fe1ef4dbcd60b7d89a9393eb8f0f7c67272383b9ac35d2ae61fa557faf"
 }
