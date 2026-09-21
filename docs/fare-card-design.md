@@ -15,6 +15,7 @@ Fare today: $1.50, and the goal is to bring it down, not up.
 - **Phase 2 built 2026-09-10** (section 12): tap endpoint, tablet scanner, offline queue, QR sheets, fare settings.
   QR codes are read by a **USB 2D barcode scanner**, not the tablet camera: same keyboard-wedge path as the RFID reader.
 - **Phase 3 built 2026-09-10** (section 13): demand-response pickup tap, online reload job (Stripe pull, not yet configured).
+- **Phone payments and fees (2026-09-21, section 20)**: send a payment link, never key a card; $10 minimum, absorb the fee.
 - Tap to pay (bank card / phone wallet) explored and **paused** (section 10). Percentage fees do not fit a $1.50 fare.
 - Connectivity is not the constraint. Every bus has a Pepwave MAX BR1 LTE router and the tablets have their own LTE.
   Offline is a fallback path, not the design center.
@@ -840,3 +841,52 @@ QR bus (the QR is a printed, laminated sheet from the account page).
 **First day with the parts**: OTG adapter and RFID reader into the pilot bus tablet, open a fixed-route run,
 tap a card (no tablet setup needed). Issue the first cards at the desk with the office reader, load a few
 dollars, try a tap and a transfer. Then order more cards.
+
+## 20. Taking payments over the phone, and the fees (2026-09-21)
+
+Philz asked how the office takes a reload by phone (Cash App? Venmo? cards?) without the fees eating
+the fare. Short answer: **never take a card number over the phone.** Take the call, send the rider a
+payment link by text or email, and let them pay on their own phone. That is the flow section 13 already
+builds (Stripe Payment Link with the fare card number field, pulled by `sync_online_reloads`).
+
+**Why not read cards over the phone.** A keyed card is the most expensive and riskiest way to take
+money: Square charges 3.5% + $0.15 keyed against 2.9% + $0.30 for a link; fraud disputes land on the
+agency because no cardholder was present; and once staff hear card numbers the office is inside PCI
+scope. A link avoids all three.
+
+**Why not Venmo or Cash App.** A public agency cannot use personal accounts; business accounts give no
+way to attach a fare card number to the payment; reconciliation is by hand; the audit trail is weak.
+The one thing they offer, riders who already live in Cash App, Stripe's payment links cover: they accept
+Cash App Pay, Apple Pay and Google Pay at Stripe's normal rate, so riders get Cash App without GCRPC
+holding a Cash App account.
+
+**The fee math.** The percentage is what hurts, and it is driven by the flat per-transaction part on
+small loads:
+
+| Reload | Stripe link (2.9% + $0.30) | Square keyed by phone (3.5% + $0.15) | Venmo business (1.9% + $0.10) |
+|---|---|---|---|
+| $5 | $0.45 (8.9%) | $0.33 (6.5%) | $0.20 (3.9%) |
+| $10 | $0.59 (5.9%) | $0.50 (5.0%) | $0.29 (2.9%) |
+| $20 | $0.88 (4.4%) | $0.85 (4.3%) | $0.48 (2.4%) |
+| $30 monthly pass | $1.17 (3.9%) | $1.20 (4.0%) | $0.67 (2.2%) |
+
+Rates as published 2026-09; Venmo is listed for comparison only, for the reasons above.
+
+**Keeping it small.**
+
+1. **Minimum online reload $10, default button $20.** That alone moves the fee from 9% to 4 or 5%.
+2. **Absorb the fee, no surcharge.** A convenience fee on a $10 load punishes exactly the riders the
+   card is for. Whether a council of governments may add one at all is a question for counsel under the
+   Texas local-government payment-fee statute. Budget it instead: if a third of fare revenue moves
+   online, the fees are a few hundred dollars a year against staff time not spent counting cash.
+3. **Ask Stripe for the nonprofit rate** (2.2% + $0.30). Aimed at 501(c)(3)s, but governments sometimes
+   get it by asking. The email costs nothing.
+4. **Cash stays the main channel.** Most of this ridership pays cash at the counter (section 8); online
+   is a convenience for the minority with a bank card, not the plan.
+5. **Skip government payment processors** (Paymentus, Point & Pay, nCourt class). They charge the payer a
+   flat $1 to $3 per transaction, fine on a $400 water bill and brutal on a $10 fare load.
+
+**The office flow.** Rider calls. Staff look up the card on the account page, send the Payment Link with
+the amount and card number pre-filled, rider pays, and the half-hourly sync posts the load. Nothing to
+key, nothing to reconcile. Still needed to turn it on: the Stripe account, the key, the link and the
+cron in section 13 (open item 8).
