@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # Publish a RideAVL build over the air (ops/rideavl-ota-updates.md).
 #
-#   ops/release-rideavl.sh [--required] [--notes "text"] [path/to/app-prod-debug.apk]
+#   ops/release-rideavl.sh [--required] [--notes "text"] path/to/rideavl-<version>.apk
+#
+# From 1.0.13 the APK is a release build signed with the fleet key (see
+# rideavl-ota-updates.md "Signing"); the publisher refuses anything else.
 #
 # Copies the APK into public/rideavl-pilot.apk, backs up the previous one to
 # ~/ridepilot-ops, writes public/rideavl-version.json from the versionName /
@@ -12,7 +15,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 APP_REPO="${RIDEAVL_REPO:-$HOME/rptest/rideavl-v2}"
-APK="${APP_REPO}/android/app/build/outputs/apk/prod/debug/app-prod-debug.apk"
+APK=""  # the fleet-signed APK, e.g. ~/rptest/rideavl-v2/dist/rideavl-1.0.13.apk
 REQUIRED=false
 NOTES="Tap Update, then Install."
 while [ $# -gt 0 ]; do
@@ -23,7 +26,13 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
-[ -f "$APK" ] || { echo "no APK at $APK (build with: cd $APP_REPO && npm run apk)"; exit 1; }
+[ -n "$APK" ] || { echo "usage: $0 [--required] [--notes text] path/to/rideavl-<version>.apk"; exit 1; }
+[ -f "$APK" ] || { echo "no APK at $APK (build with: cd $APP_REPO && npm run apk:release, then apksigner)"; exit 1; }
+# Refuse a debug-key build: from 1.0.13 the tablets carry the fleet key and a
+# debug-signed APK would fail to install on every one of them.
+if ! ~/android-sdk/build-tools/35.0.0/apksigner verify --print-certs "$APK" | grep -q 8f744b22f501b10fe72d005d23fcb456cbd9abcac2b39334485c82fcfcd262f0; then
+  echo "$APK is not signed with the GCRPC fleet key; see ops/rideavl-ota-updates.md 'Signing'"; exit 1
+fi
 
 GRADLE="$APP_REPO/android/app/build.gradle"
 VERSION=$(grep -oE 'versionName "[^"]+"' "$GRADLE" | head -1 | cut -d'"' -f2)

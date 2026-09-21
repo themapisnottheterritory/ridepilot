@@ -32,16 +32,36 @@ release (plus the Play Protect tap) is as far as Android allows without an MDM.
 **Tested 2026-09-11** on a Galaxy Tab Active Pro (SM-T547U, Android 11): 1.0.10 installed by USB, then
 1.0.11 and 1.0.12 arrived through the banner. Download took about a second on the office Wi-Fi.
 
+## Signing: the fleet key from 1.0.13 (2026-09-21)
+
+Through 1.0.12 the tablets ran a *debug* build signed with the Android debug key. From 1.0.13 RideAVL is
+a proper release build (not debuggable, WebView not inspectable) signed with the GCRPC fleet key, the
+same key as GCRPC Driver (`~/keystores/gcrpc-fixedroute.keystore`, alias `gcrpc-driver`, certificate
+`8f744b22…`). One key to back up and rotate for both apps.
+
+Android will not install a fleet-signed build over a debug-signed one. **Each tablet switches once:
+uninstall RideAVL, then install 1.0.13** (InTouch can do both; or by hand from the tablet-apps page).
+After that, updates arrive over the air as before. The uninstall clears the app's sign-in and the
+"Install unknown apps" switch, so the driver signs in again and allows installs once more.
+
+Until the tablets are switched, `public/rideavl-pilot.apk` (the slot the app polls) still holds the
+debug-signed 1.0.12. Publishing 1.0.13 there before a tablet is switched would show that tablet a banner
+whose install fails, so the fleet-signed build is on the tablet-apps page only. Run `release-rideavl.sh`
+for 1.0.13 once the switch is done.
+
 ## Publishing a release
 
 ```sh
 cd ~/rptest/rideavl-v2
 # bump versionCode and versionName in android/app/build.gradle (versionCode must go up)
-npm run apk                                   # builds android/app/build/outputs/apk/prod/debug/app-prod-debug.apk
-git commit -am "RideAVL 1.0.11: ..." && git push
+npm run apk:release                           # android/app/build/outputs/apk/prod/release/app-prod-release-unsigned.apk
+BT=~/android-sdk/build-tools/35.0.0
+$BT/apksigner sign --ks ~/keystores/gcrpc-fixedroute.keystore --ks-key-alias gcrpc-driver \
+  --out dist/rideavl-1.0.14.apk android/app/build/outputs/apk/prod/release/app-prod-release-unsigned.apk
+git commit -am "RideAVL 1.0.14: ..." && git push
 
 cd ~/rptest/ridepilot
-ops/release-rideavl.sh --notes "What changed, in one line for the banner"   # add --required if old builds must not sign in
+ops/release-rideavl.sh --notes "What changed, in one line for the banner" ~/rptest/rideavl-v2/dist/rideavl-1.0.14.apk   # add --required if old builds must not sign in
 git commit -m "Pilot APK: RideAVL 1.0.11" && git push
 ```
 
@@ -77,4 +97,4 @@ over-the-air updater always see the same build. GCRPC Driver updates the same wa
 | No banner on a tablet that should update | `curl http://10.0.0.16/rideavl-version.json`; is `version_code` higher than the tablet's build (sign-in footer shows the version)? Tablet on the tunnel? |
 | Banner, but Update opens Settings every time | the "Install unknown apps" switch for RideAVL is still off on that tablet |
 | "Download failed" | APK reachable at `http://10.0.0.16/rideavl-pilot.apk` from the tablet? Content-Length matches the file? |
-| Installer says the app is not installed / signature mismatch | the APK was signed with a different key than the one on the tablet; both must come from the same `rideavl.keystore` / debug key |
+| Installer says the app is not installed / signature mismatch | the tablet still has the debug-signed 1.0.12 or older: uninstall RideAVL, then install (see "Signing" above). Builds from 1.0.13 on are all on the fleet key, so this only happens once per tablet |
