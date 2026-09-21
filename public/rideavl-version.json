@@ -1,9 +1,9 @@
 {
-  "version": "1.0.14",
-  "version_code": 15,
+  "version": "1.0.15",
+  "version_code": 16,
   "url": "/rideavl-pilot.apk",
   "required": false,
-  "notes": "Renamed GCRPC Demand Response. Install fresh; uninstall RideAVL.",
-  "published_at": "2026-09-21T16:31:03Z",
-  "sha256": "0e9ed0e7afc39a46dc11f51349114ca6b4d8541f517f037bb185cdabe15d7ad8"
+  "notes": "No required hardware features, for Intune.",
+  "published_at": "2026-09-21T18:39:01Z",
+  "sha256": "271847c99196ca09ce9fc96efc122dd904b1feec4f1ef9f6400bde46b8c4f3d8"
 }
