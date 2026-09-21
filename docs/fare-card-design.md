@@ -204,7 +204,7 @@ Offline (fallback only, given the Pepwave and tablet LTE): at run start the tabl
 same as boardings today. On sync the server recomputes; a tap that ends up under the floor is recorded
 anyway and the account is flagged for the office.
 
-### 5.1b Fixed route from the GCRPC Driver tablet (built 2026-09-21)
+### 5.1b Fixed route from the GCRPC Fixed Route tablet app (built 2026-09-21; the app was called GCRPC Driver until the same day)
 
 The turn-by-turn app (`gcrpc-fixedroute/driver/`, GCRPC Driver 1.6) collects the same taps as
 RideAVL's fixed-route page, so a fixed-route bus needs one app. The driver signs in once with their

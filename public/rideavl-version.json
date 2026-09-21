@@ -1,9 +1,9 @@
 {
-  "version": "1.0.13",
-  "version_code": 14,
+  "version": "1.0.14",
+  "version_code": 15,
   "url": "/rideavl-pilot.apk",
   "required": false,
-  "notes": "Release build on the fleet key.",
-  "published_at": "2026-09-21T15:54:35Z",
-  "sha256": "8a73e0fe1ef4dbcd60b7d89a9393eb8f0f7c67272383b9ac35d2ae61fa557faf"
+  "notes": "Renamed GCRPC Demand Response. Install fresh; uninstall RideAVL.",
+  "published_at": "2026-09-21T16:31:03Z",
+  "sha256": "0e9ed0e7afc39a46dc11f51349114ca6b4d8541f517f037bb185cdabe15d7ad8"
 }

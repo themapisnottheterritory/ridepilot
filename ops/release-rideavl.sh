@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Publish a RideAVL build over the air (ops/rideavl-ota-updates.md).
+# Publish a GCRPC Demand Response (formerly RideAVL; renamed 2026-09-21) build
+# over the air (ops/rideavl-ota-updates.md). File names here stay 'rideavl':
+# the app reads them and they are internal.
 #
 #   ops/release-rideavl.sh [--required] [--notes "text"] path/to/rideavl-<version>.apk
 #

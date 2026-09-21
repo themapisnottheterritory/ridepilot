@@ -471,7 +471,7 @@ Set the maximum time (in minutes) any passenger should be on the vehicle. The ro
 
 ### 5.8 Adding a Driver and Their Tablet Login
 
-Every driver needs a login: it is what they type into the RideAVL tablet. You no longer have to create that login on the Users page first. Everything happens on **Drivers → New Driver**.
+Every driver needs a login: it is what they type into the RideAVL (renamed **GCRPC Demand Response** on the tablets on 2026-09-21; same app) tablet. You no longer have to create that login on the Users page first. Everything happens on **Drivers → New Driver**.
 
 1. Fill in the driver's phone, address and the rest as usual.
 2. Under **Associated User**, choose **Create a login for this driver**.

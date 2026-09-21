@@ -68,7 +68,7 @@ Runs Docker + Docker Compose. The repo is checked out at
   `busavl`; on that box use `sudo mysql busavl`, the app account is remote-only). The token in
   `~/yard_portal/fleet_sync.env` on `.32` must equal `FLEET_SYNC_TOKEN` in RidePilot's
   `application.yml`; if you regenerate one, update the other. See `ops/fleet-sync-plan.md`.
-- **Driver tablets update themselves from RidePilot** (from RideAVL 1.0.10, 2026-09-11; the tablets
+- **Driver tablets update themselves from RidePilot** (from RideAVL (on the tablets: GCRPC Demand Response, `org.gcrpc.transit.demandresponse`, since 2026-09-21) 1.0.10, 2026-09-11; the tablets
   have no MDM). The app reads `public/rideavl-version.json` and downloads `public/rideavl-pilot.apk`
   (both committed; 1.0.12 as of 2026-09-11), shows an Update banner, and opens the Android installer.
   Publish a release with `ops/release-rideavl.sh` (bumps nothing itself: bump `versionCode` /

@@ -1,5 +1,14 @@
 # RideAVL over-the-air updates
 
+**Renamed 2026-09-21** (agreed with Andrew before the first InTouch rollout): the app is now **GCRPC
+Demand Response**, application id `org.gcrpc.transit.demandresponse`, version 1.0.14. It was RideAVL,
+`com.victoriatransit.rideavl`. A new application id is a new app: it installs beside the old one and
+never over it, so old copies on test tablets are uninstalled by hand (`adb uninstall
+com.victoriatransit.rideavl`). Nothing was in service under the old id. The repo (`rideavl-v2`), this
+file, the release script and the OTA slot files (`public/rideavl-pilot.apk`, `rideavl-version.json`)
+keep their names: the app reads those paths and they are internal. Its sibling GCRPC Driver became
+**GCRPC Fixed Route** (`org.gcrpc.transit.fixedroute`) the same day.
+
 Written 2026-09-11. The driver tablets are not under Intune, so app updates used to mean Ron touching
 every tablet. From RideAVL **1.0.10** the app updates itself from RidePilot; the driver taps Update, then
 Install.
