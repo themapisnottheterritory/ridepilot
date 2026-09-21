@@ -484,6 +484,8 @@ Rails.application.routes.draw do
         end
         resources :vehicles, only: [:index]
         delete 'boardings/:id' => 'boardings#destroy'   # :id = client_uuid of the submission
+        # GCRPC Driver: open (find or create) today's fixed run for a GTFS route
+        post 'fixed_runs/open' => 'fixed_runs#open'
 
         # DVIR (driver vehicle inspection reports) — step 2
         get 'inspection_template' => 'inspection_reports#template'

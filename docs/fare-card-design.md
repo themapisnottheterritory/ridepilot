@@ -204,6 +204,17 @@ Offline (fallback only, given the Pepwave and tablet LTE): at run start the tabl
 same as boardings today. On sync the server recomputes; a tap that ends up under the floor is recorded
 anyway and the account is flagged for the office.
 
+### 5.1b Fixed route from the GCRPC Driver tablet (built 2026-09-21)
+
+The turn-by-turn app (`gcrpc-fixedroute/driver/`, GCRPC Driver 1.6) collects the same taps as
+RideAVL's fixed-route page, so a fixed-route bus needs one app. The driver signs in once with their
+RidePilot tablet login; at GO the app calls `POST /api/v1/fixed_runs/open` with the GTFS route id,
+and RidePilot finds or creates today's fixed run for that driver and route (`fixed_routes.external_route_ids`
+already carry the GTFS ids). Taps then go to the existing `runs/:id/token_taps`; cash riders to
+`runs/:id/boardings`, one per category button. A tap records one boarding, so no separate count.
+Offline taps are queued on the tablet and sent with `offline: true`. RidePilot is reached through the
+fixedroute nginx vhost at `/rp/`. Details in the gcrpc-fixedroute README, "Fare cards".
+
 ### 5.2 UDR / demand response (a little more complex)
 
 The trip already knows the customer, the fare and has `fare_collected_time`. A tap at pickup is a
