@@ -838,6 +838,11 @@ genuine NXP ($150 per 100). Plain white; serial in marker, print later if the ca
 **Skip**: card writers or encoders (the card carries only its factory UID); NTAG stickers or fobs for the
 QR bus (the QR is a printed, laminated sheet from the account page).
 
+**Test riders (created 2026-09-22)**: Test Adult Rider (customer 80145, $10), Test Senior Rider (80146, $5,
+Senior 60+) and Test Pass Rider (80147, monthly pass through 2026-10-31), each with a QR card (serials
+1001–1003). Print the QR sheets from each rider's Fare Account page; when the RFID cards arrive, tap one on
+the office reader from the same page to link it. They are flagged as not real in private notes.
+
 **First day with the parts**: OTG adapter and RFID reader into the pilot bus tablet, open a fixed-route run,
 tap a card (no tablet setup needed). Issue the first cards at the desk with the office reader, load a few
 dollars, try a tap and a transfer. Then order more cards.
