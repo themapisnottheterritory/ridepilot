@@ -38,11 +38,21 @@ RSpec.describe Api::V1::Driver::FixedRunsController, type: :controller do
     expect(run.driver).to eq driver
     expect(run.service_mode).to eq "fixed_route"
     expect(run.scheduled_start_time.strftime("%H:%M")).to eq "08:00"
-    expect(run.actual_start_time).to be_present
+    expect(run.actual_start_time).to be_nil          # the pre-trip inspection starts it
+    expect(first["started"]).to be false
+    expect(first["pre_inspection_done"]).to be false
 
     post :open, params: { external_route_id: "r1" }
     expect(JSON.parse(response.body)["run_id"]).to eq run.id
     expect(JSON.parse(response.body)["created"]).to be false
+  end
+
+  it "gives a new run after today's has been ended" do
+    existing.update_columns(actual_end_time: Time.current, end_odometer: 100, start_odometer: 90)
+    post :open, params: { external_route_id: "r1" }
+    body = JSON.parse(response.body)
+    expect(body["run_id"]).not_to eq existing.id
+    expect(body["created"]).to be true
   end
 
   it "rejects a route RidePilot does not know" do

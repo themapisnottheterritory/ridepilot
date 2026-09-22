@@ -7,7 +7,11 @@
 #   POST /api/v1/fixed_runs/open   { external_route_id, vehicle?, scheduled_start?, scheduled_end?, run_name? }
 #
 # Idempotent: the same driver on the same route the same day gets the same
-# run back, so a tablet restart mid-run keeps counting on the one sheet.
+# run back while it is open, so a tablet restart mid-run keeps counting on the
+# one sheet. A run that has been ended (post-trip done, end odometer in) stays
+# ended; a second pull-out on the same route the same day gets a new run.
+# The run is not *started* here: the tablet starts it (runs/:id/start) with the
+# odometer from the pre-trip inspection, the same order Demand Response uses.
 # Availability rules are not applied (like runs#start, which also saves
 # without validation): a driver on a bus with riders at the door is not the
 # moment to refuse a fare because dispatch double-booked them.
@@ -28,12 +32,11 @@ class Api::V1::Driver::FixedRunsController < Api::V1::Driver::BaseController
 
     date = Time.zone.today
     run = Run.where(provider: provider, driver: @driver, fixed_route: route, date: date, service_mode: "fixed_route")
-             .where(deleted_at: nil).order(:id).first
+             .where(deleted_at: nil, actual_end_time: nil).order(:id).last
     created = false
     if run.nil?
       run = Run.new(provider: provider, driver: @driver, fixed_route: route, date: date, service_mode: "fixed_route",
-                    name: params[:run_name].presence || "#{route.display_name} · #{@driver.user&.display_name || @driver.user&.username}",
-                    actual_start_time: Time.current)
+                    name: params[:run_name].presence || "#{route.display_name} · #{@driver.user&.display_name || @driver.user&.username}")
       run.scheduled_start_time = parse_clock(date, params[:scheduled_start])
       run.scheduled_end_time   = parse_clock(date, params[:scheduled_end]) || (run.scheduled_start_time && run.scheduled_start_time + 2.hours)
       created = true
@@ -42,9 +45,8 @@ class Api::V1::Driver::FixedRunsController < Api::V1::Driver::BaseController
       vehicle = Vehicle.where(provider: provider, deleted_at: nil).find_by(name: params[:vehicle].to_s.strip)
       run.vehicle = vehicle if vehicle
     end
-    run.actual_end_time = nil if run.actual_end_time.present?   # reopened after an early End
-    run.end_odometer = nil if run.end_odometer.present?
     run.save(validate: false)
+    reports = VehicleInspectionReport.where(run_id: run.id).where.not(submitted_at: nil)
 
     render success_response(boardings_payload(run).merge(
       created: created,
@@ -54,7 +56,12 @@ class Api::V1::Driver::FixedRunsController < Api::V1::Driver::BaseController
       },
       rider_categories: RiderCategory.by_provider(provider).default_order.map(&:as_api_json),
       fare_types: FareType.by_provider(provider).default_order.map(&:as_api_json),
-      vehicle: run.vehicle&.name
+      vehicle: run.vehicle&.name,
+      vehicle_id: run.vehicle_id,
+      started: run.actual_start_time.present?,
+      start_odometer: run.start_odometer,
+      pre_inspection_done: reports.where(phase: "pre").exists?,
+      post_inspection_done: reports.where(phase: "post").exists?
     ))
   end
 
