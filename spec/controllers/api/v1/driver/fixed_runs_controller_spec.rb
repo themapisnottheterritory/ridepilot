@@ -73,3 +73,29 @@ RSpec.describe Api::V1::Driver::FixedRunsController, type: :controller do
     expect(JSON.parse(response.body)["totals"]["boarded"]).to eq 1
   end
 end
+
+RSpec.describe Api::V1::Driver::FixedRunsController, "today", type: :controller do
+  let(:provider) { create(:provider) }
+  let!(:setup)   { build_fixed_run(provider) }
+  let(:run)      { setup[0] }
+  let(:driver)   { setup[1] }
+
+  before do
+    setup[2].update!(external_route_ids: ["r1", "r1-south"])
+    run.update_columns(scheduled_start_time: Time.zone.parse("07:30"))
+    user = driver.user
+    user.update_column(:authentication_token, "tok-#{SecureRandom.hex(8)}") if user.authentication_token.blank?
+    request.headers.merge!("X-User-Username" => user.username, "X-User-Token" => user.authentication_token)
+  end
+
+  it "lists what dispatch scheduled for this driver today, with the GTFS ids and the bus" do
+    get :today
+    body = JSON.parse(response.body)["runs"]
+    expect(body.size).to eq 1
+    expect(body[0]["run_id"]).to eq run.id
+    expect(body[0]["external_route_ids"]).to eq %w[r1 r1-south]
+    expect(body[0]["vehicle"]).to eq run.vehicle.name
+    expect(body[0]["scheduled_start"]).to eq "07:30"
+    expect(body[0]["started"]).to be false
+  end
+end

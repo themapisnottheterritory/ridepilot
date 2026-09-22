@@ -65,6 +65,22 @@ class Api::V1::Driver::FixedRunsController < Api::V1::Driver::BaseController
     ))
   end
 
+  # GET /api/v1/fixed_runs/today
+  # Today's fixed runs for this driver, scheduled by dispatch (repeating runs)
+  # or opened from the tablet: enough for the pull-out to pin the scheduled
+  # route and pre-select the bus. No itineraries join (fixed runs have none).
+  def today
+    runs = Run.where(provider: @driver.provider, driver: @driver, date: Time.zone.today, service_mode: "fixed_route", deleted_at: nil)
+              .includes(:fixed_route, :vehicle).order(:scheduled_start_time, :id)
+    render success_response(runs: runs.map { |r|
+      { run_id: r.id, name: r.name, fixed_route_id: r.fixed_route_id, route_name: r.fixed_route&.display_name,
+        external_route_ids: r.fixed_route&.external_route_ids || [],
+        vehicle: r.vehicle&.name, vehicle_id: r.vehicle_id,
+        scheduled_start: r.scheduled_start_time&.strftime("%H:%M"), scheduled_end: r.scheduled_end_time&.strftime("%H:%M"),
+        started: r.actual_start_time.present?, ended: r.actual_end_time.present? }
+    })
+  end
+
   private
 
   def parse_clock(date, hhmm)

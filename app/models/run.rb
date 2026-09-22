@@ -31,6 +31,7 @@ class Run < ApplicationRecord
   SERVICE_MODES = %w[demand_response fixed_route].freeze
   belongs_to :fixed_route, optional: true
   has_many :fixed_route_boardings
+  has_many :fixed_route_stop_visits
 
   has_one :run_distance
 

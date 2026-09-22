@@ -567,6 +567,33 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.index ["run_id"], name: "index_fixed_route_boardings_on_run_id"
   end
 
+  create_table "fixed_route_stop_visits", force: :cascade do |t|
+    t.integer "provider_id", null: false
+    t.integer "run_id", null: false
+    t.integer "fixed_route_id"
+    t.integer "fixed_route_stop_id"
+    t.string "external_route_id", null: false
+    t.string "external_stop_id", null: false
+    t.string "trip_id"
+    t.string "stop_name"
+    t.string "direction"
+    t.integer "sequence"
+    t.string "status", null: false
+    t.time "scheduled_time"
+    t.datetime "arrived_at"
+    t.datetime "departed_at"
+    t.integer "dwell_seconds"
+    t.integer "deviation_seconds"
+    t.decimal "latitude", precision: 10, scale: 6
+    t.decimal "longitude", precision: 10, scale: 6
+    t.string "client_uuid", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["client_uuid"], name: "index_fixed_route_stop_visits_on_client_uuid", unique: true
+    t.index ["provider_id", "created_at"], name: "index_fixed_route_stop_visits_on_provider_id_and_created_at"
+    t.index ["run_id", "trip_id", "sequence"], name: "idx_on_run_id_trip_id_sequence_343acd80cd"
+  end
+
   create_table "fixed_route_stops", force: :cascade do |t|
     t.integer "fixed_route_id", null: false
     t.string "external_route_id", null: false

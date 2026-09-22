@@ -480,12 +480,16 @@ Rails.application.routes.draw do
             # Fare cards: a tap at the door, and the offline snapshot
             post 'token_taps',  to: 'token_taps#create'
             get  'fare_tokens', to: 'token_taps#index'
+            # Which published stops the bus actually stopped at
+            post 'stop_visits', to: 'stop_visits#create'
+            get  'stop_visits', to: 'stop_visits#index'
           end
         end
         resources :vehicles, only: [:index]
         delete 'boardings/:id' => 'boardings#destroy'   # :id = client_uuid of the submission
         # GCRPC Driver: open (find or create) today's fixed run for a GTFS route
         post 'fixed_runs/open' => 'fixed_runs#open'
+        get  'fixed_runs/today' => 'fixed_runs#today'   # what dispatch scheduled for this driver
 
         # DVIR (driver vehicle inspection reports) — step 2
         get 'inspection_template' => 'inspection_reports#template'

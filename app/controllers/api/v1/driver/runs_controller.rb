@@ -123,6 +123,8 @@ class Api::V1::Driver::RunsController < Api::V1::Driver::BaseController
     return render fail_response(status: 422, vehicle: "This run has already ended.") if @run.end_odometer.present?
 
     requested_id = params[:vehicle_id].presence.try(:to_i)
+    # The fixed-route tablet may only know the unit by name (its fallback fleet list).
+    requested_id ||= Vehicle.for_provider(@run.provider_id).where(active: true).find_by(name: params[:vehicle].to_s.strip)&.id if params[:vehicle].present?
     if requested_id.nil? || requested_id == @run.vehicle_id
       return render fail_response(status: 422, vehicle: "No unit is assigned to this run. Choose the unit you are driving.") if @run.vehicle.nil?
       @run.update_column(:vehicle_confirmed_at, DateTime.current)
