@@ -26,10 +26,10 @@
         = render partial: 'shared/weekday_select'
       .col-sm-12
         = f.label :vehicle_id, translate_helper(:vehicle)
-        = f.select :vehicle_id, options_from_collection_for_select( @vehicles, :id, :name, session[:runs_vehicle_id]), {:include_blank => translate_helper(:all) }, { :class => 'form-control' }
+        = f.select :vehicle_id, options_for_select([["No bus assigned", RunFilter::UNASSIGNED]] + @vehicles.map { |v| [v.name, v.id] }, session[:runs_vehicle_id].to_s.presence), {:include_blank => translate_helper(:all) }, { :class => 'form-control' }
       .col-sm-12
         = f.label :driver_id, translate_helper(:driver)
-        = f.select :driver_id, options_from_collection_for_select( @drivers, :id, :user_name, session[:runs_driver_id]), {:include_blank => translate_helper(:all) }, { :class => 'form-control' }
+        = f.select :driver_id, options_for_select([["No driver assigned", RunFilter::UNASSIGNED]] + @drivers.map { |d| [d.user_name, d.id] }, session[:runs_driver_id].to_s.presence), {:include_blank => translate_helper(:all) }, { :class => 'form-control' }
       .col-sm-12
         = f.label :service_mode, "Service"
         = f.select :service_mode, options_for_select([["Demand response", "demand_response"], ["Fixed route", "fixed_route"]], session[:runs_service_mode]), {:include_blank => translate_helper(:all) }, { :class => 'form-control' }

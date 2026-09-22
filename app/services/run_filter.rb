@@ -49,14 +49,23 @@ class RunFilter
     @filters[:days_of_week] = days_of_week
   end
 
+  # "unassigned" in either select means runs with nobody / no bus on them:
+  # since fixed-route blocks can be scheduled bare (2026-09-22), dispatch
+  # needs one click to find what still has to be assigned.
+  UNASSIGNED = "unassigned".freeze
+
   def filter_by_vehicle!
-    if @filters[:vehicle_id].present?  
+    if @filters[:vehicle_id].to_s == UNASSIGNED
+      @runs = @runs.where(vehicle_id: nil)
+    elsif @filters[:vehicle_id].present?
       @runs = @runs.includes(:vehicle).references(:vehicle).where(vehicle_id: @filters[:vehicle_id]) 
     end
   end
 
   def filter_by_driver!
-    if @filters[:driver_id].present?  
+    if @filters[:driver_id].to_s == UNASSIGNED
+      @runs = @runs.where(driver_id: nil)
+    elsif @filters[:driver_id].present?
       @runs = @runs.includes(:driver).references(:driver).where(driver_id: @filters[:driver_id]) 
     end
   end

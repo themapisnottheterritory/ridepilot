@@ -696,6 +696,8 @@ scheduled**; dispatch assigns the driver (and, if known, the bus) on the repeati
 run. When a driver is assigned, the GCRPC Fixed Route tablet pins that route on the pull-out and
 pre-selects the bus; the driver confirms or changes the bus at GO and the run follows. Without an
 assignment the driver still picks the route on the tablet and RidePilot opens that day's run for them.
+On the Runs page, the Driver filter has a **No driver assigned** choice (and the Vehicle filter **No bus
+assigned**) to list everything still to be staffed.
 The block is one run for the whole day: trips back and forth, lunch and a bus swap all stay on it; a
 driver swap is the outgoing driver's End run and the incoming driver's pre-trip.
 
