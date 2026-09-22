@@ -685,6 +685,20 @@ To enable SMS notifications for a customer:
 ---
 
 
+### 7.4a Fixed-route runs on the schedule (dispatch)
+
+The thirteen FY2027 fixed routes are on RidePilot's schedule as **repeating runs** (Runs → Repeating
+Runs), the way the previous operator ran them: one block per route per day, city routes Mon–Fri
+07:30–17:00 (first trip 08:00, last trip ends about 16:50), each Inteplast commuter route seven days a
+week from half an hour before its morning trip to half an hour after its evening return. Daily runs are
+generated three weeks ahead by the nightly scheduler. **A fixed-route block needs no driver or bus to be
+scheduled**; dispatch assigns the driver (and, if known, the bus) on the repeating run or on the day's
+run. When a driver is assigned, the GCRPC Fixed Route tablet pins that route on the pull-out and
+pre-selects the bus; the driver confirms or changes the bus at GO and the run follows. Without an
+assignment the driver still picks the route on the tablet and RidePilot opens that day's run for them.
+The block is one run for the whole day: trips back and forth, lunch and a bus swap all stay on it; a
+driver swap is the outgoing driver's End run and the incoming driver's pre-trip.
+
 ### 7.4b Fixed Route Compliance report (admins)
 
 Reports → **Fixed Route Compliance**. One row per fixed-route run in the date range, filtered by route,

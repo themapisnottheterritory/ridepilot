@@ -5,8 +5,13 @@ module RunCore
 
   included do
     belongs_to :provider, -> { with_deleted }
-    belongs_to :driver, -> { with_deleted }
-    belongs_to :vehicle, -> { with_deleted }
+    # Driver and vehicle were always optional here (see the commented-out
+    # driver validation below; the vehicle one is explicit and skips fixed
+    # route). The Rails 7 upgrade made every belongs_to required by default,
+    # which silently made both mandatory and stopped fixed-route repeating
+    # runs from being scheduled without a driver. Restored 2026-09-22.
+    belongs_to :driver, -> { with_deleted }, optional: true
+    belongs_to :vehicle, -> { with_deleted }, optional: true
 
     before_save :update_scheduled_time_string
 
@@ -15,7 +20,9 @@ module RunCore
     validates                 :name, presence: true
     validates_datetime        :scheduled_start_time, allow_blank: true
     validates_datetime        :scheduled_end_time, after: :scheduled_start_time, allow_blank: true
-    validates                 :vehicle, presence: true
+    # A fixed-route block is scheduled by route; the bus is confirmed on the
+    # tablet at pull-out (fixed_runs/open, Change bus), and swaps are routine.
+    validates                 :vehicle, presence: true, unless: :fixed_route?
 
     scope :for_paid_driver,        -> { where(paid: true) }
     scope :for_volunteer_driver,   -> { where(paid: false) }
