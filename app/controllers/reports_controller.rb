@@ -1381,6 +1381,39 @@ class ReportsController < ApplicationController
     apply_v2_response
   end
 
+  # Fixed-route compliance (app/services/fixed_route_compliance.rb): one row per
+  # fixed run with stops served/skipped, early departures, riders, and whether
+  # the pre- and post-trip inspections were filed. Skipped stops and early
+  # departures are listed per run.
+  def fixed_route_compliance
+    query_params = params[:query] || {start_date: Date.today.prev_month + 1, end_date: Date.today + 1}
+    @query = Query.new(query_params)
+    @fixed_routes = FixedRoute.for_provider(current_provider_id).default_order
+    @drivers = Driver.for_provider(current_provider_id).default_order
+    @vehicles = Vehicle.for_provider(current_provider_id).active.default_order
+
+    if params[:query]
+      route = @query.fixed_route_id && @fixed_routes.find_by(id: @query.fixed_route_id)
+      drv = @query.driver_id && @drivers.find_by(id: @query.driver_id)
+      veh = @query.vehicle_id && @vehicles.find_by(id: @query.vehicle_id)
+      @report_params = []
+      @report_params << ["Date Range", "#{@query.start_date.strftime('%m/%d/%Y')} - #{@query.before_end_date.strftime('%m/%d/%Y')}"]
+      @report_params << ["Route", route ? route.display_name : "All"]
+      @report_params << ["Driver", drv ? drv.user_name : "All"]
+      @report_params << ["Bus", veh ? veh.name : "All"]
+
+      # Filter on the ids as given: a driver or bus that has since been deleted
+      # still filters, rather than silently widening to "All".
+      svc = FixedRouteCompliance.new(current_provider_id, start_date: @query.start_date, end_date: @query.end_date,
+                                     fixed_route_id: @query.fixed_route_id.presence, driver_id: @query.driver_id, vehicle_id: @query.vehicle_id)
+      rows = svc.rows
+      @report_data = rows.group_by(&:route_name).sort.to_h
+      @grand = svc.totals(rows)
+    end
+
+    apply_v2_response
+  end
+
   def pre_run_inspections
     query_params = params[:query] || {start_date: Date.today.prev_month + 1, end_date: Date.today + 1}
     @query = Query.new(query_params)

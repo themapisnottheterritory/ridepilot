@@ -1,0 +1,108 @@
+- if @report_data.blank?
+  %h4 No fixed-route runs in this range
+- else
+  :css
+    .fc-issue { color: #a94442; font-weight: bold; }
+    .fc-ok { color: #3c763d; }
+    .fc-detail { background: #f9f9f9; font-size: 12px; }
+    .fc-detail td { padding-left: 24px !important; }
+    .fc-num { text-align: right; }
+  :javascript
+    function fcToggle(id) { var el = document.getElementById(id); if (el) el.style.display = el.style.display === 'none' ? '' : 'none'; return false; }
+  %p
+    %b Runs:
+    = @grand[:runs]
+    &nbsp;&nbsp;
+    %b Clean:
+    %span{class: (@grand[:clean] == @grand[:runs] ? 'fc-ok' : '')}= @grand[:clean]
+    &nbsp;&nbsp;
+    %b Stops served:
+    = @grand[:served]
+    &nbsp;&nbsp;
+    %b Skipped:
+    %span{class: (@grand[:skipped] > 0 ? 'fc-issue' : 'fc-ok')}= @grand[:skipped]
+    - if @grand[:skip_rate]
+      = "(#{@grand[:skip_rate]}%)"
+    &nbsp;&nbsp;
+    %b Early departures:
+    %span{class: (@grand[:early] > 0 ? 'fc-issue' : 'fc-ok')}= @grand[:early]
+    &nbsp;&nbsp;
+    %b Missing pre-trip:
+    %span{class: (@grand[:no_pre] > 0 ? 'fc-issue' : 'fc-ok')}= @grand[:no_pre]
+    &nbsp;&nbsp;
+    %b Missing post-trip:
+    %span{class: (@grand[:no_post] > 0 ? 'fc-issue' : 'fc-ok')}= @grand[:no_post]
+    &nbsp;&nbsp;
+    %b Riders:
+    = @grand[:boarded]
+    &nbsp;&nbsp;
+    %b Miles:
+    = @grand[:miles]
+    &nbsp;&nbsp;
+    %b Days:
+    = @grand[:days]
+  %p{style: 'color: #777; font-size: 12px;'}
+    Stops served and skipped come from the tablet (GCRPC Fixed Route), which records a stop as served when the bus comes to rest within 40 m of it.
+    Early means the bus left a stop more than 30 seconds before its published time; late means more than 5 minutes after.
+    A run with no stop data was driven with a tablet that sent nothing, or on an older app.
+  - @report_data.each do |route_name, rows|
+    %h3.vehicle-heading
+      %u= "Route: #{route_name}"
+    %table.table.table-condensed{style: 'margin-bottom: 14px;'}
+      %thead
+        %tr
+          %th Date
+          %th Run
+          %th Driver
+          %th Bus
+          %th Out / In
+          %th.fc-num Miles
+          %th.fc-num Trips
+          %th.fc-num Served
+          %th.fc-num Skipped
+          %th.fc-num Early
+          %th.fc-num Late
+          %th.fc-num Dwell
+          %th.fc-num Riders
+          %th.fc-num Fares
+          %th Pre
+          %th Post
+          %th Issues
+      %tbody
+        - rows.each_with_index do |r, i|
+          - det = "fc-#{r.run.id}"
+          - has_detail = r.skipped_list.any? || r.early_list.any?
+          %tr
+            %td= r.date.strftime('%a %m/%d')
+            %td
+              = r.run_name
+              - if has_detail
+                = link_to 'details', '#', onclick: "return fcToggle('#{det}')", style: 'font-size: 11px; margin-left: 6px;'
+            %td= r.driver_name
+            %td= r.vehicle_name
+            %td= [r.started_at&.strftime('%H:%M'), r.ended_at&.strftime('%H:%M')].compact.join(' / ')
+            %td.fc-num= r.miles
+            %td.fc-num= r.trips
+            %td.fc-num= r.stops_served
+            %td.fc-num{class: (r.stops_skipped > 0 ? 'fc-issue' : '')}= r.stops_skipped
+            %td.fc-num{class: (r.early > 0 ? 'fc-issue' : '')}= r.early
+            %td.fc-num= r.late
+            %td.fc-num= r.avg_dwell ? "#{r.avg_dwell}s" : ''
+            %td.fc-num= r.boarded
+            %td.fc-num= r.fares > 0 ? number_to_currency(r.fares) : ''
+            %td{class: (r.pre_trip ? 'fc-ok' : 'fc-issue')}= r.pre_trip ? (r.pre_trip.safe_to_operate == false ? 'UNSAFE' : 'yes') : 'no'
+            %td{class: (r.post_trip ? 'fc-ok' : (r.issues.include?('no post-trip') ? 'fc-issue' : ''))}= r.post_trip ? (r.post_trip.safe_to_operate == false ? 'UNSAFE' : 'yes') : (r.ended_at ? 'no' : 'out')
+            %td{class: (r.issues.empty? ? 'fc-ok' : 'fc-issue')}= r.issues.empty? ? 'clean' : r.issues.join(', ')
+          - if has_detail
+            %tr.fc-detail{id: det, style: 'display: none;'}
+              %td{colspan: 17}
+                - if r.skipped_list.any?
+                  %b Skipped stops:
+                  %ul{style: 'margin: 2px 0 6px;'}
+                    - r.skipped_list.each do |x|
+                      %li= "#{x[:stop]} (#{x[:trip]}#{x[:scheduled] ? ", published #{x[:scheduled]}" : ''}#{x[:passed] ? ", passed #{x[:passed].strftime('%H:%M')}" : ''})"
+                - if r.early_list.any?
+                  %b Early departures:
+                  %ul{style: 'margin: 2px 0 0;'}
+                    - r.early_list.each do |x|
+                      %li= "#{x[:stop]} (#{x[:trip]}): published #{x[:scheduled]}, left #{x[:left]&.strftime('%H:%M')}, #{x[:minutes]} min early"

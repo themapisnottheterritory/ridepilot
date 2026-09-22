@@ -1,0 +1,21 @@
+- # common
+= render 'reports/common_csv_header'
+
+- if @report_data.blank?
+  = CSV.generate_line(["No fixed-route runs in this range"], row_sep: nil).html_safe
+- else
+  = CSV.generate_line(["Runs", @grand[:runs], "Clean", @grand[:clean], "Stops served", @grand[:served], "Skipped", @grand[:skipped], "Skip rate %", @grand[:skip_rate], "Early departures", @grand[:early], "Missing pre-trip", @grand[:no_pre], "Missing post-trip", @grand[:no_post], "Riders", @grand[:boarded], "Miles", @grand[:miles], "Days", @grand[:days]], row_sep: nil).html_safe
+  = CSV.generate_line([""], row_sep: nil).html_safe
+  = CSV.generate_line(["Route", "Date", "Run", "Driver", "Bus", "Out", "In", "Miles", "Trips", "Served", "Skipped", "Early", "Late", "Avg dwell s", "Riders", "Fares", "Pre-trip", "Post-trip", "Issues"], row_sep: nil).html_safe
+  - @report_data.each do |route_name, rows|
+    - rows.each do |r|
+      = CSV.generate_line([route_name, r.date.strftime('%m/%d/%Y'), r.run_name, r.driver_name, r.vehicle_name, r.started_at&.strftime('%H:%M'), r.ended_at&.strftime('%H:%M'), r.miles, r.trips, r.stops_served, r.stops_skipped, r.early, r.late, r.avg_dwell, r.boarded, r.fares.round(2), r.pre_trip ? (r.pre_trip.safe_to_operate == false ? 'unsafe' : 'yes') : 'no', r.post_trip ? (r.post_trip.safe_to_operate == false ? 'unsafe' : 'yes') : (r.ended_at ? 'no' : 'out'), r.issues.join('; ')], row_sep: nil).html_safe
+  = CSV.generate_line([""], row_sep: nil).html_safe
+  = CSV.generate_line(["Skipped stops and early departures"], row_sep: nil).html_safe
+  = CSV.generate_line(["Route", "Date", "Run", "Driver", "Bus", "Kind", "Trip", "Stop", "Published", "Time", "Minutes early"], row_sep: nil).html_safe
+  - @report_data.each do |route_name, rows|
+    - rows.each do |r|
+      - r.skipped_list.each do |x|
+        = CSV.generate_line([route_name, r.date.strftime('%m/%d/%Y'), r.run_name, r.driver_name, r.vehicle_name, "skipped", x[:trip], x[:stop], x[:scheduled], x[:passed]&.strftime('%H:%M'), nil], row_sep: nil).html_safe
+      - r.early_list.each do |x|
+        = CSV.generate_line([route_name, r.date.strftime('%m/%d/%Y'), r.run_name, r.driver_name, r.vehicle_name, "early", x[:trip], x[:stop], x[:scheduled], x[:left]&.strftime('%H:%M'), x[:minutes]], row_sep: nil).html_safe

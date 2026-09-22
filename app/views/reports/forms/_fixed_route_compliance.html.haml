@@ -1,0 +1,16 @@
+:ruby
+  action_name = @saved_report ? :show_saved_report : @custom_report.name
+= form_for @query, :url=>url_for(:action=>action_name), :html=>{:method=>:get} do |f|
+  %fieldset
+    = f.date_select  :start_date, :order => [:month,:day,:year] rescue nil
+    = translate_helper("through")
+    = f.date_select  :before_end_date, :order => [:month,:day,:year] rescue nil
+    = f.label :fixed_route_id, "Route:"
+    = f.collection_select :fixed_route_id, @fixed_routes, :id, :display_name, {include_blank: 'All'}
+    = f.label :driver_id, "Driver:"
+    = f.collection_select :driver_id, @drivers, :id, :user_name, {include_blank: 'All'}
+    = f.label :vehicle_id, "Bus:"
+    = f.collection_select :vehicle_id, @vehicles, :id, :name, {include_blank: 'All'}
+
+    = render 'reports/forms/v2_reports/common_controls', has_multiple_report_types: false, f: f
+    = render 'reports/forms/save_report_controls', custom_report_id: @custom_report.id

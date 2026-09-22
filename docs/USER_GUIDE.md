@@ -685,6 +685,18 @@ To enable SMS notifications for a customer:
 ---
 
 
+### 7.4b Fixed Route Compliance report (admins)
+
+Reports → **Fixed Route Compliance**. One row per fixed-route run in the date range, filtered by route,
+driver or bus, with: out/in times and miles from the odometers; trips driven; published stops **served**
+and **skipped** (from the tablet, which records a stop as served when the bus comes to rest within 40 m of
+it); **early departures** (left a stop more than 30 seconds before its published time) and late arrivals
+(more than 5 minutes after); average dwell; riders and fares; whether the **pre-trip** and **post-trip**
+inspections were filed, and any marked unsafe. The Issues column sums it up ("clean", or e.g. "no
+post-trip, 2 skipped, 1 early"); **details** under a run lists the skipped stops and early departures by
+stop and time. CSV export includes a second section with every skipped stop and early departure. Stop
+data comes from GCRPC Fixed Route 1.10 or later; a run driven on an older app shows "no stop data".
+
 ### 7.5 Trip Planner (plan.gcrpc.org)
 
 Riders can plan a fixed-route bus trip on their phone or computer at **https://plan.gcrpc.org**. It is the standard OpenTripPlanner engine with a Victoria Transit front end, using the same FY2027 route schedule the buses run.
