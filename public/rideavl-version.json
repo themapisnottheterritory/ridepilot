@@ -1,9 +1,9 @@
 {
-  "version": "1.0.15",
-  "version_code": 16,
+  "version": "1.0.16",
+  "version_code": 17,
   "url": "/rideavl-pilot.apk",
   "required": false,
-  "notes": "No required hardware features, for Intune.",
-  "published_at": "2026-09-21T18:39:01Z",
-  "sha256": "271847c99196ca09ce9fc96efc122dd904b1feec4f1ef9f6400bde46b8c4f3d8"
+  "notes": "End run now follows the post-trip inspection.",
+  "published_at": "2026-09-22T17:47:48Z",
+  "sha256": "031f4d22450ec94c9f5c9ee6717f258a7362fb53a7f274b84a6c99dbc242be53"
 }

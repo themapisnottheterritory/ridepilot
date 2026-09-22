@@ -38,6 +38,8 @@ tablet: Play Store -> profile -> Play Protect -> settings -> turn off "Scan apps
 Fully silent installs need device-owner mode, which these tablets cannot have. One Install tap per
 release (plus the Play Protect tap) is as far as Android allows without an MDM.
 
+**1.0.16 (2026-09-22):** End run is gated on the post-trip inspection (it used to be a separate button a driver could skip). Not yet tested on a device.
+
 **Tested 2026-09-11** on a Galaxy Tab Active Pro (SM-T547U, Android 11): 1.0.10 installed by USB, then
 1.0.11 and 1.0.12 arrived through the banner. Download took about a second on the office Wi-Fi.
 
