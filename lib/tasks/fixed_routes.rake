@@ -199,6 +199,31 @@ namespace :fixed_routes do
     puts dry ? "dry run, nothing written" : "done: created=#{created} kept=#{kept} skipped=#{skipped}. Tonight's scheduler generates the daily runs (or run RepeatingRun.generate! now)."
   end
 
+  desc "Dispatch's operator schedule -> the day's fixed-route runs. rake fixed_routes:roster[tomorrow,watch|apply]"
+  task :roster, [:date, :mode] => :environment do |_t, args|
+    # The schedule bot on 10.0.0.18 serves dispatch's SharePoint workbook as a
+    # per-day roster (app/services/roster_sync.rb). watch reports, apply assigns.
+    date  = args[:date].presence || "tomorrow"
+    mode  = (args[:mode].presence || "watch").downcase
+    raise "mode must be watch or apply" unless %w[watch apply].include?(mode)
+    provider   = Provider.find(ENV["PROVIDER_ID"].presence || 1)
+    url        = ENV["ROSTER_URL"].presence || "http://10.0.0.18:8792"
+    token      = ENV["ROSTER_TOKEN"].presence or raise "ROSTER_TOKEN is not set (the shim's bearer token)"
+    categories = (ENV["ROSTER_CATEGORIES"].presence || "fixed,commuter").split(",").map(&:strip)
+
+    sync   = RosterSync.new(provider: provider, url: url, token: token)
+    roster = sync.fetch(date, categories)
+    rows   = sync.plan(roster)
+    changed = mode == "apply" ? sync.apply!(rows) : []
+    puts sync.report(roster, rows, mode: mode)
+    puts "  applied: #{changed.map { |r| "#{r.fixed_route.name}=#{r.driver.user_name}" }.join(', ')}" if mode == "apply"
+    alerts = sync.alerts(rows)
+    puts "  ALERTS: " + alerts.map { |r| "#{r.fixed_route&.name || r.route}: #{r.note.join('; ')}" }.join(" | ") if alerts.any?
+  rescue RosterSync::Error => e
+    puts "  ALERTS: #{e.message}"
+    exit 2
+  end
+
   # ---- helpers -------------------------------------------------------------
 
   def fetch_json(url)

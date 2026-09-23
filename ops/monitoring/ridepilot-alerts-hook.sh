@@ -15,4 +15,13 @@ else
   msg="RidePilot daily health-check: no alerts logged — all clear. (No need to mention unless asked.)"
 fi
 
+# Dispatch roster sync (ops/roster/roster-sync.sh, 15:00 daily): open routes,
+# unknown drivers, refused assignments, or the schedule bot being down.
+r=/home/philz/ridepilot-roster-ALERTS.log
+if [ -s "$r" ]; then
+  msg="$msg
+
+Roster sync alerts (dispatch sheet vs RidePilot runs; most recent last). Translate recent entries into plain English: an OPEN route means dispatch has nobody on it, an unknown driver means the sheet's spelling matches no RidePilot driver.
+$(tail -5 "$r")"
+fi
 python3 -c 'import json,sys; print(json.dumps({"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":sys.stdin.read()}}))' <<<"$msg"
