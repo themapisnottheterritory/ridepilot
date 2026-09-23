@@ -21,12 +21,12 @@ class Api::V1::Driver::TokenTapsController < Api::V1::Driver::BaseController
     uid = params[:uid].to_s.strip
     return render fail_response(status: 422, uid: "Nothing was read from the card.") if uid.blank?
 
-    stop = @run.fixed_route.stops.find_by(id: params[:stop_id]) if params[:stop_id].present?
+    stop, route = resolve_boarding_stop
     recorded_at = (Time.zone.parse(params[:recorded_at].to_s) rescue nil) || Time.current
 
     result = FareTap.new(provider: @run.provider, driver: @driver).fixed_route!(
       run: @run, uid: uid, client_uuid: uuid, recorded_at: recorded_at,
-      stop: stop, stop_name: params[:stop_name].presence, direction: params[:direction].presence,
+      stop: stop, fixed_route: route, stop_name: params[:stop_name].presence, direction: params[:direction].presence,
       latitude: params[:latitude].presence, longitude: params[:longitude].presence,
       offline: ActiveModel::Type::Boolean.new.cast(params[:offline]) || false
     )

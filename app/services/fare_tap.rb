@@ -68,7 +68,10 @@ class FareTap
     token
   end
 
-  def fixed_route!(run:, uid:, client_uuid:, recorded_at: nil, stop: nil, stop_name: nil, direction: nil,
+  # fixed_route: the route the boarding is credited to; nil means the run's.
+  # Differs from the run's only when one bus covers several routes (see
+  # Api::FixedRouteJson#resolve_boarding_stop).
+  def fixed_route!(run:, uid:, client_uuid:, recorded_at: nil, stop: nil, fixed_route: nil, stop_name: nil, direction: nil,
                    latitude: nil, longitude: nil, offline: false)
     recorded_at ||= Time.current
     existing = run.fixed_route_boardings.where(client_uuid: client_uuid).to_a
@@ -106,7 +109,7 @@ class FareTap
     FixedRouteBoarding.transaction do
       PaperTrail.request(whodunnit: (@by&.id || driver&.user_id).to_s.presence) do
         rows << FixedRouteBoarding.create!(
-          run: run, stop: stop, stop_name: stop&.name || stop_name.presence, direction: stop&.direction || direction.presence,
+          run: run, fixed_route: fixed_route, stop: stop, stop_name: stop&.name || stop_name.presence, direction: stop&.direction || direction.presence,
           rider_category_id: category.id, fare_type: fare_type, boarded_count: 1, alighted_count: 0,
           fare_amount: fare, recorded_at: recorded_at, latitude: latitude.presence, longitude: longitude.presence,
           client_uuid: client_uuid, customer: customer, fare_token: token

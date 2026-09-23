@@ -11,6 +11,28 @@ module Api::FixedRouteJson
     return render fail_response(status: 422, run: "Not a fixed-route run.") unless @run.fixed_route? && @run.fixed_route
   end
 
+  # Where a walk-on or a tap happened, and which route gets the ridership.
+  # stop_id is a row of the run's own route: the ordinary case. When one bus
+  # drives several routes back to back (a block -- the tablet is on Green while
+  # the RidePilot run is Gold's), the run's route has none of the stops the
+  # tablet is passing, so it sends the authoring tool's route and stop ids
+  # instead and the stop is looked up across the provider's routes. The
+  # boarding is then credited to the route the stop belongs to, not the run's,
+  # so route ridership stays right on the days one driver covers two routes.
+  def resolve_boarding_stop
+    stop = @run.fixed_route.stops.find_by(id: params[:stop_id]) if params[:stop_id].present?
+    ext_route = params[:external_route_id].to_s.strip
+    ext_stop  = params[:external_stop_id].to_s.strip
+    if stop.nil? && ext_route.present? && ext_stop.present?
+      stop = FixedRouteStop.joins(:fixed_route)
+                           .where(fixed_routes: { provider_id: @run.provider_id, deleted_at: nil })
+                           .find_by(external_route_id: ext_route, external_stop_id: ext_stop)
+    end
+    route = stop&.fixed_route
+    route ||= FixedRoute.for_provider(@run.provider_id).active.where("? = ANY(external_route_ids)", ext_route).first if ext_route.present?
+    [stop, route || @run.fixed_route]
+  end
+
   def route_json(route)
     { id: route.id, name: route.name, display_name: route.display_name, color: route.color, kind: route.kind }
   end

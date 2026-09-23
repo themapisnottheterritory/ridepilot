@@ -55,7 +55,7 @@ class Api::V1::Driver::BoardingsController < Api::V1::Driver::BaseController
     unknown = entries.map(&:first) - categories.keys
     return render fail_response(status: 422, entries: "Unknown rider category: #{unknown.join(', ')}") if unknown.any?
 
-    stop = @run.fixed_route.stops.find_by(id: params[:stop_id]) if params[:stop_id].present?
+    stop, route = resolve_boarding_stop
     fare_type = FareType.by_provider(@run.provider).find_by(id: params[:fare_type_id]) if params[:fare_type_id].present?
     recorded_at = (Time.zone.parse(params[:recorded_at].to_s) rescue nil) || Time.current
     # A submission with only alighting riders still needs one row to carry the count.
@@ -67,7 +67,7 @@ class Api::V1::Driver::BoardingsController < Api::V1::Driver::BaseController
       FixedRouteBoarding.transaction do
         entries.each_with_index do |(cat_id, boarded, fare_amount), i|
           rows << FixedRouteBoarding.create!(
-            run: @run, stop: stop, stop_name: stop&.name || params[:stop_name].presence, direction: stop&.direction || params[:direction].presence,
+            run: @run, fixed_route: route, stop: stop, stop_name: stop&.name || params[:stop_name].presence, direction: stop&.direction || params[:direction].presence,
             rider_category_id: cat_id, fare_type: fare_type, boarded_count: boarded,
             alighted_count: (i.zero? ? alighted : 0), fare_amount: fare_amount,
             recorded_at: recorded_at, latitude: params[:latitude].presence, longitude: params[:longitude].presence,
