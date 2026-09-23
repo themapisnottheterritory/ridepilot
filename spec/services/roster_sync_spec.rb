@@ -107,6 +107,19 @@ RSpec.describe RosterSync do
     expect(s.alerts(rows).map(&:route)).to eq ["TEAL"]
   end
 
+  it "on a one-bus day with a route RidePilot does not know, the run goes on the route it does" do
+    run_blue = run_for(blue, date)
+    r = roster([["BLUE", "AM", "Mary Ramos", "assigned"], ["AZURE/EDNA", "AM", "Mary Ramos", "assigned"]],
+               [["Mary Ramos", ["AZURE/EDNA", "BLUE"]]])
+    s = sync(r)
+    rows = s.plan(r)
+    by = rows.index_by(&:route)
+    expect(by["BLUE"].action).to eq :assign
+    expect(by["AZURE/EDNA"].action).to eq :unknown_route
+    s.apply!(rows)
+    expect(run_blue.reload.driver).to eq mary
+  end
+
   it "turns the shim's errors into one line" do
     expect { sync({ "error" => "PayPeriodNotCreated" }).fetch("2027-01-01", %w[fixed]) }.to raise_error(RosterSync::Error, /PayPeriodNotCreated/)
     expect { sync("nope", code: 401).fetch("tomorrow", %w[fixed]) }.to raise_error(RosterSync::Error, /HTTP 401/)

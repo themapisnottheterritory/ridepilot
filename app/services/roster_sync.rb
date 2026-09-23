@@ -229,13 +229,17 @@ class RosterSync
     out
   end
 
+  # The run goes on a route RidePilot knows; among those, the block's lead if
+  # one is defined, else the first alphabetically.
   def lead_route(routes)
-    leads = routes.map { |r| BLOCK_LEAD[r] }.compact
-    (leads & routes).first || routes.sort.first
+    known = routes.select { |r| find_route(r) }
+    pool = known.any? ? known : routes
+    leads = pool.map { |r| BLOCK_LEAD[r] }.compact
+    (leads & pool).first || pool.sort.first
   end
 
   def find_route(roster_name)
-    key = roster_name.to_s.strip.upcase.sub(/\s*\((AM|PM)\)\s*\z/, "")
+    key = roster_name.to_s.strip.upcase.sub(/\s*\([^)]*\)\s*\z/, "")   # "EDNA ASSIST (AM/PM)" → "EDNA ASSIST"
     name = ROUTE_ALIASES[key] || key.capitalize
     @routes ||= FixedRoute.for_provider(provider.id).active.to_a
     @routes.find { |r| r.name.casecmp?(name) } || @routes.find { |r| r.name.casecmp?(key) }
