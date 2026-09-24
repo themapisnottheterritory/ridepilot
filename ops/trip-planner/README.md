@@ -22,11 +22,22 @@ Repo copy of everything here: `ridepilot/ops/trip-planner/`.
     cp ~/gtfs_fy2027/GCRPC-Fixed-FY2027.zip data/gcrpc-fixed.gtfs.zip
     docker run --rm -v ~/otp/data:/var/opentripplanner -e JAVA_OPTS=-Xmx6G \
       opentripplanner/opentripplanner:2.6.0 --build --save
-    sudo systemctl restart otp-planner
+    docker restart otp          # see the note below: the systemd unit is not installed on .32
 
 Takes a minute or two for this area. Also regenerate `web/stops.json` from the new feed
 (`ops/trip-planner/make_stops.py` in the RidePilot repo). `--build --save` writes `data/graph.obj`; the service starts with
 `--load --serve`.
+
+**The unit was never installed (found 2026-09-24).** OTP runs as a container named `otp`
+started by hand (`--load --serve`), so `systemctl restart otp-planner` says the unit is not found
+and a reboot of .32 leaves the planner down. `docker restart otp` reloads the graph. To install the
+unit once and stop depending on the hand-started container:
+
+    sudo cp ops/trip-planner/otp-planner.service /etc/systemd/system/
+    docker stop otp && sudo systemctl daemon-reload && sudo systemctl enable --now otp-planner
+
+The feed was rebuilt 2026-09-24 with the one-bus city timetable (Gold+Green on a 75-minute cycle);
+the planner answered 08:00, 09:15, 10:30 for Gold the same afternoon.
 
 ## Refresh the map (yearly is plenty)
 
