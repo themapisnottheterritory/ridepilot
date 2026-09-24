@@ -38,6 +38,14 @@ OUT=$(/usr/bin/docker exec -e ROSTER_TOKEN="$SCHED_SHIM_TOKEN" -e ROSTER_CATEGOR
       | grep -v -i 'deprecat\|upgrading_ruby\|called from\|cache serialization\|^$')
 RC=${PIPESTATUS[0]}
 { echo "[$TS] roster-sync $MODE $DATE (rc=$RC)"; echo "$OUT"; } >>"$LOG"
+# The shuttle status board (ride.gcrpc.org) gets today's doubles and
+# not-in-service lines from the same roster -- only on the same-day run, the
+# evening shuttle is still today's.
+if [ "$DATE" = "today" ]; then
+  B=$(/usr/bin/python3 /home/philz/rptest/ridepilot/ops/roster/push-status-board.py today 2>&1); RB=$?
+  echo "$B" >>"$LOG"
+  [ "$RB" -ne 0 ] && echo "[$TS] status board push failed rc=$RB: $(echo "$B" | tail -1)" >>"$ALERTS"
+fi
 A=$(echo "$OUT" | grep '^  ALERTS:' | sed 's/^  ALERTS: //')
 if [ -n "$A" ]; then
   echo "[$TS] roster $DATE: $A" >>"$ALERTS"
