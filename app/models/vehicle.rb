@@ -70,16 +70,15 @@ class Vehicle < ApplicationRecord
     end
   end
 
+  # The most recent end odometer a run recorded, by run date, and never
+  # below the vehicle's initial mileage. Ordering by date rather than by id
+  # keeps a stale run from outranking a newer one; the floor keeps a
+  # fat-fingered reading from dragging the fleet page backwards. Three test
+  # runs by "Admin User" once showed 500,005 and 213 miles here while fleet's
+  # own figures sat unseen in initial_mileage (2026-09-24).
   def last_odometer_reading
-    associated_runs = runs.where().not(end_odometer: nil)
-    # if no existing run has logged odometer, then use initial mileage
-    last_odometer = if associated_runs.empty?
-      initial_mileage
-    else
-      associated_runs.last.try(:end_odometer)
-    end
-
-    last_odometer.to_i
+    latest = runs.where.not(end_odometer: nil).order(:date, :id).last
+    [initial_mileage.to_i, latest.try(:end_odometer).to_i].max
   end
 
   def compliant?(as_of: Date.current)

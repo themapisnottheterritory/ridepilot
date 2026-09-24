@@ -68,6 +68,19 @@ RSpec.describe Vehicle, type: :model do
       expect(@vehicle.last_odometer_reading).to eq 456
     end
     
+    it "takes the latest run by date, not by id, and never reads below the initial mileage" do
+      @vehicle.update_columns(initial_mileage: 64452)
+      create :run, vehicle: @vehicle, date: Date.new(2026, 4, 15), end_odometer: 500005   # a test run with junk
+      create :run, vehicle: @vehicle, date: Date.new(2023, 2, 9), end_odometer: 213        # older, but a higher id
+      expect(@vehicle.last_odometer_reading).to eq 500005
+      Run.where(vehicle: @vehicle).update_all(end_odometer: nil)
+      expect(@vehicle.last_odometer_reading).to eq 64452
+      create :run, vehicle: @vehicle, date: Date.new(2026, 9, 24), end_odometer: 64890
+      expect(@vehicle.last_odometer_reading).to eq 64890
+      create :run, vehicle: @vehicle, date: Date.new(2026, 9, 25), end_odometer: 120        # fat-fingered
+      expect(@vehicle.last_odometer_reading).to eq 64452
+    end
+
     it "fails gracefully when no runs are present" do
       expect(@vehicle.last_odometer_reading).to eq 0
     end
