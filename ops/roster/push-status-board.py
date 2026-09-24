@@ -28,8 +28,11 @@ BOARD_URL = os.environ.get("STATUS_BOARD_URL", "http://10.0.0.32:3001").rstrip("
 # Sheet route -> line on the board (bus_lines.line_number). VIC3 riders ride
 # the Edna bus; the board has called that line "Edna/Vic" since before this.
 LINES = {
-    "BAY": "Bay City", "PAL": "Palacios", "CAMPO": "El Campo", "PORT LAVACA": "Port Lavaca",
-    "VIC1": "Victoria 1", "VIC2": "Victoria 2", "VIC3/EDNA": "Edna/Vic", "EDNA": "Edna/Vic",
+    "BAY": "Bay City", "BAY CITY": "Bay City", "PAL": "Palacios", "PALACIOS": "Palacios",
+    "CAMPO": "El Campo", "EL CAMPO": "El Campo", "PORT LAVACA": "Port Lavaca", "PL": "Port Lavaca",
+    "VIC1": "Victoria 1", "VIC 1": "Victoria 1", "VICTORIA 1": "Victoria 1",
+    "VIC2": "Victoria 2", "VIC 2": "Victoria 2", "VICTORIA 2": "Victoria 2",
+    "VIC3/EDNA": "Edna/Vic", "VIC 3/EDNA": "Edna/Vic", "EDNA/VIC3": "Edna/Vic", "EDNA": "Edna/Vic",
 }
 
 
