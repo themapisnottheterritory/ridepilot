@@ -58,7 +58,7 @@ class RosterSync
   # the same operator; the run that gets the driver is the tandem's.
   TANDEM = { %w[Bay Pal] => "Bay+Pal", ["Port Lavaca", "Vic2"] => "Port Lavaca+Vic2", %w[Edna Vic1] => "Vic1+Edna" }.freeze
 
-  Row = Struct.new(:category, :route, :fixed_route, :run, :roster_driver, :driver, :current_driver,
+  Row = Struct.new(:category, :route, :shift, :fixed_route, :run, :roster_driver, :driver, :current_driver,
                    :status, :action, :note, keyword_init: true)
 
   attr_reader :provider, :url, :token
@@ -94,81 +94,97 @@ class RosterSync
     (roster["categories"] || {}).each do |category, entries|
       by_route = entries.group_by { |e| e["route"].to_s.strip.upcase }
       by_route.each do |roster_route, shifts|
-        row = Row.new(category: category, route: roster_route, note: [])
-        row.fixed_route = find_route(roster_route)
-        statuses = shifts.map { |s| s["status"].to_s }
-        operators = shifts.map { |s| s["operator"].to_s.strip }.reject(&:blank?).uniq
+        fixed_route = find_route(roster_route)
+        # A route with an AM and a PM run here (the commuters) is planned per
+        # shift from the sheet's own AM and PM columns; a route with one run a
+        # day (the city loops) takes the day's operator.
+        runs = fixed_route ? runs_for(fixed_route, date) : []
+        slots = runs.size >= 2 ? shifts.group_by { |e| e["shift"].to_s.strip.upcase.presence || "AM" } : { nil => shifts }
+        slots.each do |shift, slot_entries|
+          row = Row.new(category: category, route: roster_route, shift: shift, fixed_route: fixed_route, note: [])
+          statuses = slot_entries.map { |e| e["status"].to_s }
+          operators = slot_entries.map { |e| e["operator"].to_s.strip }.reject(&:blank?).uniq
 
-        if roster_route =~ ASSIST
-          row.status = :assist
-          row.action = :assist
-          row.roster_driver = operators.first
-          row.note << (operators.any? ? "overflow bus: #{operators.join(' / ')}" : "overflow bus, nobody on it")
-          rows << row
-          next
-        end
-        if row.fixed_route.nil?
-          row.action = :unknown_route
-          row.note << "no RidePilot route named like #{roster_route.inspect}"
-          rows << row
-          next
-        end
-        row.run = run_for(row.fixed_route, date)
-        row.current_driver = row.run&.driver
-
-        if statuses.all? { |s| s == "not_in_service" }
-          row.status = :not_in_service
-          row.action = :skip
-          row.note << "RidePilot has #{row.current_driver.user_name} on a route the sheet says is not in service" if row.current_driver
-          rows << row
-          next
-        end
-        if operators.empty?
-          row.status = :open
-          row.action = row.current_driver ? :keep : :open
-          row.note << (row.current_driver ? "sheet is open; RidePilot already has #{row.current_driver.user_name} (kept)" : "no driver on the sheet")
-          rows << row
-          next
-        end
-
-        row.status = :assigned
-        row.roster_driver = operators.first
-        row.note << "AM and PM differ on the sheet (#{operators.join(' / ')}); using #{operators.first}" if operators.size > 1
-
-        combo = combos[row.roster_driver.upcase]
-        if combo && combo.size > 1
-          lead = lead_route(combo)
-          if lead != row.fixed_route.name
-            row.action = :combo_partner
-            row.note << "one-bus day: #{row.roster_driver} drives #{combo.join(' + ')}; the run is #{lead}'s, this one stays empty"
-            row.note << "RidePilot has #{row.current_driver.user_name} here — two drivers for one bus?" if row.current_driver
+          if roster_route =~ ASSIST
+            row.status = :assist
+            row.action = :assist
+            row.roster_driver = operators.first
+            row.note << (operators.any? ? "overflow bus: #{operators.join(' / ')}" : "overflow bus, nobody on it")
             rows << row
             next
           end
-          row.note << "one-bus day: #{row.roster_driver} drives #{combo.join(' + ')}"
+          if fixed_route.nil?
+            row.action = :unknown_route
+            row.note << "no RidePilot route named like #{roster_route.inspect}"
+            rows << row
+            next
+          end
+          row.run = pick_run(runs, shift)
+          row.current_driver = row.run&.driver
+
+          if statuses.all? { |st| st == "not_in_service" }
+            row.status = :not_in_service
+            row.action = :skip
+            row.note << "RidePilot has #{row.current_driver.user_name} on a route the sheet says is not in service" if row.current_driver
+            rows << row
+            next
+          end
+          if operators.empty?
+            row.status = :open
+            row.action = row.current_driver ? :keep : :open
+            row.note << (row.current_driver ? "sheet is open; RidePilot already has #{row.current_driver.user_name} (kept)" : "no driver on the sheet")
+            rows << row
+            next
+          end
+
+          row.status = :assigned
+          row.roster_driver = operators.first
+          row.note << "AM and PM differ on the sheet (#{operators.join(' / ')}); using #{operators.first}" if operators.size > 1 && shift.nil?
+
+          combo = combos[row.roster_driver.upcase]
+          if combo && combo.size > 1
+            lead = lead_route(combo)
+            if lead != fixed_route.name
+              row.action = :combo_partner
+              row.note << "one-bus day: #{row.roster_driver} drives #{combo.join(' + ')}; the run is #{lead}'s, this one stays empty"
+              row.note << "RidePilot has #{row.current_driver.user_name} here — two drivers for one bus?" if row.current_driver
+              rows << row
+              next
+            end
+            row.note << "one-bus day: #{row.roster_driver} drives #{combo.join(' + ')}"
+          end
+          rows << assign(row, date)
         end
-        rows << assign(row, date)
       end
 
-      # A commuter double's run belongs to a route the sheet never names: add
-      # its row, carrying the operator from the pair.
-      combos.each do |op, routes|
+      # A commuter double's run belongs to a route the sheet never names. For
+      # each shift where the pair's rows both wait on the same operator, add
+      # the tandem's row with that operator.
+      combos.each do |_op, routes|
         lead = lead_route(routes)
         next if routes.include?(lead) || rows.any? { |r| r.fixed_route&.name == lead }
-        next unless routes.all? { |r| by_route.key?(r.upcase) || by_route.keys.any? { |k| find_route(k)&.name == r } }
-        row = Row.new(category: category, route: lead.upcase, note: ["one bus: #{op.titleize} drives #{routes.join(' + ')} as #{lead}"])
-        row.fixed_route = find_route(lead)
-        if row.fixed_route.nil?
-          row.action = :unknown_route
-          row.note << "no RidePilot route named #{lead.inspect} for the double"
-          rows << row
-          next
+        partners = rows.select { |r| r.category == category && r.fixed_route && routes.include?(r.fixed_route.name) }
+        next if partners.empty?
+        tandem = find_route(lead)
+        tandem_runs = tandem ? runs_for(tandem, date) : []
+        partners.group_by(&:shift).each do |shift, group|
+          waiting = group.select { |r| r.action == :combo_partner }
+          next unless waiting.size == group.size && waiting.map(&:roster_driver).uniq.size == 1
+          op = waiting.first.roster_driver
+          row = Row.new(category: category, route: lead.upcase, shift: shift, fixed_route: tandem,
+                        note: ["one bus: #{op} drives #{routes.join(' + ')} as #{lead}"])
+          if tandem.nil?
+            row.action = :unknown_route
+            row.note << "no RidePilot route named #{lead.inspect} for the double"
+            rows << row
+            next
+          end
+          row.run = pick_run(tandem_runs, shift)
+          row.current_driver = row.run&.driver
+          row.status = :assigned
+          row.roster_driver = op
+          rows << assign(row, date)
         end
-        row.run = run_for(row.fixed_route, date)
-        row.current_driver = row.run&.driver
-        row.status = :assigned
-        row.roster_driver = op.titleize
-        rows << assign(row, date)
       end
     end
     rows
@@ -197,9 +213,17 @@ class RosterSync
     row
   end
 
-  def run_for(fixed_route, date)
+  def runs_for(fixed_route, date)
     Run.where(provider_id: provider.id, date: date, service_mode: "fixed_route",
-              fixed_route_id: fixed_route.id, deleted_at: nil).order(:id).first
+              fixed_route_id: fixed_route.id, deleted_at: nil).order(:scheduled_start_time, :id).to_a
+  end
+
+  # The run for a shift: with two runs a day, AM is the one starting before
+  # noon; with one, it is that one whatever the shift.
+  def pick_run(runs, shift)
+    return runs.first if runs.size < 2 || shift.nil?
+    am = runs.select { |r| r.scheduled_start_time.nil? || r.scheduled_start_time.hour < 12 }
+    (shift == "PM" ? (runs - am) : am).first || runs.first
   end
 
   # ---- apply ---------------------------------------------------------------------
@@ -232,7 +256,7 @@ class RosterSync
     lines << "Roster for #{roster['date']} (#{roster['weekday']}), #{mode} mode, generated #{roster['generated_at']}"
     rows.group_by(&:category).each do |category, group|
       lines << "  [#{category}]"
-      group.sort_by { |r| r.fixed_route&.name || r.route }.each do |r|
+      group.sort_by { |r| [r.fixed_route&.name || r.route, r.shift.to_s] }.each do |r|
         who = case r.action
               when :same, :started then r.current_driver&.user_name
               when :assign then r.driver.user_name
@@ -243,7 +267,8 @@ class RosterSync
               when :keep then r.current_driver&.user_name
               else r.roster_driver
               end
-        lines << format("  %s %-12s %-22s %-14s %s", FLAG.fetch(r.action, "??"), (r.fixed_route&.name || r.route),
+        label = [(r.fixed_route&.name || r.route), r.shift].compact.join(" ")
+        lines << format("  %s %-19s %-22s %-14s %s", FLAG.fetch(r.action, "??"), label,
                         who.to_s, r.action, r.note.join("; "))
       end
     end

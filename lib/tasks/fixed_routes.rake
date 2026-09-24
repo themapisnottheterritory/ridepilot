@@ -216,12 +216,76 @@ namespace :fixed_routes do
     rows   = sync.plan(roster)
     changed = mode == "apply" ? sync.apply!(rows) : []
     puts sync.report(roster, rows, mode: mode)
-    puts "  applied: #{changed.map { |r| "#{r.fixed_route.name}=#{r.driver.user_name}" }.join(', ')}" if mode == "apply"
+    puts "  applied: #{changed.map { |r| "#{[r.fixed_route.name, r.shift].compact.join(' ')}=#{r.driver.user_name}" }.join(', ')}" if mode == "apply"
     alerts = sync.alerts(rows)
-    puts "  ALERTS: " + alerts.map { |r| "#{r.fixed_route&.name || r.route}: #{r.note.join('; ')}" }.join(" | ") if alerts.any?
+    puts "  ALERTS: " + alerts.map { |r| "#{[r.fixed_route&.name || r.route, r.shift].compact.join(' ')}: #{r.note.join('; ')}" }.join(" | ") if alerts.any?
   rescue RosterSync::Error => e
     puts "  ALERTS: #{e.message}"
     exit 2
+  end
+
+  desc "Commuter blocks -> an AM and a PM block each, spans from the timetable. DRY_RUN=1 to preview."
+  task :split_commuter_blocks, [:provider_id] => :environment do |_t, args|
+    # A commuter run is two shifts: out ~05:30, back by ~10:00, out again at
+    # ~17:30. The all-day blocks typed in on 2026-09-22 could not hold that --
+    # once the morning run ended the tablet had nothing to pin for the evening,
+    # scheduled hours read 16 for a bus that drove 9, and dispatch's sheet,
+    # which has an AM and a PM operator per route, could not be applied when
+    # they differed. Each all-day block becomes "<route> AM" and "<route> PM"
+    # (first pickup - 30 min to last drop-off + 30 min, from the authoring
+    # tool's timetable); its future daily runs are removed, any driver on them
+    # is carried onto both halves for the roster sync to correct, and the old
+    # block ends today so today's run stands and nothing more is generated.
+    provider = Provider.find(args[:provider_id] || 1)
+    base     = (ENV["FIXED_ROUTE_AUTHORING_URL"].presence || "http://10.0.0.16:8080").chomp("/")
+    dry      = ENV["DRY_RUN"].to_s == "1"
+    pad      = (ENV["BLOCK_PAD_MINUTES"] || 30).to_i
+    puts "provider: #{provider.name}#{dry ? '  (DRY RUN)' : ''}  authoring tool: #{base}"
+
+    FixedRoute.for_provider(provider.id).active.where(kind: "commuter").default_order.each do |route|
+      old = RepeatingRun.where(provider_id: provider.id, service_mode: "fixed_route", fixed_route_id: route.id).where.not("name LIKE '% AM' OR name LIKE '% PM'").first
+      if old.nil? || old.end_date.present?
+        puts "  #{route.name}: no all-day block to split (#{old ? 'already ended' : 'none'})"
+        next
+      end
+      spans = { "AM" => [], "PM" => [] }
+      route.external_route_ids.each do |id|
+        d = fetch_json("#{base}/api/routes/#{id}")
+        st = d["stops"]; next if st.empty?
+        d["runs"].each do |r|
+          first = st.first.dig("scheduled_times_by_run", r["run_id"]); last = st.last.dig("scheduled_times_by_run", r["run_id"])
+          next unless first && last
+          spans[first < "12:00" ? "AM" : "PM"] << [first, last]
+        end
+      end
+      halves = spans.select { |_, l| l.any? }.map { |label, l| [label, block_time(l.map(&:first).min, -pad), block_time(l.map(&:last).max, pad)] }
+      puts "  #{route.name}: #{old.scheduled_start_time&.strftime('%H:%M')}-#{old.scheduled_end_time&.strftime('%H:%M')} -> " +
+           halves.map { |label, a, b| "#{label} #{a}-#{b}" }.join(", ")
+      next if dry
+
+      new_blocks = halves.map do |label, a, b|
+        rr = RepeatingRun.where(provider_id: provider.id, service_mode: "fixed_route", name: "#{route.name} #{label}").first
+        unless rr
+          rr = old.dup
+          rr.assign_attributes(name: "#{route.name} #{label}", driver: nil, vehicle: nil, scheduled_through: nil,
+                               scheduled_start_time: Time.zone.parse(a), scheduled_end_time: Time.zone.parse(b), start_date: Date.today)
+          rr.save!
+        end
+        rr.instantiate!
+        rr
+      end
+
+      moved = 0; removed = 0
+      old.runs.where("date > ?", Date.today).where(actual_start_time: nil).find_each do |r|
+        if r.driver
+          new_blocks.each { |rr| n = rr.runs.for_date(r.date).first; n&.update_columns(driver_id: r.driver_id); moved += 1 if n }
+        end
+        r.destroy; removed += 1
+      end
+      old.update_columns(end_date: Date.today)
+      puts "    created #{new_blocks.map(&:name).join(' + ')}; removed #{removed} future all-day runs, carried #{moved} driver assignments; #{old.name} ends #{Date.today}"
+    end
+    puts "dry run, nothing written" if dry
   end
 
   # ---- helpers -------------------------------------------------------------

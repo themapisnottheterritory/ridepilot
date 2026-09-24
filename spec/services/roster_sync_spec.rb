@@ -165,6 +165,47 @@ RSpec.describe RosterSync do
     expect(s.alerts(rows).map(&:route)).to eq ["BAY+PAL"]
   end
 
+  it "plans a route with AM and PM runs per shift, from the sheet's own columns" do
+    campo = FixedRoute.create!(provider: provider, name: "Campo", kind: "commuter", color: "000000", external_route_ids: ["campo-inteplast"])
+    vehicle = build(:vehicle, provider: provider); vehicle.save!(validate: false)
+    am = Run.create!(provider: provider, name: "Campo AM", date: date, service_mode: "fixed_route", fixed_route: campo, vehicle: vehicle,
+                     scheduled_start_time: Time.zone.parse("#{date} 05:40"), scheduled_end_time: Time.zone.parse("#{date} 09:30"))
+    pm = Run.create!(provider: provider, name: "Campo PM", date: date, service_mode: "fixed_route", fixed_route: campo, vehicle: vehicle,
+                     scheduled_start_time: Time.zone.parse("#{date} 17:40"), scheduled_end_time: Time.zone.parse("#{date} 21:30"))
+    clinton = driver("Clinton", "Sandifer")
+    r = roster([["CAMPO", "AM", "Ram Mejia", "assigned"], ["CAMPO", "PM", "Clinton Sandifer", "assigned"]])
+    s = sync(r)
+    rows = s.plan(r)
+    expect(rows.map { |x| [x.shift, x.action] }).to match_array([["AM", :assign], ["PM", :assign]])
+    s.apply!(rows)
+    expect(am.reload.driver).to eq ram
+    expect(pm.reload.driver).to eq clinton
+    expect(s.report(r, rows, mode: "apply")).to include("Campo AM").and include("Campo PM")
+
+    # A double per shift: both singles have two runs, the tandem has two runs.
+    bay = FixedRoute.create!(provider: provider, name: "Bay", kind: "commuter", color: "000000", external_route_ids: ["bay-inteplast"])
+    pal = FixedRoute.create!(provider: provider, name: "Pal", kind: "commuter", color: "000000", external_route_ids: ["pal-inteplast"])
+    both = FixedRoute.create!(provider: provider, name: "Bay+Pal", kind: "commuter", color: "000000", external_route_ids: ["bay-pal-inteplast"])
+    mk = ->(fr, label, a, b) {
+      v = build(:vehicle, provider: provider); v.save!(validate: false)   # a bus each: overlapping runs may not share one
+      Run.create!(provider: provider, name: "#{fr.name} #{label}", date: date, service_mode: "fixed_route", fixed_route: fr, vehicle: v,
+                  scheduled_start_time: Time.zone.parse("#{date} #{a}"), scheduled_end_time: Time.zone.parse("#{date} #{b}")) }
+    [bay, pal, both].each { |fr| mk.(fr, "AM", "05:00", "10:50"); mk.(fr, "PM", "17:00", "22:50") }
+    cindy = driver("Cindy", "Perales")
+    r2 = roster([["BAY", "AM", "Cindy Perales", "assigned"], ["PAL", "AM", "Cindy Perales", "assigned"],
+                 ["BAY", "PM", "Cindy Perales", "assigned"], ["PAL", "PM", "Frances Gonzalez", "assigned"]],
+                [["Cindy Perales", %w[BAY PAL]]])
+    s = sync(r2)   # routes and drivers are cached per instance; these routes did not exist for the first one
+    rows = s.plan(r2)
+    tandem = rows.select { |x| x.route == "BAY+PAL" }
+    expect(tandem.map(&:shift)).to eq ["AM"]                      # PM is not a double: Pal PM has its own driver
+    expect(rows.find { |x| x.route == "PAL" && x.shift == "PM" }.action).to eq :assign
+    s.apply!(rows)
+    expect(both.runs.find_by(name: "Bay+Pal AM").driver).to eq cindy
+    expect(both.runs.find_by(name: "Bay+Pal PM").driver).to be_nil
+    expect(pal.runs.find_by(name: "Pal PM").driver).to eq frances
+  end
+
   it "turns the shim's errors into one line" do
     expect { sync({ "error" => "PayPeriodNotCreated" }).fetch("2027-01-01", %w[fixed]) }.to raise_error(RosterSync::Error, /PayPeriodNotCreated/)
     expect { sync("nope", code: 401).fetch("tomorrow", %w[fixed]) }.to raise_error(RosterSync::Error, /HTTP 401/)
