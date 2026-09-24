@@ -32,7 +32,17 @@ class RosterSync
     "PORT LAVACA" => "Port Lavaca", "PL" => "Port Lavaca", "PORTLAVACA" => "Port Lavaca",
     "VIC 1" => "Vic1", "VIC 2" => "Vic2", "VICTORIA 1" => "Vic1", "VICTORIA 2" => "Vic2",
     "EL CAMPO" => "Campo", "PALACIOS" => "Pal", "BAY CITY" => "Bay",
+    # VIC3 was a commuter route of its own; short of drivers it is folded into
+    # the Edna bus, and the sheet names that slot "VIC3/EDNA". When drivers
+    # return and VIC3 runs alone again it needs its own route here and in the
+    # authoring tool, and this alias goes.
+    "VIC3/EDNA" => "Edna", "VIC 3/EDNA" => "Edna", "EDNA/VIC3" => "Edna",
   }.freeze
+
+  # "BAY CITY ASSIST", "EDNA ASSIST": an overflow bus that follows the route
+  # and picks up whoever did not fit. A second driver and bus, but not a route
+  # of its own and no RidePilot run: reported, never matched, never alerted.
+  ASSIST = /\bASSIST\b/i
 
   # On a one-bus day the driver sits on one RidePilot run and the partner run
   # stays empty (one run, one driver: the tablet flips between the routes).
@@ -81,6 +91,14 @@ class RosterSync
         statuses = shifts.map { |s| s["status"].to_s }
         operators = shifts.map { |s| s["operator"].to_s.strip }.reject(&:blank?).uniq
 
+        if roster_route =~ ASSIST
+          row.status = :assist
+          row.action = :assist
+          row.roster_driver = operators.first
+          row.note << (operators.any? ? "overflow bus: #{operators.join(' / ')}" : "overflow bus, nobody on it")
+          rows << row
+          next
+        end
         if row.fixed_route.nil?
           row.action = :unknown_route
           row.note << "no RidePilot route named like #{roster_route.inspect}"
@@ -174,7 +192,7 @@ class RosterSync
   # ---- report ---------------------------------------------------------------------
 
   FLAG = { unknown_route: "!!", unknown_driver: "!!", no_run: "!!", refused: "!!", open: "!!",
-           assign: "->", combo_partner: "..", started: "..", keep: "..", skip: "  ", same: "  " }.freeze
+           assign: "->", combo_partner: "..", started: "..", keep: "..", skip: "  ", same: "  ", assist: "  " }.freeze
 
   def report(roster, rows, mode:)
     lines = []
@@ -188,6 +206,7 @@ class RosterSync
               when :combo_partner then "(empty)"
               when :skip then "not in service"
               when :open then "OPEN"
+              when :assist then r.roster_driver || "(nobody)"
               when :keep then r.current_driver&.user_name
               else r.roster_driver
               end
@@ -222,7 +241,7 @@ class RosterSync
     (roster["combos"] || {}).each_value do |list|
       Array(list).each do |c|
         op = (c["operator"] || c["name"]).to_s.strip.upcase
-        routes = Array(c["routes"]).map { |r| find_route(r.to_s)&.name || r.to_s }
+        routes = Array(c["routes"]).reject { |r| r.to_s =~ ASSIST }.map { |r| find_route(r.to_s)&.name || r.to_s }
         out[op] = ((out[op] || []) + routes).uniq if op.present?
       end
     end

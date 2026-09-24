@@ -120,6 +120,24 @@ RSpec.describe RosterSync do
     expect(run_blue.reload.driver).to eq mary
   end
 
+  it "reports assist (overflow) buses without matching them, and folds VIC3/EDNA onto Edna" do
+    edna = FixedRoute.create!(provider: provider, name: "Edna", kind: "commuter", color: "000000", external_route_ids: ["edna-inteplast"])
+    run_edna = run_for(edna, date)
+    r = roster([["VIC3/EDNA", "AM", "Mary Ramos", "assigned"], ["EDNA ASSIST (AM/PM)", "AM", "Frances Gonzalez", "assigned"],
+                ["BAY CITY ASSIST", "AM", "", "open"]])
+    s = sync(r)
+    rows = s.plan(r)
+    by = rows.index_by(&:route)
+    expect(by["VIC3/EDNA"].action).to eq :assign
+    expect(by["VIC3/EDNA"].fixed_route).to eq edna
+    expect(by["EDNA ASSIST (AM/PM)"].action).to eq :assist
+    expect(by["BAY CITY ASSIST"].action).to eq :assist
+    expect(s.alerts(rows)).to be_empty
+    s.apply!(rows)
+    expect(run_edna.reload.driver).to eq mary
+    expect(s.report(r, rows, mode: "watch")).to include("overflow bus: Frances Gonzalez")
+  end
+
   it "turns the shim's errors into one line" do
     expect { sync({ "error" => "PayPeriodNotCreated" }).fetch("2027-01-01", %w[fixed]) }.to raise_error(RosterSync::Error, /PayPeriodNotCreated/)
     expect { sync("nope", code: 401).fetch("tomorrow", %w[fixed]) }.to raise_error(RosterSync::Error, /HTTP 401/)
