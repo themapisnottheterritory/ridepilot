@@ -44,11 +44,19 @@ class RosterSync
   # of its own and no RidePilot run: reported, never matched, never alerted.
   ASSIST = /\bASSIST\b/i
 
-  # On a one-bus day the driver sits on one RidePilot run and the partner run
-  # stays empty (one run, one driver: the tablet flips between the routes).
-  # Which route holds the run: the one driven first. Gold then Green is the
-  # block built 2026-09-23 (gcrpc-fixedroute/ops/one-bus-combo.md).
+  # On a one-bus day the driver sits on one RidePilot run and the partner runs
+  # stay empty. Two shapes of that:
+  #
+  # A city block: the bus drives one route's loop then the other's, and the
+  # tablet flips between them on one run. The run is the route driven first --
+  # Gold then Green (gcrpc-fixedroute/ops/one-bus-combo.md).
   BLOCK_LEAD = { "Green" => "Gold" }.freeze
+  #
+  # A commuter double: one interleaved trip through both routes' pickups, which
+  # is a route of its own in the authoring tool and in RidePilot (ops/
+  # make-tandem-routes.py). The sheet still lists the two single routes with
+  # the same operator; the run that gets the driver is the tandem's.
+  TANDEM = { %w[Bay Pal] => "Bay+Pal", ["Port Lavaca", "Vic2"] => "Port Lavaca+Vic2", %w[Edna Vic1] => "Vic1+Edna" }.freeze
 
   Row = Struct.new(:category, :route, :fixed_route, :run, :roster_driver, :driver, :current_driver,
                    :status, :action, :note, keyword_init: true)
@@ -105,8 +113,7 @@ class RosterSync
           rows << row
           next
         end
-        row.run = Run.where(provider_id: provider.id, date: date, service_mode: "fixed_route",
-                            fixed_route_id: row.fixed_route.id, deleted_at: nil).order(:id).first
+        row.run = run_for(row.fixed_route, date)
         row.current_driver = row.run&.driver
 
         if statuses.all? { |s| s == "not_in_service" }
@@ -128,13 +135,6 @@ class RosterSync
         row.roster_driver = operators.first
         row.note << "AM and PM differ on the sheet (#{operators.join(' / ')}); using #{operators.first}" if operators.size > 1
 
-        if row.run.nil?
-          row.action = :no_run
-          row.note << "no RidePilot run for #{row.fixed_route.name} on #{date}"
-          rows << row
-          next
-        end
-
         combo = combos[row.roster_driver.upcase]
         if combo && combo.size > 1
           lead = lead_route(combo)
@@ -147,26 +147,59 @@ class RosterSync
           end
           row.note << "one-bus day: #{row.roster_driver} drives #{combo.join(' + ')}"
         end
+        rows << assign(row, date)
+      end
 
-        row.driver = find_driver(row.roster_driver)
-        if row.driver.nil?
-          row.action = :unknown_driver
-          row.note << "no RidePilot driver matching #{row.roster_driver.inspect}"
-        elsif row.run.actual_start_time.present?
-          row.action = :started
-          row.note << "run already started (#{row.current_driver&.user_name || 'no driver'}), left alone"
-        elsif row.current_driver == row.driver
-          row.action = :same
-        elsif row.current_driver
-          row.action = :assign
-          row.note << "RidePilot has #{row.current_driver.user_name}, sheet says #{row.driver.user_name}"
-        else
-          row.action = :assign
+      # A commuter double's run belongs to a route the sheet never names: add
+      # its row, carrying the operator from the pair.
+      combos.each do |op, routes|
+        lead = lead_route(routes)
+        next if routes.include?(lead) || rows.any? { |r| r.fixed_route&.name == lead }
+        next unless routes.all? { |r| by_route.key?(r.upcase) || by_route.keys.any? { |k| find_route(k)&.name == r } }
+        row = Row.new(category: category, route: lead.upcase, note: ["one bus: #{op.titleize} drives #{routes.join(' + ')} as #{lead}"])
+        row.fixed_route = find_route(lead)
+        if row.fixed_route.nil?
+          row.action = :unknown_route
+          row.note << "no RidePilot route named #{lead.inspect} for the double"
+          rows << row
+          next
         end
-        rows << row
+        row.run = run_for(row.fixed_route, date)
+        row.current_driver = row.run&.driver
+        row.status = :assigned
+        row.roster_driver = op.titleize
+        rows << assign(row, date)
       end
     end
     rows
+  end
+
+  # The driver for an :assigned row: matched, compared with the run, decided.
+  def assign(row, date)
+    row.driver = find_driver(row.roster_driver)
+    if row.run.nil?
+      row.action = :no_run
+      row.note << "no RidePilot run for #{row.fixed_route.name} on #{date}"
+    elsif row.driver.nil?
+      row.action = :unknown_driver
+      row.note << "no RidePilot driver matching #{row.roster_driver.inspect}"
+    elsif row.run.actual_start_time.present?
+      row.action = :started
+      row.note << "run already started (#{row.current_driver&.user_name || 'no driver'}), left alone"
+    elsif row.current_driver == row.driver
+      row.action = :same
+    elsif row.current_driver
+      row.action = :assign
+      row.note << "RidePilot has #{row.current_driver.user_name}, sheet says #{row.driver.user_name}"
+    else
+      row.action = :assign
+    end
+    row
+  end
+
+  def run_for(fixed_route, date)
+    Run.where(provider_id: provider.id, date: date, service_mode: "fixed_route",
+              fixed_route_id: fixed_route.id, deleted_at: nil).order(:id).first
   end
 
   # ---- apply ---------------------------------------------------------------------
@@ -248,9 +281,12 @@ class RosterSync
     out
   end
 
-  # The run goes on a route RidePilot knows; among those, the block's lead if
-  # one is defined, else the first alphabetically.
+  # The run goes on: the tandem route for a commuter double; else a route
+  # RidePilot knows -- the block's lead if one is defined, else the first
+  # alphabetically.
   def lead_route(routes)
+    tandem = TANDEM[routes.sort]
+    return tandem if tandem
     known = routes.select { |r| find_route(r) }
     pool = known.any? ? known : routes
     leads = pool.map { |r| BLOCK_LEAD[r] }.compact

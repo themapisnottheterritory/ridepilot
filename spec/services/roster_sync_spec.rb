@@ -138,6 +138,33 @@ RSpec.describe RosterSync do
     expect(s.report(r, rows, mode: "watch")).to include("overflow bus: Frances Gonzalez")
   end
 
+  it "puts a commuter double's driver on the tandem route's run and leaves both singles empty" do
+    bay = FixedRoute.create!(provider: provider, name: "Bay", kind: "commuter", color: "000000", external_route_ids: ["bay-inteplast"])
+    pal = FixedRoute.create!(provider: provider, name: "Pal", kind: "commuter", color: "000000", external_route_ids: ["pal-inteplast"])
+    both = FixedRoute.create!(provider: provider, name: "Bay+Pal", kind: "commuter", color: "000000", external_route_ids: ["bay-pal-inteplast"])
+    run_bay = run_for(bay, date); run_pal = run_for(pal, date); run_both = run_for(both, date)
+    cindy = driver("Cindy", "Perales")
+    r = roster([["BAY", "AM", "Cindy Perales", "assigned"], ["PAL", "AM", "Cindy Perales", "assigned"]],
+               [["Cindy Perales", %w[BAY PAL]]])
+    s = sync(r)
+    rows = s.plan(r)
+    by = rows.index_by(&:route)
+    expect(by["BAY"].action).to eq :combo_partner
+    expect(by["PAL"].action).to eq :combo_partner
+    expect(by["BAY+PAL"].action).to eq :assign
+    expect(s.alerts(rows)).to be_empty
+    s.apply!(rows)
+    expect(run_both.reload.driver).to eq cindy
+    expect(run_bay.reload.driver).to be_nil
+    expect(run_pal.reload.driver).to be_nil
+
+    # No run for the tandem that day: an alert, and the singles still stay empty.
+    run_both.destroy
+    rows = s.plan(r)
+    expect(rows.index_by(&:route)["BAY+PAL"].action).to eq :no_run
+    expect(s.alerts(rows).map(&:route)).to eq ["BAY+PAL"]
+  end
+
   it "turns the shim's errors into one line" do
     expect { sync({ "error" => "PayPeriodNotCreated" }).fetch("2027-01-01", %w[fixed]) }.to raise_error(RosterSync::Error, /PayPeriodNotCreated/)
     expect { sync("nope", code: 401).fetch("tomorrow", %w[fixed]) }.to raise_error(RosterSync::Error, /HTTP 401/)
