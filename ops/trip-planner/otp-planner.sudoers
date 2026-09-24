@@ -1,0 +1,4 @@
+# /etc/sudoers.d/otp-planner on 10.0.0.32 -- lets the feed publish restart the
+# planner without a password. Restart only; nothing else.
+#   sudo install -m 440 -o root -g root otp-planner.sudoers /etc/sudoers.d/otp-planner && sudo visudo -cf /etc/sudoers.d/otp-planner
+philz ALL=(root) NOPASSWD: /usr/bin/systemctl restart otp-planner, /usr/bin/systemctl restart stop_announce

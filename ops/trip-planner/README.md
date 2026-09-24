@@ -19,6 +19,16 @@ Repo copy of everything here: `ridepilot/ops/trip-planner/`.
 
 ## Rebuild the graph (after a new GTFS feed or map)
 
+Automated since 2026-09-24: `gcrpc-fixedroute/ops/publish-gtfs.sh` on .16 copies the city zip
+here and runs `~/otp/rebuild-planner.sh` (repo copy: `rebuild-planner.sh`), which builds the
+graph, restarts `otp-planner` under the one-line rule in `/etc/sudoers.d/otp-planner`
+(`otp-planner.sudoers`: restart only, no password), waits for GraphQL to answer, and regenerates
+`web/stops.json`. The previous graph is kept as `data/graph.obj.prev`. By hand:
+
+    ~/otp/rebuild-planner.sh ~/gtfs_fy2027/GCRPC-Fixed-FY2027.zip
+
+The manual steps, for reference:
+
     cp ~/gtfs_fy2027/GCRPC-Fixed-FY2027.zip data/gcrpc-fixed.gtfs.zip
     docker run --rm -v ~/otp/data:/var/opentripplanner -e JAVA_OPTS=-Xmx6G \
       opentripplanner/opentripplanner:2.6.0 --build --save
