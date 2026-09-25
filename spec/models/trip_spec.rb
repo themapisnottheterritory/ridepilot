@@ -61,12 +61,12 @@ RSpec.describe Trip do
       t = Trip.new
       t.mileage = 0
       t.valid?
-      expect(t.errors.keys.include?(:mileage)).to be_truthy
+      expect(t.errors.attribute_names.include?(:mileage)).to be_truthy
       expect(t.errors[:mileage]).to include "must be greater than 0"
 
       t.mileage = 1
       t.valid?
-      expect(t.errors.keys.include?(:mileage)).not_to be_truthy
+      expect(t.errors.attribute_names.include?(:mileage)).not_to be_truthy
     end
   end
 

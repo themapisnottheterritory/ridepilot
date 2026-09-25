@@ -4,13 +4,13 @@ RSpec.describe OperatingHour, type: :model do
   it "requires a day of the week" do
     hours = build :operating_hour, day_of_week: nil
     expect(hours.valid?).to be_falsey
-    expect(hours.errors.keys).to include :day_of_week
+    expect(hours.errors.attribute_names).to include :day_of_week
   end
 
   it "requires a operatable object" do
     hours = build :operating_hour, operatable: nil
     expect(hours.valid?).to be_falsey
-    expect(hours.errors.keys).to include :operatable
+    expect(hours.errors.attribute_names).to include :operatable
   end
   
   it "orders records by day_of_week" do
@@ -25,7 +25,7 @@ RSpec.describe OperatingHour, type: :model do
   it "does not allow overnight hours" do
     hours = build :operating_hour, start_time: "01:00", end_time: "00:59"
     expect(hours.valid?).to be_falsey
-    expect(hours.errors.keys).to include :end_time
+    expect(hours.errors.attribute_names).to include :end_time
 
     hours.end_time = "00:00"
     expect(hours.valid?).to be_truthy

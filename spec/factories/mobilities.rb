@@ -2,6 +2,6 @@ require 'faker'
 
 FactoryBot.define do
   factory :mobility do
-    name  { Faker::Lorem.words(number: 2).join(' ') }
+    sequence(:name) { |n| "sample_mobility_#{n}" }  # name is unique
   end
 end

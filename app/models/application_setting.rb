@@ -14,6 +14,26 @@ class ApplicationSetting < RailsSettings::Base
   field :cad_avl_cad_refresh_interval_seconds, type: :integer, default: 30
   field :opentransit_polling_interval_seconds, type: :integer, default: 15
 
+  # Dotted keys as the settings page and older callers use them.
+  KEY_FIELDS = {
+    'devise.password_archiving_count'        => :devise_password_archiving_count,
+    'devise.expire_password_after'           => :devise_expire_password_after,
+    'cad_avl.data_storage_months'            => :cad_avl_data_storage_months,
+    'cad_avl.gps_interval_seconds'           => :cad_avl_gps_interval_seconds,
+    'cad_avl.cad_refresh_interval_seconds'   => :cad_avl_cad_refresh_interval_seconds,
+    'opentransit.polling_interval_seconds'   => :opentransit_polling_interval_seconds
+  }.freeze
+
+  def self.[](key)
+    field = KEY_FIELDS[key.to_s]
+    field ? public_send(field) : nil
+  end
+
+  def self.[]=(key, value)
+    field = KEY_FIELDS[key.to_s] or raise ArgumentError, "unknown setting #{key}"
+    public_send("#{field}=", value)
+  end
+
   # For compatibility with older code expecting get_all method
   def self.get_all
     {
@@ -41,11 +61,10 @@ class ApplicationSetting < RailsSettings::Base
       self.cad_avl_gps_interval_seconds = params['cad_avl.gps_interval_seconds'].to_i if params.has_key? "cad_avl.gps_interval_seconds"
       self.cad_avl_cad_refresh_interval_seconds = params['cad_avl.cad_refresh_interval_seconds'].to_i if params.has_key? "cad_avl.cad_refresh_interval_seconds"
       self.opentransit_polling_interval_seconds = params['opentransit.polling_interval_seconds'].to_i if params.has_key? "opentransit.polling_interval_seconds"
-
-      return true
     end
-
-    return false
+    # No `return` inside the block: on Rails 7.1 a non-local return rolls the
+    # transaction back, which made the settings page save nothing.
+    true
   end
 
   def self.apply!

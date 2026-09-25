@@ -7,8 +7,9 @@ class VehicleMaintenanceCompliance < ApplicationRecord
   DUE_TYPES = [:date, :mileage, :both].freeze
   
   belongs_to :vehicle, inverse_of: :vehicle_maintenance_compliances
-  belongs_to :recurring_vehicle_maintenance_compliance, inverse_of: :vehicle_maintenance_compliances
-  belongs_to :vehicle_maintenance_schedule
+  # A compliance event may be entered by hand: no recurring parent, no schedule.
+  belongs_to :recurring_vehicle_maintenance_compliance, inverse_of: :vehicle_maintenance_compliances, optional: true
+  belongs_to :vehicle_maintenance_schedule, optional: true
   
   validates :vehicle, presence: true
   validates :due_type, inclusion: { in: DUE_TYPES.map(&:to_s) }

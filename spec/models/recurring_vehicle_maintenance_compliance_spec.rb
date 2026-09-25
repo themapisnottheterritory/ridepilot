@@ -17,11 +17,11 @@ RSpec.describe RecurringVehicleMaintenanceCompliance, type: :model do
   it "requires a recurrence_type of either 'date', 'mileage', or 'both'" do
     recurrence = build :recurring_vehicle_maintenance_compliance, recurrence_type: nil, recurrence_mileage: 1
     expect(recurrence.valid?).to be_falsey
-    expect(recurrence.errors.keys).to include :recurrence_type
+    expect(recurrence.errors.attribute_names).to include :recurrence_type
 
     recurrence.recurrence_type = "foo"
     expect(recurrence.valid?).to be_falsey
-    expect(recurrence.errors.keys).to include :recurrence_type
+    expect(recurrence.errors.attribute_names).to include :recurrence_type
 
     %w(date mileage both).each do |recurrence_type|
       recurrence.recurrence_type = recurrence_type
@@ -35,11 +35,11 @@ RSpec.describe RecurringVehicleMaintenanceCompliance, type: :model do
   it "requires a recurrence_schedule when recurrence type is 'date' or 'both'" do
     recurrence = build :recurring_vehicle_maintenance_compliance, recurrence_type: "date", recurrence_schedule: nil, recurrence_mileage: 1
     expect(recurrence.valid?).to be_falsey
-    expect(recurrence.errors.keys).to include :recurrence_schedule
+    expect(recurrence.errors.attribute_names).to include :recurrence_schedule
 
     recurrence.recurrence_type = "both"
     expect(recurrence.valid?).to be_falsey
-    expect(recurrence.errors.keys).to include :recurrence_schedule
+    expect(recurrence.errors.attribute_names).to include :recurrence_schedule
 
     recurrence.recurrence_type = "mileage"
     expect(recurrence.valid?).to be_truthy
@@ -51,11 +51,11 @@ RSpec.describe RecurringVehicleMaintenanceCompliance, type: :model do
   it "requires a recurrence_frequency when recurrence type is 'date' or 'both'" do
     recurrence = build :recurring_vehicle_maintenance_compliance, recurrence_type: "date", recurrence_frequency: nil, recurrence_mileage: 1
     expect(recurrence.valid?).to be_falsey
-    expect(recurrence.errors.keys).to include :recurrence_frequency
+    expect(recurrence.errors.attribute_names).to include :recurrence_frequency
 
     recurrence.recurrence_type = "both"
     expect(recurrence.valid?).to be_falsey
-    expect(recurrence.errors.keys).to include :recurrence_frequency
+    expect(recurrence.errors.attribute_names).to include :recurrence_frequency
 
     recurrence.recurrence_type = "mileage"
     expect(recurrence.valid?).to be_truthy
@@ -65,11 +65,11 @@ RSpec.describe RecurringVehicleMaintenanceCompliance, type: :model do
   it "requires a recurrence_mileage when recurrence type is 'mileage' or 'both'" do
     recurrence = build :recurring_vehicle_maintenance_compliance, recurrence_type: "mileage", recurrence_mileage: nil
     expect(recurrence.valid?).to be_falsey
-    expect(recurrence.errors.keys).to include :recurrence_mileage
+    expect(recurrence.errors.attribute_names).to include :recurrence_mileage
 
     recurrence.recurrence_type = "both"
     expect(recurrence.valid?).to be_falsey
-    expect(recurrence.errors.keys).to include :recurrence_mileage
+    expect(recurrence.errors.attribute_names).to include :recurrence_mileage
 
     recurrence.recurrence_type = "date"
     expect(recurrence.valid?).to be_truthy
@@ -79,15 +79,15 @@ RSpec.describe RecurringVehicleMaintenanceCompliance, type: :model do
   it "requires recurrence_mileage to be an integer greater than 0 when its presence is required" do
     recurrence = build :recurring_vehicle_maintenance_compliance, recurrence_type: "mileage", recurrence_mileage: nil
     expect(recurrence.valid?).to be_falsey
-    expect(recurrence.errors.keys).to include :recurrence_mileage
+    expect(recurrence.errors.attribute_names).to include :recurrence_mileage
 
     recurrence.recurrence_mileage = 0
     expect(recurrence.valid?).to be_falsey
-    expect(recurrence.errors.keys).to include :recurrence_mileage
+    expect(recurrence.errors.attribute_names).to include :recurrence_mileage
 
     recurrence.recurrence_mileage = 1.2
     expect(recurrence.valid?).to be_falsey
-    expect(recurrence.errors.keys).to include :recurrence_mileage
+    expect(recurrence.errors.attribute_names).to include :recurrence_mileage
 
     recurrence.recurrence_mileage = 1
     expect(recurrence.valid?).to be_truthy
@@ -99,11 +99,11 @@ RSpec.describe RecurringVehicleMaintenanceCompliance, type: :model do
   it "requires a start_date when recurrence type is 'date' or 'both'" do
     recurrence = build :recurring_vehicle_maintenance_compliance, start_date: nil, recurrence_type: "date", recurrence_mileage: 1
     expect(recurrence.valid?).to be_falsey
-    expect(recurrence.errors.keys).to include :start_date
+    expect(recurrence.errors.attribute_names).to include :start_date
 
     recurrence.recurrence_type = "both"
     expect(recurrence.valid?).to be_falsey
-    expect(recurrence.errors.keys).to include :start_date
+    expect(recurrence.errors.attribute_names).to include :start_date
 
     recurrence.recurrence_type = "mileage"
     expect(recurrence.valid?).to be_truthy
@@ -113,7 +113,7 @@ RSpec.describe RecurringVehicleMaintenanceCompliance, type: :model do
   it "does not allow a future_start_rule of 'time_span' when the recurrence_type is 'mileage'" do
     recurrence = build :recurring_vehicle_maintenance_compliance, recurrence_type: "mileage", recurrence_mileage: 1, future_start_rule: "time_span", future_start_schedule: "days", future_start_frequency: 1
     expect(recurrence.valid?).to be_falsey
-    expect(recurrence.errors.keys).to include :future_start_rule
+    expect(recurrence.errors.attribute_names).to include :future_start_rule
 
     recurrence.recurrence_type = "date"
     expect(recurrence.valid?).to be_truthy

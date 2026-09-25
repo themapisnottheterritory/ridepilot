@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe API::V2::SessionsController, type: :controller do 
+RSpec.describe Api::V2::SessionsController, type: :controller do 
   let(:user) { create :user }
 
   describe "user sign in/sign out" do

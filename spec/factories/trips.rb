@@ -6,6 +6,7 @@ FactoryBot.define do
     appointment_time { pickup_time + 30.minutes }
     trip_purpose
     customer
+    provider { customer ? customer.provider : association(:provider) }
 
     factory :cab_trip do
       cab { true }

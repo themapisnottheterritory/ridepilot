@@ -7,7 +7,7 @@ RSpec.describe VehiclesController, type: :controller do
   # Vehicle. As you add validations to Vehicle, be sure to
   # adjust the attributes here as well.
   let(:valid_attributes) { 
-    attributes_for(:vehicle)
+    attributes_for(:vehicle, vehicle_type_id: create(:vehicle_type, provider: @current_user.current_provider).id)
   }
 
   let(:invalid_attributes) { 

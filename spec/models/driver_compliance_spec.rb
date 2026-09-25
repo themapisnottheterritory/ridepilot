@@ -26,13 +26,13 @@ RSpec.describe DriverCompliance, type: :model do
   it "requires a driver" do
     compliance = build :driver_compliance, driver: nil
     expect(compliance.valid?).to be_falsey
-    expect(compliance.errors.keys).to include :driver
+    expect(compliance.errors.attribute_names).to include :driver
   end
 
   it "requires a due date" do
     compliance = build :driver_compliance, due_date: nil
     expect(compliance.valid?).to be_falsey
-    expect(compliance.errors.keys).to include :due_date
+    expect(compliance.errors.attribute_names).to include :due_date
   end
 
   describe ".for_driver" do

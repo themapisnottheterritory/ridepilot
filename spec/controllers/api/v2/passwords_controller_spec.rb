@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe API::V2::PasswordsController, type: :controller do 
+RSpec.describe Api::V2::PasswordsController, type: :controller do 
   let(:user) { create :user }
 
   describe "reset password" do

@@ -219,7 +219,7 @@ RSpec.describe UsersController, type: :controller do
   describe "GET #check_session" do
     it "responds with JSON" do
       get :check_session, params: {}
-      expect(response.content_type).to eq("application/json")
+      expect(response.media_type).to eq("application/json")
     end
 
     it "include an integer named last_request_at" do

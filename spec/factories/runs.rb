@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :run do
-    name { Faker::Lorem.words(number: 2).join(' ') }
+    sequence(:name) { |n| "Sample Run #{n}" }  # unique per provider and date
     vehicle
     driver
     provider

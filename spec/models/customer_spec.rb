@@ -184,7 +184,7 @@ RSpec.describe Customer do
       # new numbers array consists of one new funding number, and two of the original
       # ones. One old number is left out.
       new_funding_numbers_hash = [
-        { number: 'test number', funding_source: FundingSource.first, contact_info: 'test contact info'},
+        { number: 'test number', funding_source_id: FundingSource.first.id, contact_info: 'test contact info'},
         original_numbers[0].attributes.with_indifferent_access,
         original_numbers[1].attributes.with_indifferent_access
       ]

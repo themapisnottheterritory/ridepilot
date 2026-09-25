@@ -27,7 +27,7 @@ RSpec.describe TripsController, type: :controller do
     context "when responding to a :json request" do
       it "responds with JSON" do
         get :index, params: {:format => "json"}
-        expect(response.content_type).to eq("application/json")
+        expect(response.media_type).to eq("application/json")
       end
 
       it "assigns trips for the current day as @trips" do
@@ -57,7 +57,7 @@ RSpec.describe TripsController, type: :controller do
 
   describe "GET #customer_trip_summary" do
     it "returns empty when no customer_id is given" do 
-      get :customer_trip_summary, {:format => "json"}
+      get :customer_trip_summary, params: {:format => "json"}
       expect(assigns(:trips)).to be_empty
     end
 
@@ -177,7 +177,7 @@ RSpec.describe TripsController, type: :controller do
     context "when responding to a :js request" do
       it "responds with JSON" do
         get :new, params: {:format => "js"}
-        expect(response.content_type).to eq("text/json")
+        expect(response.media_type).to eq("text/json")
       end
       
       context "with rendered views" do
@@ -212,7 +212,7 @@ RSpec.describe TripsController, type: :controller do
       it "responds with JSON" do
         trip = create(:trip, :provider => @current_user.current_provider)
         get :edit, params: {:id => trip.to_param, :format => "js"}
-        expect(response.content_type).to eq("text/json")
+        expect(response.media_type).to eq("text/json")
       end
       
       context "with rendered views" do
@@ -309,7 +309,7 @@ RSpec.describe TripsController, type: :controller do
         it "responds with JSON" do
           trip = create(:trip, :provider => @current_user.current_provider)
           put :update, params: {:id => trip.to_param, :trip => valid_attributes, :format => "js"}
-          expect(response.content_type).to eq("text/json")
+          expect(response.media_type).to eq("text/json")
         end
 
         it "includes a successful status in the JS response" do
@@ -341,7 +341,7 @@ RSpec.describe TripsController, type: :controller do
         it "responds with JSON" do
           trip = create(:trip, :provider => @current_user.current_provider)
           put :update, params: {:id => trip.to_param, :trip => invalid_attributes, :format => "js"}
-          expect(response.content_type).to eq("text/json")
+          expect(response.media_type).to eq("text/json")
         end
         
         it "includes a error status in the JS response" do
@@ -387,7 +387,7 @@ RSpec.describe TripsController, type: :controller do
       it "responds with JSON" do
         trip = create(:trip, :provider => @current_user.current_provider)
         delete :destroy, params: {:id => trip.to_param, :format => "js"}
-        expect(response.content_type).to eq("text/json")
+        expect(response.media_type).to eq("text/json")
       end
 
       it "includes a successful status in the JS response" do

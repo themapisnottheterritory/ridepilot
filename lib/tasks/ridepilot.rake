@@ -374,7 +374,7 @@ namespace :ridepilot do
     
     all_day_ids = []
     OperatingHour.where.not(is_unavailable: true).pluck(:id, :start_time, :end_time).each do |config|
-      if config[1].try(:to_s, :time_utc) == '00:00:00' and config[2].try(:to_s, :time_utc) == '00:00:00'
+      if config[1].try(:to_fs, :time_utc) == '00:00:00' and config[2].try(:to_fs, :time_utc) == '00:00:00'
         all_day_ids << config[0]
       end
     end
@@ -384,14 +384,14 @@ namespace :ridepilot do
   desc 'Update runs scheduled time string'
   task :migrate_runs_scheduled_time_string => :environment do
     Run.unscoped.where('scheduled_start_time_string is NULL or scheduled_end_time_string is NULL').find_each do |r|
-      r.scheduled_start_time_string = r.scheduled_start_time.try(:to_s, :time_utc)
-      r.scheduled_end_time_string = r.scheduled_end_time.try(:to_s, :time_utc)
+      r.scheduled_start_time_string = r.scheduled_start_time.try(:to_fs, :time_utc)
+      r.scheduled_end_time_string = r.scheduled_end_time.try(:to_fs, :time_utc)
       r.save(validate: false)
     end
 
     RepeatingRun.unscoped.where('scheduled_start_time_string is NULL or scheduled_end_time_string is NULL').find_each do |r|
-      r.scheduled_start_time_string = r.scheduled_start_time.try(:to_s, :time_utc)
-      r.scheduled_end_time_string = r.scheduled_end_time.try(:to_s, :time_utc)
+      r.scheduled_start_time_string = r.scheduled_start_time.try(:to_fs, :time_utc)
+      r.scheduled_end_time_string = r.scheduled_end_time.try(:to_fs, :time_utc)
       r.save(validate: false)
     end
   end

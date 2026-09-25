@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe API::V2::BaseController, type: :controller do 
+RSpec.describe Api::V2::BaseController, type: :controller do 
   # This line is necessary to get Devise scoped tests to work.
   before(:each) { @request.env["devise.mapping"] = Devise.mappings[:user] }
 

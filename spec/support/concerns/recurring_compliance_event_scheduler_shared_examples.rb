@@ -54,13 +54,13 @@ RSpec.shared_examples "a recurring compliance event scheduler" do
     it "requires a provider" do
       recurrence = build @recurrence_class_factory, provider: nil
       expect(recurrence.valid?).to be_falsey
-      expect(recurrence.errors.keys).to include :provider
+      expect(recurrence.errors.attribute_names).to include :provider
     end
 
     it "requires an event_name" do
       recurrence = build @recurrence_class_factory, event_name: nil
       expect(recurrence.valid?).to be_falsey
-      expect(recurrence.errors.keys).to include :event_name
+      expect(recurrence.errors.attribute_names).to include :event_name
     end
 
     # The described class may decide this is not a required field, but the
@@ -68,7 +68,7 @@ RSpec.shared_examples "a recurring compliance event scheduler" do
     it "requires a recurrence_schedule be one of 'days', 'weeks', 'months', or 'years'" do
       recurrence = build @recurrence_class_factory, recurrence_schedule: "foo"
       expect(recurrence.valid?).to be_falsey
-      expect(recurrence.errors.keys).to include :recurrence_schedule
+      expect(recurrence.errors.attribute_names).to include :recurrence_schedule
 
       %w(days weeks months years).each do |schedule|
         recurrence.recurrence_schedule = schedule
@@ -84,7 +84,7 @@ RSpec.shared_examples "a recurring compliance event scheduler" do
       %w(foo -1 0).each do |frequency|
         recurrence.recurrence_frequency = frequency
         expect(recurrence.valid?).to be_falsey
-        expect(recurrence.errors.keys).to include :recurrence_frequency
+        expect(recurrence.errors.attribute_names).to include :recurrence_frequency
       end
 
       recurrence.recurrence_frequency = "1"
@@ -98,7 +98,7 @@ RSpec.shared_examples "a recurring compliance event scheduler" do
 
       recurrence.start_date = "foo"
       expect(recurrence.valid?).to be_falsey
-      expect(recurrence.errors.keys).to include :start_date
+      expect(recurrence.errors.attribute_names).to include :start_date
 
       recurrence.start_date = Date.current
       expect(recurrence.valid?).to be_truthy
@@ -107,11 +107,11 @@ RSpec.shared_examples "a recurring compliance event scheduler" do
     it "requires a future_start_rule of either 'immediately', 'on_schedule' (i.e. based on start_date), or 'time_span'" do
       recurrence = build @recurrence_class_factory, future_start_rule: nil, future_start_schedule: "days", future_start_frequency: 1
       expect(recurrence.valid?).to be_falsey
-      expect(recurrence.errors.keys).to include :future_start_rule
+      expect(recurrence.errors.attribute_names).to include :future_start_rule
 
       recurrence.future_start_rule = "foo"
       expect(recurrence.valid?).to be_falsey
-      expect(recurrence.errors.keys).to include :future_start_rule
+      expect(recurrence.errors.attribute_names).to include :future_start_rule
 
       %w(immediately on_schedule time_span).each do |rule|
         recurrence.future_start_rule = rule
@@ -122,11 +122,11 @@ RSpec.shared_examples "a recurring compliance event scheduler" do
     it "requires a future_start_schedule of either 'days', 'weeks', 'months', or 'years' when future_start_rule is 'time_span'" do
       recurrence = build @recurrence_class_factory, future_start_rule: 'time_span', future_start_schedule: nil, future_start_frequency: 1
       expect(recurrence.valid?).to be_falsey
-      expect(recurrence.errors.keys).to include :future_start_schedule
+      expect(recurrence.errors.attribute_names).to include :future_start_schedule
 
       recurrence.future_start_schedule = "foo"
       expect(recurrence.valid?).to be_falsey
-      expect(recurrence.errors.keys).to include :future_start_schedule
+      expect(recurrence.errors.attribute_names).to include :future_start_schedule
 
       %w(days weeks months years).each do |schedule|
         recurrence.future_start_schedule = schedule
@@ -137,12 +137,12 @@ RSpec.shared_examples "a recurring compliance event scheduler" do
     it "requires a numeric future_start_frequency greater than 0 when future_start_rule is 'time_span'" do
       recurrence = build @recurrence_class_factory, future_start_rule: 'time_span', future_start_schedule: 'days', future_start_frequency: nil
       expect(recurrence.valid?).to be_falsey
-      expect(recurrence.errors.keys).to include :future_start_frequency
+      expect(recurrence.errors.attribute_names).to include :future_start_frequency
 
       %w(foo -1 0).each do |frequency|
         recurrence.future_start_frequency = frequency
         expect(recurrence.valid?).to be_falsey
-        expect(recurrence.errors.keys).to include :future_start_frequency
+        expect(recurrence.errors.attribute_names).to include :future_start_frequency
       end
 
       recurrence.future_start_frequency = "1"
@@ -152,7 +152,7 @@ RSpec.shared_examples "a recurring compliance event scheduler" do
     it "can prefer compliance based scheduling over frequency based scheduling" do
       recurrence = build @recurrence_class_factory, compliance_based_scheduling: nil
       expect(recurrence.valid?).to be_falsey
-      expect(recurrence.errors.keys).to include :compliance_based_scheduling
+      expect(recurrence.errors.attribute_names).to include :compliance_based_scheduling
 
       [true, false].each do |bool|
         recurrence.compliance_based_scheduling = bool.to_s
@@ -174,7 +174,7 @@ RSpec.shared_examples "a recurring compliance event scheduler" do
 
         recurrence.start_date = Date.tomorrow
         expect(recurrence.valid?).to be_falsey
-        expect(recurrence.errors.keys).to include :start_date
+        expect(recurrence.errors.attribute_names).to include :start_date
 
         recurrence.reload
         recurrence.event_name = "My New Event"

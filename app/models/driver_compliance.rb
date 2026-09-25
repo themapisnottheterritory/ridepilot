@@ -5,8 +5,9 @@ class DriverCompliance < ApplicationRecord
   has_paper_trail
   
   belongs_to :driver, inverse_of: :driver_compliances
-  belongs_to :driver_requirement_template, -> { with_deleted }
-  belongs_to :recurring_driver_compliance, inverse_of: :driver_compliances
+  # A compliance event may be entered by hand: no template, no recurring parent.
+  belongs_to :driver_requirement_template, -> { with_deleted }, optional: true
+  belongs_to :recurring_driver_compliance, inverse_of: :driver_compliances, optional: true
   
   validates :driver, presence: true
   

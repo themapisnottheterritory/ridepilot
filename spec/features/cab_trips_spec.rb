@@ -6,7 +6,7 @@ RSpec.describe "CabTrips" do
       @user = create(:admin)
       visit new_user_session_path
       fill_in 'user_username', with: @user.username
-      fill_in 'Password', with: 'Password#1'
+      fill_in 'user_password', with: 'Password#1'
       click_button 'Log In'
       
       @start_date = Time.current.beginning_of_week
@@ -24,9 +24,10 @@ RSpec.describe "CabTrips" do
       end
       
       it "has a link to edit the trips occuring on the 1st, 2nd and 4th day of the week" do
-        expect(page).to have_link("Edit 2 cab trips", href: edit_multiple_cab_trips_path(start: @start_date.to_i))
-        expect(page).to have_link("Edit 2 cab trips", href: edit_multiple_cab_trips_path(start: (@start_date + 1.day).to_i))
-        expect(page).to have_link("Edit 1 cab trip", href: edit_multiple_cab_trips_path(start: (@start_date + 3.day).to_i))
+        # Page links carry the locale prefix (/en/...); match on the path tail.
+        expect(page).to have_link("Edit 2 cab trips", href: /cab_trips\/edit_multiple\?start=#{@start_date.to_i}$/)
+        expect(page).to have_link("Edit 2 cab trips", href: /cab_trips\/edit_multiple\?start=#{(@start_date + 1.day).to_i}$/)
+        expect(page).to have_link("Edit 1 cab trip", href: /cab_trips\/edit_multiple\?start=#{(@start_date + 3.day).to_i}$/)
       end
       
       # TODO This test is failing on master. Uncomment after upgrade. Fix if

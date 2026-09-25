@@ -1,7 +1,8 @@
 class DevicePoolDriver < ApplicationRecord
   belongs_to :device_pool
-  belongs_to :driver
-  belongs_to :vehicle
+  # A pool entry is a driver or a vehicle (either may be blank).
+  belongs_to :driver, optional: true
+  belongs_to :vehicle, optional: true
   has_one    :user, :through => :driver
   
   Statuses = %w{inactive active break timedout}

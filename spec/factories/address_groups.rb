@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :address_group do
-    name { Faker::Lorem.words(number: 2).join(' ') }
+    sequence(:name) { |n| "sample_address_group_#{n}" }  # name is unique
   end
 
 end

@@ -48,12 +48,12 @@ RSpec.describe Monthly do
       m = Monthly.new
       m.volunteer_admin_hours = -1
       m.valid?
-      expect(m.errors.keys.include?(:volunteer_admin_hours)).to be_truthy
+      expect(m.errors.attribute_names.include?(:volunteer_admin_hours)).to be_truthy
       expect(m.errors[:volunteer_admin_hours]).to include "must be greater than or equal to 0"
       
       m.volunteer_admin_hours = 0
       m.valid?
-      expect(m.errors.keys.include?(:volunteer_admin_hours)).not_to be_truthy
+      expect(m.errors.attribute_names.include?(:volunteer_admin_hours)).not_to be_truthy
     end
   end
 
@@ -71,12 +71,12 @@ RSpec.describe Monthly do
       m = Monthly.new
       m.volunteer_escort_hours = -1
       m.valid?
-      expect(m.errors.keys.include?(:volunteer_escort_hours)).to be_truthy
+      expect(m.errors.attribute_names.include?(:volunteer_escort_hours)).to be_truthy
       expect(m.errors[:volunteer_escort_hours]).to include "must be greater than or equal to 0"
       
       m.volunteer_escort_hours = 0
       m.valid?
-      expect(m.errors.keys.include?(:volunteer_escort_hours)).not_to be_truthy
+      expect(m.errors.attribute_names.include?(:volunteer_escort_hours)).not_to be_truthy
     end
   end
   
@@ -96,24 +96,24 @@ RSpec.describe Monthly do
       
       m2 = Monthly.new(start_date: start_date, provider: @p1, funding_source: @f1, volunteer_escort_hours: 0, volunteer_admin_hours: 0)
       expect(m2.valid?).to be_falsey
-      expect(m2.errors.keys).to include(:start_date)
+      expect(m2.errors.attribute_names).to include(:start_date)
       expect(m2.errors[:start_date]).to include "has already been used for the given provider and funding source"
       
       m2.provider = @p2
       m2.funding_source = @f1
       expect(m2.valid?).to be_truthy
-      expect(m2.errors.keys).not_to include(:start_date)
+      expect(m2.errors.attribute_names).not_to include(:start_date)
       
       m2.provider = @p1
       m2.funding_source = @f2
       expect(m2.valid?).to be_truthy
-      expect(m2.errors.keys).not_to include(:start_date)
+      expect(m2.errors.attribute_names).not_to include(:start_date)
       
       m2.provider = @p1
       m2.funding_source = @f1
       m2.start_date = start_date + 1.day
       expect(m2.valid?).to be_truthy
-      expect(m2.errors.keys).not_to include(:start_date)
+      expect(m2.errors.attribute_names).not_to include(:start_date)
       
       expect(m2.save).to be_truthy
     end

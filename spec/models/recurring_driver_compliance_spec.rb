@@ -13,18 +13,18 @@ RSpec.describe RecurringDriverCompliance, type: :model do
   it "requires a recurrence_schedule" do
     recurrence = build :recurring_driver_compliance, recurrence_schedule: nil
     expect(recurrence.valid?).to be_falsey
-    expect(recurrence.errors.keys).to include :recurrence_schedule
+    expect(recurrence.errors.attribute_names).to include :recurrence_schedule
   end
 
   it "requires a recurrence_frequency" do
     recurrence = build :recurring_driver_compliance, recurrence_frequency: nil
     expect(recurrence.valid?).to be_falsey
-    expect(recurrence.errors.keys).to include :recurrence_frequency
+    expect(recurrence.errors.attribute_names).to include :recurrence_frequency
   end
 
   it "requires a start_date" do
     recurrence = build :recurring_driver_compliance, start_date: nil
     expect(recurrence.valid?).to be_falsey
-    expect(recurrence.errors.keys).to include :start_date
+    expect(recurrence.errors.attribute_names).to include :start_date
   end
 end

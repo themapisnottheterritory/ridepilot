@@ -2,6 +2,6 @@ require 'faker'
 
 FactoryBot.define do
   factory :funding_source do
-    name  { Faker::Lorem.words(number: 2).join(' ') }
+    sequence(:name) { |n| "sample_funding_source_#{n}" }
   end
 end

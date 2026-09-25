@@ -1,0 +1,1592 @@
+locale,key,value
+de,devise.failure.expired,Ihr Account ist aufgrund zu langer Inaktiviät abgelaufen. Bitte kontaktieren Sie den Administrator.
+de,devise.failure.session_limited,"Ihre Anmeldedaten wurden in einem anderen Browser genutzt. Bitte melden Sie sich erneut an, um in diesem Browser fortzufahren."
+de,devise.invalid_captcha,Die Captchaeingabe ist nicht gültig!
+de,devise.password_expired.change_required,Ihr Passwort ist abgelaufen. Bitte vergeben sie ein neues Passwort!
+de,devise.password_expired.updated,Das neue Passwort wurde übernommen.
+de,errors.messages.equal_to_current_password,darf nicht dem aktuellen Passwort entsprechen!
+de,errors.messages.password_format,"müssen große, kleine Buchstaben und Ziffern enthalten"
+de,errors.messages.taken_in_past,wurde bereits in der Vergangenheit verwendet!
+en,action_log,Action Log
+en,activate,Activate
+en,activated_date,Activated Date
+en,active,Active
+en,active_customer_listing,Active Customers
+en,active_customers_link_text,Active Customers
+en,active_only,Active Only?
+en,activerecord.errors.models.run.attributes.actual_end_time.after,must be after the actual start time
+en,activerecord.errors.models.run.attributes.date.invalid_date,must be a valid date
+en,activerecord.errors.models.run.attributes.scheduled_end_time.after,must be after the scheduled start time
+en,active_status_change_reason,Reason
+en,actual_end_time,Actual End Time
+en,actual_start_time,Actual Start Time
+en,ada_eligible,ADA Eligibile
+en,add,Add
+en,add_document,Add Document
+en,add_donation,Add
+en,add_donation_dialog_title,Add Donation
+en,add_driver_to_device_pool,Add Driver
+en,add_funding_authorization_number,Add
+en,add_funding_authorization_number_dialog_title,Add Funding Authorization Number
+en,add_lookup_table_code,Code
+en,add_lookup_table_description,Description
+en,add_lookup_table_value,Value
+en,add_maintenance_link_text,Add Maintenance Event
+en,address,Address
+en,address_code,Code
+en,address_file_being_uploading,There is an address file currently in uploading.
+en,address_file_should_be_csv,The address file should be in CSV.
+en,address_file_uploaded,Address file was uploaded.
+en,address_form_error_message.one,%{count} error prohibited this address from being saved:
+en,address_form_error_message.other,%{count} errors prohibited this address from being saved:
+en,address_group,Address Group
+en,address_group_label,Type
+en,address_name,Address Name
+en,address_nickname,Nickname
+en,address_notes,Notes
+en,address_required,Please type address in the Address fields
+en,address_results_building_name_column,Building Name
+en,address_results_name_column,Name
+en,address_results_type_column,Type
+en,address_search,Address Search
+en,add_travel_training,Add
+en,add_travel_training_dialog_title,Add Travel Training
+en,add_trips_from_run_pages,Add Trips from Runs Pages
+en,add_value,Add Value
+en,add_vehicle_to_device_pool,Add Vehicle
+en,add_verification_question,Add a Security Question
+en,add_verification_question_dialog_title,Add a Security Question
+en,administrative_fee,Administrative Fee
+en,advance_day_scheduling,Advance Day Scheduling
+en,age,Age
+en,age_and_ethnicity_link_text,Age & Ethnicity
+en,age_and_ethnicity_page_title,"Age and Ethnicity: %{provider}, %{start_date}"
+en,age_and_ethnicity_report_heading,Reports: Unduplicated Age &amp; Ethnicity
+en,age_and_ethnicity_table_heading,Unduplicated Age & Ethnicity Report
+en,age_eligibility,Age Eligibility
+en,age_eligible,Age Eligible
+en,all,All
+en,all_customers_link_text,All Customers
+en,alternate_phone,Alternate Phone
+en,alternate_phone_number,Alternate Phone
+en,alt_phone_number,Alternative Phone Number
+en,ambulatory_load_fee,Ambulatory Load Fee
+en,ambulatory_reimbursement_rate,Ambulatory Mileage Rate
+en,and,and
+en,answer_verification_questions_heading,Answer a Security Question to Reset your Password
+en,application_admin_link_text,System Admin
+en,application_cabs_link_text,Cabs
+en,application_cad_link_text,CAD/AVL
+en,application_customers_link_text,Customers
+en,application_dispatch_link_text,Dispatch
+en,application_drivers_link_text,Drivers
+en,application_reports_link_text,Reports
+en,application_runs_link_text,Runs
+en,application_settings_applied_value,Applied Value
+en,application_settings_configured_value,Configured Value
+en,application_settings_default_value,Default Value
+en,application_settings_edit_link_text,Edit Application Settings
+en,application_settings_expire_password_after,Expire password after
+en,application_settings_heading,Application Settings
+en,application_settings_link_text,Application Settings
+en,application_settings_password_archiving_count,Password archive count
+en,application_settings_setting,Setting
+en,application_title,GCRPC RidePilot
+en,application_trips_link_text,Trips
+en,application_trips_runs_link_text,Dispatch
+en,application_vehicles_link_text,Vehicles
+en,appointment_time,Appointment Time
+en,appointment_time_column,Appointment Time
+en,ask_for_creating_return_trip_message,Would you like to create a return trip?
+en,ask_for_trip_result_reason_message,Would you like to enter a comment to explain the change?
+en,assigned_to,Assigned to
+en,assigned_to_other_overlapping_run,has been assigned to another overlapping run
+en,assigned_to_overlapping_repeating_run,has been assigned to another overlapping subscription run
+en,assignment,Assignment
+en,attendant_count,Attendant Count
+en,attendant_count_column,Attendant Count
+en,attendants,Attendants
+en,average_rides_per_hour,Avg Rides per Hour
+en,back,Back
+en,back_to_provider,Back
+en,back_to_reports_link,Back to Reports
+en,back_to_view_trips,Back to View Trips
+en,beyond_advance_day_scheduling,should be within %{advance_day_scheduling} (Advance Day Scheduling) days from today
+en,building_name,Building Name
+en,cab,Cab
+en,cab_log_heading,Reports: Cab Log
+en,cab_log_link_text,Cab Log
+en,cab_mileage,Cab Mileage
+en,cab_report_submit,Report
+en,cab_trip,Cab Trip
+en,cab_trips,Cab Trips
+en,cancel,Cancel
+en,cancel_run,Cancel
+en,capacity_type_label,Capacity Type
+en,capacity_types_link_text,Capacity Type Lookup Table
+en,cctc_administrative_hours_label,Administrative Hours
+en,cctc_a_label,A.
+en,cctc_ambulatory_reimbursement_summary,<p>Ambulatory STF Taxi Rides Reimbursed at Admin Fee (%{stf_rate}/ride) + Load Fee (%{stf_ambulatory_load_fee}/ride) + Mileage (%{stf_taxi_ambulatory_rate}/mile)</p>
+en,cctc_b_label,B.
+en,cctc_cancels_label,Cancels
+en,cctc_c_label,C.
+en,cctc_date_generated_label,Date Generated 
+en,cctc_d_label,D.
+en,cctc_driver_information_label,Driver
+en,cctc_drivers_new_this_month_label,Drivers New This Month
+en,cctc_e_label,E.
+en,cctc_escort_hours_label,Escort Hours
+en,cctc_funding_source_label,Funding Sources
+en,cctc_generated_by_label,Generated By 
+en,cctc_member_label,1.Member: 
+en,cctc_month_label,2. Month/Yr:
+en,cctc_monthly_rider_and_driver_description,"<p class='b'>This form has totals of information for all vehicles. All are current reporting period numbers, not YTD, unless specified.</p>"
+en,cctc_monthly_rider_and_driver_heading,Monthly Rider and Driver Report
+en,cctc_new_rider_ethnicity,New Rider Ethnic Heritage
+en,cctc_new_riders_label,# Riders New This Month
+en,cctc_non-medical_label,Non-Medical T-XXX
+en,cctc_no_shows_label,No Shows
+en,cctc_number_of_active_drivers_label,Number of Active Drivers
+en,cctc_number_of_driver_hours_label,Number of Driver Hours
+en,cctc_oaa_3b_label,OAA<br>III B
+en,cctc_one_way_rides_label,Total Number of 1-way rides
+en,cctc_out_label,Out
+en,cctc_over_60_label,Over 60
+en,cctc_paid_label,Paid
+en,cctc_RC_label,RC
+en,cctc_reimbursement_due_label,Reimbursement Due
+en,cctc_reimbursement_rates_heading,Per-Ride Reimbursement Rates
+en,cctc_ride_connection_label,Ride<br>Connection
+en,cctc_rider_donations_label,Rider Donations
+en,cctc_rider_information_label,Rider Information
+en,cctc_riders_ytd_label,# Riders YTD
+en,cctc_rides_not_given_label,Rides Not Given
+en,cctc_sdsd_label,SDSD
+en,cctc_STF_label,STF
+en,cctc_stf-new_rides_label,STF - New Rides
+en,cctc_summary_label,Clackamas County Transportation Consortium Summary Report
+en,cctc_summary_provider_heading,"Clackamas County Transportation Consortium Summary Report: %{provider}, %{start_date}"
+en,cctc_summary_report_heading,Clackamas County Transportation Consortium
+en,cctc_summary_report_page_title,"Clackamas County Transportation Consortium Summary Report: %{provider}, %{start_date}"
+en,cctc_taxi_label,Taxi
+en,cctc_total_miles_label,Total miles driven for all rides provided during month:
+en,cctc_total_rides_label,Total<br>Rides
+en,cctc_totals_label,Totals
+en,cctc_tri-met_label,Tri-Met
+en,cctc_turndowns_label,Turndowns
+en,cctc_type_of_ride_label,Type of Ride
+en,cctc_under_60_label,Under 60
+en,cctc_unreimbursable_label,Unreinb.<br>Rides
+en,cctc_usdot_label,USDOT
+en,cctc_van_label,Van
+en,cctc_volunteer_label,Volunteer
+en,cctc_wheelchair_disclaimer,*Calculations require reimbursement rates not provided in system.
+en,cctc_wheelchair_reimbursement_summary,<p>Wheelchair STF Taxi Rides Reimbursed at Admin Fee (%{stf_taxi_admin_fee}/ride) + Load Fee (%{stf_wheelchair_load_fee}/ride) + Mileage (%{stf_wheelchair_mileage_rate}/mile)</p>
+en,change_customer,Change Customer
+en,change_email,Change Email
+en,change_email_heading,Change Email
+en,change_email_submit,Submit
+en,change_expiration_heading,Change Account Expiration
+en,change_expiration_submit,Update
+en,change_locations,Change Locations
+en,change_locations_dialog_title,Change Start and End Location
+en,change_my_password,Change My Password
+en,change_password,Change Password
+en,change_password_heading,Change Password
+en,change_password_submit,Update
+en,change_role,Change role
+en,change_selected_trips_result,Change Result of Selected Trips
+en,change_your_password_heading,Change your password
+en,city,City
+en,city_state_zip,City/State/Zip
+en,clear_all_markers,Clear All Markers
+en,clone_trip,Clone
+en,close_button_label,Close
+en,common_address_upload_summary,"Address file was uploaded. Loaded %{count_good} addresses. %{count_bad} bad were skipped, %{count_failed} failed to save, %{count_possible_existing} possible existing."
+en,completable_until_trip_appointment_day_validation_error,cannot be set as complete until the day of the trip appointment
+en,complete,Complete
+en,complete_run_dialog_title,Complete Run
+en,configure_capacity_types,Configure Capacity Types
+en,configure_inactivation_dialog_title,Configure Inactivation
+en,configure_mobility_types,Configure Mobility Types
+en,configure_provider_ada_questions,Configure ADA Questions
+en,configure_provider_driver_requirement_templates,Configure Provider Specific Driver Requirements
+en,configure_provider_lookup_tables,Configure Provider Lookup Tables
+en,configure_provider_operating_hours,Configure Operating Hours
+en,configure_provider_vehicle_maintenance_types,Configure Vehicle Maintenance Schedule Types
+en,configure_provider_vehicle_requirement_templates,Configure Provider Specific Vehicle Requirements
+en,configure_provider_vehicle_types,Configure Vehicle Types
+en,configure_provider_vehicle_warranties,Configure Vehicle Warranties
+en,confirm,Are you sure?
+en,confirmation_instructions_email,<p>Welcome %{email}!</p><p>You can confirm your account email through the link below:</p><p>%{link}</p>
+en,confirm_creating_next_maintenance_event,Would you like to create next maintenance event?
+en,confirm_creating_reoccuring_event,This is a reoccuring event. Would you like to create a new record?
+en,confirm_delete_message,Are you sure you want to delete %{value}?
+en,confirm_hide_lookup_value_message,Are you sure to change %{value} to be invisible?
+en,confirm_message,Are you sure you want to delete this record?
+en,confirm_msg,Are you sure to delete it?
+en,confirm_new_password,Confirm New Password
+en,confirm_runs_batch_cancel,Are you sure you want to unschedule all selected runs?
+en,confirm_runs_batch_delete,Are you sure you want to delete all selected runs?
+en,confirm_show_lookup_value_message,Are you sure to change %{value} to be visible?
+en,county,County
+en,create_first_admin_user,Create Admin User
+en,create_provider_address_text,Create Address
+en,create_return_trip,Create Return
+en,create_translation,Create Translation
+en,create_user_link_text,Create User
+en,crtr_report_title,Customers receiving trips in range:
+en,crtr_through,through
+en,crtr_verify_runs,Verify Runs
+en,current_email,Current Email
+en,currently_available,Currently Available?
+en,current_month,Current Month
+en,current_password,Current Password
+en,current_provider_link_text,"Vehicles, drivers and users"
+en,current_provider_settings_link_text,Provider Settings
+en,customer,Customer
+en,customer_active,Active?
+en,customer_addresses_panel,Addresses
+en,customer_authorized_providers,Authorized Providers
+en,customer_code,Code
+en,customer_column,Customer
+en,customer_comments,Comments
+en,customer_comments_panel,Customer Comments
+en,customer_default_mobility,Default Mobility
+en,customer_deleted,Customer has been deleted
+en,customer_details_panel,Details
+en,customer_donations_panel,Donations
+en,customer_eligibilities,Customer Eligibilities
+en,customer_eligibility_panel,Eligibility
+en,customer_form_error_message.one,%{count} error prohibited this customer from being saved:
+en,customer_form_error_message.other,%{count} errors prohibited this customer from being saved:
+en,customer_form_photo,Photo
+en,customer_funding_authorization_numbers_panel,Funding Authorization Numbers
+en,customer_id_label,ID
+en,customer_inactivate_panel,Inactivate
+en,customer_inactive_for_trip_date,is not active on the trip scheduled date.
+en,customer_listing,Customers
+en,customer_message,Message
+en,customer_mobility_panel,Mobility Configuration
+en,customer_name,Customer Name
+en,customer_not_exist,Customer does not exist based on given id and token.
+en,customer_others_panel,Others
+en,customer_phone,Customer Phone
+en,customer_phone_number_column,Phone
+en,customer_private_notes,Customer Private Notes
+en,customer_providers_panel,Authorized Providers
+en,customer_saved_address_dialog_title,Customer Saved Address
+en,customers_link_text,Customers
+en,customer_token_label,Token
+en,customer_travel_trainings_panel,Travel Trainings
+en,customer_trip_summary_for,Trips for 
+en,customer_trip_summary_instructions,Double clicking each trip below to clone a new trip
+en,daily_manifest_by_half_hour_label,Daily Manifest By Half Hour
+en,daily_manifest_by_half_hour_with_cab_summary_label,Daily Manifest By Half Hour with Cab Summary
+en,daily_manifest_heading,Transportation Manifest
+en,daily_manifest_label,Daily Manifest
+en,daily_manifest_title,Manifest
+en,daily_manifest_with_cab_summary_label,Daily Manifest with Cab Summary
+en,daily_operating_hour_form_new_heading,New Hours
+en,daily_scheduling,Daily Scheduling
+en,daily_trips_heading,Day's Trips
+en,daily_trips_title,Daily Trips
+en,date,Date
+en,date.abbr_day_names,"Sun,Mon,Tue,Wed,Thu,Fri,Sat"
+en,date.abbr_month_names,",Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec"
+en,date_and_time,Date & Time
+en,date.day_name_initials,"S,M,T,W,T,F,S"
+en,date.day_names,"Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday"
+en,date.formats.default,%Y-%m-%d
+en,date.formats.long,"%B %d, %Y"
+en,date.formats.short,%b %d
+en,date.month_names,",January,February,March,April,May,June,July,August,September,October,November,December"
+en,date_of_birth,Date of Birth
+en,date.order,"year,month,day"
+en,date_order_parameter,"year,month,day"
+en,date_range_filter,Date range
+en,date_range_inactive,Inactive for a date range
+en,days_in_advance,Days to schedule in advance
+en,days_of_week,Days of Week
+en,days_worked,Days Worked
+en,default,Default
+en,default_driver,Default Driver
+en,default_funding_source,Default Funding Source
+en,default_service_level,Default Service Level
+en,default_trip_purpose,Default Trip Purpose:
+en,delete,Delete
+en,delete_customer_confirm,Are you sure to delete this customer?
+en,delete_driver_button,Delete
+en,delete_driver_confirm,Are you sure?
+en,delete_driver_requirement_template_button,Delete
+en,delete_driver_requirement_template_confirm,Are you sure?
+en,delete_driver_requirement_template_confirm_button,Confirm
+en,delete_driver_requirement_template_confirm_heading,You are about to delete '%{requirement_name}'
+en,delete_driver_requirement_template_heading,Delete Requirement
+en,delete_driver_user_role_confirm,This user is associated with a driver account. Are you sure to delete it?
+en,delete_photo,Delete Photo
+en,delete_photo_confirm,Are you sure to delete the photo?
+en,delete_provider_button,Delete
+en,delete_provider_confirm,Are you sure to delete this provider?
+en,delete_recurring_driver_compliance_button,Delete
+en,delete_recurring_driver_compliance_confirm,Are you sure?
+en,delete_recurring_driver_compliance_confirm_button,Confirm
+en,delete_recurring_driver_compliance_confirm_heading,You are about to delete '%{event_name}'
+en,delete_recurring_driver_compliance_heading,Delete Recurring Event
+en,delete_recurring_driver_compliance_incude_incomplete_dependents,Also delete incomplete driver events that were generated from this event?
+en,delete_recurring_vehicle_maintenance_compliance_button,Delete
+en,delete_recurring_vehicle_maintenance_compliance_confirm,Are you sure?
+en,delete_recurring_vehicle_maintenance_compliance_confirm_button,Confirm
+en,delete_recurring_vehicle_maintenance_compliance_confirm_heading,You are about to delete '%{event_name}'
+en,delete_recurring_vehicle_maintenance_compliance_heading,Delete Recurring Event
+en,delete_recurring_vehicle_maintenance_compliance_incude_incomplete_dependents,Also delete incomplete vehicle events that were generated from this event?
+en,delete_role_confirm,Are you sure?
+en,delete_run,Delete
+en,delete_run_confirm,Are you sure?
+en,delete_run_link_text,Delete Run (does not delete trips)
+en,delete_trip,Delete
+en,delete_trip_confirm,Are you sure?
+en,delete_value,Delete Value
+en,delete_vehicle_button,Delete Vehicle
+en,delete_vehicle_confirmation,Are you sure?
+en,delete_vehicle_requirement_template_button,Delete
+en,delete_vehicle_requirement_template_confirm,Are you sure?
+en,delete_vehicle_requirement_template_confirm_button,Confirm
+en,delete_vehicle_requirement_template_confirm_heading,You are about to delete '%{requirement_name}'
+en,delete_vehicle_requirement_template_heading,Delete Requirement
+en,destination,Destination
+en,device_pool_color,Color
+en,device_pool_delete_confirm,Are you sure?
+en,device_pool_form_error_message.one,%{count} error prohibited this device pool from being saved:
+en,device_pool_form_error_message.other,%{count} errors prohibited this device pool from being saved:
+en,device_pool_name,Name
+en,device_pools,Device Pools
+en,devise.confirmations.confirmed,Your email address has been successfully confirmed.
+en,devise.confirmations.send_instructions,You will receive an email with instructions for how to confirm your email address in a few minutes.
+en,devise.confirmations.send_paranoid_instructions,"If your email address exists in our database, you will receive an email with instructions for how to confirm your email address in a few minutes."
+en,devise.failure.already_authenticated,You are already signed in.
+en,devise.failure.expired,Your account has expired due to inactivity. Please contact the site administrator.
+en,devise.failure.inactive,Your account is not activated yet.
+en,devise.failure.invalid,Invalid %{authentication_keys} or password.
+en,devise.failure.last_attempt,You have one more attempt before your account is locked.
+en,devise.failure.locked,Your account is locked.
+en,devise.failure.not_found_in_database,Invalid %{authentication_keys} or password.
+en,devise.failure.session_limited,Your login credentials were used in another browser. Please sign in again to continue in this browser.
+en,devise.failure.timeout,Your session expired. Please sign in again to continue.
+en,devise.failure.unauthenticated,You need to sign in or sign up before continuing.
+en,devise.failure.unconfirmed,You have to confirm your email address before continuing.
+en,devise.invalid_captcha,The captcha input is not valid!
+en,devise.mailer.confirmation_instructions.subject,Confirmation instructions
+en,devise.mailer.reset_password_instructions.subject,Reset password instructions
+en,devise.mailer.unlock_instructions.subject,Unlock instructions
+en,devise.omniauth_callbacks.failure,"Could not authenticate you from %{kind} because ""%{reason}""."
+en,devise.omniauth_callbacks.success,Successfully authenticated from %{kind} account.
+en,devise.password_expired.change_required,Your password is expired. Please renew your password!
+en,devise.password_expired.updated,Your new password is saved.
+en,devise.passwords.no_token,"You can't access this page without coming from a password reset email. If you do come from a password reset email, please make sure you used the full URL provided."
+en,devise.passwords.send_instructions,You will receive an email with instructions on how to reset your password in a few minutes.
+en,devise.passwords.send_paranoid_instructions,"If your email address exists in our database, you will receive a password recovery link at your email address in a few minutes."
+en,devise.passwords.updated,Your password has been changed successfully. You are now signed in.
+en,devise.passwords.updated_not_active,Your password has been changed successfully.
+en,devise.registrations.destroyed,Bye! Your account has been successfully cancelled. We hope to see you again soon.
+en,devise.registrations.signed_up,Welcome! You have signed up successfully.
+en,devise.registrations.signed_up_but_inactive,"You have signed up successfully. However, we could not sign you in because your account is not yet activated."
+en,devise.registrations.signed_up_but_locked,"You have signed up successfully. However, we could not sign you in because your account is locked."
+en,devise.registrations.signed_up_but_unconfirmed,A message with a confirmation link has been sent to your email address. Please follow the link to activate your account.
+en,devise.registrations.updated,Your account has been updated successfully.
+en,devise.registrations.update_needs_confirmation,"You updated your account successfully, but we need to verify your new email address. Please check your email and follow the confirm link to confirm your new email address."
+en,devise.sessions.already_signed_out,Signed out successfully.
+en,devise.sessions.signed_in,Signed in successfully.
+en,devise.sessions.signed_out,Signed out successfully.
+en,devise.unlocks.send_instructions,You will receive an email with instructions for how to unlock your account in a few minutes.
+en,devise.unlocks.send_paranoid_instructions,"If your account exists, you will receive an email with instructions for how to unlock it in a few minutes."
+en,devise.unlocks.unlocked,Your account has been unlocked successfully. Please sign in to continue.
+en,dispatch,Dispatch
+en,dispatcher_heading,Dispatcher
+en,dispatch_link_text,Dispatch
+en,dispatch_submit,Refresh
+en,dispatch_view_heading,Dispatch View
+en,document_associations_associable_date_heading,Date
+en,document_associations_associable_name_heading,Name
+en,document_associations_associables_empty,There are no associated events
+en,document_associations_associables_heading,Associated Events
+en,document_associations_associable_type_heading,Type
+en,document_associations_document_date_heading,Uploaded At
+en,document_associations_document_description_heading,Description
+en,document_associations_documents_empty,There are no associated documents
+en,document_associations_documents_heading,Associated Documents
+en,document_associations_form_add_link_title,Add associated document
+en,document_associations_form_document_label,Document
+en,document_delete_confirm,Are you sure you want to delete this document?
+en,document_description,Description
+en,document_download,Download
+en,document_file,File
+en,document_form_description,Description
+en,document_form_edit_heading,Edit document
+en,document_form_error.one,1 error prohibited this document from being saved
+en,document_form_error.other,%{count} errors prohibited this document from being saved
+en,document_form_file_name,File
+en,document_form_file_name_currently,Current file:
+en,document_form_file_size,File Size
+en,document_form_new_heading,Upload new document
+en,document_form_submit,Save
+en,document_form_upload_date,Uploaded At
+en,donation_amount,Amount
+en,donation_date,Date
+en,donation_notes,Notes
+en,donation_report_heading,Reports: Donations
+en,donation_report_submit,Report
+en,donations_link_text,Donations
+en,double_booked_modal_dismiss,Back
+en,double_booked_modal_message,The customer already has one or more trips on the same day that could be duplicates. Do you want to save this trip as entered or go back to re-edit information about the trip?
+en,double_booked_modal_submit,Save
+en,double_booked_modal_title,Warning: Potential Duplication of Trips
+en,drive_distance,Drive Distance
+en,driver,Driver
+en,driver_address_heading,Address
+en,driver_alt_address_heading,Alternative Address
+en,driver_availability_days_ahead,Days Ahead to Forecast Availability
+en,driver_availability_forecast,Driver Availability Forecast
+en,driver_availability_forecast_link_text,Availability Forecast
+en,driver_availability_interval_min,Availability Chart Interval (min)
+en,driver_availability_link_title,Show Availability
+en,driver_availability_max_hour,Availability Chart End Hour
+en,driver_availability_min_hour,Availability Chart Start Hour
+en,driver_availability_settings,Driver Availability Settings
+en,driver_available,Available
+en,driver_completed_run_hours,Completed Run Hours This Week
+en,driver_compliance_delete_confirm,Are you sure you want to delete this compliance event?
+en,driver_compliance_form_compliance_date,Compliance Date
+en,driver_compliance_form_due_date,Due Date
+en,driver_compliance_form_edit_heading,Edit compliance event
+en,driver_compliance_form_error.one,1 error prohibited this driver compliance from being saved
+en,driver_compliance_form_error.other,%{count} errors prohibited this driver compliance from being saved
+en,driver_compliance_form_event,Name
+en,driver_compliance_form_new_heading,New compliance event
+en,driver_compliance_form_notes,Notes
+en,driver_compliance_form_submit,Save
+en,driver_compliances_add_link_title,Add compliance event
+en,driver_compliances_empty,No compliance events exist for this driver
+en,driver_compliances_heading,Compliance Events
+en,driver_documents_add_link_title,Add document
+en,driver_documents_empty,No documents exist for this driver
+en,driver_documents_heading,Driver Documentation
+en,driver_form_active,Active
+en,driver_form_associated_user,Associated User
+en,driver_form_available,Available
+en,driver_form_daily_availability_heading,Daily Availability
+en,driver_form_details_heading,Details
+en,driver_form_email,Email
+en,driver_form_emergency_contact_heading,Emergency Contact
+en,driver_form_error.one,1 error prohibited this driver from being saved
+en,driver_form_error.other,%{count} errors prohibited this driver from being saved
+en,driver_form_name,Name
+en,driver_form_photo,Photo
+en,driver_form_planned_leaves_heading,Planned Leaves
+en,driver_form_recurring_availability_heading,Recurring Availability
+en,driver_form_submit,Submit
+en,driver_histories_add_link_title,Add history event
+en,driver_histories_empty,No history events exist for this driver
+en,driver_histories_heading,History Events
+en,driver_history_delete_confirm,Are you sure you want to delete this history event?
+en,driver_history_form_edit_heading,Edit history event
+en,driver_history_form_error.one,1 error prohibited this driver history from being saved
+en,driver_history_form_error.other,%{count} errors prohibited this driver history from being saved
+en,driver_history_form_event,Name
+en,driver_history_form_event_date,Event Date
+en,driver_history_form_new_heading,New history event
+en,driver_history_form_notes,Notes
+en,driver_history_form_submit,Save
+en,driver_hours_paid,Driver hours: Paid
+en,driver_hours_volunteer,Driver Hours: Volunteer
+en,driver_is_valid_for_vehicle_validation_error,is not the driver for the selected vehicle during this vehicle's run.
+en,driver_legal_requirements_add_link_title,Add legal requirement
+en,driver_manifest_appt_time,Appt Time
+en,driver_manifest_attendants,Attendants
+en,driver_manifest_client_address,Client/Address
+en,driver_manifest_customer,Customer
+en,driver_manifest_date,Date
+en,driver_manifest_donation_$,Donation $
+en,driver_manifest_dropoff,Drop Off
+en,driver_manifest_guests,Guests
+en,driver_manifest_heading,Driver Manifest
+en,driver_manifest_mobility_devices,Mobility Devices
+en,driver_manifest_mobility_notes,Mobility Notes
+en,driver_manifest_p_d,P/D
+en,driver_manifest_pickup,Pick Up
+en,driver_manifest_pickup_time,Pickup Time
+en,driver_manifest_pullin_hour_minute,Pullin Hour/Minute
+en,driver_manifest_pullin_mileage,Pullin Mileage
+en,driver_manifest_pullout_hour_minute,Pullout Hour/Minute
+en,driver_manifest_pullout_mileage,Pullout Mileage
+en,driver_manifest_run,Run
+en,driver_manifest_run_end_time,Run End Time
+en,driver_manifest_run_start_time,Run Start Time
+en,driver_manifest_scheduled_run_time,Run Time
+en,driver_manifest_time_arrive,Time Arrive
+en,driver_manifest_time_depart,Time Depart
+en,driver_manifest_title,Driver Manifest
+en,driver_manifest_total_passengers,Total Passengers
+en,driver_manifest_trip_notes,Trip Notes
+en,driver_manifest_vehicle,Veh.
+en,driver_notes,Driver Notes
+en,driver_overdue_events,Overdue Events
+en,driver_paid,Paid
+en,driver_profile,Driver Profile
+en,driver_requirement_template_field_label,Type
+en,driver_requirement_template_form_error.one,1 error prohibited this requirement from being saved
+en,driver_requirement_template_form_error.other,%{count} errors prohibited this requirement from being saved
+en,driver_requirement_template_form_submit,Submit
+en,driver_requirement_template_legal,Legal?
+en,driver_requirement_template_legal_field_label,Legal?
+en,driver_requirement_template_name,Name
+en,driver_requirement_template_name_field_label,Name
+en,driver_requirement_template_reoccuring,Reoccuring?
+en,driver_requirement_template_reoccuring_field_label,Reoccuring?
+en,driver_requirement_templates_empty,No requirements exist
+en,driver_requirement_templates_index_heading,Driver Requirements
+en,driver_requirement_templates_link_text,Driver Requirements
+en,drivers,Drivers
+en,drivers_empty,No drivers exist
+en,driver_temporarily_inactive,Driver is put on temporarily inactive for the date.
+en,driver_type,Type
+en,driver_unavailable,Driver is not available
+en,dropoff_address,Dropoff Address
+en,dropoff_address_column,Dropoff Address
+en,dropoff_address_notes,Dropoff Address Notes
+en,dropoff_phone,Dropoff Phone
+en,dropoff_time_later_than_pickup_time,Appointment time should be no earlier than pickup time
+en,dropoff_unspecified,(Dropoff Unspecified)
+en,duplicate,Duplicate
+en,early_arrival_threshold_min,Threshold (min) to flag as early arrival
+en,early_pickup_allowed,Allow early pickup?
+en,edit,Edit
+en,edit_application_settings_heading,Editing Application Settings
+en,edit_device_pool,Edit Device Pool
+en,edit_driver_button,Edit
+en,edit_driver_heading,Edit Driver
+en,edit_driver_requirement_template_button,Edit
+en,edit_driver_requirement_template_heading,Edit Requirement
+en,editing_address,Editing Address
+en,editing_customer,Editing Customer: %{customer_name}
+en,editing_run_heading,Editing Run: %{run_date}
+en,editing_trip,Editing Trip
+en,edit_maintenance_heading,Edit Maintenance Event
+en,edit_multi_cab_heading,Editing cab trips for %{formatted_week}
+en,edit_provider_button,Edit
+en,edit_provider_heading,Edit Provider: %{provider}
+en,edit_recurring_driver_compliance_button,Edit
+en,edit_recurring_driver_compliance_heading,Edit Recurring Event
+en,edit_recurring_vehicle_maintenance_compliance_button,Edit
+en,edit_recurring_vehicle_maintenance_compliance_heading,Edit Recurring Event
+en,edit_run_link_text,Edit Run
+en,edit_trip_link_text,Edit Trip
+en,edit_value,Edit Value
+en,edit_vehicle_button,Edit Vehicle
+en,edit_vehicle_heading,Edit Vehicle
+en,edit_vehicle_initial_mileage_heading,Change initial mileage
+en,edit_vehicle_link_text,Edit Vehicle
+en,edit_vehicle_requirement_template_button,Edit
+en,edit_vehicle_requirement_template_heading,Edit Requirement
+en,edit_x_cab_trips.one,Edit %{count} cab trip
+en,edit_x_cab_trips.other,Edit %{count} cab trips
+en,eligible,Eligible
+en,eligible_age,Eligible Age
+en,email,Email
+en,emergency_contact_address,Address
+en,emergency_contact_name,Name
+en,emergency_contact_notes,Emergency Contact Notes
+en,emergency_contact_phone_number,Phone Number
+en,emergency_contact_relationship,Relationship
+en,empty_runs,No run
+en,empty_trips,No trip
+en,enabled,Enabled?
+en,end_date,Stop Date
+en,end_location,End Location
+en,end_odometer,End Odometer
+en,errors.messages.after,must be after %{restriction}
+en,errors.messages.already_confirmed,"was already confirmed, please try signing in"
+en,errors.messages.before,must be before %{restriction}
+en,errors.messages.confirmation_period_expired,"needs to be confirmed within %{period}, please request a new one"
+en,errors.messages.equal_to_current_password,must be different to the current password!
+en,errors.messages.expired,"has expired, please request a new one"
+en,errors.messages.invalid_date,is not a valid date
+en,errors.messages.invalid_datetime,is not a valid datetime
+en,errors.messages.invalid_time,is not a valid time
+en,errors.messages.is_at,must be at %{restriction}
+en,errors.messages.not_found,not found
+en,errors.messages.not_locked,was not locked
+en,errors.messages.not_saved.one,1 error prohibited this %{resource} from being saved:
+en,errors.messages.not_saved.other,%{count} errors prohibited this %{resource} from being saved:
+en,errors.messages.on_or_after,must be on or after %{restriction}
+en,errors.messages.on_or_before,must be on or before %{restriction}
+en,errors.messages.password_format,"must contain big, small letters and digits"
+en,errors.messages.taken_in_past,was already taken in the past!
+en,eta_related_settings,ETA Calculation Related Settings
+en,ethnic_heritage,Ethnic Heritage
+en,ethnicity,Ethnicity
+en,expires_at,Account Expires At
+en,export,Export
+en,export_trips_as_csv,Export Trips as CSV
+en,fare_related_settings,Fare Configurations
+en,fare_type,Type
+en,female,Female
+en,first_day_of_leave,First Day of Leave
+en,first_name,First Name
+en,fiscal_ytd,Fiscal YTD
+en,footer_content,Footer content here.
+en,forgot_password_link,Forgot your password?
+en,from_date,From Date
+en,from_date_cannot_later_than_to_date,From Date can not be later than To Date
+en,from_garage,From Garage
+en,from_garage_address_label,From Garage
+en,full_address_name,Address
+en,funding_authorization_number_contact_info,Contact Info
+en,funding_authorization_number_funding_source,Funding Source
+en,funding_authorization_number_name,Number
+en,funding_source,Funding Source
+en,funding_source_column_heading,Funding Source
+en,funding_source_form_name,Name
+en,funding_source_form_submit,Submit
+en,funding_source_index_heading,Funding Sources
+en,funding_source_label,Available to:
+en,funding_sources_link_back,Back to List of Funding Sources
+en,funding_sources_link_text,Funding Sources
+en,funding_sources_ntd_edit_notes,Please choose NTD reportable funding sources and save.
+en,garaged_location,Garaged Location
+en,gender,Gender
+en,generic_error_message.one,%{count} error prohibited this record from being saved:
+en,generic_error_message.other,%{count} errors prohibited this record from being saved:
+en,geocode_address_required,"A geocoded address is required, please type and select an address in the Address field"
+en,group,Group
+en,group_name,Group Name
+en,group_size,Group Size
+en,guest_count,Guest Count
+en,guest_count_column,Guest Count
+en,guests,Guests
+en,header_content,"<img src=""/assets/gcrpc-logo.png"" alt=""GCRPC"">"
+en,hide_calendar,Hide Calendar
+en,hide_value,Hide Value
+en,hours_in_operation,Hours in Operation
+en,hours_scheduled,Hours Scheduled
+en,ignore_duplicates,Ignore duplicates
+en,inactivate,Inactivate
+en,inactivated_date,Inactivated Date
+en,inactivated_end_date,End Date
+en,inactivated_end_date_earlier_than_start_date,End Date should be no earlier than Start Date
+en,inactivated_reason,Inactivated Reason
+en,inactivated_start_date,Start Date
+en,inactivate_provider_confirmation,Are you sure to inactivate this provider?
+en,inactivation_reason,Inactivation Reason
+en,inactive,Inactive
+en,incomplete,Incomplete
+en,index_driver_heading,Drivers
+en,index_vehicle_heading,Vehicles
+en,index_vehicle_maintenance_schedule_type_heading,Maintenance Schedule Types
+en,index_vehicle_type_heading,Vehicle Types
+en,in_district,In District
+en,ineligible_reason,Why not eligible?
+en,invalid_ridepilot_token,Ridepilot token is not valid.
+en,invoice_amount,Invoice Amount
+en,invoice_date,Invoice Date
+en,invoice_number,Invoice Number
+en,is_elderly,Elderly?
+en,is_mailing_address,Mailing
+en,key,Key
+en,last_called_back,Last Called Back
+en,last_day_of_leave,Last Day of Leave
+en,last_login,Last Login
+en,last_name,Last Name:
+en,late_arrival_threshold_min,Threshold (min) to flag as late arrival
+en,later_trips,Later ride today
+en,latitude,Latitude
+en,legal_driver_compliances_heading,Legal Requirements
+en,legal_vehicle_compliances_heading,Legal Requirements
+en,license_plate,License Plate
+en,line_number_label,Line #
+en,linking_to,Link to
+en,listing_cab_runs,Listing Cab Runs
+en,loading,Loading...
+en,locales.en,English
+en,locales.tags,Tags
+en,locate_address,Locate Address
+en,log_date_time,Datetime
+en,log_message,Message
+en,logo_text,RidePilot
+en,log_out_link_text,Log out
+en,log_user,User
+en,longitude,Longitude
+en,lookup_table,Lookup Table
+en,lookup_table_error_message.one,%{count} error prohibited this lookup table from being saved:
+en,lookup_table_error_message.other,%{count} errors prohibited this lookup table from being saved:
+en,lookup_tables_link_text,Lookup Tables
+en,maintenance_form_submit,Save
+en,male,Male
+en,manage_customers,Manage Customers
+en,manage_customers_link_text,Open Customers Tab
+en,manage_drivers,Manage Drivers
+en,manage_drivers_link_text,Open Drivers Tab
+en,manage_provider_lookup_tables,Configure Provider Lookup Table
+en,manage_provider_lookup_tables_link_text,Open Provider Lookup Table Page
+en,manage_provider_ntd_funding_source_link_text,Manage Provider Specific NTD Funding Sources
+en,manage_vehicles,Manage Vehicles
+en,manage_vehicles_link_text,Open Vehicles Tab
+en,map_center,Map Center
+en,mark_as_called_back,Mark as Called Back:
+en,mark_as_no_show,Mark as no-show
+en,mark_as_reached,Mark as reached
+en,medicaid_eligible,Medicaid Eligible
+en,merge,Merge
+en,middle_initial,Middle Initial
+en,mileage,Mileage
+en,min_trip_time_gap_in_mins_label,Time gap (in minutes)
+en,min_trip_time_gap_in_mins_text,Configure the default time gap between trip pickup and appointment times (mins)
+en,mobility,Mobility
+en,mobility_capacities_edit_notes,Click each number to edit.
+en,mobility_capacities_link_text,Mapping Mobility Types to Capacity Types
+en,mobility_notes,Mobility Notes
+en,mobility_types_link_text,Mobility Type Lookup Table
+en,modify_selected_runs,Apply Action to Selected Runs
+en,month,Month
+en,monthlies_form_submit,Submit
+en,monthlies_index_heading,Reports: Monthly Miscellaneous Data
+en,monthlies_start_date,Month
+en,monthly_misc_link_text,Monthly Miscellaneous Data
+en,monthly_report,Monthly Report
+en,must_have_one_address,Must have at least one address
+en,n_a,N/A
+en,name,Name
+en,new,New
+en,new_confirmation_link,Didn't receive confirmation instructions?
+en,new_customer,New Customer
+en,new_customer_link_text,New Customer
+en,new_device_pool,New Device Pool
+en,new_device_pool_link_text,Create Device Pool
+en,new_driver_heading,New Driver
+en,new_driver_link_text,Create Driver
+en,new_driver_requirement_template_heading,New Driver Requirement
+en,new_driver_requirement_template_link_text,Create Driver Requirement
+en,new_email,New Email
+en,new_ethnicity_link_text,Create Ethnicity
+en,new_funding_source_link,New Funding Source
+en,new_group,New Group
+en,new_maintenance_heading,Add Maintenance Event
+en,new_monthly_heading,Create Monthly Report
+en,new_monthly_link_text,Add New Monthly Data
+en,new_password,New Password
+en,new_password_form_heading,Enter your Username
+en,new_password_form_identifier_label,Username
+en,new_password_heading,Forgot your password?
+en,new_planned_leave_link_text,New
+en,new_provider_common_address_dialog_title,New Address
+en,new_provider_heading,New Provider
+en,new_provider_link_text,New Provider
+en,new_recurring_driver_compliance_heading,New Recurring Event
+en,new_recurring_driver_compliance_link_text,Create Recurring Event
+en,new_recurring_vehicle_maintenance_compliance_heading,New Recurring Event
+en,new_recurring_vehicle_maintenance_compliance_link_text,Create Recurring Event
+en,new_repeating_run,New Subscription Run
+en,new_repeating_run_text,Create New Subscription Run
+en,new_repeating_trip,New Subscription Trip
+en,new_repeating_trip_text,Create New Subscription Trip
+en,new_reports,New Reports
+en,new_run,New Run
+en,new_run_heading,New Run
+en,new_run_link_text,New Run
+en,new_run_submit,Submit
+en,new_session_heading,New Session
+en,new_session_submit,Log In
+en,new_trip,New Trip
+en,new_trip_for_customer,New Trip for This Customer
+en,new_trip_link_text,New Trip
+en,new_unlock_link,Didn't receive unlock instructions?
+en,new_user_email,"Hi, %{email} <br/><br/>You have been added as a user to RidePilot.  You can set your password at<br/>%{link}<br/><br/>You will be asked to change it when you log in.<br/>"
+en,new_user_heading,Create New User
+en,new_user_submit,Create User
+en,new_vehicle_capacity_configuration_link_text,New Configuration
+en,new_vehicle_heading,New Vehicle
+en,new_vehicle_link_text,Create Vehicle
+en,new_vehicle_maintenance_schedule_link_text,New
+en,new_vehicle_maintenance_schedule_type_link_text,New
+en,new_vehicle_requirement_template_heading,New Vehicle Requirement
+en,new_vehicle_requirement_template_link_text,Create Vehicle Requirement
+en,new_vehicle_type_link_text,New
+en,next,Next
+en,no,No
+en,no_addresses_yet,No addresses yet.
+en,no_cab_trips_in_date_range,No cab trips in this date range
+en,no_cab_trips_on_this_date,No cab trips on this date
+en,no_device_pool,No device pools yet.
+en,no_driver,No driver
+en,no_driver_assigned,No driver is assigned
+en,no_drivers,No drivers yet.
+en,no_ethnicities,No ethnicities yet.
+en,no_monthly_reports_available,No monthly reports yet.
+en,non_street_mailing_address,Non-street Mailing Address (P.O. Box)
+en,no_repeating_runs,No subscription runs
+en,no_repeating_trips,No subscription trips
+en,northwest_corner,Northwest Corner
+en,no_runs,No runs
+en,not_authorized,You are not authorized.
+en,not_eligible,Not Eligible
+en,not_fit_in_run_schedule,Trip schedule does not fit in run schedule
+en,no_trips,No trips.
+en,no_trips_yet,No trips yet.
+en,not_set,Not Set
+en,not_yet_called,not yet called
+en,no_users_yet,No users yet.
+en,no_vehicle,No Vehicle
+en,no_vehicle_assigned,No vehicle is assigned
+en,no_vehicle_maintenance_schedule_type,No maintenance schedule type.
+en,no_vehicles,No vehicles yet.
+en,no_vehicle_type,No vehicle type.
+en,no_vendor_list,No Approved Vendor List has been uploaded
+en,no_verification_questions_set,You have not set up any security questions. Please contact your administrator to reset your password.
+en,ntd_funding_sources_link_text,Change NTD Funding Sources
+en,ntd_reportable_label,Appear on NTD Report?
+en,number_of_disabled_passengers_tracking_label,Disabled
+en,number_of_low_income_passengers_tracking_label,Low Income
+en,number_of_one_way_trips,Number of One Way Trips
+en,number_of_passengers_served,Number of Passengers Served
+en,number_of_passengers_tracking,Number of Passengers Tracking
+en,number_of_runs_completed,Number of Runs Completed
+en,number_of_senior_passengers_tracking_label,Senior
+en,number_of_trips,Number of Trips
+en,oaa3b_per_ride_reimbursement_rate,OAA III B
+en,odometer,Odometer
+en,odometer_end,Odometer End
+en,odometer_reading,Odometer Reading
+en,odometer_start,Odometer Start
+en,ok,OK
+en,omniauth_link,Sign in with %{provider}
+en,open_system_lookup_tables_link_text,Open System Lookup Tables Page
+en,operating_hour_form_new_heading,New Hours
+en,operating_hours_24_hours,24 Hours
+en,operating_hours_heading,Available Hours
+en,operating_hours_open,Open
+en,operating_hours_unavailable,Unavailable
+en,operation_failed,"The operation has failed, please try again"
+en,operation_not_authorized,You are not authorized to execute the operation.
+en,other,Other
+en,other_gender,Non-Binary
+en,outbound_trip,Outbound
+en,outbound_trip_dropoff_time_no_later_than_return_trip_pickup_time,Appointment time should be no later than return trip's pickup time
+en,outbound_trip_label,Outbound Trip
+en,out_of_district,Out of District
+en,paid,Paid
+en,paid_driver_count,Number of Paid Drivers
+en,passenger_count,Count
+en,passenger_load_min,Passenger Load Time (min)
+en,passengers,Passengers
+en,passenger_type,Passenger Type
+en,passenger_unload_min,Passenger Unload Time (min)
+en,password,Password
+en,password_confirmation,Password Confirmation
+en,pending,Pending
+en,permanent_inactive,Permanent Inactive?
+en,permissions,Permissions
+en,person_preparing_report_label,Person preparing report (please print):
+en,phone,Phone
+en,phone_number,Phone Number
+en,pickup_address,Pickup Address
+en,pickup_address_column,Pickup Address
+en,pickup_address_notes,Pickup Address Notes
+en,pickup_date,Pickup Date
+en,pickup_date_column,Pickup Date
+en,pick_up_point,Pick-Up Point
+en,pickup_time,Pickup Time
+en,pickup_time_column,Pickup Time
+en,pickup_unspecified,(Pickup Unspecified)
+en,planned_leave_end_date,End Date
+en,planned_leave_form_edit_heading,Edit Planned Leave
+en,planned_leave_form_error.one,1 error prohibited this planned leave from being saved
+en,planned_leave_form_error.other,%{count} errors prohibited this planned leave from being saved
+en,planned_leave_form_new_heading,New Planned Leave
+en,planned_leave_form_reason,Reason
+en,planned_leave_start_date,Start Date
+en,planned_leave_unassign_driver_warning,Planned leave within live scheduling window would remove the driver from assigned runs.
+en,pre_or_post_trip,Collect during pre-trip or post-trip?
+en,previous,Previous
+en,previous_reports,Previous Reports
+en,prime_number,Prime Number
+en,private_notes,Private Notes
+en,proceed_button,Proceed
+en,provider_ada_questions_link_text,ADA Question Lookup Table
+en,provider_addresses_label,Addresses
+en,provider_customers_label,Customers
+en,provider_driver_requirement_templates_index_heading,Provider-specific Driver Requirements
+en,provider_driver_requirement_templates_link_text,Provider-specific Driver Requirements
+en,provider_drivers_label,Drivers
+en,provider_form_admin_name,Admin Name
+en,provider_form_admin_name_label,Admin Name (if different)
+en,provider_form_business_address_heading,Business Address
+en,provider_form_details_heading,Details
+en,provider_form_dispatch,Dispatch enabled
+en,provider_form_error.one,1 error prohibited this provider from being saved
+en,provider_form_error.other,%{count} errors prohibited this provider from being saved
+en,provider_form_fields_required_for_run_completion,Fields required for a run to be considered completed
+en,provider_form_logo,Logo
+en,provider_form_mailing_address_heading,Mailing Address
+en,provider_form_name,Name
+en,provider_form_primary_contact_email,Email
+en,provider_form_primary_contact_heading,Primary Contact
+en,provider_form_primary_contact_name,Name
+en,provider_form_primary_contact_phone,Phone
+en,provider_form_run_tracking,Run Tracking
+en,provider_form_scheduling,Scheduling
+en,provider_form_submit,Submit
+en,provider_form_trip_entry_from_runs,Allow trip entry from runs page
+en,provider_form_website,Website (add http or https)
+en,provider_general_label,General
+en,provider_index_active,Active?
+en,provider_index_details,Details
+en,provider_index_heading,Providers
+en,provider_index_name,Name
+en,provider_index_users,Users
+en,provider_lookup_table,Provider Specific Lookup Table
+en,provider_lookup_tables_link_text,Provider Lookup Tables
+en,provider_not_available_for_trip,Provider is not available for the trip.
+en,provider_not_exist,Provider does not exist based on given id.
+en,provider_ntd_funding_source_link_text,Change NTD Funding Sources
+en,provider_profile_label,Profile
+en,providers_link_text,Providers
+en,provider_users_label,Users
+en,provider_vehicle_maintenance_types_link_text,Provider-specific Vehicle Maintenance Schedule Types
+en,provider_vehicle_requirement_templates_index_heading,Provider-specific Vehicle Requirements
+en,provider_vehicle_requirement_templates_link_text,Provider-specific Vehicle Requirements
+en,provider_vehicles_label,Vehicles
+en,provider_vehicle_types_link_text,Provider-specific Vehicle Types
+en,provider_vehicle_warranties_link_text,Vehicle Warrenties Lookup Table
+en,public_notes,Public Notes
+en,reactivate,Reactivate
+en,reactivate_confirmation,Are you sure to reactivate it?
+en,reactivate_provider_confirmation,Are you sure to reactivate this provider?
+en,reason_leave,Reason
+en,reassociate_customer_trips,Associate this customer's trips with another customer.
+en,reassociate_trips,Associate this addresses's trips with another address.
+en,reconcile_cab_log,Reconcile Cab Log
+en,reconcile_cab_log_link_text,Reconcile Cab Log
+en,recurring_driver_compliance_compliance_based_scheduling_heading,Compliance Based
+en,recurring_driver_compliance_events_scheduled_heading,Events Scheduled
+en,recurring_driver_compliance_form_compliance_based_schedule_preview_header,"If a driver were to complete the first occurrence 1 day after the due date, their next event would be due:"
+en,recurring_driver_compliance_form_compliance_based_schedule_preview_placeholder_text,Complete all scheduling fields to see an example of how compliance based scheduling works.
+en,recurring_driver_compliance_form_compliance_based_scheduling,Use Compliance based scheduling
+en,recurring_driver_compliance_form_compliance_based_scheduling_heading,Scheduling Options
+en,recurring_driver_compliance_form_compliance_based_scheduling_help,"With this checked, only 1 event is scheduled at a time per driver. A new event is scheduled once the last event has been completed, based on the last completion date."
+en,recurring_driver_compliance_form_creation_notice,"New events are not automatically scheduled when this form is saved. Instead they are created by an automated task on the server, typically daily at midnight. You will be able to edit the schedule of this event until the first events are generated. Afterwards, only the event name, event notes, and recurrence notes will be editable."
+en,recurring_driver_compliance_form_creation_notice_heading,Please note
+en,recurring_driver_compliance_form_details_header,Event Details
+en,recurring_driver_compliance_form_details_header_help,The event name and event notes will be copied to each generated event.
+en,recurring_driver_compliance_form_error.one,1 error prohibited this recurring event from being saved
+en,recurring_driver_compliance_form_error.other,%{count} errors prohibited this recurring event from being saved
+en,recurring_driver_compliance_form_event_name,Event Name
+en,recurring_driver_compliance_form_event_notes,Event Notes
+en,recurring_driver_compliance_form_future_schedule_immediately_preview_placeholder_text,Complete all scheduling fields to see an example of future scheduling using 'Immediately'
+en,recurring_driver_compliance_form_future_schedule_on_schedule_preview_placeholder_text,Complete all scheduling fields to see an example of future scheduling using 'On Schedule'
+en,recurring_driver_compliance_form_future_schedule_preview_header.one,"If a new driver was created 1 day after the first due date, their first event would be due:"
+en,recurring_driver_compliance_form_future_schedule_preview_header.other,"If a new driver was created 1 day after the first due date, their first %{count} events would be due:"
+en,recurring_driver_compliance_form_future_schedule_time_span_preview_placeholder_text,Complete all scheduling and new driver scheduling fields to see an example of future scheduling using 'After a time'
+en,recurring_driver_compliance_form_future_start_frequency,Future Frequency
+en,recurring_driver_compliance_form_future_start_rule,Future Start Rule
+en,recurring_driver_compliance_form_future_start_rule_immediately,"Immediately (1st event due upon next task generation, typically daily at midnight)"
+en,recurring_driver_compliance_form_future_start_rule_on_schedule,On Schedule (1st event due according to the the next date in the initial schedule)
+en,recurring_driver_compliance_form_future_start_rule_time_span,After a time (1st event will be due based on the schedule you set below)
+en,recurring_driver_compliance_form_future_start_schedule,Future Schedule
+en,recurring_driver_compliance_form_readonly_notice,"You cannot modify the scheduling of this event since events have already been generated from it. However you can still adjust the recurrence note, event name, and event notes fields. Changes to the latter two fields will be copied to the generated events."
+en,recurring_driver_compliance_form_readonly_notice_heading,Please note
+en,recurring_driver_compliance_form_recurrence_frequency,Frequency
+en,recurring_driver_compliance_form_recurrence_notes,Recurrence Notes
+en,recurring_driver_compliance_form_recurrence_schedule,Schedule
+en,recurring_driver_compliance_form_recurrence_schedule_header,Scheduling
+en,recurring_driver_compliance_form_recurrence_schedule_header_help,"How often should the event be due, and when should the first occurrence be due?"
+en,recurring_driver_compliance_form_schedule_preview_header.one,"Based on the schedule above and the compliance based scheduling option, the first event for each driver would be due:"
+en,recurring_driver_compliance_form_schedule_preview_header.other,"Based on the schedule above, the first %{count} events for each driver would be due:"
+en,recurring_driver_compliance_form_schedule_preview_placeholder_text,Complete all scheduling fields to see an example of the schedule.
+en,recurring_driver_compliance_form_start_date,First Due Date
+en,recurring_driver_compliance_form_submit,Save
+en,recurring_driver_compliance_recurrence_future_scheduling_heading,New Driver Scheduling
+en,recurring_driver_compliance_recurrence_future_scheduling_heading_help,How should scheduling work for drivers created after the first due date?
+en,recurring_driver_compliance_recurrence_scheduling_heading,Repeats every
+en,recurring_driver_compliances_empty,No recurring driver compliance events exist
+en,recurring_driver_compliances_index_heading,Recurring Driver Compliance Events
+en,recurring_driver_compliances_link_text,Recurring Driver Compliance Events
+en,recurring_scheduling,Recurring Scheduling
+en,recurring_vehicle_maintenance_compliance_compliance_based_scheduling_heading,Compliance Based
+en,recurring_vehicle_maintenance_compliance_events_scheduled_heading,Events Scheduled
+en,recurring_vehicle_maintenance_compliance_form_compliance_based_schedule_both_preview_header,"If a vehicle were to complete the first occurrence 1 day after the due date and at 100 miles, their next event would be due:"
+en,recurring_vehicle_maintenance_compliance_form_compliance_based_schedule_date_preview_header,"If a vehicle were to complete the first occurrence 1 day after the due date, their next event would be due:"
+en,recurring_vehicle_maintenance_compliance_form_compliance_based_schedule_mileage_preview_header,"If a vehicle were to complete the first occurrence at 100 miles, their next event would be due:"
+en,recurring_vehicle_maintenance_compliance_form_compliance_based_schedule_preview_placeholder_text,Complete all scheduling fields to see an example of how compliance based scheduling works.
+en,recurring_vehicle_maintenance_compliance_form_compliance_based_scheduling,Use Compliance based scheduling
+en,recurring_vehicle_maintenance_compliance_form_compliance_based_scheduling_heading,Scheduling Options
+en,recurring_vehicle_maintenance_compliance_form_compliance_based_scheduling_help,"With this checked, only 1 event is scheduled at a time per vehicle. A new event is scheduled once the last event has been completed, based on the last completion date and/or mileage."
+en,recurring_vehicle_maintenance_compliance_form_creation_notice,"New events are not automatically scheduled when this form is saved. Instead they are created by an automated task on the server, typically daily at midnight. You will be able to edit the schedule of this event until the first events are generated. Afterwards, only the event name, event notes, and recurrence notes will be editable."
+en,recurring_vehicle_maintenance_compliance_form_creation_notice_heading,Please note
+en,recurring_vehicle_maintenance_compliance_form_details_header,Event Details
+en,recurring_vehicle_maintenance_compliance_form_details_header_help,The event name and event notes will be copied to each generated event.
+en,recurring_vehicle_maintenance_compliance_form_error.one,1 error prohibited this recurring event from being saved
+en,recurring_vehicle_maintenance_compliance_form_error.other,%{count} errors prohibited this recurring event from being saved
+en,recurring_vehicle_maintenance_compliance_form_event_name,Event Name
+en,recurring_vehicle_maintenance_compliance_form_event_notes,Event Notes
+en,recurring_vehicle_maintenance_compliance_form_future_schedule_immediately_preview_placeholder_text,Complete all scheduling fields to see an example of future scheduling using 'Immediately'
+en,recurring_vehicle_maintenance_compliance_form_future_schedule_on_schedule_preview_placeholder_text,Complete all scheduling fields to see an example of future scheduling using 'On Schedule'
+en,recurring_vehicle_maintenance_compliance_form_future_schedule_preview_header.one,"If a new vehicle was created 1 day after the first due date, their first event would be due:"
+en,recurring_vehicle_maintenance_compliance_form_future_schedule_preview_header.other,"If a new vehicle was created 1 day after the first due date, their first %{count} events would be due:"
+en,recurring_vehicle_maintenance_compliance_form_future_schedule_time_span_preview_placeholder_text,Complete all scheduling and new vehicle scheduling fields to see an example of future scheduling using 'After a time'
+en,recurring_vehicle_maintenance_compliance_form_future_start_frequency,Future Frequency
+en,recurring_vehicle_maintenance_compliance_form_future_start_rule,Future Start Rule
+en,recurring_vehicle_maintenance_compliance_form_future_start_rule_immediately,"Immediately (1st event due upon next task generation, typically daily at midnight)"
+en,recurring_vehicle_maintenance_compliance_form_future_start_rule_on_schedule,On Schedule (1st event due according to the the next date in the initial schedule)
+en,recurring_vehicle_maintenance_compliance_form_future_start_rule_time_span,After a time (1st event will be due based on the schedule you set below)
+en,recurring_vehicle_maintenance_compliance_form_future_start_schedule,Future Schedule
+en,recurring_vehicle_maintenance_compliance_form_readonly_notice,"You cannot modify the scheduling of this event since events have already been generated from it. However you can still adjust the recurrence note, event name, and event notes fields. Changes to the latter two fields will be copied to the generated events."
+en,recurring_vehicle_maintenance_compliance_form_readonly_notice_heading,Please note
+en,recurring_vehicle_maintenance_compliance_form_recurrence_frequency,Frequency
+en,recurring_vehicle_maintenance_compliance_form_recurrence_mileage,Mileage Frequency
+en,recurring_vehicle_maintenance_compliance_form_recurrence_notes,Recurrence Notes
+en,recurring_vehicle_maintenance_compliance_form_recurrence_schedule,Schedule
+en,recurring_vehicle_maintenance_compliance_form_recurrence_schedule_header,Scheduling
+en,recurring_vehicle_maintenance_compliance_form_recurrence_schedule_header_help,"How often should the event be due, and when should the first occurrence be due?"
+en,recurring_vehicle_maintenance_compliance_form_recurrence_type,Schedule Based On
+en,recurring_vehicle_maintenance_compliance_form_schedule_date_preview_header.one,"Based on the schedule above and the compliance based scheduling option, the first event for each vehicle would be due:"
+en,recurring_vehicle_maintenance_compliance_form_schedule_date_preview_header.other,"Based on the schedule above, the first %{count} events for each vehicle would be due:"
+en,recurring_vehicle_maintenance_compliance_form_schedule_mileage_preview_header.one,"Based on the schedule above and the compliance based scheduling option, and assuming the vehicle has an initial odometer reading of 0 miles, the first event for each vehicle would be due:"
+en,recurring_vehicle_maintenance_compliance_form_schedule_mileage_preview_header.other,"Based on the schedule above, and assuming the vehicle has an initial odometer reading of 0 miles, the first %{count} events for each vehicle would be due:"
+en,recurring_vehicle_maintenance_compliance_form_schedule_preview_placeholder_text,Complete all scheduling fields to see an example of the schedule.
+en,recurring_vehicle_maintenance_compliance_form_start_date,First Due Date
+en,recurring_vehicle_maintenance_compliance_form_submit,Save
+en,recurring_vehicle_maintenance_compliance_recurrence_future_scheduling_heading,New Vehicle Scheduling
+en,recurring_vehicle_maintenance_compliance_recurrence_future_scheduling_heading_help,How should scheduling work for vehicles created after the first due date?
+en,recurring_vehicle_maintenance_compliance_recurrence_scheduling_heading,Repeats every
+en,recurring_vehicle_maintenance_compliances_empty,No recurring vehicle maintenance compliance events exist
+en,recurring_vehicle_maintenance_compliances_index_heading,Recurring Vehicle Maintenance Compliance Events
+en,recurring_vehicle_maintenance_compliances_link_text,Recurring Vehicle Maintenance Compliance Events
+en,region_heading,Region Boundaries
+en,reimbursable,Reimbursable
+en,reimbursement_rates,Reimbursement Rates
+en,reimbursement_rates_heading,Per-Ride Reimbursement Rates
+en,remove_device_pool_driver,Remove
+en,remove_vendor_list_confirm,Are you sure you want to remove the Approved Vendor List?
+en,repeat_every,Repeat every
+en,repeating_run,Subscription Run
+en,repeating_runs,View Subscription Run Templates
+en,repeating_runs_heading,Subscription Runs
+en,repeating_schedule,Schedule
+en,repeating_trip,Subscription Trip
+en,repeating_trips,View Subscription Trip Templates
+en,repeating_trips_heading,Subscription Trips
+en,repetition,Repetitions
+en,repetition_comments,Comments
+en,repetition_driver,Driver
+en,repetition_vehicle,Vehicle
+en,report_footer_heading,Provider/Agency:
+en,report_footer_title,Title
+en,report_format,Format
+en,report_header,"<div id='address'>Ride Connection, Inc. 847 NE 19th Ave #200 <br /> Portland, OR 97232<br />503.528.1720</div>"
+en,report_header_instructions,"<div id='instructions'><strong>Please submit report by the 5th of each month to:</strong><br />Kirsten Huckfeldt, Fiscal Specialist<br />Phone: 503.528.1742<br />Fax: 503.528.1755<br />Email: Khuckfeldt@rideconnection.org</div>"
+en,report_month_heading,Report month:
+en,report_name,Reports
+en,report_parameters,Report Parameters
+en,reports,Reports
+en,reports_heading,Reports
+en,reports_link_text,Reports
+en,report_type,Report Type
+en,required_trip_details_panel,Trip Essentials
+en,resend_confirmation_instructions_heading,Resend Confirmation Instructions
+en,resend_conformation_instructions,Resend Confirmation Instructions
+en,resend_unlock_header,Resend unlock instructions
+en,reset,Reset
+en,reset_all_filter,Reset All
+en,reset_filter_panel,Reset Filter
+en,reset_password,Reset Password
+en,reset_password_email,<p>Hello %{email}!</p><p>Someone has requested a link to change your password. You can do this through the link below.</p><p>%{link}</p>
+en,reset_password_heading,Reset Password
+en,restore_user_link_text,Restore User
+en,result,Result
+en,return,Return
+en,return_trip,Return
+en,return_trip_label,Return Trip
+en,return_trip_pickup_time_no_earlier_than_outbound_trip_dropoff_time,Pickup time should be no earlier than outbound trip's appointment time
+en,ride_connection_per_ride_reimbursement_rate,Ride Connection
+en,ride_information,Ride Information
+en,ridepilot_token_required,Ridepilot token is required.
+en,role,Role
+en,round_trip,Round Trip
+en,run,Run
+en,run_completion_required,Required for Completion
+en,run_date_column,Date
+en,run_distance,Distance
+en,run_distance_deadhead_from_garage,Deadhead from Garage
+en,run_distance_deadhead_to_garage,Deadhead to Garage
+en,run_distance_non_revenue_miles,Non Revenue Miles
+en,run_distance_revenue_miles,Revenue Miles
+en,run_distance_total,Total Miles
+en,run_driver_column,Driver
+en,run_end_time_column,End Time
+en,run_filter,Filter
+en,run_form_error_message.one,%{count} error prohibited this run from being saved:
+en,run_form_error_message.other,%{count} errors prohibited this run from being saved:
+en,run_incomplete_reason,Incomplete Reason
+en,run_index_heading,Listing runs
+en,run_label,Run
+en,run_manifest_table_header_action,Action
+en,run_manifest_table_header_actions,Actions
+en,run_manifest_table_header_address,Address
+en,run_manifest_table_header_comments,Comments
+en,run_manifest_table_header_customer,Customer
+en,run_manifest_table_header_customer_phone,Phone #
+en,run_manifest_table_header_driver_notified,Driver Notified
+en,run_manifest_table_header_dropoff_time,Dropoff
+en,run_manifest_table_header_eta,ETA
+en,run_manifest_table_header_fare,Fare
+en,run_manifest_table_header_occupancy,Occupancy
+en,run_manifest_table_header_pickup_time,Pickup
+en,run_manifest_table_header_scheduled_time,Schedule Time
+en,run_manifest_table_header_trip_result,Result
+en,run_manifest_table_header_trip_type,Type
+en,run_name_column,Name
+en,run_reimbursement_cost,Reimbursement
+en,run_result,Result
+en,run_result_column,Result
+en,runs,Runs
+en,runs_between,Runs between
+en,runs_link_text,Runs
+en,runs_panel_header,Runs
+en,run_start_time_column,Start Time
+en,run_table_header_actions,Actions
+en,run_table_header_driver,Driver
+en,run_table_header_end,End
+en,run_table_header_name,Name
+en,run_table_header_start,Start
+en,run_table_header_trips,Trips
+en,run_table_header_type,Type
+en,run_table_header_vehicle,Vehicle
+en,run_tracking,Tracking
+en,run_tracking_disabled,Disabled
+en,run_tracking_low_income,Low Income
+en,run_tracking_senior,Senior
+en,run_trip_day,Date
+en,run_trip_type_daily,Daily
+en,run_trip_type_recurring,Recur
+en,run_vehicle_column,Vehicle
+en,same_address_exists_for_customer,Same address was created for the customer. Please click Edit Details to edit it if needed.
+en,save,Save
+en,saved_custom_report_form_error.one,1 error prohibited this report from being saved
+en,saved_custom_report_form_error.other,%{count} errors prohibited this report from being saved
+en,save_mobility_capacities,Save
+en,save_region_submit,Save Region
+en,save_report,Save
+en,save_viewport_submit,Save Viewport
+en,schedule,Schedule
+en,scheduled,Scheduled
+en,scheduled_end_time,Scheduled End Time
+en,scheduled_start_time,Scheduled Start Time
+en,schedule_recurring_trips_runs,Schedule Recurring Trips and Runs
+en,scheduling,Scheduling
+en,search,Search
+en,search_button_label,Search
+en,search_for_address,Search for an address above.
+en,select_address_file_to_upload,Select a file (.csv) to upload
+en,service_date,Service Date
+en,service_performed,Service Performed
+en,services_performed,Services Performed
+en,service_summary_end_date,End Date:
+en,service_summary_end_date_earlier_than_start_date,End Date should be no earlier than Start Date
+en,service_summary_heading,Reports: Service Summary
+en,service_summary_link_text,Service Summary
+en,service_summary_report_submit,Report
+en,service_summary_section_one_heading,Service Summary Section 1 - Trip Data
+en,service_summary_start_date,Start Date:
+en,service_summary_title,"Service Summary: %{provider}, %{start_date}"
+en,session_timeout_message,You will be logged off shortly due to inactivity.  <a id='session-resume' href='#'>Click here to stay logged in.</a>
+en,session_timeout_warning,Session timeout
+en,set_as_incomplete,Set as Incomplete
+en,show,Show
+en,show_all_compliances,Show All?
+en,show_driver_heading,Driver
+en,show_driver_requirement_template_heading,Driver Requirement
+en,show_future_label,Show future
+en,show_hide_system_lookup_tables,Show/hide System-wide Lookup Table Entries
+en,show_inactive,Include inactive?
+en,show_last_label,Show last
+en,show_past,Show Past?
+en,show_provider_address_heading,Addresses
+en,show_provider_heading,Provider: %{provider}
+en,show_provider_search_addresses,Search addresses:
+en,show_recurring_driver_compliance_heading,Recurring Event
+en,show_recurring_vehicle_maintenance_compliance_heading,Recurring Event
+en,show_runs_report_heading,Verify Runs
+en,show_runs_report_title,Verify Runs
+en,show_runs_submit,Update Runs
+en,show_trips_report_heading,Verify Trips
+en,show_trips_submit,Verify Trips
+en,show_trips_submit_update,Update Trips
+en,show_trips_title,Verify Trips
+en,show_value,Show Value
+en,show_vehicle_requirement_template_heading,Vehicle Requirement
+en,signature_of_person_preparing_report_label,Signature of person preparing report:
+en,sign_in_link,Sign in
+en,sign_up_link,Sign up
+en,site_title,GCRPC RidePilot
+en,southeast_corner,Southeast Corner
+en,start_date,Start Date
+en,start_location,Start Location
+en,start_odometer,Start Odometer
+en,state,State
+en,status,Status
+en,stf_ride_miles,STF Ride Miles
+en,stf_service_label,STF Service
+en,stf_van_per_ride_reimbursement_rate,USDOT STF Van
+en,submit,Submit
+en,submit_answer_verification_questions_form,Submit Answer
+en,submit_driver_availability_settings,Submit
+en,submit_fields_required_for_run_completion,Save Required Fields
+en,submit_new_confirmation_form,Send new confirmation instructions
+en,submit_new_password_form,Send me reset password instructions
+en,submit_new_password_form_reset,Send a Password Reset Email
+en,submit_new_password_form_verification_question,Reset Password by Answering a Security Question
+en,submit_new_unlock,Resend unlock instructions
+en,submit_reimbursement_rates,Save Reimbursement Rates
+en,submit_run,Submit
+en,summary,Summary
+en,switch_providers_to_add_device_pool,"<p>You are currently logged in to %{current_provider}.  To create a device pool for %{provider}, please switch providers by using the dropdown menu at the top of this page.</p>"
+en,switch_providers_to_create_driver,"<p>You are currently logged in to %{current_provider}.  To create a driver for %{provider} , please switch providers by using the dropdown menu at the top of this page.</p>"
+en,switch_providers_to_create_ethnicity,"<p>You are currently logged in to %{current_provider}.  To create an ethnicity for %{provider} , please switch providers by using the dropdown menu at the top of this page.</p>"
+en,switch_providers_to_create_user,"<p>You are currently logged in to %{current_provider}.  To create a user for %{provider} , please switch providers by using the dropdown menu at the top of this page.</p>"
+en,switch_providers_to_create_vehicle,"<p>You are currently logged in to %{current_provider}.  To create a vehicle for %{provider} , please switch providers by using the dropdown menu at the top of this page.</p>"
+en,system_driver_requirement_templates_index_heading,System-wide Driver Requirements
+en,system_driver_requirement_templates_link_text,System-wide Driver Requirements
+en,system_vehicle_requirement_templates_index_heading,System-wide Vehicle Requirements
+en,system_vehicle_requirement_templates_link_text,System-wide Vehicle Requirements
+en,taxi_per_ride_reimbursement_rates,Taxi Per-Ride Reimbursement Rates
+en,this_week,This Week
+en,through,through
+en,time.am,am
+en,time.formats.default,"%a, %d %b %Y %H:%M:%S %z"
+en,time.formats.long,"%B %d, %Y %I:%M %p"
+en,time.formats.short,%d %b %H:%M
+en,time.pm,pm
+en,to_date,To Date
+en,to_garage,To Garage
+en,to_garage_address_label,To Garage
+en,total,Total
+en,total_donations,Total Donations
+en,total_driver_hours,Total Driver Hours
+en,total_hours,Total Hours
+en,total_hours_driven,Total Hours Driven
+en,total_hours_scheduled,Total Hours Scheduled
+en,total_mileage,Total Mileage
+en,total_miles_driven,Total Miles Driven
+en,total_passengers,Total Passengers
+en,total_space,Total
+en,total_trips,Total Trips
+en,total_trips_text,%{trips_count} trips in total
+en,total_unduplicated_individuals,Total Unduplicated Individuals
+en,translation_engine_link_text,Translations
+en,translations,Translations
+en,travel_training_comment,Comment
+en,travel_training_date,Date
+en,tri_met_per_ride_reimbursement_rate,Tri-Met
+en,trip,Trip
+en,trip_called_back,Called Back?
+en,trip_called_back_column,Called back?
+en,trip_confirm,Confirm
+en,trip_direction,Direction
+en,trip_direction_column,Trip Direction
+en,trip_donation,Donation
+en,trip_eligibility_panel,Eligibility
+en,trip_filter,Filter
+en,trip_form_error_message,Please correct following errors
+en,trip_form_mobility_device_accommodations_label,Mobility Device Count
+en,trip_from,From
+en,trip_funding_sources,Trip Funding Sources
+en,trip_has_been_requested,Your trip request has been accepted.
+en,trip_has_been_scheduled,Your trip has been scheduled.
+en,trip_has_been_scheduled_to_cab,Your trip has been scheduled to a cab.
+en,trip_mobility_notes,Mobility notes
+en,trip_mobility_panel,Mobility Configuration
+en,trip_mobility_requirements,Mobility Req.
+en,trip_notes,Trip Notes
+en,trip_notes_label,Trip notes:
+en,trip_notes_panel_title,Notes
+en,trip_parameters,Trip Parameters
+en,trip_payment,Payment
+en,trip_provider,Provider
+en,trip_purpose,Trip Purpose
+en,trip_purpose_column,Purpose
+en,trip_purpose_not_exist,Trip purpose does not exist for given provider.
+en,trip_purposes,Trip Purposes
+en,trip_result,Trip Result
+en,trip_result_column,Result
+en,trip_result_confirm_message,Are you sure you want to change the trip result?
+en,trip_result_label,Result: 
+en,trip_result_modal_cancel,Cancel
+en,trip_result_modal_dismiss,Skip Comment
+en,trip_result_reason,Trip Result Comment
+en,trip_round_trip_column,Round Trip?
+en,trip_run_label,Run: 
+en,trips,Trips
+en,trip_service_level,Service Level
+en,trips_form_error_message.one,%{count} error prohibited this trip from being saved:
+en,trips_form_error_message.other,%{count} errors prohibited this trip from being saved:
+en,trips_label,Trips
+en,trips_link_text,Trips
+en,trips_received,Trips Received
+en,trips_reimbursement_cost,Reimbursement
+en,trips_requiring_callback_link_text,Trips Requiring Callback
+en,trips_runs,Dispatch
+en,trips_runs_filter,Filter
+en,trip_status_column,Status
+en,trip_to,To
+en,trip_turn_down,Turn Down
+en,trip_useful_info_panel,Useful Info
+en,turndowns,Turndowns
+en,unassigned_trips,Trips
+en,unassigned_trips_table_header_actions,Actions
+en,unassigned_trips_table_header_appointment_time,Appt Time
+en,unassigned_trips_table_header_comments,Comments
+en,unassigned_trips_table_header_customer,Customer
+en,unassigned_trips_table_header_dropoff_address,Dropoff Address
+en,unassigned_trips_table_header_fare,Fare
+en,unassigned_trips_table_header_phone,Phone#
+en,unassigned_trips_table_header_pickup_address,Pickup Address
+en,unassigned_trips_table_header_pickup_time,Pickup Time
+en,unassigned_trips_table_header_riders_count,# of Riders
+en,unassigned_trips_table_header_type,Type
+en,unauthorized_customer_for_provider,Customer is not authorized to access given provider.
+en,unauthorized_customer_for_trip,Customer is not authorized to access given trip.
+en,unavailable_at_run_time,is not available at run schedule time
+en,unavailable_driver_for_run_time_range_warning,Driver is not available within the run scheduled time range.
+en,unavailable_warning_dialog_title,Unavailable
+en,unavailable_warning_message,"System detected following warnings, would you still like to proceed?"
+en,uncomplete_reason,Reason
+en,uncomplete_run_dialog_title,Set Run as Incomplete
+en,unduplicated_59_and_younger,Unduplicated number of persons 59 years and younger
+en,unduplicated_60_and_older,Unduplicated Persons 60 and Older
+en,unduplicated_riders,Unduplicated riders (First ride this fiscal year)
+en,unduplicated_unknown_age,Unduplicated number of persons age unknown
+en,unknown_error,"There was something wrong with the request, please try again."
+en,unlinked_trip_count,Unlinked Trip Count
+en,unlock_instructions_email,<p>Hello %{email}!</p><p>Your account has been locked due to an excessive number of unsuccessful sign in attempts.</p><p>Click the link below to unlock your account:</p><p>%{link}</p>
+en,unpaid_break_time,Unpaid Break Time
+en,unschedule,Unschedule
+en,unscheduled,Unscheduled
+en,unscheduled_trips_link_text,Unscheduled Trips
+en,unspecified,Unspecified
+en,unspecified_driver,Unspecified driver
+en,update,Update
+en,update_eta_related_settings,Update
+en,update_fare_related_settings,Update
+en,update_min_trip_time_gap,Update
+en,update_ntd_funding_sources,Save
+en,update_provider_operating_hours,Update
+en,upload,Upload
+en,upload_common_addresses,Upload Addresses
+en,upload_common_addresses_notes,Please refer to address file specifications.
+en,uploading,Uploading
+en,upload_vendor_list,Upload Approved Vendors List
+en,user_address_heading,Address
+en,user_details_heading,Details
+en,user_expires_at,Inactivation Date
+en,user_form_error_message.one,%{count} error prohibited this user from being saved:
+en,user_form_error_message.other,%{count} errors prohibited this user from being saved:
+en,user_inactivation_reason,Reasons
+en,username,Username
+en,user_was_deleted,This user was deleted. You can find the option below to restore it.
+en,user_was_restored,User has been successfully restored.
+en,use_vehicle_garage,Vehicle garage as start & end?
+en,validates_timeliness.error_value_formats.date,%Y-%m-%d
+en,validates_timeliness.error_value_formats.datetime,%Y-%m-%d %H:%M:%S
+en,validates_timeliness.error_value_formats.time,%H:%M:%S
+en,value,Value
+en,vehicle,Vehicle
+en,vehicle_cannot_accommodate_warning,Vehicle cannot accommodate
+en,vehicle_capacity_capacity,Capacity
+en,vehicle_capacity_configuration_delete_confirm,Are you sure to delete this configuration?
+en,vehicle_capacity_configuration_form_edit_heading,Edit Configuration
+en,vehicle_capacity_configuration_form_error.one,1 error prohibited this configuration from being saved
+en,vehicle_capacity_configuration_form_error.other,%{count} errors prohibited this from being saved
+en,vehicle_capacity_configuration_form_new_heading,New Configuration
+en,vehicle_capacity_configuration_form_submit,Submit
+en,vehicle_capacity_type,Type
+en,vehicle_compliance_delete_confirm,Are you sure you want to delete this compliance event?
+en,vehicle_compliance_form_compliance_date,Compliance Date
+en,vehicle_compliance_form_due_date,Due Date
+en,vehicle_compliance_form_edit_heading,Edit compliance event
+en,vehicle_compliance_form_error.one,1 error prohibited this vehicle compliance from being saved
+en,vehicle_compliance_form_error.other,%{count} errors prohibited this vehicle compliance from being saved
+en,vehicle_compliance_form_event,Name
+en,vehicle_compliance_form_new_heading,New compliance event
+en,vehicle_compliance_form_notes,Notes
+en,vehicle_compliance_form_submit,Save
+en,vehicle_compliances_add_link_title,Add compliance event
+en,vehicle_compliances_empty,No compliance events exist for this vehicle
+en,vehicle_compliances_heading,Compliance Events
+en,vehicle_documents_add_link_title,Add document
+en,vehicle_documents_empty,No documents exist for this vehicle
+en,vehicle_documents_heading,Vehicle Documentation
+en,vehicle_expired_warranties,Expired Warranties
+en,vehicle_form_5310_reportable_label,Is FTA 5310 Vehicle?
+en,vehicle_form_accessibility_equipment_label,Accessibility Equipment
+en,vehicle_form_active_label,Active
+en,vehicle_form_capacity_heading,Capacity
+en,vehicle_form_details_heading,Details
+en,vehicle_form_driver_label,Driver
+en,vehicle_form_edit_heading,Edit Type
+en,vehicle_form_error_message.one,%{count} error prohibited this vehicle from being saved:
+en,vehicle_form_error_message.other,%{count} errors prohibited this vehicle from being saved:
+en,vehicle_form_garage_label,Garage
+en,vehicle_form_information_heading,Additional Information
+en,vehicle_form_initial_mileage,Initial Mileage
+en,vehicle_form_initial_mileage_change_reason,Reason
+en,vehicle_form_insurance_coverage_details_label,Insurance Coverage
+en,vehicle_form_last_odometer_reading,Last Reported Mileage
+en,vehicle_form_license_plate_label,License Plate
+en,vehicle_form_location_label,Garaged Location
+en,vehicle_form_make_label,Make
+en,vehicle_form_mobility_device_accommodations_label,Mobility Devices Accommodated
+en,vehicle_form_model_label,Model
+en,vehicle_form_name_label,Name
+en,vehicle_form_ownership_label,Ownership
+en,vehicle_form_registration_expiration_date_label,Registration Exp Date
+en,vehicle_form_reportable_label,Vehicle Should Appear on Vehicle Report
+en,vehicle_form_responsible_party_label,Responsible Party
+en,vehicle_form_seating_capacity_label,Seating Capacity
+en,vehicle_form_submit,Submit
+en,vehicle_form_vehicle_type_label,Vehicle Type
+en,vehicle_form_vin_label,VIN
+en,vehicle_form_year_label,Year
+en,vehicle_has_mobility_device_capacity_validation_error,There's not enough mobility device capacity on this run to accommodate this trip
+en,vehicle_has_open_seating_capacity_validation_error,There's not enough open capacity on this run to accommodate this trip
+en,vehicle_legal_requirements_add_link_title,Add legal requirement
+en,vehicle_location,Location
+en,vehicle_maintenance_compliance_delete_confirm,Are you sure you want to delete this compliance event?
+en,vehicle_maintenance_compliance_form_compliance_date,Compliance Date
+en,vehicle_maintenance_compliance_form_compliance_mileage,Compliance Mileage
+en,vehicle_maintenance_compliance_form_due_date,Due Date
+en,vehicle_maintenance_compliance_form_due_mileage,Due Mileage
+en,vehicle_maintenance_compliance_form_due_string,Due
+en,vehicle_maintenance_compliance_form_due_type,Due Based On
+en,vehicle_maintenance_compliance_form_edit_heading,Edit compliance event
+en,vehicle_maintenance_compliance_form_error.one,1 error prohibited this vehicle compliance from being saved
+en,vehicle_maintenance_compliance_form_error.other,%{count} errors prohibited this vehicle compliance from being saved
+en,vehicle_maintenance_compliance_form_event,Name
+en,vehicle_maintenance_compliance_form_new_heading,New compliance event
+en,vehicle_maintenance_compliance_form_notes,Notes
+en,vehicle_maintenance_compliance_form_schedule,Schedule
+en,vehicle_maintenance_compliance_form_submit,Save
+en,vehicle_maintenance_compliances_add_link_title,Add compliance event
+en,vehicle_maintenance_compliances_empty,No compliance events exist for this vehicle
+en,vehicle_maintenance_compliances_heading,Preventive Maintenance Logs (PM)
+en,vehicle_maintenance_event_add_link_title,Add Maintenance Event
+en,vehicle_maintenance_event_delete_confirm,Are you sure?
+en,vehicle_maintenance_event_form_error.one,%{count} error prohibited this maintenance event from being saved:
+en,vehicle_maintenance_event_form_error.other,%{count} errors prohibited this maintenance event from being saved:
+en,vehicle_maintenance_events_empty,There are no maintenance events
+en,vehicle_maintenance_events_heading,Maintenance Events
+en,vehicle_maintenance_schedule_delete_confirm,Are you sure to delete this schedule?
+en,vehicle_maintenance_schedule_document,Inspection Requirement Sheet
+en,vehicle_maintenance_schedule_document_description,Inspection Requirement Sheet
+en,vehicle_maintenance_schedule_document_upload,Upload Inspection Requirement Sheet
+en,vehicle_maintenance_schedule_form_edit_heading,Edit Schedule
+en,vehicle_maintenance_schedule_form_error.one,1 error prohibited this schedule from being saved
+en,vehicle_maintenance_schedule_form_error.other,%{count} errors prohibited this schedule from being saved
+en,vehicle_maintenance_schedule_form_new_heading,New Schedule
+en,vehicle_maintenance_schedule_form_submit,Submit
+en,vehicle_maintenance_schedule_mileage,Mileage
+en,vehicle_maintenance_schedule_name,Name
+en,vehicle_maintenance_schedule_type_delete_confirm,Are you sure to delete this schedule type?
+en,vehicle_maintenance_schedule_type_form_edit_heading,Edit Maintenance Schedule Type
+en,vehicle_maintenance_schedule_type_form_error.one,1 error prohibited this schedule type from being saved
+en,vehicle_maintenance_schedule_type_form_error.other,%{count} errors prohibited this schedule type from being saved
+en,vehicle_maintenance_schedule_type_form_new_heading,New Schedule Type
+en,vehicle_maintenance_schedule_type_form_submit,Submit
+en,vehicle_maintenance_schedule_type_label,Maintenance Schedule Type
+en,vehicle_maintenance_schedule_type_name,Name
+en,vehicle_maintenance_schedule_types,Maintenance Schedule Types
+en,vehicle_make,Make
+en,vehicle_model,Model
+en,vehicle_operations_heading,Vehicle Operations Report
+en,vehicle_operations_submit,Report
+en,vehicle_operations_title,"Vehicle Operations: %{provider}, %{start_date}"
+en,vehicle_operations_ymm_label,Vehicle Year/Make/Model (Internal Name)
+en,vehicle_overdue_events,Maintenance Overdue
+en,vehicle_requirement_template_field_label,Type
+en,vehicle_requirement_template_form_error.one,1 error prohibited this requirement from being saved
+en,vehicle_requirement_template_form_error.other,%{count} errors prohibited this requirement from being saved
+en,vehicle_requirement_template_form_submit,Submit
+en,vehicle_requirement_template_legal,Legal?
+en,vehicle_requirement_template_legal_field_label,Legal?
+en,vehicle_requirement_template_name,Name
+en,vehicle_requirement_template_name_field_label,Name
+en,vehicle_requirement_template_reoccuring,Reoccuring?
+en,vehicle_requirement_template_reoccuring_field_label,Reoccuring?
+en,vehicle_requirement_templates_empty,No requirements exist
+en,vehicle_requirement_templates_index_heading,Vehicle Requirements
+en,vehicle_requirement_templates_link_text,Vehicle Requirements
+en,vehicle_show_heading,Vehicle Details
+en,vehicles_link_text,Vehicles
+en,vehicle_temporarily_inactive,Vehicle is put on temporarily inactive for the date.
+en,vehicle_type_delete_confirm,Are you sure to delete this type?
+en,vehicle_type_form_edit_heading,Edit Vehicle Type
+en,vehicle_type_form_error.one,1 error prohibited this type from being saved
+en,vehicle_type_form_error.other,%{count} errors prohibited this type from being saved
+en,vehicle_type_form_new_heading,New Type
+en,vehicle_type_form_submit,Submit
+en,vehicle_type_label,Vehicle Type
+en,vehicle_type_name,Name
+en,vehicle_types,Vehicle Types
+en,vehicle_unavailable,Vehicle is not available
+en,vehicle_warranties_add_link_title,Add warranty
+en,vehicle_warranties_empty,No warranties exist for this vehicle
+en,vehicle_warranties_heading,Vehicle and Equipment Warranties
+en,vehicle_warranty_delete_confirm,Are you sure you want to delete this warranty?
+en,vehicle_warranty_form_description,Description
+en,vehicle_warranty_form_edit_heading,Edit warranty
+en,vehicle_warranty_form_error.one,1 error prohibited this warranty from being saved
+en,vehicle_warranty_form_error.other,%{count} errors prohibited this warranty from being saved
+en,vehicle_warranty_form_expiration_date,Expiration Date
+en,vehicle_warranty_form_new_heading,New warranty
+en,vehicle_warranty_form_notes,Notes
+en,vehicle_warranty_form_submit,Save
+en,vehicle_warranty_type,Warranty Type
+en,vehicle_year,Year
+en,vendor,Vendor
+en,vendor_list,Approved Vendors List
+en,vendor_list_download,Download Approved Vendors List
+en,vendor_name,Vendor Name
+en,verification_question_answer,Answer
+en,verification_question_incorrect_answer,That answer is not correct. Please try again or contact your administrator to reset your password.
+en,verification_question_question,Question
+en,verification_questions,Security Questions
+en,verify_runs,Verify Runs
+en,verify_trips,Verify Trips
+en,very_early_arrival_threshold_min,Threshold (min) to flag as very early arrival
+en,very_late_arrival_threshold_min,Threshold (min) to flag as very late arrival
+en,view,View
+en,view_address_details,View Details
+en,view_customer_comments_report,View Customer Comments Report
+en,view_customer_profile,Profile
+en,view_customer_record_link_text,Click to view customer record
+en,view_customer_trip_summary,Trip Summary
+en,view_repeating_trips_link_text,View Subscription Trips
+en,view_runs_link_text,View Runs
+en,view_trips,View Trips
+en,view_trips_link_text,View Trips
+en,vin,VIN
+en,violate_provider_min_time_gap,The gap between drop off time and pick up time violates the minimum gap setting (%{min_gap} minutes) by the provider (%{provider_name})
+en,volunteer,Volunteer
+en,volunteer_admin_hours,Volunteer Admin Hours
+en,volunteer_driver_count,Number of Volunteer Drivers
+en,volunteer_escort_hours,Volunteer Escort Hours
+en,volunteer_hours,Volunteer Hours
+en,volunteer_hours_administrative,Volunteer Hours: Administrative
+en,volunteer_hours_escort,Volunteer Hours: Escort
+en,week_of,Week Of
+en,weeks,Weeks
+en,wheelchair_load_fee,Wheelchair Load Fee
+en,wheelchair_reimbursement_rate,Wheelchair Mileage Rate
+en,yes,Yes
+en,zip,Zip Code
+en,zoom,Zoom:
+en,zoom_level,Zoom Level

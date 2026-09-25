@@ -9,6 +9,10 @@ FactoryBot.define do
   end
 
   factory :user_address, parent: :address, class: UserAddress
+
+  factory :garage_address, parent: :address, class: GarageAddress do
+    the_geom { Address.compute_geom(28.8, -97.0) }  # a garage must be geocoded
+  end
   
   factory :driver_address, parent: :address, class: DriverAddress
 

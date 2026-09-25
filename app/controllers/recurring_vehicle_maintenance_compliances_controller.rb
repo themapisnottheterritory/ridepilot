@@ -129,7 +129,7 @@ class RecurringVehicleMaintenanceCompliancesController < ApplicationController
         mileages = RecurringVehicleMaintenanceCompliance.occurrence_mileages_on_schedule_in_range @recurring_vehicle_maintenance_compliance, range_start_mileage: @recurring_vehicle_maintenance_compliance.recurrence_mileage, range_end_mileage: (@recurring_vehicle_maintenance_compliance.recurrence_mileage * 6)
         dates.zip(mileages).map{ |date, mileage| {due_date: date, due_mileage: mileage} }
       end
-    end.collect{ |occurrences| due_string occurrences }
+    end.collect{ |occurrences| due_string(**occurrences) }
   end
   
   def generate_future_schedule_preview
@@ -159,7 +159,7 @@ class RecurringVehicleMaintenanceCompliancesController < ApplicationController
         mileages = RecurringVehicleMaintenanceCompliance.occurrence_mileages_on_schedule_in_range @recurring_vehicle_maintenance_compliance, range_start_mileage: @recurring_vehicle_maintenance_compliance.recurrence_mileage, range_end_mileage: (@recurring_vehicle_maintenance_compliance.recurrence_mileage * 6)
         dates.zip(mileages).map{ |date, mileage| {due_date: date, due_mileage: mileage} }
       end
-    end.collect{ |occurrences| due_string occurrences }
+    end.collect{ |occurrences| due_string(**occurrences) }
   end
   
   def generate_compliance_based_schedule_preview
@@ -175,7 +175,7 @@ class RecurringVehicleMaintenanceCompliancesController < ApplicationController
       assumed_completion_date = @recurring_vehicle_maintenance_compliance.start_date + 1.day
       assumed_completion_mileage = 100 # miles
       [{due_date: RecurringVehicleMaintenanceCompliance.next_occurrence_date_from_previous_date_in_range(@recurring_vehicle_maintenance_compliance, assumed_completion_date, range_end_date: (assumed_completion_date + @recurring_vehicle_maintenance_compliance.recurrence_frequency.send(@recurring_vehicle_maintenance_compliance.recurrence_schedule))), due_mileage: RecurringVehicleMaintenanceCompliance.next_occurrence_mileage_from_previous_mileage_in_range(@recurring_vehicle_maintenance_compliance, assumed_completion_mileage, range_end_mileage: assumed_completion_mileage + (@recurring_vehicle_maintenance_compliance.recurrence_mileage * 6))}]
-    end.collect{ |occurrences| due_string occurrences }
+    end.collect{ |occurrences| due_string(**occurrences) }
   end
   
   def prep_form
@@ -195,7 +195,7 @@ class RecurringVehicleMaintenanceCompliancesController < ApplicationController
   end
   
   def due_string(due_date: nil, due_mileage: nil)
-    date = due_date.try(:to_s, :long)
+    date = due_date.try(:to_fs, :long)
     mileage = "#{ActionController::Base.helpers.number_with_delimiter due_mileage} mi" unless due_mileage.blank?
     if date.present? and mileage.present?
       "#{date} and #{mileage}"

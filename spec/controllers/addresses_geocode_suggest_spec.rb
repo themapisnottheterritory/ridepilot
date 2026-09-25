@@ -4,7 +4,8 @@ RSpec.describe AddressesController, type: :controller do
   login_admin_as_current_user
 
   describe "GET #geocode_suggest" do
-    let(:hit) { [{ "place_id" => 1, "display_name" => "somewhere" }] }
+    # Carries the typed house number, so the controller does not spend a second pass.
+    let(:hit) { [{ "place_id" => 1, "display_name" => "1404 E Virginia Ave, Bay City", "address" => { "house_number" => "1404" } }] }
 
     def suggest(term)
       get :geocode_suggest, params: { q: term, format: :json }

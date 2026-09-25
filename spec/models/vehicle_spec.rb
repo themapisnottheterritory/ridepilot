@@ -4,13 +4,13 @@ RSpec.describe Vehicle, type: :model do
   it "requires a provider" do
     vehicle = build :vehicle, provider: nil
     expect(vehicle.valid?).to be_falsey
-    expect(vehicle.errors.keys).to include :provider
+    expect(vehicle.errors.attribute_names).to include :provider
   end
   
   it "requires a name" do
     vehicle = build :vehicle, name: nil
     expect(vehicle.valid?).to be_falsey
-    expect(vehicle.errors.keys).to include :name
+    expect(vehicle.errors.attribute_names).to include :name
   end
   
   it "requires a properly formatted VIN, when present" do
@@ -26,7 +26,7 @@ RSpec.describe Vehicle, type: :model do
     %w(z234567890123456 i2345678901234567 o2345678901234567 q2345678901234567).each do |bad_vin|
       vehicle.vin = bad_vin
       expect(vehicle.valid?).to be_falsey
-      expect(vehicle.errors.keys).to include :vin
+      expect(vehicle.errors.attribute_names).to include :vin
     end
   end
 
@@ -36,7 +36,7 @@ RSpec.describe Vehicle, type: :model do
 
     vehicle.registration_expiration_date = "13/13/13"
     expect(vehicle.valid?).to be_falsey
-    expect(vehicle.errors.keys).to include :registration_expiration_date
+    expect(vehicle.errors.attribute_names).to include :registration_expiration_date
 
     vehicle.registration_expiration_date = "12/12/12"
     expect(vehicle.valid?).to be_truthy
@@ -48,7 +48,7 @@ RSpec.describe Vehicle, type: :model do
 
     vehicle.ownership = "foo"
     expect(vehicle.valid?).to be_falsey
-    expect(vehicle.errors.keys).to include :ownership
+    expect(vehicle.errors.attribute_names).to include :ownership
 
     %w(agency volunteer).each do |ownership|
       vehicle.ownership = ownership

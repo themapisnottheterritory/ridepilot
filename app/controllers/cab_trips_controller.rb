@@ -9,7 +9,7 @@ class CabTripsController < ApplicationController
       format.html # index.html.erb
       format.xml  { render :xml => @cab_trips }
       format.js {
-        render :json => { :rows => [render_to_string(:partial => "grouped_cab_trips.html")] }
+        render :json => { :rows => [render_to_string(:partial => "grouped_cab_trips", :formats => [:html])] }
       }
     end
   end
@@ -28,7 +28,9 @@ class CabTripsController < ApplicationController
 
   def update_multiple
     authorize! :manage, :cab_trip
-    @trips = Trip.update(params[:cab_trips].keys, params[:cab_trips].values)
+    # Bulk edit from the cab trips sheet (admin only, see authorize! above).
+    cab_trips = params.require(:cab_trips).permit!.to_h
+    @trips = Trip.update(cab_trips.keys, cab_trips.values)
     @errors = @trips.delete_if { |t| t.errors.any? }
     respond_to do |format|
       if @trips.any?      

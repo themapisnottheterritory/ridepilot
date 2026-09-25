@@ -9,7 +9,7 @@ RSpec.shared_examples "a compliance event" do
   it "requires an event name" do
     compliance = build @described_class_factory, event: nil
     expect(compliance.valid?).to be_falsey
-    expect(compliance.errors.keys).to include :event
+    expect(compliance.errors.attribute_names).to include :event
   end
 
   it "requires compliance date to be on or before today, when specified" do
@@ -18,7 +18,7 @@ RSpec.shared_examples "a compliance event" do
 
     compliance = build @described_class_factory, :complete, compliance_date: Date.current.tomorrow
     expect(compliance.valid?).to be_falsey
-    expect(compliance.errors.keys).to include :compliance_date
+    expect(compliance.errors.attribute_names).to include :compliance_date
 
     compliance = build @described_class_factory, :complete, compliance_date: Date.current
     expect(compliance.valid?).to be_truthy

@@ -22,12 +22,12 @@ RSpec.describe Provider do
       it "should only allow values greater than 0" do
         p = build(:provider, :oaa3b_per_ride_reimbursement_rate => 0)
         expect(p.valid?).to_not be_truthy
-        expect(p.errors.keys.include?(:oaa3b_per_ride_reimbursement_rate)).to be_truthy
+        expect(p.errors.attribute_names.include?(:oaa3b_per_ride_reimbursement_rate)).to be_truthy
         expect(p.errors[:oaa3b_per_ride_reimbursement_rate]).to include "must be greater than 0"
       
         p.oaa3b_per_ride_reimbursement_rate = 1
         expect(p.valid?).to be_truthy
-        expect(p.errors.keys.include?(:oaa3b_per_ride_reimbursement_rate)).not_to be_truthy
+        expect(p.errors.attribute_names.include?(:oaa3b_per_ride_reimbursement_rate)).not_to be_truthy
       end
     end
 
@@ -44,12 +44,12 @@ RSpec.describe Provider do
       it "should only allow values greater than 0" do
         p = build(:provider, :ride_connection_per_ride_reimbursement_rate => 0)
         expect(p.valid?).to_not be_truthy
-        expect(p.errors.keys.include?(:ride_connection_per_ride_reimbursement_rate)).to be_truthy
+        expect(p.errors.attribute_names.include?(:ride_connection_per_ride_reimbursement_rate)).to be_truthy
         expect(p.errors[:ride_connection_per_ride_reimbursement_rate]).to include "must be greater than 0"
       
         p.ride_connection_per_ride_reimbursement_rate = 1
         expect(p.valid?).to be_truthy
-        expect(p.errors.keys.include?(:ride_connection_per_ride_reimbursement_rate)).not_to be_truthy
+        expect(p.errors.attribute_names.include?(:ride_connection_per_ride_reimbursement_rate)).not_to be_truthy
       end
     end
 
@@ -66,12 +66,12 @@ RSpec.describe Provider do
       it "should only allow values greater than 0" do
         p = build(:provider, :trimet_per_ride_reimbursement_rate => 0)
         expect(p.valid?).to_not be_truthy
-        expect(p.errors.keys.include?(:trimet_per_ride_reimbursement_rate)).to be_truthy
+        expect(p.errors.attribute_names.include?(:trimet_per_ride_reimbursement_rate)).to be_truthy
         expect(p.errors[:trimet_per_ride_reimbursement_rate]).to include "must be greater than 0"
       
         p.trimet_per_ride_reimbursement_rate = 1
         expect(p.valid?).to be_truthy
-        expect(p.errors.keys.include?(:trimet_per_ride_reimbursement_rate)).not_to be_truthy
+        expect(p.errors.attribute_names.include?(:trimet_per_ride_reimbursement_rate)).not_to be_truthy
       end
     end
 
@@ -89,12 +89,12 @@ RSpec.describe Provider do
         p = build(:provider)
         p.stf_van_per_ride_reimbursement_rate = 0
         expect(p.valid?).to_not be_truthy
-        expect(p.errors.keys.include?(:stf_van_per_ride_reimbursement_rate)).to be_truthy
+        expect(p.errors.attribute_names.include?(:stf_van_per_ride_reimbursement_rate)).to be_truthy
         expect(p.errors[:stf_van_per_ride_reimbursement_rate]).to include "must be greater than 0"
       
         p.stf_van_per_ride_reimbursement_rate = 1
         expect(p.valid?).to be_truthy
-        expect(p.errors.keys.include?(:stf_van_per_ride_reimbursement_rate)).not_to be_truthy
+        expect(p.errors.attribute_names.include?(:stf_van_per_ride_reimbursement_rate)).not_to be_truthy
       end
     end
 
@@ -111,12 +111,12 @@ RSpec.describe Provider do
       it "should only allow values greater than 0" do
         p = build(:provider, :stf_taxi_per_ride_administrative_fee => 0)
         expect(p.valid?).to_not be_truthy
-        expect(p.errors.keys.include?(:stf_taxi_per_ride_administrative_fee)).to be_truthy
+        expect(p.errors.attribute_names.include?(:stf_taxi_per_ride_administrative_fee)).to be_truthy
         expect(p.errors[:stf_taxi_per_ride_administrative_fee]).to include "must be greater than 0"
       
         p.stf_taxi_per_ride_administrative_fee = 1
         expect(p.valid?).to be_truthy
-        expect(p.errors.keys.include?(:stf_taxi_per_ride_administrative_fee)).not_to be_truthy
+        expect(p.errors.attribute_names.include?(:stf_taxi_per_ride_administrative_fee)).not_to be_truthy
       end
     end
 
@@ -133,12 +133,12 @@ RSpec.describe Provider do
       it "should only allow values greater than 0" do
         p = build(:provider, :stf_taxi_per_ride_ambulatory_load_fee => 0)
         expect(p.valid?).to_not be_truthy
-        expect(p.errors.keys.include?(:stf_taxi_per_ride_ambulatory_load_fee)).to be_truthy
+        expect(p.errors.attribute_names.include?(:stf_taxi_per_ride_ambulatory_load_fee)).to be_truthy
         expect(p.errors[:stf_taxi_per_ride_ambulatory_load_fee]).to include "must be greater than 0"
       
         p.stf_taxi_per_ride_ambulatory_load_fee = 1
         expect(p.valid?).to be_truthy
-        expect(p.errors.keys.include?(:stf_taxi_per_ride_ambulatory_load_fee)).not_to be_truthy
+        expect(p.errors.attribute_names.include?(:stf_taxi_per_ride_ambulatory_load_fee)).not_to be_truthy
       end
     end
 
@@ -155,12 +155,12 @@ RSpec.describe Provider do
       it "should only allow values greater than 0" do
         p = build(:provider, :stf_taxi_per_ride_wheelchair_load_fee => 0)
         expect(p.valid?).to_not be_truthy
-        expect(p.errors.keys.include?(:stf_taxi_per_ride_wheelchair_load_fee)).to be_truthy
+        expect(p.errors.attribute_names.include?(:stf_taxi_per_ride_wheelchair_load_fee)).to be_truthy
         expect(p.errors[:stf_taxi_per_ride_wheelchair_load_fee]).to include "must be greater than 0"
       
         p.stf_taxi_per_ride_wheelchair_load_fee = 1
         expect(p.valid?).to be_truthy
-        expect(p.errors.keys.include?(:stf_taxi_per_ride_wheelchair_load_fee)).not_to be_truthy
+        expect(p.errors.attribute_names.include?(:stf_taxi_per_ride_wheelchair_load_fee)).not_to be_truthy
       end
     end
 
@@ -177,12 +177,12 @@ RSpec.describe Provider do
       it "should only allow values greater than 0" do
         p = build(:provider, :stf_taxi_per_mile_ambulatory_reimbursement_rate => 0)
         expect(p.valid?).to_not be_truthy
-        expect(p.errors.keys.include?(:stf_taxi_per_mile_ambulatory_reimbursement_rate)).to be_truthy
+        expect(p.errors.attribute_names.include?(:stf_taxi_per_mile_ambulatory_reimbursement_rate)).to be_truthy
         expect(p.errors[:stf_taxi_per_mile_ambulatory_reimbursement_rate]).to include "must be greater than 0"
       
         p.stf_taxi_per_mile_ambulatory_reimbursement_rate = 1
         expect(p.valid?).to be_truthy
-        expect(p.errors.keys.include?(:stf_taxi_per_mile_ambulatory_reimbursement_rate)).not_to be_truthy
+        expect(p.errors.attribute_names.include?(:stf_taxi_per_mile_ambulatory_reimbursement_rate)).not_to be_truthy
       end
     end
 
@@ -200,12 +200,12 @@ RSpec.describe Provider do
         p = build(:provider)
         p.stf_taxi_per_mile_wheelchair_reimbursement_rate = 0
         expect(p.valid?).to_not be_truthy
-        expect(p.errors.keys.include?(:stf_taxi_per_mile_wheelchair_reimbursement_rate)).to be_truthy
+        expect(p.errors.attribute_names.include?(:stf_taxi_per_mile_wheelchair_reimbursement_rate)).to be_truthy
         expect(p.errors[:stf_taxi_per_mile_wheelchair_reimbursement_rate]).to include "must be greater than 0"
       
         p.stf_taxi_per_mile_wheelchair_reimbursement_rate = 1
         expect(p.valid?).to be_truthy
-        expect(p.errors.keys.include?(:stf_taxi_per_mile_wheelchair_reimbursement_rate)).not_to be_truthy
+        expect(p.errors.attribute_names.include?(:stf_taxi_per_mile_wheelchair_reimbursement_rate)).not_to be_truthy
       end
     end
 

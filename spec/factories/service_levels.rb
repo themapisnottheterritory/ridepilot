@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :service_level do
-    name { "sample_service_level" }
+    sequence(:name) { |n| "sample_service_level_#{n}" }  # name is unique
   end
 
 end

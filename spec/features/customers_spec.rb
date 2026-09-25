@@ -8,7 +8,7 @@ RSpec.describe "Customers" do
       @user = create(:admin)
       visit new_user_session_path
       fill_in 'user_username', with: @user.username
-      fill_in 'Password', :with => 'Password#1'
+      fill_in 'user_password', :with => 'Password#1'
       click_button 'Log In'
     end
     
@@ -102,7 +102,7 @@ RSpec.describe "Customers" do
       @user = create(:role, :level => 50).user
       visit new_user_session_path
       fill_in 'user_username', with: @user.username
-      fill_in 'Password', :with => 'Password#1'
+      fill_in 'user_password', :with => 'Password#1'
       click_button 'Log In'
     end
     

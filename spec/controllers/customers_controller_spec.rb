@@ -7,7 +7,14 @@ RSpec.describe CustomersController, type: :controller do
   # Customer. As you add validations to Customer, be sure to
   # adjust the attributes here as well.
   let(:valid_attributes) {
-    attributes_for(:customer, :authorized_provider_ids => [])
+    attributes_for(:customer, :authorized_provider_ids => [],
+      mobility_id: create(:mobility).id, service_level_id: create(:service_level).id,
+      default_funding_source_id: create(:funding_source).id)
+  }
+
+  # The form posts the saved addresses as JSON next to the customer fields.
+  let(:address_params) {
+    { addresses: [attributes_for(:customer_common_address, name: "Home")].to_json, mailing_address_index: 0 }
   }
 
   let(:invalid_attributes) {
@@ -51,12 +58,12 @@ RSpec.describe CustomersController, type: :controller do
     context "with valid params" do
       it "creates a new Customer" do
         expect {
-          post :create, params: {:customer => valid_attributes}
+          post :create, params: {:customer => valid_attributes}.merge(address_params)
         }.to change(Customer, :count).by(1)
       end
 
       it "assigns a newly created customer as @customer" do
-        post :create, params: {:customer => valid_attributes}
+        post :create, params: {:customer => valid_attributes}.merge(address_params)
         expect(assigns(:customer)).to be_a(Customer)
         expect(assigns(:customer)).to be_persisted
       end
@@ -72,7 +79,7 @@ RSpec.describe CustomersController, type: :controller do
 
       it "redirects to the created customer" do
         skip 'somehow the outcome is not stable which caused the failure'
-        post :create, params: {:customer => valid_attributes}
+        post :create, params: {:customer => valid_attributes}.merge(address_params)
         expect(response).to redirect_to(Customer.last)
       end
     end
@@ -291,7 +298,7 @@ RSpec.describe CustomersController, type: :controller do
 
     it "responds with JSON" do
       get :autocomplete, params: autocomplete_terms
-      expect(response.content_type).to eq("application/json")
+      expect(response.media_type).to eq("application/json")
     end
 
     it "include matching address info in the json response" do

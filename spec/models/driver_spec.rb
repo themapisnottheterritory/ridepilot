@@ -5,20 +5,20 @@ RSpec.describe Driver, type: :model do
   it "requires a provider" do
     driver = build :driver, provider: nil
     expect(driver.valid?).to be_falsey
-    expect(driver.errors.keys).to include :provider
+    expect(driver.errors.attribute_names).to include :provider
   end
 
   it "requires a user" do
     driver = build :driver, user: nil
     expect(driver.valid?).to be_falsey
-    expect(driver.errors.keys).to include :user
+    expect(driver.errors.attribute_names).to include :user
   end
 
   it "cannot be linked to the same user as another driver" do
     driver_1 = create :driver
     driver_2 = build :driver, user: driver_1.user
     expect(driver_2.valid?).to be_falsey
-    expect(driver_2.errors.keys).to include :user_id
+    expect(driver_2.errors.attribute_names).to include :user_id
 
     driver_2.user = create :user
     expect(driver_2.valid?).to be_truthy
@@ -27,7 +27,7 @@ RSpec.describe Driver, type: :model do
   it "must have a valid email when specified" do
     driver = build :driver, email: "m@"
     expect(driver.valid?).to be_falsey
-    expect(driver.errors.keys).to include :email
+    expect(driver.errors.attribute_names).to include :email
 
     driver.email = "m@m.m"
     expect(driver.valid?).to be_truthy

@@ -402,9 +402,9 @@ class TripsController < ApplicationController
         double_booked_trips_json = double_booked_trips.map do |trip|
           {
             id: trip.id,
-            pickup_time: trip.pickup_time.try(:to_s, :time_only),
+            pickup_time: trip.pickup_time.try(:to_fs, :time_only),
             pickup_address: trip.pickup_address.try(:address_text),
-            appointment_time: trip.appointment_time.try(:to_s, :time_only),
+            appointment_time: trip.appointment_time.try(:to_fs, :time_only),
             dropoff_address: trip.dropoff_address.try(:address_text)
           }
         end

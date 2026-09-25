@@ -4,13 +4,13 @@ RSpec.describe DocumentAssociation, type: :model do
   it "requires a document" do
     association = build :document_association, document: nil
     expect(association.valid?).to be_falsey
-    expect(association.errors.keys).to include :document
+    expect(association.errors.attribute_names).to include :document
   end
 
   it "requires an associable object" do
     association = build :document_association, associable: nil
     expect(association.valid?).to be_falsey
-    expect(association.errors.keys).to include :associable
+    expect(association.errors.attribute_names).to include :associable
   end
   
   it "requires that the document and associable share the same parent object" do
@@ -18,7 +18,7 @@ RSpec.describe DocumentAssociation, type: :model do
     associable = create :driver_compliance
     association = build :document_association, document: document, associable: associable, allow_invalid_owners: true
     expect(association.valid?).to be_falsey
-    expect(association.errors.keys).to include :base
+    expect(association.errors.attribute_names).to include :base
     
     association.associable.update_attribute :driver, document.documentable
     expect(association.valid?).to be_truthy
@@ -32,7 +32,7 @@ RSpec.describe DocumentAssociation, type: :model do
   #   association = build :document_association, document: document, associable: associable_1
   #   
   #   expect(association.valid?).to be_falsey
-  #   expect(association.errors.keys).to include :document_id
+  #   expect(association.errors.attribute_names).to include :document_id
   #   
   #   association.associable = associable_2
   #   expect(association.valid?).to be_truthy

@@ -10,19 +10,19 @@ RSpec.describe VehicleWarranty, type: :model do
   it "requires a vehicle" do
     warranty = build :vehicle_warranty, vehicle: nil
     expect(warranty.valid?).to be_falsey
-    expect(warranty.errors.keys).to include :vehicle
+    expect(warranty.errors.attribute_names).to include :vehicle
   end
 
   it "requires a description" do
     warranty = build :vehicle_warranty, description: nil
     expect(warranty.valid?).to be_falsey
-    expect(warranty.errors.keys).to include :description
+    expect(warranty.errors.attribute_names).to include :description
   end
 
   it "requires an expiration_date" do
     warranty = build :vehicle_warranty, expiration_date: nil
     expect(warranty.valid?).to be_falsey
-    expect(warranty.errors.keys).to include :expiration_date
+    expect(warranty.errors.attribute_names).to include :expiration_date
   end
 
   describe "#expired?" do

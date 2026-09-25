@@ -39,7 +39,7 @@ RSpec.describe DevicePoolDriversController, type: :controller do
 
       it "responds with JSON" do
         post :create, params: {:device_pool_id => @device_pool.id, :device_pool_driver => valid_attributes}
-        expect(response.content_type).to eq("application/json")
+        expect(response.media_type).to eq("application/json")
       end
 
       it "renders a row including the new device_pool_driver attributes in the json response" do
@@ -58,7 +58,7 @@ RSpec.describe DevicePoolDriversController, type: :controller do
 
       it "responds with JSON" do
         post :create, params: {:device_pool_id => @device_pool.id, :device_pool_driver => invalid_attributes}
-        expect(response.content_type).to eq("application/json")
+        expect(response.media_type).to eq("application/json")
       end
 
       it "includes validation errors in the json response" do
@@ -81,7 +81,7 @@ RSpec.describe DevicePoolDriversController, type: :controller do
     it "responds with JSON" do
       device_pool_driver = create(:device_pool_driver, :device_pool => @device_pool)
       delete :destroy, params: {:device_pool_id => @device_pool.id, :id => device_pool_driver.to_param}
-      expect(response.content_type).to eq("application/json")
+      expect(response.media_type).to eq("application/json")
     end
 
     it "include the deleted device_pool_driver in the json response" do

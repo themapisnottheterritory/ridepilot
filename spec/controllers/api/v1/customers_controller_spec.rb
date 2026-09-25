@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe API::V1::CustomersController, type: :controller do
+RSpec.describe Api::V1::CustomersController, type: :controller do
 
   context "authenticate customer" do
 

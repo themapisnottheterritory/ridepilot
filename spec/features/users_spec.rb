@@ -11,7 +11,7 @@ RSpec.describe "Users" do
     it "signs me in" do
       visit new_user_session_path
       fill_in 'user_username', with: @user.username
-      fill_in 'Password', :with => 'password'
+      fill_in 'user_password', :with => 'password'
       click_button 'Log In'
       
       # TODO add sme actual assertions

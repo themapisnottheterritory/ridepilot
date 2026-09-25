@@ -83,7 +83,7 @@ module RunCore
     end
   end
   
-  def as_json(options)
+  def as_json(options = nil)
     { :id => id, :label => label }
   end
   

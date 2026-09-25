@@ -6,7 +6,7 @@ RSpec.describe "DriverDocuments" do
       @admin = create(:admin)
       visit new_user_session_path
       fill_in 'user_username', :with => @admin.username
-      fill_in 'Password', :with => @admin.password
+      fill_in 'user_password', :with => @admin.password
       click_button 'Log In'
       
       @driver = create :driver, :provider => @admin.current_provider

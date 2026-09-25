@@ -159,7 +159,7 @@ RSpec.describe RunsController, type: :controller do
     
     it "responds with JSON" do
       get :for_date, params: {:date => Date.yesterday.in_time_zone}
-      expect(response.content_type).to eq("application/json")
+      expect(response.media_type).to eq("application/json")
     end
 
     it "include matching address info in the json response" do

@@ -26,17 +26,17 @@ RSpec.describe VehicleMaintenanceCompliance, type: :model do
   it "requires a vehicle" do
     compliance = build :vehicle_maintenance_compliance, vehicle: nil
     expect(compliance.valid?).to be_falsey
-    expect(compliance.errors.keys).to include :vehicle
+    expect(compliance.errors.attribute_names).to include :vehicle
   end
 
   it "requires a due_type of either 'date', 'mileage', or 'both'" do
     compliance = build :vehicle_maintenance_compliance, due_type: nil, due_date: Date.current, due_mileage: 1
     expect(compliance.valid?).to be_falsey
-    expect(compliance.errors.keys).to include :due_type
+    expect(compliance.errors.attribute_names).to include :due_type
 
     compliance.due_type = "foo"
     expect(compliance.valid?).to be_falsey
-    expect(compliance.errors.keys).to include :due_type
+    expect(compliance.errors.attribute_names).to include :due_type
 
     %w(date mileage both).each do |due_type|
       compliance.due_type = due_type
@@ -47,7 +47,7 @@ RSpec.describe VehicleMaintenanceCompliance, type: :model do
   it "requires a compliance_date if compliance_mileage is present" do
     compliance = build :vehicle_maintenance_compliance, compliance_date: nil, compliance_mileage: 1234
     expect(compliance.valid?).to be_falsey
-    expect(compliance.errors.keys).to include :compliance_date
+    expect(compliance.errors.attribute_names).to include :compliance_date
 
     compliance.compliance_mileage = nil
     expect(compliance.valid?).to be_truthy
@@ -56,7 +56,7 @@ RSpec.describe VehicleMaintenanceCompliance, type: :model do
   it "requires a compliance_mileage if compliance_date is present" do
     compliance = build :vehicle_maintenance_compliance, compliance_date: Date.current, compliance_mileage: nil
     expect(compliance.valid?).to be_falsey
-    expect(compliance.errors.keys).to include :compliance_mileage
+    expect(compliance.errors.attribute_names).to include :compliance_mileage
 
     compliance.compliance_date = nil
     expect(compliance.valid?).to be_truthy
@@ -71,7 +71,7 @@ RSpec.describe VehicleMaintenanceCompliance, type: :model do
       it "requires a due_date" do
         @compliance.due_date = nil
         expect(@compliance.valid?).to be_falsey
-        expect(@compliance.errors.keys).to include :due_date
+        expect(@compliance.errors.attribute_names).to include :due_date
       end
 
       it "does not require a due_mileage" do
@@ -93,15 +93,15 @@ RSpec.describe VehicleMaintenanceCompliance, type: :model do
       it "requires due_mileage to be an integer > 0" do
         @compliance.due_mileage = nil
         expect(@compliance.valid?).to be_falsey
-        expect(@compliance.errors.keys).to include :due_mileage
+        expect(@compliance.errors.attribute_names).to include :due_mileage
 
         @compliance.due_mileage = 0
         expect(@compliance.valid?).to be_falsey
-        expect(@compliance.errors.keys).to include :due_mileage
+        expect(@compliance.errors.attribute_names).to include :due_mileage
 
         @compliance.due_mileage = 1.2
         expect(@compliance.valid?).to be_falsey
-        expect(@compliance.errors.keys).to include :due_mileage
+        expect(@compliance.errors.attribute_names).to include :due_mileage
 
         @compliance.due_mileage = 1
         expect(@compliance.valid?).to be_truthy
@@ -116,21 +116,21 @@ RSpec.describe VehicleMaintenanceCompliance, type: :model do
       it "requires a due_date" do
         @compliance.due_date = nil
         expect(@compliance.valid?).to be_falsey
-        expect(@compliance.errors.keys).to include :due_date
+        expect(@compliance.errors.attribute_names).to include :due_date
       end
 
       it "requires due_mileage to be an integer > 0" do
         @compliance.due_mileage = nil
         expect(@compliance.valid?).to be_falsey
-        expect(@compliance.errors.keys).to include :due_mileage
+        expect(@compliance.errors.attribute_names).to include :due_mileage
 
         @compliance.due_mileage = 0
         expect(@compliance.valid?).to be_falsey
-        expect(@compliance.errors.keys).to include :due_mileage
+        expect(@compliance.errors.attribute_names).to include :due_mileage
 
         @compliance.due_mileage = 1.2
         expect(@compliance.valid?).to be_falsey
-        expect(@compliance.errors.keys).to include :due_mileage
+        expect(@compliance.errors.attribute_names).to include :due_mileage
 
         @compliance.due_mileage = 1
         expect(@compliance.valid?).to be_truthy

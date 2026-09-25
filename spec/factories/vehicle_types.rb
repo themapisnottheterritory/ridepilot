@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :vehicle_type do
-    name { Faker::Lorem.words(number: 2).join(' ') }
+    sequence(:name) { |n| "sample_vehicle_type_#{n}" }  # unique within a provider
     provider 
   end
 
