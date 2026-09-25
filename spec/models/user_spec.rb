@@ -52,27 +52,27 @@ RSpec.describe User, type: :model do
     it "requires first_name" do
       user = build :user, first_name: ""
       expect(user.valid?).to be_falsey
-      expect(user.errors.keys).to include :first_name
+      expect(user.errors.attribute_names).to include :first_name
     end
 
     it "requires last_name" do
       user = build :user, last_name: ""
       expect(user.valid?).to be_falsey
-      expect(user.errors.keys).to include :last_name
+      expect(user.errors.attribute_names).to include :last_name
     end
 
     describe "username" do
       it "is required" do
         user = build :user, username: ""
         expect(user.valid?).to be_falsey
-        expect(user.errors.keys).to include :username
+        expect(user.errors.attribute_names).to include :username
       end
 
       it "must be unique" do
         user_1 = create :user
         user_2 = build :user, username: user_1.username
         expect(user_2.valid?).to be_falsey
-        expect(user_2.errors.keys).to include :username
+        expect(user_2.errors.attribute_names).to include :username
 
         user_2.username = "different#{user_1.username}"
         expect(user_2.valid?).to be_truthy
@@ -90,13 +90,13 @@ RSpec.describe User, type: :model do
       it "is required" do
         user = build :user, email: ""
         expect(user.valid?).to be_falsey
-        expect(user.errors.keys).to include :email
+        expect(user.errors.attribute_names).to include :email
       end
 
       it "must be a valid format" do
         user = build :user, email: "m@"
         expect(user.valid?).to be_falsey
-        expect(user.errors.keys).to include :email
+        expect(user.errors.attribute_names).to include :email
 
         user.email = "m@m.m"
         expect(user.valid?).to be_truthy
@@ -106,7 +106,7 @@ RSpec.describe User, type: :model do
         user_1 = create :user
         user_2 = build :user, email: user_1.email
         expect(user_2.valid?).to be_falsey
-        expect(user_2.errors.keys).to include :email
+        expect(user_2.errors.attribute_names).to include :email
 
         user_2.email = "different-#{user_1.email}"
         expect(user_2.valid?).to be_truthy
@@ -124,13 +124,13 @@ RSpec.describe User, type: :model do
       it "is required" do
         user = build :user, password: ""
         expect(user.valid?).to be_falsey
-        expect(user.errors.keys).to include :password
+        expect(user.errors.attribute_names).to include :password
       end
 
       it "must be confirmed" do
         user = build :user, password_confirmation: ""
         expect(user.valid?).to be_falsey
-        expect(user.errors.keys).to include :password_confirmation
+        expect(user.errors.attribute_names).to include :password_confirmation
 
         user.password_confirmation = user.password
         expect(user.valid?).to be_truthy
@@ -139,7 +139,7 @@ RSpec.describe User, type: :model do
       it "must have at least one number and at least one capital letter" do
         user = build :user, password: "password"
         expect(user.valid?).to be_falsey
-        expect(user.errors.keys).to include :password
+        expect(user.errors.attribute_names).to include :password
 
         user.password = user.password_confirmation = "Password 1"
         expect(user.valid?).to be_truthy
@@ -148,7 +148,7 @@ RSpec.describe User, type: :model do
       it "must be at least 8 characters in length" do
         user = build :user, password: "pass 1"
         expect(user.valid?).to be_falsey
-        expect(user.errors.keys).to include :password
+        expect(user.errors.attribute_names).to include :password
 
         user.password = user.password_confirmation = "Passwd 1"
         expect(user.valid?).to be_truthy
@@ -157,7 +157,7 @@ RSpec.describe User, type: :model do
       it "must be at most 20 characters in length" do
         user = build :user, password: "This is too long by 13 characters"
         expect(user.valid?).to be_falsey
-        expect(user.errors.keys).to include :password
+        expect(user.errors.attribute_names).to include :password
 
         user.password = user.password_confirmation = "20 Characters passes"
         expect(user.valid?).to be_truthy
@@ -222,7 +222,7 @@ RSpec.describe User, type: :model do
     user = create :user, password: "Password 1"
     params = {current_password: "Password 1", password_confirmation: "new Password 1"}
     expect(user.update_password(params)).to be_falsey
-    expect(user.errors.keys).to include :password
+    expect(user.errors.attribute_names).to include :password
 
     expect {
       expect(user.update_password(params.merge({password: "new Password 1"}))).to be_truthy
@@ -235,7 +235,7 @@ RSpec.describe User, type: :model do
     end
 
     after do
-      Devise.password_archiving_count = ApplicationSetting['devise.password_archiving_count']
+      Devise.password_archiving_count = ApplicationSetting.devise_password_archiving_count
     end
 
     it "does not allow a user to reuse x number of previous passwords" do
@@ -249,18 +249,18 @@ RSpec.describe User, type: :model do
 
       # Cannot change it to the password currently set
       expect(user.update_password({current_password: passwords[0], password: passwords[0], password_confirmation: passwords[0]})).to be_falsey
-      expect(user.errors.keys).to include :password
+      expect(user.errors.attribute_names).to include :password
 
       # Change to second password, first password is added to archive table
       expect(user.update_password({current_password: passwords[0], password: passwords[1], password_confirmation: passwords[1]})).to be_truthy
 
       # Cannot change it to the first password
       expect(user.update_password({current_password: passwords[1], password: passwords[0], password_confirmation: passwords[0]})).to be_falsey
-      expect(user.errors.keys).to include :password
+      expect(user.errors.attribute_names).to include :password
 
       # Cannot change it to the second (current) password
       expect(user.update_password({current_password: passwords[1], password: passwords[1], password_confirmation: passwords[1]})).to be_falsey
-      expect(user.errors.keys).to include :password
+      expect(user.errors.attribute_names).to include :password
 
       # Change to third password, second password is added to archive table, 
       # first password is dropped

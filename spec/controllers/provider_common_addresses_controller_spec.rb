@@ -59,7 +59,7 @@ RSpec.describe ProviderCommonAddressesController, type: :controller do
         it "responds with JSON" do
           address = create(:provider_common_address, :provider => @current_user.current_provider)
           post :create, params: valid_create_attributes.merge({:address_id => address.id})
-          expect(response.content_type).to eq("application/json")
+          expect(response.media_type).to eq("application/json")
         end
 
         it "includes the address attributes in the json response" do
@@ -80,7 +80,7 @@ RSpec.describe ProviderCommonAddressesController, type: :controller do
 
         it "responds with JSON" do
           post :create, params: valid_create_attributes
-          expect(response.content_type).to eq("application/json")
+          expect(response.media_type).to eq("application/json")
         end
 
         it "includes the address attributes in the json response" do
@@ -110,10 +110,15 @@ RSpec.describe ProviderCommonAddressesController, type: :controller do
 
       it "responds with JSON" do
         post :create, params: invalid_create_attributes
-        expect(response.content_type).to eq("application/json")
+        expect(response.media_type).to eq("application/json")
       end
 
       it "includes validation errors in the json response" do
+        # Messages come from the translation tables, which the test database
+        # does not seed; put the one this example reads in place.
+        locale = Locale.find_or_create_by!(name: "en")
+        key = TranslationKey.find_or_create_by!(name: "address_required")
+        Translation.find_or_create_by!(locale: locale, translation_key: key) { |t| t.value = "Please type address in the Address fields" }
         post :create, params: invalid_create_attributes
         json = JSON.parse(response.body)
         expect(json["base"].first).to include("Please type address in the Address fields")
@@ -289,7 +294,7 @@ RSpec.describe ProviderCommonAddressesController, type: :controller do
     # MapRequest API now requires a key, current call without key causes HTTP error, so skip for now
     skip "responds with JSON" do
       post :autocomplete, autocomplete_terms
-      expect(response.content_type).to eq("application/json")
+      expect(response.media_type).to eq("application/json")
     end
 
     it "include matching address info in the json response" do
@@ -346,7 +351,7 @@ RSpec.describe ProviderCommonAddressesController, type: :controller do
 
     it "responds with JSON" do
       get :search, params: search_terms
-      expect(response.content_type).to eq("application/json")
+      expect(response.media_type).to eq("application/json")
     end
   end
 end

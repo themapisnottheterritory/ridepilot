@@ -84,7 +84,9 @@ class ProviderCommonAddressesController < AddressesController
     @addresses = ProviderCommonAddress.accessible_by(current_ability).for_provider(@provider).where(customer_id: nil).order(:address, :name).search_for_term(@term)
 
     respond_to do |format|
-      format.json { render :plain => render_to_string(:partial => "results.html") }
+      # The format goes in :formats; a dot in the partial name is a literal
+      # name on Rails 7 and raised MissingTemplate.
+      format.json { render :plain => render_to_string(:partial => "results", :formats => [:html]) }
     end
   end
 
