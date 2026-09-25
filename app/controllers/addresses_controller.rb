@@ -98,6 +98,12 @@ class AddressesController < ApplicationController
 
     if params[:address_id].present?
       address = CustomerCommonAddress.find_by_id(params[:address_id])
+      # Street edited without a fresh pin: drop the old pin rather than keep
+      # one for the wrong place. The dialog re-sends the current pin, so a
+      # text-only tweak (unit number) keeps it.
+      if the_geom.nil? && %w[address city state zip].any? { |f| address_params[f].to_s.strip != address[f].to_s.strip }
+        address_params[:the_geom] = nil
+      end
       address.attributes = address_params
     else
       address_params[:provider_id] = current_provider_id

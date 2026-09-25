@@ -22,22 +22,22 @@
   .form-label
     = label_tag "#{prefix}_full_address", translate_helper("full_address_name")
   .form-field
-    - if edit_mode == :edit
-      = address.try(:address_text)
-    - else
-      .form-inline.address_container
-        - is_latlng_coded = address.try(:coded_by_lat_lng?)
-        - is_latlng = is_latlng_coded || !params[:address_lat].blank? || !params[:address_lon].blank?
-        .latlng_fields{style: is_latlng ? "" : 'display: none;'}
-          = number_field_tag "address_lat", (is_latlng_coded && address.try(:latitude)) || params[:address_lat], class: "form-control", placeholder: "latitude", min: -90, max: 90, style: 'width: 40%;'
-          = number_field_tag "address_lon", (is_latlng_coded && address.try(:longitude)) || params[:address_lon], class: "form-control", placeholder: "longitude", min: -180, max: 180, style: 'width: 40%;'
-        .address_fields{style: is_latlng ? 'display: none;' : ""}
-          = text_field_tag "#{prefix}_full_address", is_latlng_coded ? nil : address.try(:address_text), class: 'address_search form-control', style: 'width: 100%;'
-        .pull-right
-          %label.pull-right
-            %input.latlng_address_switch{type: 'checkbox', checked: ("true" if is_latlng)}
-            Lat/Lon
-.selfclear.non_geocoding_address{:style => "display: none;"}
+    -# The search box geocodes; the street/city/state/zip fields below stay
+    -# visible so a unit number can be appended after picking a suggestion, and
+    -# so an existing address can be corrected (edit used to render it as text).
+    .form-inline.address_container
+      - is_latlng_coded = address.try(:coded_by_lat_lng?)
+      - is_latlng = is_latlng_coded || !params[:address_lat].blank? || !params[:address_lon].blank?
+      .latlng_fields{style: is_latlng ? "" : 'display: none;'}
+        = number_field_tag "address_lat", (is_latlng_coded && address.try(:latitude)) || params[:address_lat], class: "form-control", placeholder: "latitude", min: -90, max: 90, style: 'width: 40%;'
+        = number_field_tag "address_lon", (is_latlng_coded && address.try(:longitude)) || params[:address_lon], class: "form-control", placeholder: "longitude", min: -180, max: 180, style: 'width: 40%;'
+      .address_fields{style: is_latlng ? 'display: none;' : ""}
+        = text_field_tag "#{prefix}_full_address", is_latlng_coded ? nil : address.try(:address_text), class: 'address_search form-control', style: 'width: 100%;', placeholder: translate_helper("full_address_name")
+      .pull-right
+        %label.pull-right
+          %input.latlng_address_switch{type: 'checkbox', checked: ("true" if is_latlng)}
+          Lat/Lon
+.selfclear.non_geocoding_address
   %li.form-group
     .form-label
       = form.label :address, translate_helper("address")

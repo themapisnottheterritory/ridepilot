@@ -41,7 +41,6 @@
       form.find('input[type=hidden][name!=prefix]').val('');
       form.find('.error').html('');
       form.find('.full_address').show();
-      form.find('.non_geocoding_address').hide();
     });
 
     $('#customerCommonAddressTable').on('click', '.deleteCustomerAddress', function(e) {
@@ -64,9 +63,9 @@
         form.find('form')[0].reset();
         form.find('input[type=hidden][name!=prefix]').val('');
         form.find('.error').html('');
-        $(".address-form .address_container input").attr("disabled","disabled");
-        $(".address-form input.address_non_street_mailing_address").attr("disabled","disabled");
-        $(".address-form .non_geocoding_address input").attr("readonly","readonly");
+        // Existing addresses are editable (street fixes, unit numbers). The
+        // hidden lat/lon are filled below so the pin survives a text-only edit.
+        $(".address-form input").removeAttr("disabled").removeAttr("readonly");
       }
       address_obj = $(this).parents('tr').data('address');
       if(address_obj && address_obj.the_geom) {

@@ -37,7 +37,10 @@
         %label
           %input.latlng_address_switch{type: 'checkbox', checked: ("true" if is_latlng)}
           Lat/Lon
-.selfclear.non_geocoding_address{:style => "display: none;"}
+-# Street/city/state/zip stay visible: the geocoder fills them from a picked
+-# suggestion and the unit number gets typed in after. Non-street mailing
+-# address only hides the geocoder search.
+.selfclear.non_geocoding_address
   %li.form-group
     .form-label
       = form.label :address, translate_helper("address")
@@ -91,16 +94,10 @@
     
     $('.address_non_street_mailing_address').change(function() {
       if(!$(this).prop('checked')) {
-        $('.non_geocoding_address').hide();
         $('.full_address').show();
-
       } else {
         $('.full_address').hide();
-        $('.non_geocoding_address').show();
       }
-
-      $('.non_geocoding_address input').val('');
-      $('.full_address input').val();
     });
 
 

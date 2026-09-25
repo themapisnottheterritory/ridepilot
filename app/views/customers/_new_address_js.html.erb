@@ -15,6 +15,9 @@
     form.find('#' + field + '_zip').val(address.zip);
     form.find('#' + field + '_lat').val(address.lat);
     form.find('#' + field + '_lon').val(address.lon);
+    // The hidden lat/lon the validate action reads (hidden_field_tag :lat/:lon).
+    form.find('.address_lat').val(address.latitude);
+    form.find('.address_lon').val(address.longitude);
     form.find('#' + field + '_phone_number').val(address.phone_number);
     form.find('#' + field + '_trip_purpose_id').val(address.trip_purpose_id);
     var in_district = [true, false].indexOf(address.in_district) >= 0 ? address.in_district.toString() : '';

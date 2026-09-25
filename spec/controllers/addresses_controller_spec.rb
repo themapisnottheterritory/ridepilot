@@ -14,6 +14,38 @@ RSpec.describe AddressesController, type: :controller do
     attributes_for(:address, :state => "", :address => '', :city => '')
   }
 
+  describe "POST #validate_customer_specific on an existing customer address" do
+    let(:saved) {
+      CustomerCommonAddress.create!(address: "100 Main St", city: "Victoria", state: "TX", zip: "77901",
+        provider_id: @current_user.current_provider.id, the_geom: Address.compute_geom(28.8, -97.0))
+    }
+    let(:fields) { {name: "Home", address: "100 Main St", city: "Victoria", state: "TX", zip: "77901"} }
+
+    it "reports the pin kept when a unit number is appended and the dialog re-sends the current lat/lon" do
+      post :validate_customer_specific, params: {prefix: "customer", address_id: saved.id, lat: 28.8, lon: -97.0,
+        customer: fields.merge(address: "100 Main St Apt 5")}, format: :json
+      body = JSON.parse(response.body)
+      expect(body["success"]).to be true
+      expect(body["attributes"]["address"]).to eq("100 Main St Apt 5")
+      expect(body["attributes"]["latitude"]).to be_within(0.0001).of(28.8)
+    end
+
+    it "reports the pin dropped when the street changes without a new lat/lon" do
+      post :validate_customer_specific, params: {prefix: "customer", address_id: saved.id,
+        customer: fields.merge(address: "200 Other Rd")}, format: :json
+      body = JSON.parse(response.body)
+      expect(body["success"]).to be true
+      expect(body["attributes"]["the_geom"]).to be_nil
+    end
+
+    it "reports the pin kept when only the name changes and no lat/lon is sent" do
+      post :validate_customer_specific, params: {prefix: "customer", address_id: saved.id,
+        customer: fields.merge(name: "Work")}, format: :json
+      body = JSON.parse(response.body)
+      expect(body["attributes"]["latitude"]).to be_within(0.0001).of(28.8)
+    end
+  end
+
   describe "GET #trippable_autocomplete" do
     # Sticking to high-level testing of this action since there's otherwise a 
     # lot of setup involved.

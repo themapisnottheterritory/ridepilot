@@ -3,6 +3,21 @@ require "rails_helper"
 RSpec.describe User, type: :model do
   include ActiveSupport::Testing::TimeHelpers
   
+  describe "email uniqueness after a soft delete" do
+    it "lets the same email be re-created once the old user is soft-deleted" do
+      old = create(:user, email: "reuse@example.com")
+      old.destroy
+      expect(old.reload.deleted_at).to_not be_nil
+      expect { create(:user, email: "reuse@example.com") }.to_not raise_error
+    end
+
+    it "still refuses a duplicate email on a live user at the database level" do
+      create(:user, email: "live@example.com")
+      dup = build(:user, email: "live@example.com")
+      expect { dup.save(validate: false) }.to raise_error(ActiveRecord::RecordNotUnique)
+    end
+  end
+
   describe "role checks" do
     before(:each) do
       @user = create(:user)

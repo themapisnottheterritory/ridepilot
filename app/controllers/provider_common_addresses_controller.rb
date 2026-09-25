@@ -92,7 +92,13 @@ class ProviderCommonAddressesController < AddressesController
     new_addr_params = address_params.except(:provider_id) # don't want to overwrite provider
     the_geom       = process_geom
     new_addr_params[:the_geom] = the_geom if the_geom
-    
+    # The edit form now lets the street be changed. The hidden lat/lon carry the
+    # current pin and are cleared when a new search is typed; if the street
+    # changed and no pin came back, the old pin is for the wrong place.
+    if the_geom.nil? && street_changed?(new_addr_params)
+      new_addr_params[:the_geom] = nil
+    end
+
     if @address.update new_addr_params
       flash.now[:notice] = "Address '#{@address.name}' was successfully updated"
       redirect_to addresses_provider_path(@address.provider)
@@ -185,6 +191,10 @@ class ProviderCommonAddressesController < AddressesController
     else
       nil 
     end
+  end
+
+  def street_changed?(attrs)
+    %w[address city state zip].any? { |f| attrs.key?(f) && attrs[f].to_s.strip != @address[f].to_s.strip }
   end
 
   def address_params

@@ -1494,7 +1494,7 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.index ["authentication_token"], name: "index_users_on_authentication_token", unique: true
     t.index ["current_provider_id"], name: "index_users_on_current_provider_id"
     t.index ["deleted_at"], name: "index_users_on_deleted_at"
-    t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["email"], name: "index_users_on_email", unique: true, where: "(deleted_at IS NULL)"
     t.index ["omniauth_provider", "omniauth_uid"], name: "index_users_on_omniauth_provider_and_uid", unique: true, where: "((omniauth_provider IS NOT NULL) AND (omniauth_uid IS NOT NULL))"
     t.index ["password_changed_at"], name: "index_users_on_password_changed_at"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true

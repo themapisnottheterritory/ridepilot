@@ -166,6 +166,40 @@ RSpec.describe ProviderCommonAddressesController, type: :controller do
       end
     end
 
+    context "street edits and the pin" do
+      let(:pinned) {
+        ProviderCommonAddress.create! valid_attributes.merge(provider_id: @current_user.current_provider.id,
+          address: "100 Main St", the_geom: Address.compute_geom(28.8, -97.0))
+      }
+
+      it "keeps the pin when only the name changes and the form re-sends the current lat/lon" do
+        put :update, params: {id: pinned.to_param, lat: 28.8, lon: -97.0,
+          provider_common_address: {name: "Renamed", address_group_id: test_group.id}}
+        expect(pinned.reload.the_geom).to_not be_nil
+        expect(pinned.name).to eq("Renamed")
+      end
+
+      it "keeps the pin when a unit number is appended and the current lat/lon comes back" do
+        put :update, params: {id: pinned.to_param, lat: 28.8, lon: -97.0,
+          provider_common_address: {address: "100 Main St Apt 5", address_group_id: test_group.id}}
+        expect(pinned.reload.address).to eq("100 Main St Apt 5")
+        expect(pinned.the_geom).to_not be_nil
+      end
+
+      it "drops the pin when the street changes and no new lat/lon is sent" do
+        put :update, params: {id: pinned.to_param,
+          provider_common_address: {address: "200 Other Rd", address_group_id: test_group.id}}
+        expect(pinned.reload.address).to eq("200 Other Rd")
+        expect(pinned.the_geom).to be_nil
+      end
+
+      it "takes the new pin when the street changes with a new lat/lon" do
+        put :update, params: {id: pinned.to_param, lat: 29.1, lon: -97.2,
+          provider_common_address: {address: "200 Other Rd", address_group_id: test_group.id}}
+        expect(pinned.reload.latitude).to be_within(0.0001).of(29.1)
+      end
+    end
+
     context "with invalid params" do
       it "assigns the address as @address" do
         address = ProviderCommonAddress.create! valid_attributes.merge({:provider_id => @current_user.current_provider.id})
