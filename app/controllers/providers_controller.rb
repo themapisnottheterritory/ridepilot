@@ -320,6 +320,8 @@ class ProvidersController < ApplicationController
   end
 
   def addresses
+    # Every row reads its address group; load them all in one query rather than one per row.
+    @addresses = @provider.addresses.includes(:address_group)
   end
 
   def customers

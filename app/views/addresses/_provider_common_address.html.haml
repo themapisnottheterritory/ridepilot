@@ -1,8 +1,12 @@
+-# Lists render this once per address (2,400+ on the provider page), so the labels and
+-# permission checks come in precomputed as row_context rather than being looked up per row --
+-# each translate_helper is several DB-backed lookups. Callers without it still work.
+- ctx = local_assigns[:row_context] || provider_common_address_row_context
 %tr
   %td
     = address.address_group.try(:name)
   %td.name
-    = link_to_if can?(:edit, ProviderCommonAddress), address.name || '' , edit_provider_common_address_path(address)
+    = link_to_if ctx[:can_edit_common], address.name || '' , edit_provider_common_address_path(address)
   %td= address.coded_by_lat_lng? ? address.address_text : address.address
   %td= address.city
   %td= address.county
@@ -13,9 +17,9 @@
   -# is an answer nobody gave.
   %td
     - if address.in_district.nil?
-      = translate_helper("unspecified")
+      = ctx[:unspecified]
     - else
-      = address.in_district? ? translate_helper("in_district") : translate_helper("out_of_district")
+      = address.in_district? ? ctx[:in_district] : ctx[:out_of_district]
   %td= address.notes
-  - if can? :edit, Address
-    %td= link_to translate_helper("edit"), edit_provider_common_address_path(address), :class=>'edit edit-address'
+  - if ctx[:can_edit_address]
+    %td= link_to ctx[:edit], edit_provider_common_address_path(address), :class=>'edit edit-address'

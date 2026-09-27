@@ -1,6 +1,6 @@
 - if @addresses.present?
-  - for address in @addresses
-    = render 'addresses/provider_common_address', address: address
+  = render partial: 'addresses/provider_common_address', collection: @addresses, as: :address,
+    locals: { row_context: provider_common_address_row_context }
 - else
   %tr
     %td
