@@ -1,21 +1,21 @@
 # Prices a demand-response trip from the provider's fare tables
-# (docs/fare-card-design.md, section 15; per-county since 2026-09-28).
+# (docs/fare-card-design.md, section 15; county tables since 2026-09-28).
 #
 #   FareSchedule.new(provider).price(miles: 7.2, category: senior)   # => 1.00, or nil if no table
 #   FareSchedule.new(provider).trip_fare(trip)                        # rider + guests, attendants free
 #   FareSchedule.new(provider).quote(trip)                            # the same, with how it was priced
 #
-# Each county GCRPC serves publishes its own rural fare, so the table is
-# chosen by the rider's county: their home address, else the pickup. A
-# county with zone rows (Jackson, Matagorda) prices by where the trip goes;
-# a county with its own distance table (Calhoun, Gonzales) uses that; any
-# other county uses the provider's default table (county ''), which for
-# Victoria Transit is the Victoria / DeWitt table and for a county tenant is
-# that county's.
+# Since the FY27 fare structure every area, the Goliad and Lavaca tenants
+# included, uses one distance table: the provider's default (county ''). A
+# county can still have its own table, chosen by the rider's county (home
+# address, else the pickup), and a table can end on a date, compared with
+# the trip's date (Gonzales rides free through 2026-09-30). A county with
+# zone rows prices by where the trip goes; none do today.
 #
-# The rider pays their category's fare for the trip's band or zone. Each
-# guest pays the Adult fare for the same band or zone. Attendants (personal
-# care assistants) ride free. Returns nil when the trip cannot be priced --
+# The rider pays their category's fare for the trip's band. A companion or
+# guest pays the same fare as the rider (FY27: "the same fare charged to the
+# fixed route, rural disabled and complementary paratransit rider").
+# Attendants (personal care assistants) ride free. Returns nil when the trip cannot be priced --
 # no table, no distance, no cell for the rider's category, or a destination
 # the county's zones do not cover -- so callers show nothing rather than a
 # wrong number, or fall through to the flat default.
@@ -47,6 +47,15 @@ class FareSchedule
     rows.any?
   end
 
+  # The last day this table applies (nil: no end).
+  def ends_on
+    rows.first&.ends_on
+  end
+
+  def in_effect_on?(date)
+    configured? && (ends_on.nil? || date.nil? || date <= ends_on)
+  end
+
   def bands
     rows.map(&:up_to_miles).uniq
   end
@@ -67,8 +76,8 @@ class FareSchedule
 
   # The fare and how it was reached, for the office to read out. Paratransit
   # comes first: an ADA-eligible rider on a trip inside the urban service
-  # area pays the flat paratransit fare (and so does each guest, as ADA
-  # companions do) whatever the distance.
+  # area pays the flat paratransit fare (and so does each companion)
+  # whatever the distance.
   def quote(trip, category: nil)
     category, source = category ? [category, :given] : rider_category(trip)
     base = { category: category, category_assumed: source == :assumed, category_source: source,
@@ -88,19 +97,20 @@ class FareSchedule
       return nil unless zone
       rider = zone_price(zones, zone, place, category)
       return nil if rider.nil?
-      guest_fare = zone_price(zones, zone, place, adult_category) || rider
+      guest_fare = rider                                   # companions pay the rider's fare
       name = zones.first.county
       return Quote.new(**base, amount: (rider + guest_fare * guests).round(2), rider: rider, guest_each: guest_fare, guests: guests,
                        county: name, basis: zone_label(name, zone, place))
     end
 
-    table = table_for(home)
+    table = table_for(home, trip_date(trip))
     return nil unless table.configured? && trip.drive_distance.to_f > 0
     rider = table.price(miles: trip.drive_distance, category: category)
     return nil if rider.nil?
-    guest_fare = table.price(miles: trip.drive_distance, category: adult_category) || rider
+    guest_fare = rider                                     # companions pay the rider's fare
     name = table.rows.first.county.presence     # the table's own spelling, not the address's
     label = name ? "#{name} County fare" : "standard fare"
+    label += " through #{table.ends_on.strftime('%-m/%-d')}" if name && table.ends_on
     Quote.new(**base, amount: (rider + guest_fare * guests).round(2), rider: rider, guest_each: guest_fare, guests: guests,
               county: name,
               basis: "#{label}, #{format('%.1f', trip.drive_distance.to_f)} mi")
@@ -152,9 +162,6 @@ class FareSchedule
     categories.find { |c| c.name.to_s.downcase.start_with?("disab") }
   end
 
-  def adult_category
-    @adult ||= categories.find { |c| c.name.to_s.downcase == "adult" } || categories.first
-  end
 
   # The provider's rider categories in display order, loaded once.
   def categories
@@ -166,27 +173,33 @@ class FareSchedule
     [trip.customer&.address&.county, trip.pickup_address&.county].map { |c| c.to_s.strip }.find(&:present?)
   end
 
-  # The distance table for a county: its own if it has one, else the default.
-  def table_for(county_name)
+  # The distance table for a county on a date: its own if it has one in
+  # effect then, else the default.
+  def table_for(county_name, date = nil)
     if county_name.present?
       @tables ||= {}
       own = (@tables[county_name.downcase] ||= self.class.new(provider, service: service, county: county_name))
-      return own if own.configured?
+      return own if own.in_effect_on?(date)
     end
     county.blank? ? self : (@default_table ||= self.class.new(provider, service: service))
+  end
+
+  # The day the trip runs, in local time.
+  def trip_date(trip)
+    trip.pickup_time&.in_time_zone&.to_date || trip.try(:date) || Date.current
   end
 
   # Replace this table (the county given, or the default) from a grid of
   # { up_to_miles => { rider_category_id => fare } }. A blank edge is the
   # open-ended band. Blank cells are $0.00 (free).
-  def replace!(grid, by: nil)
+  def replace!(grid, by: nil, ends_on: nil)
     FareScheduleRow.transaction do
       PaperTrail.request(whodunnit: by&.id.to_s.presence) do
         FareScheduleRow.for_provider(provider.id).for_service(service).for_county(county).destroy_all
         grid.each do |edge, cells|
           edge_val = edge.to_s.strip.presence && BigDecimal(edge.to_s)
           cells.each do |category_id, fare|
-            FareScheduleRow.create!(provider: provider, service: service, county: county, up_to_miles: edge_val,
+            FareScheduleRow.create!(provider: provider, service: service, county: county, up_to_miles: edge_val, ends_on: ends_on,
                                     rider_category_id: category_id, fare: (BigDecimal(fare.to_s.gsub(/[$,\s]/, "")) rescue 0))
           end
         end

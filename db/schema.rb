@@ -465,6 +465,7 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "county", default: "", null: false
+    t.date "ends_on"
     t.index ["provider_id", "service", "county", "up_to_miles", "rider_category_id"], name: "idx_fare_schedule_rows_cell", unique: true
   end
 

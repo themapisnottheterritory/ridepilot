@@ -31,12 +31,12 @@ RSpec.describe FareSchedule do
     expect(schedule.bands).to eq [5, 10, nil]
   end
 
-  it "prices a trip as rider plus one adult fare per guest, attendants free" do
+  it "prices a trip as rider plus the rider's fare per companion, attendants free" do
     seed!
     rider = create_rider(provider, default_rider_category_id: senior.id)
     trip, = build_udr_trip(provider, rider)
     trip.update_columns(drive_distance: 7.2, guest_count: 2, attendant_count: 1)
-    expect(schedule.trip_fare(trip)).to eq 1.00 + 2 * 2.00
+    expect(schedule.trip_fare(trip)).to eq 1.00 + 2 * 1.00
     trip.update_columns(guest_count: 0)
     expect(schedule.trip_fare(trip)).to eq 1.00
     trip.update_columns(drive_distance: nil)
@@ -70,8 +70,8 @@ RSpec.describe FareTap, "#trip! with a schedule" do
   it "charges the scheduled fare for the trip's distance ahead of the flat default" do
     trip.update_columns(drive_distance: 12.0, guest_count: 1)
     r = FareTap.new(provider: provider, driver: setup[2]).trip!(trip: trip, uid: token.uid, client_uuid: SecureRandom.uuid)
-    expect(r.fare).to eq 1.00 + 2.00
-    expect(rider.reload.fare_balance).to eq 17.0
+    expect(r.fare).to eq 1.00 + 1.00
+    expect(rider.reload.fare_balance).to eq 18.0
   end
 
   it "falls back to the flat default when the trip has no distance" do
@@ -198,11 +198,11 @@ RSpec.describe FareSchedule, "county fares" do
     expect(schedule.trip_fare(elsewhere)).to be_nil
   end
 
-  it "charges the rider's category, guests the adult fare, and flags an assumed category" do
+  it "charges the rider's category, companions the same, and flags an assumed category" do
     trip = trip_for(home_county: "Jackson", from: ["Edna", "Jackson"], to: ["Houston", "Harris"], default_rider_category_id: senior.id)
     trip.update_columns(guest_count: 1)
     q = schedule.quote(trip.reload)
-    expect([q.amount, q.rider, q.guest_each, q.category_assumed]).to eq [32.5 + 65, 32.5, 65, false]
+    expect([q.amount, q.rider, q.guest_each, q.category_assumed]).to eq [65, 32.5, 32.5, false]
     expect(schedule.quote(trip_for(home_county: "Victoria")).category_assumed).to be true
   end
 
@@ -256,13 +256,39 @@ RSpec.describe FareSchedule, "rider category from passenger tracking" do
     expect([q.amount, q.category_source]).to eq [2.00, :customer]
   end
 
-  it "still charges guests the adult fare" do
+  it "charges a companion the rider's fare" do
     q = schedule.quote(trip_with(number_of_disabled_passengers_served: 2, guest_count: 1))
-    expect([q.rider, q.guest_each, q.amount]).to eq [0.75, 2.00, 2.75]
+    expect([q.rider, q.guest_each, q.amount]).to eq [0.75, 0.75, 1.50]
   end
 
   it "is Adult, assumed, with no category and no counts" do
     q = schedule.quote(trip_with)
     expect([q.amount, q.category_source, q.category_assumed]).to eq [2.00, :assumed, true]
+  end
+end
+
+RSpec.describe FareSchedule, "a county table with an end date" do
+  let(:provider) { create(:provider) }
+  let(:adult)    { RiderCategory.find_or_create_by!(name: "Adult") { |c| c.default_fare = 1.00 } }
+  let(:schedule) { FareSchedule.new(provider) }
+
+  before do
+    schedule.replace!({ "" => { adult.id => "1.00" } })
+    FareSchedule.new(provider, county: "Gonzales").replace!({ "" => { adult.id => "0" } }, ends_on: Date.new(2026, 9, 30))
+  end
+
+  def gonzales_trip_on(date)
+    rider = create_rider(provider, default_rider_category_id: adult.id)
+    rider.address.update_columns(county: "Gonzales")
+    trip, = build_udr_trip(provider, rider)
+    trip.update_columns(drive_distance: 3.0, pickup_time: Time.zone.parse("#{date} 09:00"))
+    trip.reload
+  end
+
+  it "applies through its last day, by the trip's date, then the default table" do
+    q = schedule.quote(gonzales_trip_on("2026-09-30"))
+    expect([q.amount, q.basis]).to eq [0, "Gonzales County fare through 9/30, 3.0 mi"]
+    q = schedule.quote(gonzales_trip_on("2026-10-01"))
+    expect([q.amount, q.basis]).to eq [1.00, "standard fare, 3.0 mi"]
   end
 end
