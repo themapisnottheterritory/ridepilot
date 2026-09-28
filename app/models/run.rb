@@ -286,7 +286,7 @@ class Run < ApplicationRecord
       reasons << "no vehicle"
     end
 
-    unless ((self.from_garage_address && self.to_garage_address) || self.vehicle.garage_address )
+    unless ((self.from_garage_address && self.to_garage_address) || self.vehicle.try(:garage_address) )
       reasons << "no run start/end location(s)"
     end
 
@@ -512,7 +512,7 @@ class Run < ApplicationRecord
     slack_info = []
     itineraries.where.not(time: nil).where.not(eta: nil)
       .includes(trip: :customer).references(trip: :customer)
-      .pluck(:time, :eta, :leg_flag, :trip_id, "customers.first_name || '' || customers.last_name").each do |itin|
+      .pluck(:time, :eta, :leg_flag, :trip_id, Arel.sql("customers.first_name || '' || customers.last_name")).each do |itin|
       time = (itin[0] - itin[0].beginning_of_day) / 3600.0
       eta = (itin[1] - itin[1].beginning_of_day) / 3600.0
       is_late = eta > time
