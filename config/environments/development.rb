@@ -44,6 +44,8 @@ Rails.application.configure do
   config.action_mailer.raise_delivery_errors = false
 
   config.action_mailer.perform_caching = false
+  # Links in emails (Devise password reset) point at the internal site.
+  config.action_mailer.default_url_options = { host: "rp.internal.gcrpc.org", protocol: "https" }
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
