@@ -1,0 +1,34 @@
+-# What to tell a rider who pays cash, priced from the county fare tables.
+-# While booking it refreshes as the customer, addresses, guests and passenger tracking change.
+- edit_mode = :edit if !defined? edit_mode
+.panel.panel-primary#trip_fare_quote_panel
+  .panel-heading
+    %h3.panel-title Fare to quote
+  .panel-body#trip_fare_quote
+    = render 'trips/fare_quote', quote: (@trip.is_a?(Trip) ? TripFareQuote.new(@trip).call : nil)
+- if edit_mode != :show && @trip.is_a?(Trip)
+  :javascript
+    $(function() {
+      var last = null;
+      function fareQuoteParams() {
+        var form = $('#trip_fare_quote_panel').closest('form');
+        return {
+          trip_id: #{@trip.id.to_json},
+          customer_id: form.find('.trip-customer-id').val(),
+          pickup_address_id: form.find('.trip_pickup_address_id').val(),
+          dropoff_address_id: form.find('.trip_dropoff_address_id').val(),
+          guest_count: form.find('#trip_guest_count').val(),
+          seniors: form.find('#trip_number_of_senior_passengers_served').val(),
+          disabled: form.find('#trip_number_of_disabled_passengers_served').val()
+        };
+      }
+      function refreshFareQuote() {
+        var p = fareQuoteParams(), key = JSON.stringify(p);
+        if (key === last) return;
+        last = key;
+        $.get(#{fare_quote_trips_path.to_json}, p, function(html) { $('#trip_fare_quote').html(html); });
+      }
+      last = JSON.stringify(fareQuoteParams());
+      // The address and customer pickers set hidden fields without firing change, so check every couple of seconds.
+      setInterval(refreshFareQuote, 2000);
+    });

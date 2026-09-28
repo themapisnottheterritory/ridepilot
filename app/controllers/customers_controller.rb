@@ -341,6 +341,7 @@ class CustomersController < ApplicationController
       :public_notes,
       :authorized_provider_ids,
       :is_elderly,
+      :default_rider_category_id,
       :message,
       :code,
       :comments,

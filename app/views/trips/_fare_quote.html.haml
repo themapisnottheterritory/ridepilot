@@ -1,0 +1,26 @@
+-# The fare to quote a cash rider (TripFareQuote). quote may be nil.
+- if quote
+  %p{style: 'font-size: 20px; margin: 0 0 4px;'}
+    %strong= number_to_currency(quote.amount)
+    - if quote.guests.to_i > 0
+      %span.text-muted{style: 'font-size: 14px;'}= "rider #{number_to_currency(quote.rider)} + #{pluralize(quote.guests, 'guest')} × #{number_to_currency(quote.guest_each)}"
+    - elsif quote.guest_each.present?
+      %span.text-muted{style: 'font-size: 14px;'}= "each guest #{number_to_currency(quote.guest_each)}, attendants free"
+  %p.text-muted{style: 'margin: 0;'}
+    = quote.basis
+    - if quote.category
+      = "· #{quote.category.name}"
+      - case quote.category_source
+      - when :trip_tracking
+        (from this trip's passenger tracking)
+      - when :elderly_flag
+        (customer marked elderly)
+  - if quote.category_assumed
+    %p.text-warning{style: 'margin: 4px 0 0;'}
+      No fare category on the customer, so this is the Adult fare. Seniors, riders with a disability and youth pay less:
+      set the customer's Fare category, or count the rider under Number of Passengers Tracking.
+- else
+  %p.text-muted{style: 'margin: 0;'}
+    No fare to quote yet: needs the customer and both addresses. If they are set, the rider's county has no fare for
+    this trip (for example a Calhoun trip over 45 miles, or an under-5 rider where the county lists no child fare);
+    quote it from the county fare sheet.

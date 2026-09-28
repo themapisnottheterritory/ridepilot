@@ -138,3 +138,131 @@ RSpec.describe FareSchedule, "paratransit" do
     expect(rider.reload.fare_balance).to eq 8.50
   end
 end
+
+RSpec.describe FareSchedule, "county fares" do
+  let(:provider) { create(:provider) }
+  let(:adult)    { RiderCategory.find_or_create_by!(name: "Adult") { |c| c.default_fare = 1.00 } }
+  let(:senior)   { RiderCategory.find_or_create_by!(name: "Senior 60+") { |c| c.default_fare = 0.50 } }
+  let(:schedule) { FareSchedule.new(provider) }
+
+  before do
+    adult; senior
+    schedule.replace!({ "5" => { adult.id => "1.00", senior.id => "0.50" }, "" => { adult.id => "5.00", senior.id => "2.50" } })
+    FareSchedule.new(provider, county: "Calhoun").replace!({ "5" => { adult.id => "2.00", senior.id => "1.50" }, "45" => { adult.id => "7.00", senior.id => "5.00" } })
+    { ["town", "Edna"] => [3, 2], ["county", nil] => [5, 2.5], ["other_county", nil] => [15, 10], ["city", "Houston"] => [65, 32.5] }.each do |(zone, place), (full, reduced)|
+      FareZoneRow.create!(provider: provider, county: "Jackson", zone: zone, place: place, rider_category: adult, fare: full)
+      FareZoneRow.create!(provider: provider, county: "Jackson", zone: zone, place: place, rider_category: senior, fare: reduced)
+    end
+  end
+
+  def trip_for(home_county:, from: ["Victoria", "Victoria"], to: ["Victoria", "Victoria"], miles: 3.0, **rider_attrs)
+    rider = create_rider(provider, **rider_attrs)
+    rider.address.update_columns(county: home_county)
+    trip, = build_udr_trip(provider, rider)
+    trip.pickup_address.update_columns(city: from[0], county: from[1])
+    trip.dropoff_address.update_columns(city: to[0], county: to[1])
+    trip.update_columns(drive_distance: miles)
+    trip.reload
+  end
+
+  it "uses the default table for a county without its own" do
+    q = schedule.quote(trip_for(home_county: "Victoria"))
+    expect(q.amount).to eq 1.00
+    expect(q.basis).to eq "standard fare, 3.0 mi"
+  end
+
+  it "uses the county's own distance table, chosen by the rider's home county" do
+    trip = trip_for(home_county: "calhoun ", from: ["Victoria", "Victoria"], to: ["Port Lavaca", "Calhoun"], miles: 30)
+    expect(schedule.trip_fare(trip)).to eq 7.00
+    expect(schedule.quote(trip).basis).to eq "Calhoun County fare, 30.0 mi"
+  end
+
+  it "is blank past a county table's last band rather than guessing" do
+    expect(schedule.trip_fare(trip_for(home_county: "Calhoun", miles: 60))).to be_nil
+  end
+
+  it "falls back to the pickup county when the rider has no home county" do
+    trip = trip_for(home_county: "", from: ["Port Lavaca", "Calhoun"], to: ["Port Lavaca", "Calhoun"])
+    expect(schedule.trip_fare(trip)).to eq 2.00
+  end
+
+  it "prices a zone county by where the trip goes, in either direction" do
+    within_edna = trip_for(home_county: "Jackson", from: ["Edna", "Jackson"], to: ["edna", "Jackson"])
+    in_county   = trip_for(home_county: "Jackson", from: ["Edna", "Jackson"], to: ["Ganado", "Jackson"])
+    to_victoria = trip_for(home_county: "Jackson", from: ["Edna", "Jackson"], to: ["Victoria", "Victoria"])
+    home_again  = trip_for(home_county: "Jackson", from: ["Victoria", "Victoria"], to: ["Edna", "Jackson"])
+    houston     = trip_for(home_county: "Jackson", from: ["Edna", "Jackson"], to: ["Houston", "Harris"])
+    elsewhere   = trip_for(home_county: "Jackson", from: ["Edna", "Jackson"], to: ["Austin", "Travis"])
+    expect([within_edna, in_county, to_victoria, home_again, houston].map { |t| schedule.trip_fare(t) }).to eq [3, 5, 15, 15, 65]
+    expect(schedule.quote(to_victoria).basis).to eq "Jackson County fare, to another county"
+    expect(schedule.trip_fare(elsewhere)).to be_nil
+  end
+
+  it "charges the rider's category, guests the adult fare, and flags an assumed category" do
+    trip = trip_for(home_county: "Jackson", from: ["Edna", "Jackson"], to: ["Houston", "Harris"], default_rider_category_id: senior.id)
+    trip.update_columns(guest_count: 1)
+    q = schedule.quote(trip.reload)
+    expect([q.amount, q.rider, q.guest_each, q.category_assumed]).to eq [32.5 + 65, 32.5, 65, false]
+    expect(schedule.quote(trip_for(home_county: "Victoria")).category_assumed).to be true
+  end
+
+  it "quotes a rider marked elderly at the senior fare" do
+    q = schedule.quote(trip_for(home_county: "Victoria", is_elderly: true))
+    expect([q.amount, q.category, q.category_assumed]).to eq [0.50, senior, false]
+  end
+end
+
+RSpec.describe TripFareQuote do
+  let(:provider) { create(:provider) }
+  let(:adult)    { RiderCategory.find_or_create_by!(name: "Adult") { |c| c.default_fare = 1.00 } }
+
+  it "prefers an amount typed on the trip, else prices it" do
+    FareSchedule.new(provider).replace!({ "" => { adult.id => "2.00" } })
+    trip, = build_udr_trip(provider, create_rider(provider, default_rider_category_id: adult.id))
+    trip.update_columns(drive_distance: 4.0)
+    expect(TripFareQuote.new(trip.reload, compute_distance: false).call.amount).to eq 2.00
+    trip.update_columns(fare_amount: 3.25)
+    q = TripFareQuote.new(trip.reload, compute_distance: false).call
+    expect([q.amount, q.basis]).to eq [3.25, "set on the trip"]
+  end
+end
+
+RSpec.describe FareSchedule, "rider category from passenger tracking" do
+  let(:provider) { create(:provider) }
+  let(:adult)    { RiderCategory.find_or_create_by!(name: "Adult") { |c| c.default_fare = 1.00 } }
+  let(:senior)   { RiderCategory.find_or_create_by!(name: "Senior 60+") { |c| c.default_fare = 0.50 } }
+  let(:disabled) { RiderCategory.find_or_create_by!(name: "Disabled") { |c| c.default_fare = 0.50 } }
+  let(:schedule) { FareSchedule.new(provider) }
+
+  before do
+    schedule.replace!({ "" => { adult.id => "2.00", senior.id => "1.00", disabled.id => "0.75" } })
+  end
+
+  def trip_with(rider_attrs = {}, **trip_attrs)
+    trip, = build_udr_trip(provider, create_rider(provider, **rider_attrs))
+    trip.update_columns(**{ drive_distance: 3.0 }.merge(trip_attrs))
+    trip.reload
+  end
+
+  it "prices the rider as Disabled or Senior when the trip counts them and the customer has no category" do
+    q = schedule.quote(trip_with(number_of_disabled_passengers_served: 1))
+    expect([q.amount, q.category, q.category_source, q.category_assumed]).to eq [0.75, disabled, :trip_tracking, false]
+    q = schedule.quote(trip_with(number_of_senior_passengers_served: 1))
+    expect([q.amount, q.category, q.category_source]).to eq [1.00, senior, :trip_tracking]
+  end
+
+  it "keeps the customer's own category ahead of the trip's counts" do
+    q = schedule.quote(trip_with({ default_rider_category_id: adult.id }, number_of_disabled_passengers_served: 1))
+    expect([q.amount, q.category_source]).to eq [2.00, :customer]
+  end
+
+  it "still charges guests the adult fare" do
+    q = schedule.quote(trip_with(number_of_disabled_passengers_served: 2, guest_count: 1))
+    expect([q.rider, q.guest_each, q.amount]).to eq [0.75, 2.00, 2.75]
+  end
+
+  it "is Adult, assumed, with no category and no counts" do
+    q = schedule.quote(trip_with)
+    expect([q.amount, q.category_source, q.category_assumed]).to eq [2.00, :assumed, true]
+  end
+end

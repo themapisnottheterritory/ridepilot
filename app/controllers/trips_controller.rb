@@ -1,5 +1,5 @@
 class TripsController < ApplicationController
-  load_and_authorize_resource :except=>[:show]
+  load_and_authorize_resource :except=>[:show, :fare_quote]
 
   def index
     Date.beginning_of_week= :sunday
@@ -303,6 +303,23 @@ class TripsController < ApplicationController
       format.xml  { render :xml => @trip }
       format.js   { @remote = true; render :json => {:form => render_to_string(:partial => 'form') }, :content_type => "text/json" }
     end
+  end
+
+  # GET /trips/fare_quote -- the "Fare to quote" panel, refreshed while the
+  # office books: the trip as the form has it (customer, addresses, guests,
+  # passenger tracking),
+  # priced without saving anything.
+  def fare_quote
+    authorize! :read, Trip
+    trip = params[:trip_id].present? ? Trip.for_provider(current_provider_id).find(params[:trip_id]) : Trip.new(provider: current_provider)
+    trip.customer_id = params[:customer_id] if params[:customer_id].present?
+    trip.pickup_address_id = params[:pickup_address_id] if params[:pickup_address_id].present?
+    trip.dropoff_address_id = params[:dropoff_address_id] if params[:dropoff_address_id].present?
+    trip.guest_count = params[:guest_count].to_i if params[:guest_count].present?
+    trip.number_of_senior_passengers_served = params[:seniors].to_i if params.key?(:seniors)
+    trip.number_of_disabled_passengers_served = params[:disabled].to_i if params.key?(:disabled)
+    trip.drive_distance = nil if trip.pickup_address_id_changed? || trip.dropoff_address_id_changed?
+    render partial: 'trips/fare_quote', locals: { quote: TripFareQuote.new(trip).call }
   end
 
   def show

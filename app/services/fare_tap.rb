@@ -205,7 +205,9 @@ class FareTap
     explicit = amount.to_s.strip.presence && (BigDecimal(amount.to_s.gsub(/[$,\s]/, "")) rescue nil)
     return explicit.round(2) if explicit && explicit > 0
     return trip.fare_amount.to_d.round(2) if trip.fare_amount.to_f > 0
-    scheduled = FareSchedule.new(provider).trip_fare(trip, category: rider_category_for(customer))
+    # The rider's own category if set; otherwise the schedule reads the trip (passenger tracking, elderly box).
+    on_file = customer.default_rider_category_id && rider_category_for(customer)
+    scheduled = FareSchedule.new(provider).trip_fare(trip, category: on_file || nil)
     return scheduled if scheduled && scheduled > 0
     return provider.fare_udr_default.to_d if provider.fare_udr_default.to_f > 0
     rider_category_for(customer)&.default_fare.to_d || 0.to_d

@@ -464,7 +464,8 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.decimal "fare", precision: 6, scale: 2, default: "0.0", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["provider_id", "service", "up_to_miles", "rider_category_id"], name: "idx_fare_schedule_rows_cell", unique: true
+    t.string "county", default: "", null: false
+    t.index ["provider_id", "service", "county", "up_to_miles", "rider_category_id"], name: "idx_fare_schedule_rows_cell", unique: true
   end
 
   create_table "fare_tokens", force: :cascade do |t|
@@ -517,6 +518,18 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.decimal "fare_factor", precision: 4, scale: 2, default: "1.0", null: false
+  end
+
+  create_table "fare_zone_rows", force: :cascade do |t|
+    t.integer "provider_id", null: false
+    t.string "county", null: false
+    t.string "zone", null: false
+    t.string "place"
+    t.integer "rider_category_id", null: false
+    t.decimal "fare", precision: 7, scale: 2, default: "0.0", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["provider_id", "county", "zone", "place", "rider_category_id"], name: "idx_fare_zone_rows_cell", unique: true
   end
 
   create_table "fares", force: :cascade do |t|

@@ -83,6 +83,14 @@
         = f.label :is_elderly, translate_helper(:is_elderly) 
       .form-field
         = f.check_box :is_elderly
+    -# What the office quotes a cash rider and what a fare card charges: the
+    -# county fare tables price by this category (FareSchedule). Unset, the
+    -# rider is quoted at the Adult fare (Senior if the elderly box is ticked).
+    .form-group
+      .form-label
+        = f.label :default_rider_category_id, 'Fare category'
+      .form-field
+        = f.collection_select :default_rider_category_id, RiderCategory.by_provider(current_provider).default_order, :id, :name, { include_blank: 'Not set (quoted as Adult)' }, { class: 'form-control' }
     .form-group.ethnicity
       .form-label
         = f.label :ethnicity, translate_helper(:ethnicity) 

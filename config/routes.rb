@@ -85,6 +85,7 @@ Rails.application.routes.draw do
         get :trips_requiring_callback
         get :unscheduled
         get :customer_trip_summary
+        get :fare_quote
         post :check_double_booked
         get :report
         get :update_run_filters

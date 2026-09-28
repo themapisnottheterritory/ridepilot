@@ -14,6 +14,7 @@
       %th= translate_helper(:unassigned_trips_table_header_comments)
       %th= translate_helper(:unassigned_trips_table_header_actions)
   %tbody
+    - fare_schedule = FareSchedule.new(current_provider)
     - trips.each do |trip|
       %tr{data: {trip_id: trip.id}}
         %td
@@ -33,7 +34,12 @@
           - if trip.ridership_mobilities.has_capacity.empty?
             %span.label.label-danger.pull-right
               Mobility?
+        -# The fare to quote a cash rider (county fare tables); blank until the trip has a distance.
         %td
+          - if (quote = TripFareQuote.new(trip, schedule: fare_schedule, compute_distance: false).call)
+            %span{title: [quote.basis, quote.category&.name].compact.join(' · ')}= number_to_currency(quote.amount)
+            - if quote.category_assumed
+              %span.text-warning{title: 'No fare category on the customer: Adult fare shown'} *
         %td= trip.notes
         %td
           = link_to trip_path(trip, from_dispatch: true), style: 'padding-right: 5px;', title: "View details" do 

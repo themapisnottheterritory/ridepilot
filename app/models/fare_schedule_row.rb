@@ -1,7 +1,8 @@
 # One cell of a provider's distance-band fare table: for trips of up to
 # up_to_miles (nil = any longer trip), a rider in this category pays fare.
-# FareSchedule reads the table; the office edits it as a grid on the
-# provider's fare settings page.
+# county names the county whose riders the table prices; '' is the
+# provider's default table. FareSchedule reads the table; the office edits
+# the default one as a grid on the provider's fare settings page.
 class FareScheduleRow < ApplicationRecord
   has_paper_trail
 
@@ -13,10 +14,11 @@ class FareScheduleRow < ApplicationRecord
   validates :service, inclusion: { in: SERVICES }
   validates :fare, numericality: { greater_than_or_equal_to: 0 }
   validates :up_to_miles, numericality: { greater_than: 0 }, allow_nil: true
-  validates :rider_category_id, uniqueness: { scope: [:provider_id, :service, :up_to_miles] }
+  validates :rider_category_id, uniqueness: { scope: [:provider_id, :service, :county, :up_to_miles] }
 
   scope :for_provider, -> (provider_id) { where(provider_id: provider_id) }
   scope :for_service,  -> (service) { where(service: service) }
+  scope :for_county,   -> (county) { where("lower(county) = ?", county.to_s.strip.downcase) }
   # Bands in order, the open-ended one last.
   scope :by_band,      -> { order(Arel.sql("up_to_miles IS NULL, up_to_miles"), :rider_category_id) }
 
@@ -31,7 +33,7 @@ class FareScheduleRow < ApplicationRecord
   end
 
   def self.previous_edge_label(row)
-    prev = for_provider(row.provider_id).for_service(row.service).where.not(up_to_miles: nil).maximum(:up_to_miles)
+    prev = for_provider(row.provider_id).for_service(row.service).for_county(row.county).where.not(up_to_miles: nil).maximum(:up_to_miles)
     prev.nil? ? "0" : (prev.to_f == prev.to_i ? prev.to_i.to_s : prev.to_f.to_s) + " mi"
   end
 end
