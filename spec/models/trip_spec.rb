@@ -211,11 +211,13 @@ RSpec.describe Trip do
       non_preserved_attrs = [
         "id", "created_at", "updated_at", "donation_old",
         "pickup_time", "appointment_time", "direction",
-        "pickup_address_id", "dropoff_address_id", "linking_trip_id"
+        "pickup_address_id", "dropoff_address_id", "linking_trip_id",
+        "fare_id"   # each trip has its own copy of the fare settings
       ]
       trip_attrs = trip.attributes.except(*non_preserved_attrs)
       return_trip_attrs = return_trip.attributes.except(*non_preserved_attrs)
       expect(trip_attrs).to eq(return_trip_attrs)
+      expect(return_trip.fare&.attributes&.slice("fare_type", "pre_trip")).to eq(trip.fare&.attributes&.slice("fare_type", "pre_trip"))
     end
 
     it "addresses are reversed in return trip" do
@@ -287,4 +289,17 @@ RSpec.describe Trip do
     end
   end
 
+end
+
+RSpec.describe Trip, "default fare" do
+  it "saves a copy of the provider's fare on a trip created outside the booking form" do
+    provider = create(:provider)
+    provider.update_column(:fare_id, Fare.create!(fare_type: :payment, pre_trip: true).id)
+    trip = build(:trip, provider: provider.reload, fare: nil)
+    trip.save!(validate: false)
+    fare = Trip.find(trip.id).fare
+    expect(fare).to be_present
+    expect([fare.fare_type, fare.pre_trip]).to eq ["payment", true]
+    expect(fare.id).not_to eq provider.fare_id
+  end
 end

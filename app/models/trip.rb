@@ -533,10 +533,15 @@ class Trip < ApplicationRecord
     true
   end
 
+  # A new trip takes the provider's default fare (type, pre/post trip). Saved
+  # here, not left to autosave: this runs in before_create, after the
+  # belongs_to autosave has already passed, so an unsaved copy was dropped and
+  # trips created outside the booking form (the nightly recurring-trip run)
+  # had no fare, and no Fare box on the tablet.
   def find_fare_settings
     unless self.fare
       if self.provider && self.provider.fare 
-        self.fare = self.provider.fare.dup
+        self.fare = self.provider.fare.dup.tap(&:save!)
       end
     end
 
