@@ -1,6 +1,13 @@
 
 
 = render partial: "reports/manifest/run_header", formats: [:html], locals: {run: run}
+-# The published stop list is what the driver's tablet has. Before dispatch
+-# publishes, print the working one (as on Dispatch) and say so -- it used to
+-# print an empty table (Kristie, 2026-09-29).
+- published = run.public_itineraries.exists?
+- unless published
+  .row{style: 'font-size: 13pt; font-weight: bold; margin: 6px 0;'}
+    DRAFT: not yet published to the driver. The stops below are the run as it stands in Dispatch.
 .row
   %table{style: 'font-size: 12pt; width: 100% !important;'}
     %tr
@@ -9,6 +16,6 @@
       %th{style: 'text-align: right;'}= translate_helper("run_manifest_table_header_scheduled_time") 
       %th{style: 'border-right: 2px black solid;'}
     %tbody
-      - itins = get_public_itineraries(run, true)
+      - itins = published ? get_public_itineraries(run, true) : draft_manifest_itineraries(run)
       - itins.each_with_index do |itin, index|
         = render partial: "reports/manifest/itinerary", formats: [:html], locals: {itinerary: itin}

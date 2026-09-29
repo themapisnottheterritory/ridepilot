@@ -88,6 +88,15 @@ module DispatchHelper
 
   # use public_itinerary data and get associated occupancy etc
   # used in manifest report
+  # The run's working stops in manifest order, for printing a manifest that
+  # hasn't been published: trip stops only, and like the published list,
+  # without the drop-off of a cancelled or turned-down trip.
+  def draft_manifest_itineraries(run)
+    get_itineraries(run).select { |itin| itin.trip && [1, 2].include?(itin.leg_flag) }.reject do |itin|
+      itin.leg_flag == 2 && TripResult::NON_DISPATCHABLE_CODES.include?(itin.trip.trip_result&.code)
+    end
+  end
+
   def get_public_itineraries(run, trip_only = false)
     return [] unless run
 
