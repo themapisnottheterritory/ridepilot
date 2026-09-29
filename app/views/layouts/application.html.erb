@@ -48,6 +48,10 @@
           <% end %>
         <% end %>
         <% if current_user %>
+          <% whats_new_count = WhatsNew.unseen_count(current_user, current_provider) %>
+          <%= link_to whats_new_path, id: "whats-new-link", title: (whats_new_count > 0 ? "What's new (#{whats_new_count} you haven't seen)" : "What's new") do %>
+            <i class="fas fa-bullhorn"></i><% if whats_new_count > 0 %><span class="whats-new-count"><%= whats_new_count %></span><% end %>
+          <% end %>
           <a href=<%= user_path(current_user)%> title="<%= current_user.display_name %>"><i class="fas fa-user-edit"></i></a>
           <%= link_to show_change_password_path, title: translate_helper("change_password") do %>
             <i class="fas fa-key"></i>

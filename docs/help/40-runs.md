@@ -2,7 +2,7 @@
 
 **Where**: **Runs** in the top menu lists runs by date (use the filters on the left, e.g. Service mode = Demand response, and the dates). Click View on a run to open it. The list can take a few seconds to load.
 
-**Subscription runs**: the weekday runs are created automatically from **Subscription Run** templates (**View Subscription Run Templates** on the Runs page). Changing a template affects runs RidePilot creates from then on; runs already created for the coming weeks keep their old settings, so change those days one by one or ask Philz to update them all.
+**Subscription runs**: the weekday runs are created automatically from **Subscription Run** templates (**View Subscription Run Templates** on the Runs page). Changing a template affects runs RidePilot creates from then on; runs already created for the coming weeks keep their old settings, so change those days one by one or ask GCRPC I.T. to update them all.
 
 **Demand-response runs**: Monday-Friday, 8:00 AM - 5:00 PM.
 - Victoria Transit: UDR1-10, RVIC1-3, RGON1-3, DeWitt1-3, RCAL1-3, MATA1-3, JACK1-3.

@@ -16,12 +16,13 @@ class HelpAssistant
   GUIDE_GLOB = Rails.root.join("docs/help/*.md")
   MAX_HISTORY = 6    # earlier turns sent back, so follow-ups make sense
 
+  # the guide pages, then the recent What's new notes (WhatsNew)
   def self.guide
     files = Dir[GUIDE_GLOB].sort
-    stamp = files.map { |f| File.mtime(f).to_i }.sum
+    stamp = [files.map { |f| File.mtime(f).to_i }.sum, (File.mtime(WhatsNew::FILE).to_i rescue 0), Date.current]
     @guide = nil if @guide_stamp != stamp
     @guide_stamp = stamp
-    @guide ||= files.map { |f| File.read(f).strip }.join("\n\n---\n\n")
+    @guide ||= (files.map { |f| File.read(f).strip } + [WhatsNew.guide_text].reject(&:blank?)).join("\n\n---\n\n")
   end
 
   def initialize(user:, provider:, page_path:, page_title:)

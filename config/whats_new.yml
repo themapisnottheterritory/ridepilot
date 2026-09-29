@@ -1,0 +1,142 @@
+# What's new in RidePilot: notes for staff, shown at /whats_new (the megaphone
+# in the header) and read by Ask RidePilot. Newest first. See WhatsNew.
+#
+# Add a note in the same commit as any change staff will notice. Write it for
+# a dispatcher, not a developer: what changed, where to find it, and what to
+# do differently, in one to three short sentences. Use **bold** for on-screen
+# names exactly as they appear. Skip changes nobody will notice.
+#
+#   added:     "YYYY-MM-DD HH:MM" Central, when it went live
+#   title:     a few words
+#   body:      paragraphs separated by a blank line
+#   for:       admins            (optional: provider admins and up only)
+#   providers: [1]               (optional: 1 GCRPC, 107 Goliad, 143 Lavaca)
+
+- added: "2026-09-29 12:15"
+  title: What's new in RidePilot
+  body: |
+    Changes to RidePilot are now listed on a What's new page, newest first.
+    The megaphone at the top right of every page opens it, and a red number
+    on it shows how many notes you haven't read yet.
+
+- added: "2026-09-29 12:11"
+  title: A quote for the day, and today's rides
+  body: |
+    The bar at the bottom of every page shows a quote for the day. Once
+    drivers mark drop-offs done on their tablets, it will also show how many
+    rides your office has completed today.
+
+- added: "2026-09-29 11:56"
+  title: Ask RidePilot, the help button
+  body: |
+    Click **Ask RidePilot** at the bottom right of any page and ask how to do
+    something, in English or Spanish. It answers from GCRPC's RidePilot
+    guide. It can't see or change your data, and it can be wrong, so check
+    anything important with Kristie or GCRPC I.T.
+
+    Drag the button or the panel out of the way and it stays there. The
+    conversation follows you from page to page; **New chat** starts over.
+    The thumbs up or down under an answer tell us whether it helped.
+
+- added: "2026-09-29 11:41"
+  title: The Dispatch divider stays where you put it
+  body: |
+    On **Dispatch**, drag the bar between the runs and the Trips list to the
+    height you like, and RidePilot remembers it on that computer. Neither
+    side can be dragged out of sight, and the Trips list now opens by
+    default.
+
+- added: "2026-09-29 10:49"
+  title: Optimize Route plans a workable route
+  body: |
+    **Optimize Route** on a demand-response run now keeps each pickup
+    between 5 minutes before and 10 minutes after the booked time, gets
+    riders to appointments on time, keeps time on board reasonable, allows
+    time to board at each stop, and keeps the bus inside the run's hours.
+
+    If any trip can't fit, it changes nothing and names the trip to move to
+    another run. It won't change a run that has started. A progress bar
+    shows while it works, about 15 seconds.
+
+- added: "2026-09-29 08:41"
+  title: Gold+Green is its own run
+  providers: [1]
+  body: |
+    Days when one bus runs Gold then Green now show as one **Gold+Green**
+    run, like the commuter doubles. Boardings still count toward Gold and
+    Green.
+
+- added: "2026-09-28 17:00"
+  title: Password reset emails work
+  body: |
+    **Forgot your password?** on the sign-in page now sends a reset email.
+    Before, RidePilot couldn't send email at all.
+
+- added: "2026-09-28 15:37"
+  title: FY27 fares everywhere
+  body: |
+    Demand-response fares now follow GCRPC's FY27 fare structure in every
+    area, Goliad and Lavaca included: by distance (0-5, 6-10, 11-15, 16-20
+    and 21+ miles) for Youth, Adult and Elderly/Disabled riders, and children
+    under 5 ride free.
+
+    A companion pays the same fare as the rider; a personal care attendant
+    rides free. Gonzales County rides are free through September 30 and pay
+    the fare from October 1.
+
+- added: "2026-09-28 15:13"
+  title: The fare to quote a cash rider
+  body: |
+    The trip form and trip page show **Fare to quote**: what to tell a rider
+    paying cash, from the trip's distance and the rider's fare category. The
+    Trips list on **Dispatch** has a Fare column; an * means the rider has no
+    fare category, so Adult was assumed. Set it with **Fare category** on the
+    customer form.
+
+    Drivers' tablets show the fare box at pickup, filled in with the same
+    fare, including trips made by the nightly recurring-trip run.
+
+- added: "2026-09-28 15:12"
+  title: Dispatch run panel fixed
+  body: |
+    The run panel on **Dispatch** opens again for demand-response runs. It
+    was showing an error for today's and future runs.
+
+- added: "2026-09-26 19:26"
+  title: The Addresses page opens fast
+  for: admins
+  body: |
+    The provider's common **Addresses** page now opens in about 2 seconds
+    instead of more than 30.
+
+- added: "2026-09-25 15:28"
+  title: Fix a street or add a unit number
+  body: |
+    You can now correct the street on a common address when editing it, and
+    add an apartment or unit number to a customer's saved address after
+    picking it from the address search.
+
+- added: "2026-09-22 14:58"
+  title: Find runs with no driver or no bus
+  body: |
+    On **Runs**, the driver and bus filters have **No driver assigned** and
+    **No bus assigned**, to find the runs that still need one.
+
+- added: "2026-09-22 14:34"
+  title: Fixed Route Compliance report
+  providers: [1]
+  body: |
+    **Reports** has a new **Fixed Route Compliance** report: one row per
+    fixed-route run with miles, riders and fares, skipped stops, early
+    departures and late arrivals, and whether the pre- and post-trip
+    inspections were filed. Filter by dates, route, driver or bus, and
+    export to CSV.
+
+- added: "2026-09-11 08:36"
+  title: Create a driver's tablet login in one step
+  for: admins
+  body: |
+    The **New Driver** page can create the driver's tablet login: tick
+    **Create a login for this driver**. The password is shown once, to copy
+    and give to the driver. The driver's page has **Reset tablet password**
+    for when they forget it.

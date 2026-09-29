@@ -54,7 +54,7 @@
   %form#askrp-form
     %textarea#askrp-input{placeholder: "Type your question (English or Spanish)...", "aria-label": "Your question"}
     %button.btn.btn-primary{type: "submit"} Ask
-  .askrp-note Answers come from GCRPC's RidePilot guide and can be wrong. For anything important, check with Kristie or Philz.
+  .askrp-note Answers come from GCRPC's RidePilot guide and can be wrong. For anything important, check with Kristie or GCRPC I.T.
 
 :javascript
   (function() {
@@ -184,7 +184,7 @@
             if (ev.error) failed = ev.error;
           });
         }
-      } catch (e) { failed = "Ask RidePilot can't answer right now. Try again in a minute, or ask Kristie or Philz."; }
+      } catch (e) { failed = "Ask RidePilot can't answer right now. Try again in a minute, or ask Kristie or GCRPC I.T."; }
       if (failed && !answer) {
         bot.className = 'msg err'; bot.textContent = failed;
         chat.push({ cls: 'user', text: question }, { cls: 'err', text: failed });

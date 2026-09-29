@@ -213,6 +213,9 @@ Rails.application.routes.draw do
     # footer: rides completed today (FooterNote)
     get  "footer/today"      => "footer#today",  as: :footer_today
 
+    # What's new (WhatsNew, config/whats_new.yml)
+    get  "whats_new"         => "whats_new#index", as: :whats_new
+
     resources :address_groups
 
     resources :device_pools, :except => [:index, :show] do

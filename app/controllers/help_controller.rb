@@ -35,7 +35,7 @@ class HelpController < ApplicationController
     rescue StandardError => e
       Rails.logger.error("Ask RidePilot #{record.id}: #{e.class}: #{e.message}")
       record.update_columns(answer: answer, duration_ms: elapsed.(), error: "#{e.class}: #{e.message}".first(250))
-      emit.(error: "Ask RidePilot can't answer right now. Try again in a minute, or ask Kristie or Philz.") rescue nil
+      emit.(error: "Ask RidePilot can't answer right now. Try again in a minute, or ask Kristie or GCRPC I.T.") rescue nil
     ensure
       response.stream.close
     end

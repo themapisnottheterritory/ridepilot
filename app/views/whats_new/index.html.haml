@@ -1,0 +1,20 @@
+- content_for :title, "What's new"
+#page-header
+  %h1.page-title What's new in RidePilot
+.whats-new-page
+  %p
+    Changes to RidePilot, newest first. Questions about any of them? Use
+    %strong Ask RidePilot
+    at the bottom right, or ask Kristie or GCRPC I.T.
+  - if @notes.empty?
+    %p Nothing yet.
+  - @notes.group_by { |n| n.added.to_date }.each do |day, notes|
+    %h3.whats-new-day= day.strftime("%A, %B %-d, %Y")
+    - notes.each do |note|
+      .whats-new-note{class: ("unseen" if @unseen.include?(note))}
+        %h4
+          = note.title
+          - if @unseen.include?(note)
+            %span.label.label-warning New
+        - note.body.split(/\n\s*\n/).each do |para|
+          %p= sanitize(ERB::Util.html_escape(para.squish).gsub(/\*\*(.+?)\*\*/, '<strong>\1</strong>'), tags: %w[strong])

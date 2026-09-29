@@ -24,3 +24,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Authentication: Devise + CanCanCan
 - Error handling: ActiveRecord validations, rescue blocks, flash messages
 - Provider scoping: Most models have provider association
+
+## What's new (required for user-facing changes)
+- Any change staff will notice (new feature, changed screen or behaviour, fixed bug they hit) gets a note at the TOP of `config/whats_new.yml` in the SAME commit. The header megaphone counts unread notes; Ask RidePilot reads the last 90 days of them.
+- Write for a dispatcher, not a developer: what changed, where to find it, what to do differently; one to three short sentences; on-screen names in **bold**, exactly as they appear (check the view or translation). No commit hashes, class names or jargon.
+- `added:` is when it goes live ("YYYY-MM-DD HH:MM" Central). Use `for: admins` for admin-only screens and `providers: [1]` for GCRPC-only things such as fixed route (107 Goliad, 143 Lavaca).
+- Skip notes for invisible work (refactors, specs, ops scripts, performance nobody feels).
+- Show Philz the note text when asking to commit, so the wording is reviewed.
+- If the change affects how to do something, also update the guide in `docs/help/*.md`.

@@ -757,6 +757,39 @@ fieldset {
 	}
 }
 
+// What's new: the header megaphone's count, and the page
+#whats-new-link {
+	position: relative;
+	.whats-new-count {
+		position: absolute;
+		top: -8px;
+		right: -10px;
+		min-width: 18px;
+		padding: 1px 5px;
+		border-radius: 9px;
+		background: #c9302c;
+		color: #fff;
+		font-size: 11px;
+		font-weight: 700;
+		line-height: 16px;
+		text-align: center;
+	}
+}
+.whats-new-page {   // not .whats-new: that is the body's class on this page
+	max-width: 760px;
+	.whats-new-day {
+		margin-top: 1.6em;
+		border-bottom: 1px solid #dde3ea;
+		padding-bottom: .3em;
+	}
+	.whats-new-note {
+		padding: .2em 0 .4em .9em;
+		border-left: 3px solid transparent;
+		&.unseen { border-left-color: #f0ad4e; }
+		h4 { margin-bottom: .4em; }
+	}
+}
+
 // page elements
 
 .action-buttons {

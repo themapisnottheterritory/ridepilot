@@ -1521,6 +1521,7 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.string "authentication_token", limit: 30
     t.string "omniauth_provider"
     t.string "omniauth_uid"
+    t.datetime "whats_new_seen_at"
     t.index ["address_id"], name: "index_users_on_address_id"
     t.index ["authentication_token"], name: "index_users_on_authentication_token", unique: true
     t.index ["current_provider_id"], name: "index_users_on_current_provider_id"
