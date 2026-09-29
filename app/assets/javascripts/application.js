@@ -198,9 +198,13 @@ $(function() {
   });
 
   // Setting z-index to 999 ensures the calendar appears over bootstrap input group components
+  // showOtherMonths / selectOtherMonths: next month's first days show (and can
+  // be picked) in the current month's grid, so "Oct 1" isn't a hunt late in September
   $('#new_monthly #monthly_start_date, #new_monthly #monthly_end_date, input.datepicker').datepicker({
 		dateFormat: 'D M dd, yy',
-    showButtonPanel: true
+    showButtonPanel: true,
+    showOtherMonths: true,
+    selectOtherMonths: true
   }).css('z-index', 9999);
 
   // Support for bootstrap style input groups for datepickers

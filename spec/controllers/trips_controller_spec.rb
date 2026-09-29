@@ -606,6 +606,16 @@ RSpec.describe TripsController, type: :controller do
       expect(trips[0]["dropoff_address"]).to be
       
     end
+
+    # The form sends a blank id for a trip not saved yet; that used to become
+    # "id != NULL" and hide every existing trip (2026-09-29, George Vasquez
+    # booked three times in six minutes).
+    it "warns about the customer's other trips that day when booking a new trip" do
+      trip_1 = create(:trip)
+      trip_2 = create(:trip, customer: trip_1.customer)
+      post :check_double_booked, params: { trip: { id: "", customer_id: trip_1.customer_id, date: trip_1.date.to_s }, format: :js }
+      expect(JSON.parse(response.body)["trips"].map { |t| t["id"] }.sort).to eq([trip_1.id, trip_2.id].sort)
+    end
     
   end
   

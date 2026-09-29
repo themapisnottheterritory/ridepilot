@@ -1,5 +1,25 @@
 = render 'shared/hide_invisible_form_fields_js', model_name: "trip", table_name: 'trips', provider_id:  current_provider.try(:id)
 
+-# Asked before any other save check: a trip dated before today is almost
+-# always a slip in the calendar (2026-09-29: three trips booked for 9/1
+-# instead of 10/1, which looked like "not saving" from the October list).
+-# New trips always; an existing trip only when its date is moved into the past.
+:javascript
+  function confirm_past_date(callback) {
+    var picked = moment($('#trip_date').val(), 'ddd MMM DD, YYYY');
+    var original = #{@trip.new_record? || @trip.date.blank? ? 'null' : "moment('#{@trip.date}')"};
+    var past = picked.isValid() && picked.isBefore(moment().startOf('day'));
+    if (!past || (original && picked.isSame(original, 'day'))) {
+      callback();
+      return;
+    }
+    bootbox.confirm({
+      message: "<b>This trip is for " + picked.format('dddd, MMMM D, YYYY') + ", which is in the past.</b><br>Did you mean a later date? Click <b>Cancel</b> to fix the date, or <b>Save anyway</b> to keep it.",
+      buttons: { confirm: { label: 'Save anyway', className: 'btn-warning' }, cancel: { label: 'Cancel', className: 'btn-default' } },
+      callback: function(ok) { if (ok) callback(); }
+    });
+  }
+
 - if @trip.run && !@trip.new_record?
   :javascript
     function check_run_disruption(callback) {
@@ -58,15 +78,17 @@
         $('.trip_form').submit(function(e) {
           var form = this;
           e.preventDefault();
-          var callback = function() {
-            handle_client_code_verification($('#trip_customer_id').val(), form);
-          };
-          // first check run disruption warning
-          if(typeof check_run_disruption != 'undefined') {
-            check_run_disruption(callback);
-          } else {
-            callback();
-          }
+          confirm_past_date(function() {
+            var callback = function() {
+              handle_client_code_verification($('#trip_customer_id').val(), form);
+            };
+            // first check run disruption warning
+            if(typeof check_run_disruption != 'undefined') {
+              check_run_disruption(callback);
+            } else {
+              callback();
+            }
+          });
         });
       });
   - else
@@ -75,7 +97,9 @@
         $('.trip_form').submit(function(e) {
           var form = this;
           e.preventDefault();
-          handle_client_code_verification($('#trip_customer_id').val(), form);
+          confirm_past_date(function() {
+            handle_client_code_verification($('#trip_customer_id').val(), form);
+          });
         });
       });
 - else
@@ -115,12 +139,13 @@
           });
         }
 
-        // first check run disruption warning
-        if(typeof check_run_disruption != 'undefined') {
-          check_run_disruption(callback);
-        } else {
-          callback();
-        }
-        
+        // the past-date question, then the run disruption warning
+        confirm_past_date(function() {
+          if(typeof check_run_disruption != 'undefined') {
+            check_run_disruption(callback);
+          } else {
+            callback();
+          }
+        });
       });
     });

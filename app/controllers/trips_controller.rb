@@ -250,6 +250,11 @@ class TripsController < ApplicationController
       end
     end
 
+    # Start on today, not blank: with a blank date the calendar opens on the
+    # current month and a click on "1" late in the month books the 1st of
+    # THIS month (Kristie, 2026-09-29).
+    @trip.date = Time.zone.today unless @trip.date
+
     if params[:customer_id] && customer = Customer.find_by_id(params[:customer_id])
       @trip.customer_id = customer.id
       @trip.pickup_address_id = customer.address_id if customer.address.try(:the_geom).present?
@@ -413,8 +418,10 @@ class TripsController < ApplicationController
     unless params[:customer_id].blank? || params[:date].blank?
       @customer = Customer.find_by_id(params[:customer_id])
       if @customer
-        double_booked_trips = @customer.trips.for_date(Date.parse(params[:date]))
-          .where.not(id: params[:id]).order(:pickup_time, :appointment_time)
+        double_booked_trips = @customer.trips.for_date(Date.parse(params[:date])).order(:pickup_time, :appointment_time)
+        # A new trip sends a blank id, and where.not(id: "") becomes "id != NULL",
+        # which matches nothing -- so new trips were never warned (2026-09-29).
+        double_booked_trips = double_booked_trips.where.not(id: params[:id]) if params[:id].present?
 
         double_booked_trips_json = double_booked_trips.map do |trip|
           {

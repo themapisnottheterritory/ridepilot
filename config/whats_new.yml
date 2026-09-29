@@ -12,6 +12,25 @@
 #   for:       admins            (optional: provider admins and up only)
 #   providers: [1]               (optional: 1 GCRPC, 107 Goliad, 143 Lavaca)
 
+- added: "2026-09-29 14:48"
+  title: Duplicate trip warning works again
+  body: |
+    When you book a trip for a rider who already has a trip that day,
+    RidePilot shows **Warning: Potential Duplication of Trips** with their
+    other trips, so you can go **Back** instead of booking it twice. It had
+    stopped appearing for new trips; it works again.
+
+- added: "2026-09-29 14:12"
+  title: "Trip dates: today by default, and a check for past dates"
+  body: |
+    The **New Trip** form now starts on today's date, and its calendar shows
+    the first days of next month, so late in the month you can click the 1st
+    of next month right in this month's calendar.
+
+    If you save a trip dated before today, RidePilot asks whether you meant a
+    later date. Click **Cancel** to fix it, or **Save anyway** if the past
+    date is right.
+
 - added: "2026-09-29 13:34"
   title: Addresses that aren't on the map
   body: |
