@@ -11,14 +11,21 @@
       Have an idea, or is something not working?
       = link_to "Send a suggestion", new_suggestion_path, class: "btn btn-primary btn-sm"
       = link_to (Suggestion.manageable_by?(current_user) ? "Suggestions" : "Your suggestions"), suggestions_path, class: "btn btn-link btn-sm"
-  - if @notes.empty?
+  - if @apps.size > 1
+    .whats-new-filter
+      = link_to "All", whats_new_path, class: ("active" unless @app)
+      - @apps.each do |a|
+        = link_to WhatsNew::APPS[a], whats_new_path(app: a), class: ["app-#{a}", ("active" if @app == a)]
+  - if @shown.empty?
     %p Nothing yet.
-  - @notes.group_by { |n| n.added.to_date }.each do |day, notes|
+  - @shown.group_by { |n| n.added.to_date }.each do |day, notes|
     %h3.whats-new-day= day.strftime("%A, %B %-d, %Y")
     - notes.each do |note|
       .whats-new-note{class: ("unseen" if @unseen.include?(note))}
         %h4
           = note.title
+          - note.apps.each do |a|
+            %span.app-badge{class: "app-#{a}"}= WhatsNew::APPS[a]
           - if @unseen.include?(note)
             %span.label.label-warning New
         - note.body.split(/\n\s*\n/).each do |para|

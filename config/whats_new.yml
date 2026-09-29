@@ -11,9 +11,23 @@
 #   body:      paragraphs separated by a blank line
 #   for:       admins            (optional: provider admins and up only)
 #   providers: [1]               (optional: 1 GCRPC, 107 Goliad, 143 Lavaca)
+#   apps:      [web, tablet]     (optional, web if left out: which app changed --
+#                                 web = RidePilot web, tablet = driver tablet
+#                                 (GCRPC Demand Response), fixed = fixed-route tablet
+#                                 (GCRPC Fixed Route); shown as badges)
+
+- added: "2026-09-29 16:14"
+  title: "Driver tablet 1.0.17: will-call badge"
+  apps: [tablet]
+  body: |
+    The driver tablet app (GCRPC Demand Response) has an update. Will-call
+    pickups now show an amber **Will call** badge on the driver's list of
+    stops, and a banner on the stop itself. Drivers see an update banner
+    when they open the app: tap **Update**, then **Install**.
 
 - added: "2026-09-29 15:58"
   title: Will-call trips
+  apps: [web, tablet]
   body: |
     Tick **Will call** on a trip (or subscription trip) when the rider will
     call when they're ready, usually for the ride home. The pickup time you
@@ -150,6 +164,7 @@
 
 - added: "2026-09-28 15:13"
   title: The fare to quote a cash rider
+  apps: [web, tablet]
   body: |
     The trip form and trip page show **Fare to quote**: what to tell a rider
     paying cash, from the trip's distance and the rider's fare category. The

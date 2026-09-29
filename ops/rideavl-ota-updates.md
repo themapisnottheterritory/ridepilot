@@ -40,6 +40,19 @@ release (plus the Play Protect tap) is as far as Android allows without an MDM.
 
 **1.0.16 (2026-09-22):** End run is gated on the post-trip inspection (it used to be a separate button a driver could skip). Not yet tested on a device.
 
+**1.0.17 (2026-09-29, published to all tablets the same day, rideavl-v2 95e6af0 on `fixed-route-wp6`, RidePilot 341694fc):**
+will-call pickups show an amber "Will call" badge on the manifest list and a banner on the stop screen
+("The rider calls when ready. The time is an estimate; check with dispatch before heading there."). It reads
+`will_call` from the itinerary API (RidePilot 2dbbfe80). RidePilot also puts that line at the top of the pickup's
+trip notes for 1.0.16 and older, and 1.0.17 hides it from the notes when the banner shows. Not required, so 1.0.16
+tablets still sign in. It was published before it was tried on a device (Philz's call); confirm on the first
+tablet that updates. The 1.0.16 End-run change is still untested on a device too. Rollback means rebuilding as 1.0.18,
+because tablets never go down a versionCode. 1.0.16's APK is at `~/ridepilot-ops/rideavl-pilot.apk.bak-20260929-*`
+and on the tablet-apps page.
+
+**Branches:** the releases since 1.0.14 are on `rideavl-v2` branch `fixed-route-wp6`. That repo's `master` is far
+behind (an early map/routing commit), so build and commit from `fixed-route-wp6` until someone merges it.
+
 **Tested 2026-09-11** on a Galaxy Tab Active Pro (SM-T547U, Android 11): 1.0.10 installed by USB, then
 1.0.11 and 1.0.12 arrived through the banner. Download took about a second on the office Wi-Fi.
 

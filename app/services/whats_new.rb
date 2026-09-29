@@ -5,13 +5,20 @@
 #
 # Each note: added ("YYYY-MM-DD HH:MM", Central), title, body (paragraphs,
 # **bold** for on-screen names), and optionally for: admins (provider admins
-# and up) and providers: [ids] (1 GCRPC, 107 Goliad, 143 Lavaca).
+# and up), providers: [ids] (1 GCRPC, 107 Goliad, 143 Lavaca), and apps: which
+# app changed (APPS; web if left out), shown as a badge on each note.
 class WhatsNew
   FILE = Rails.root.join("config", "whats_new.yml")
+  # which app a note is about: key in whats_new.yml => badge on the page
+  APPS = {
+    "web"    => "RidePilot web",
+    "tablet" => "Driver tablet",
+    "fixed"  => "Fixed-route tablet"
+  }.freeze
   NEW_USER_WINDOW = 14.days   # someone who never opened the page sees two weeks as new
   GUIDE_WINDOW = 90.days      # how far back Ask RidePilot reads
 
-  Note = Struct.new(:added, :title, :body, :for, :providers, keyword_init: true) do
+  Note = Struct.new(:added, :title, :body, :for, :providers, :apps, keyword_init: true) do
     def visible_to?(user, provider)
       return false if self.for == "admins" && !user&.admin?
       return false if providers.present? && !providers.include?(provider&.id)
@@ -25,7 +32,8 @@ class WhatsNew
     @stamp = stamp
     @notes ||= Array(YAML.safe_load(File.read(FILE))).map do |h|
       Note.new(added: Time.zone.parse(h["added"].to_s), title: h["title"].to_s, body: h["body"].to_s.strip,
-               for: h["for"], providers: Array(h["providers"]).map(&:to_i).presence)
+               for: h["for"], providers: Array(h["providers"]).map(&:to_i).presence,
+               apps: (Array(h["apps"]).map(&:to_s) & APPS.keys).presence || ["web"])
     end.select(&:added).sort_by(&:added).reverse
   rescue Errno::ENOENT, Psych::SyntaxError
     []
@@ -48,6 +56,6 @@ class WhatsNew
     recent = notes.select { |n| n.added > GUIDE_WINDOW.ago }
     return "" if recent.empty?
     "# Recent changes to RidePilot (What's new, the megaphone at the top of every page)\n\n" +
-      recent.map { |n| "## #{n.title} (#{n.added.strftime('%-m/%-d/%Y')})\n\n#{n.body}" }.join("\n\n")
+      recent.map { |n| "## #{n.title} (#{n.added.strftime('%-m/%-d/%Y')}; #{n.apps.map { |a| APPS[a] }.join(', ')})\n\n#{n.body}" }.join("\n\n")
   end
 end

@@ -782,6 +782,35 @@ fieldset {
 		border-bottom: 1px solid #dde3ea;
 		padding-bottom: .3em;
 	}
+	// which app a note is about (WhatsNew::APPS)
+	.app-badge {
+		display: inline-block;
+		margin-left: .4em;
+		padding: 1px 8px;
+		border-radius: 10px;
+		@include barlow;   // the page's text font, not the heading's serif
+		font-size: 11px;
+		font-weight: 700;
+		vertical-align: 2px;
+		color: #fff;
+		background: #1f3864;
+		&.app-tablet { background: #0f7b6c; }
+		&.app-fixed { background: #7d3c98; }
+	}
+	.whats-new-filter {
+		margin: .6em 0 .4em;
+		a {
+			display: inline-block;
+			margin-right: .5em;
+			padding: 3px 12px;
+			border-radius: 14px;
+			border: 1px solid #c9d2df;
+			font-weight: 600;
+			font-size: 13px;
+			text-decoration: none;
+			&.active { background: #1f3864; border-color: #1f3864; color: #fff; }
+		}
+	}
 	.whats-new-note {
 		padding: .2em 0 .4em .9em;
 		border-left: 3px solid transparent;

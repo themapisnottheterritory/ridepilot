@@ -18,6 +18,7 @@ RSpec.describe WhatsNew do
       - added: "#{(Time.zone.now - 3.hours).strftime('%Y-%m-%d %H:%M')}"
         title: GCRPC only
         providers: [#{gcrpc.id}]
+        apps: [tablet, web, nonsense]
         body: Buses.
       - added: "#{(Time.zone.now - 100.days).strftime('%Y-%m-%d %H:%M')}"
         title: Long ago
@@ -49,17 +50,31 @@ RSpec.describe WhatsNew do
     expect(text).not_to include("Long ago")
   end
 
+  it "tags each note with the app that changed, web when left out" do
+    notes = described_class.notes.index_by(&:title)
+    expect(notes["For everyone"].apps).to eq ["web"]
+    expect(notes["GCRPC only"].apps).to eq ["tablet", "web"]
+    expect(described_class.guide_text).to include("## GCRPC only (", "; Driver tablet, RidePilot web)")
+  end
+
   it "reads the real notes file" do
     stub_const("WhatsNew::FILE", Rails.root.join("config", "whats_new.yml"))
     notes = described_class.notes
     expect(notes).not_to be_empty
     expect(notes.map(&:added)).to eq notes.map(&:added).sort.reverse
     expect(notes).to all(have_attributes(title: be_present, body: be_present))
+    expect(notes.flat_map(&:apps).uniq - WhatsNew::APPS.keys).to be_empty
   end
 end
 
 RSpec.describe WhatsNewController, type: :controller do
   login_admin_as_current_user
+
+  it "filters to one app's notes" do
+    get :index, params: { app: "tablet" }
+    expect(assigns(:shown)).to all(satisfy { |n| n.apps.include?("tablet") })
+    expect(assigns(:shown).size).to be < assigns(:notes).size
+  end
 
   it "lists the notes and marks them seen" do
     get :index
