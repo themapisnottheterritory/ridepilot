@@ -688,6 +688,23 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.index ["run_id"], name: "index_gps_locations_on_run_id"
   end
 
+  create_table "help_questions", force: :cascade do |t|
+    t.integer "user_id"
+    t.integer "provider_id"
+    t.string "page_path"
+    t.string "page_title"
+    t.text "question", null: false
+    t.text "answer"
+    t.string "model"
+    t.integer "duration_ms"
+    t.boolean "helpful"
+    t.string "error"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_help_questions_on_created_at"
+    t.index ["provider_id"], name: "index_help_questions_on_provider_id"
+  end
+
   create_table "hidden_lookup_table_values", id: :serial, force: :cascade do |t|
     t.integer "provider_id"
     t.string "table_name", limit: 255

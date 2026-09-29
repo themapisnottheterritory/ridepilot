@@ -1,0 +1,22 @@
+# The Dispatch page: putting trips on runs
+
+Click **Dispatch** in the top menu and pick the day.
+
+- **Runs** panel: the day's runs. Click a run to open its panel with its manifest (stops in order).
+- **Trips** panel: trips for the day that are not on a run yet (Unscheduled; you can also view Standby and Cab).
+
+**Put a trip on a run**: drag the trip from the Trips panel onto the run's panel, or use the trip's **Assign to** menu and choose the run. A run needs a bus and a driver before trips can go on it (RidePilot says "no vehicle assigned" otherwise).
+
+**Run panel icons** (top right of each run's panel):
+- red cloud: **Publish Manifest**. Shown when the stop list changed. Click it so the driver's tablet gets the new list.
+- clock: recalculate arrival times (ETA).
+- power: cancel the run.
+- pencil: edit the run (bus, driver, times).
+- **+**: book a new trip straight onto this run.
+- arrow box: open the run's full page.
+
+**Take a trip off a run**: use the run panel's unschedule menu and choose Unscheduled, Standby or Cab.
+
+**Before the day starts**: every run in use has a bus and a driver, every trip that should go is on a run, and each run's manifest is published (no red cloud left).
+
+**"Trip schedule does not fit in run schedule"**: the trip's pickup time is before the run starts or after it ends (demand-response runs are 8:00 AM - 5:00 PM Monday-Friday). Put it on a run whose hours cover it, or change the trip time. A 7:30 AM pickup cannot go on an 8:00 run.

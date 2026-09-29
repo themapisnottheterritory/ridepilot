@@ -1,0 +1,44 @@
+-# What staff asked Ask RidePilot, newest first (HelpController#log).
+#page-header
+  %h1.page-title Ask RidePilot: questions asked
+%p.text-muted
+  The last #{@questions.size} questions#{current_user.super_admin? ? ', all agencies' : " at #{current_provider.name}"}.
+  Answers come from the guide in docs/help; a question it couldn't answer, or a thumbs-down, usually means the guide or the screen needs work.
+- asked = @questions.to_a
+%p
+  %strong= asked.count { |q| q.helpful == true }
+  helpful,
+  %strong= asked.count { |q| q.helpful == false }
+  not helpful,
+  %strong= asked.count { |q| q.answer.to_s =~ /not sure/i }
+  "not sure",
+  %strong= asked.count { |q| q.error.present? }
+  errors.
+%table.table.table-condensed.table-striped
+  %thead
+    %tr
+      %th When
+      %th Who
+      %th Page
+      %th Question
+      %th Answer
+      %th Helpful?
+      %th Time
+  %tbody
+    - asked.each do |q|
+      %tr
+        %td{style: "white-space: nowrap;"}= q.created_at.in_time_zone.strftime("%-m/%-d %-l:%M %p")
+        %td
+          = q.user&.name || q.user&.username
+          %br
+          %small.text-muted= q.provider&.name
+        %td
+          %small= q.page_title
+        %td{style: "max-width: 260px;"}= q.question
+        %td{style: "max-width: 420px;"}
+          - if q.error.present?
+            %span.text-danger= q.error
+          %div{style: "white-space: pre-wrap; font-size: 12px;"}= q.answer.to_s.truncate(900)
+        %td= q.helpful.nil? ? "" : (q.helpful ? "👍" : "👎")
+        %td
+          %small= q.duration_ms ? "#{(q.duration_ms / 1000.0).round(1)} s" : ""

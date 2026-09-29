@@ -39,6 +39,16 @@
   // dispatch_run_panel_{id}_height
   // dispatch_unassigned_trips_collapsed: 1/0 (0 if the unassigned trips panel is collapsed)
   // dispatch_unassigned_trips_height
+  // dispatch_splitter_fraction: where the user left the Runs / Trips divider, as a fraction of its height
+
+  // Neither side of the divider can be dragged smaller than this, so the Runs
+  // table and the Trips list always keep a header and a couple of rows in view.
+  var SPLITTER_MIN = 160;   // px incl. the divider bar: header plus a couple of rows
+  function saved_splitter_position(total) {
+    var f = parseFloat(localStorage.getItem('dispatch_splitter_fraction'));
+    if (!(f > 0 && f < 1)) return null;
+    return Math.max(SPLITTER_MIN, Math.min(Math.round(f * total), total - SPLITTER_MIN));
+  }
 
   // update one trip schedule status
   function schedule_trip(trip_id, run_id, prev_run_id) {
@@ -233,8 +243,8 @@
     }
 
     var was_collapsed = localStorage.getItem('dispatch_unassigned_trips_collapsed');
-    if(was_collapsed != '1') {
-      // by default, collapse Unassigned Trips panel
+    if(was_collapsed == '0') {
+      // collapsed only if the user collapsed it; open by default so the trip list is never hidden
       $('#unassigned_trips_panel .panel-expand-collapse-reverse').click();
     }
   }
@@ -310,19 +320,11 @@
     var new_height = $(window).innerHeight() - $('#dispatch_runs_container').offset().top; // exclude height of everything above runs container
     $('#dispatch_runs_trips').height(new_height);
     if(splitter) {
+      // keep the divider where the user left it (same share of the height), never past the minimums
       var prev_pos = splitter.position();
-      var new_pos = new_height - (prev_height - prev_pos);
-      if((new_height - new_pos) < 40) {
-        new_pos = new_height - 40;
-
-        var collapseButton = $('#unassigned_trips_container').find('.panel-expand-collapse-reverse');
-        var panel = $('#unassigned_trips_panel');
-
-        if(!collapseButton.hasClass('panel-collapsed')) {
-          reverse_collapse_panel(panel);
-          localStorage.setItem('dispatch_unassigned_trips_collapsed', '0'); 
-        } 
-      }
+      var new_pos = saved_splitter_position(new_height);
+      if (new_pos === null) new_pos = new_height - (prev_height - prev_pos);
+      new_pos = Math.max(SPLITTER_MIN, Math.min(new_pos, new_height - SPLITTER_MIN));
       splitter.position(new_pos);
     }
   }
@@ -340,10 +342,15 @@
   $(function() {  
     // init the splitter between Runs section and Trips section
     var splitter_height = $(window).innerHeight() - $('#dispatch_runs_container').offset().top;
+    var start_pos = saved_splitter_position(splitter_height);
+    if (start_pos === null)   // first visit: 80% for the runs, but the Trips pane still gets its minimum
+      start_pos = Math.max(SPLITTER_MIN, Math.min(Math.round(splitter_height * 0.8), splitter_height - SPLITTER_MIN));
     splitter = $('#dispatch_runs_trips').height(splitter_height).split({
-      position: '80%',
-      limit: 40,
+      position: start_pos,
+      limit: SPLITTER_MIN,
       onDragEnd: function() {
+        var total = $('#dispatch_runs_trips').height();
+        if (total > 0) localStorage.setItem('dispatch_splitter_fraction', (splitter.position() / total).toFixed(4));
         update_trips_panel_height();
       },
       onDrag: function(e) {

@@ -205,6 +205,11 @@ Rails.application.routes.draw do
     end
     get "trip_address_autocomplete" => "addresses#trippable_autocomplete"
 
+    # Ask RidePilot, the help panel (HelpAssistant)
+    post "help/ask"          => "help#ask",      as: :help_ask
+    post "help/:id/feedback" => "help#feedback", as: :help_feedback
+    get  "help/log"          => "help#log",      as: :help_log
+
     resources :address_groups
 
     resources :device_pools, :except => [:index, :show] do

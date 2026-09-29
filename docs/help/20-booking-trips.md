@@ -1,0 +1,15 @@
+# Booking a trip
+
+1. Click **Trips** in the top menu, then **New Trip** (or use **+** on a run's panel on the Dispatch page to book straight onto that run).
+2. Pick the customer by typing their name.
+3. **Trip Essentials**: set the **Pickup Time**, the **Appointment Time** if the rider must arrive by a certain time, the pickup address and the drop-off address. Choose saved addresses where you can.
+4. Add mobility needs, guests and attendants (PCA) if any, and notes for the driver.
+5. Save. RidePilot asks "Would you like to create a return trip?" Say yes for a round trip, or use **Create Return** on the trip page later.
+
+**Fare to quote**: the trip form and trip page show a "Fare to quote" panel with the amount to tell a rider who pays cash, based on trip distance and the rider's fare category. If it says the Adult fare was assumed, set the customer's Fare category (see Customers). See the Fares guide for the table.
+
+**Copy a trip**: open an existing trip and click **Clone** to book the same ride on another day.
+
+**Standing trips** (same ride on set days, e.g. dialysis): use **Create New Subscription Trip** (Trips page, or **View Subscription Trip Templates** to see existing ones). Fill in the customer and **Trip Essentials** as for a normal trip, then in the **Repetitions** panel set the **Start Date**, an optional **Stop Date**, tick the **Days of Week** (e.g. Tuesday and Thursday), and set **Repeat every** 1 **Weeks** (2 for every other week). Save. RidePilot generates the daily trips ahead of time. A single trip can't be turned into a subscription; create the Subscription Trip, and cancel any one-off trips it duplicates.
+
+**Changing a trip after it happened**: use the trip's Result (for example **Mark as no-show**, cancelled, turned down). RidePilot may ask for a comment explaining the change.
