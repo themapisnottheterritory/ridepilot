@@ -194,6 +194,7 @@ class RepeatingTripsController < ApplicationController
       :passenger_load_min,
       :passenger_unload_min,
       :early_pickup_allowed,
+      :will_call,
       :direction,
       :linking_trip_id,
       customer_attributes: [:id]

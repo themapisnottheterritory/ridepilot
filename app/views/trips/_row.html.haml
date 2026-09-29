@@ -6,6 +6,7 @@
     - if trip.repeating_trip_id.present?
       %span.label.label-info
         Recur
+    = will_call_label(trip)
   %td
     = format_time_for_listing_day trip.pickup_time
   %td

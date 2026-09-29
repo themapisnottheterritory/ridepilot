@@ -38,8 +38,18 @@ class ItinerarySerializer
     true if object.trip && object.is_pickup? && !object.trip.early_pickup_allowed
   end
 
+  WILL_CALL_NOTE = "WILL CALL: the rider calls when ready. The time is an estimate; check with dispatch before heading there.".freeze
+
+  # a will-call pickup says so first, so drivers see it on the app they have
   attribute :trip_notes do |object|
-    object.trip.notes if object.trip
+    if object.trip
+      will_call = object.trip.will_call && object.is_pickup?
+      will_call ? [WILL_CALL_NOTE, object.trip.notes.presence].compact.join("\n") : object.trip.notes
+    end
+  end
+
+  attribute :will_call do |object|
+    !!(object.trip&.will_call && object.is_pickup?)
   end
 
   attribute :customer_notes do |object|

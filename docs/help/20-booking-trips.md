@@ -13,3 +13,8 @@
 **Standing trips** (same ride on set days, e.g. dialysis): use **Create New Subscription Trip** (Trips page, or **View Subscription Trip Templates** to see existing ones). Fill in the customer and **Trip Essentials** as for a normal trip, then in the **Repetitions** panel set the **Start Date**, an optional **Stop Date**, tick the **Days of Week** (e.g. Tuesday and Thursday), and set **Repeat every** 1 **Weeks** (2 for every other week). Save. RidePilot generates the daily trips ahead of time. A single trip can't be turned into a subscription; create the Subscription Trip, and cancel any one-off trips it duplicates.
 
 **Changing a trip after it happened**: use the trip's Result (for example **Mark as no-show**, cancelled, turned down). RidePilot may ask for a comment explaining the change.
+
+## Will-call trips
+
+A will-call trip is one where the rider will call when they're ready, usually the ride home from an appointment. On the trip form, tick **Will call** (under the appointment time) and enter your best estimate for the pickup time. The trip shows a **Will call** label on the Trips list, the Dispatch trips list and the run manifest, and the driver's tablet shows "WILL CALL: the rider calls when ready" at the top of that pickup's notes. When the rider calls, open the trip, set the real pickup time, untick **Will call**, and save. Subscription trips have the same checkbox, and the trips they create carry it.
+

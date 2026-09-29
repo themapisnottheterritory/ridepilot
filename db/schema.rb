@@ -1140,6 +1140,7 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.integer "passenger_unload_min"
     t.boolean "early_pickup_allowed"
     t.integer "linking_trip_id"
+    t.boolean "will_call", default: false, null: false
     t.index ["customer_id"], name: "index_repeating_trips_on_customer_id"
     t.index ["driver_id"], name: "index_repeating_trips_on_driver_id"
     t.index ["dropoff_address_id"], name: "index_repeating_trips_on_dropoff_address_id"
@@ -1493,6 +1494,7 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.float "fare_amount"
     t.datetime "fare_collected_time", precision: nil
     t.datetime "estimated_pickup_time"
+    t.boolean "will_call", default: false, null: false
     t.index ["called_back_by_id"], name: "index_trips_on_called_back_by_id"
     t.index ["customer_id"], name: "index_trips_on_customer_id"
     t.index ["deleted_at"], name: "index_trips_on_deleted_at"

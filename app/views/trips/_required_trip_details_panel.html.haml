@@ -37,6 +37,13 @@
         = f.label :appointment_time, translate_helper("appointment_time")
       .form-field
         = render 'shared/time_inputs', field_name: :appointment_time, time: @trip.appointment_time, f: f, required: false
+    .form-group
+      .form-label
+        = f.label :will_call, "Will call"
+      .form-field
+        %label{style: "font-weight: normal;"}
+          = f.check_box :will_call
+          The rider calls when ready; the pickup time is an estimate.
     - if edit_mode != :show  # JavaScript for generating date and time pickers
       = render "shared/date_time_picker_javascript"
       :javascript

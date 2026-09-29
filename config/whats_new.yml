@@ -12,6 +12,16 @@
 #   for:       admins            (optional: provider admins and up only)
 #   providers: [1]               (optional: 1 GCRPC, 107 Goliad, 143 Lavaca)
 
+- added: "2026-09-29 15:58"
+  title: Will-call trips
+  body: |
+    Tick **Will call** on a trip (or subscription trip) when the rider will
+    call when they're ready, usually for the ride home. The pickup time you
+    enter is treated as an estimate. The trip shows a **Will call** label on
+    the Trips list and in Dispatch, and the driver's tablet shows "WILL CALL"
+    at the top of that pickup's notes. When the rider calls, set the real
+    pickup time and untick **Will call**.
+
 - added: "2026-09-29 15:03"
   title: A mobility icon next to riders who need one
   body: |
