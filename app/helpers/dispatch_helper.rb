@@ -1,6 +1,27 @@
 module DispatchHelper
 
   # used in dispatch screen for internal manifest display
+  # What the run's bus holds, as a list of layouts {capacity_type_id => count}
+  # (any one layout that fits the stop's occupancy is enough). The vehicle's own
+  # seat and wheelchair counts (Vehicles page, from the fleet review; also what
+  # Optimize Route uses) come first; its vehicle type's capacity configurations
+  # are the fallback. Needs capacity types named "Seat" and "Wheelchair ...".
+  def run_vehicle_capacities(run)
+    vehicle = run&.vehicle
+    return nil unless vehicle
+    seat_type = CapacityType.where("lower(name) = ?", "seat").pick(:id)
+    if seat_type && vehicle.seating_capacity.present?
+      layout = { seat_type => vehicle.seating_capacity.to_i }
+      wheelchair_type = CapacityType.where("lower(name) LIKE ?", "%wheelchair%").pick(:id)
+      layout[wheelchair_type] = vehicle.mobility_device_accommodations.to_i if wheelchair_type
+      return [layout]
+    end
+    return nil unless vehicle.vehicle_type
+    vehicle.vehicle_type.vehicle_capacity_configurations.map do |config|
+      config.vehicle_capacities.pluck(:capacity_type_id, :capacity).to_h
+    end
+  end
+
   def get_itineraries(run, is_recurring = false, recurring_dispatch_wday = nil)
     return [] unless run
 
@@ -14,12 +35,7 @@ module DispatchHelper
     end
 
     # vehicle capacity
-    if run.vehicle && run.vehicle.vehicle_type
-      vehicle_capacities = []
-      run.vehicle.vehicle_type.vehicle_capacity_configurations.each do |config|
-        vehicle_capacities << config.vehicle_capacities.pluck(:capacity_type_id, :capacity).to_h
-      end
-    end
+    vehicle_capacities = run_vehicle_capacities(run)
 
     trips_table_name = is_recurring ? "repeating_trips" : "trips"
     trip_capacities = get_trip_capacities(trips, trips_table_name)
@@ -112,12 +128,7 @@ module DispatchHelper
     trips = Trip.unscoped.where(id: public_itins.joins(:itinerary).pluck(:trip_id).uniq)
 
     # vehicle capacity
-    if run.vehicle && run.vehicle.vehicle_type
-      vehicle_capacities = []
-      run.vehicle.vehicle_type.vehicle_capacity_configurations.each do |config|
-        vehicle_capacities << config.vehicle_capacities.pluck(:capacity_type_id, :capacity).to_h
-      end
-    end
+    vehicle_capacities = run_vehicle_capacities(run)
 
     trip_capacities = get_trip_capacities(trips)
 

@@ -17,6 +17,10 @@
     %li= link_to translate_helper("translation_engine_link_text"), translation_engine.translations_path
   - if TroubleWatch.can_view?(current_user)
     %li= link_to "Trouble board", trouble_board_path
+    - if TvController.wall_key
+      %li
+        = link_to "TV board", tv_path(k: TvController.wall_key, p: current_provider&.id), target: "_blank", rel: "noopener"
+        %span.text-muted (the office TV's live board; the link works without signing in, so share it with care)
     %li= link_to "Ask RidePilot questions", help_log_path
 
 - if !Rails.env.production? || ENV['HAS_RECURRING_TRIP_RUN_SCHDULING_BUTTON'] == 'true'

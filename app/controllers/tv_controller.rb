@@ -7,6 +7,11 @@ class TvController < ApplicationController
   before_action :require_key
   layout false
 
+  # the TV link's key (config/tv_wall_key, not in git, or TV_WALL_KEY); nil if unset
+  def self.wall_key
+    ENV["TV_WALL_KEY"].presence || (File.read(Rails.root.join("config", "tv_wall_key")).strip.presence rescue nil)
+  end
+
   def show
     @provider = provider
   end
@@ -18,7 +23,7 @@ class TvController < ApplicationController
   private
 
   def require_key
-    key = ENV["TV_WALL_KEY"].presence || (File.read(Rails.root.join("config", "tv_wall_key")).strip rescue nil)
+    key = self.class.wall_key
     return if key.present? && ActiveSupport::SecurityUtils.secure_compare(key, params[:k].to_s)
     render plain: "This board needs its link. Ask GCRPC I.T. for the TV address.", status: :forbidden
   end

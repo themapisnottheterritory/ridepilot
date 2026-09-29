@@ -6,7 +6,12 @@ Rails.application.configure do
   # In the development environment your application's code is reloaded any time
   # it changes. This slows down response time but is perfect for development
   # since you don't have to restart the web server when you make code changes.
-  config.enable_reloading = true
+  # RidePilot runs live service in this environment (production mode is planned
+  # for after 2026-10-02). Code reloading froze the whole app for 6 minutes on
+  # 2026-09-29: a file changed while Ask RidePilot was streaming an answer, and
+  # the reloader and the stream waited on each other. So no reloading: code
+  # and view changes go live on a restart (docker restart ridepilot_app_1).
+  config.enable_reloading = false
 
   # Do not eager load code on boot.
   config.eager_load = false

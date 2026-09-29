@@ -33,3 +33,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Skip notes for invisible work (refactors, specs, ops scripts, performance nobody feels).
 - Show Philz the note text when asking to commit, so the wording is reviewed.
 - If the change affects how to do something, also update the guide in `docs/help/*.md`.
+
+## Deploying a change on the live server (.16)
+- Code reloading is OFF (config/environments/development.rb, 2026-09-29): editing a file changes nothing until `docker restart ridepilot_app_1` (about 12 s of downtime). Restart when staff aren't mid-task, and say so.
+- Reason: with reloading on, an edit during an Ask RidePilot streaming answer deadlocked the whole app for 6 minutes.
+
