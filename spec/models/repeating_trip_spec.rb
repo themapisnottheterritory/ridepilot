@@ -91,4 +91,14 @@ RSpec.describe RepeatingTrip do
       expect(RepeatingTrip.by_trip_purpose("Bar")).not_to include @trip_1
     end
   end
+
+  # dup used to copy scheduled_through from the outbound, so a new return
+  # made no trips until after that date (Juanita Ramirez, 2026-09-29)
+  it "starts a return or a copy with no trips made yet" do
+    outbound = create(:repeating_trip)
+    outbound.update_column(:scheduled_through, Date.today + 21)
+    expect(outbound.clone_for_return!("12:00 PM").scheduled_through).to be_nil
+    expect(outbound.clone_for_future!.scheduled_through).to be_nil
+  end
+
 end

@@ -165,6 +165,7 @@ class RepeatingTrip < ApplicationRecord
     cloned_trip.appointment_time = nil
     cloned_trip.customer_informed = false
     cloned_trip.cab = false
+    cloned_trip.scheduled_through = nil   # a new template has made no trips yet
 
     cloned_trip.ridership_mobilities = self.ridership_mobilities.has_capacity.collect{|m| m.dup}
 
@@ -175,6 +176,10 @@ class RepeatingTrip < ApplicationRecord
 
     return_trip = self.dup 
     return_trip.direction = :return
+    # dup copied "trips made through <date>" from the outbound; left there, the
+    # return makes no trips until after that date (2026-09-29: a new ride home
+    # would have started three weeks late)
+    return_trip.scheduled_through = nil
     return_trip.pickup_address = self.dropoff_address
     return_trip.pickup_address_notes = self.dropoff_address_notes
     return_trip.dropoff_address = self.pickup_address
