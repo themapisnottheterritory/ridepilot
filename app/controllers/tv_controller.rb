@@ -24,6 +24,6 @@ class TvController < ApplicationController
   end
 
   def provider
-    Provider.find_by(id: params[:p]) || Provider.find(1)
+    Provider.find_by(id: params[:p]) || Provider.find_by(id: 1) || Provider.order(:id).first!   # GCRPC by default
   end
 end

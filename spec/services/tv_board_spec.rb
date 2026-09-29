@@ -27,6 +27,20 @@ RSpec.describe TvBoard do
     expect(described_class.new(provider).as_json[:hero].values_at(:count, :tone)).to eq [0, "good"]
   end
 
+  it "counts only trips still to come; past ones are just mentioned" do
+    trip_at(now - 3.hours)
+    trip_at(now + 5.hours)
+    hero = described_class.new(provider).as_json[:hero]
+    expect(hero.values_at(:count, :past_count, :tone)).to eq [1, 1, "warn"]
+  end
+
+  it "is covered once the day's remaining trips have runs, pointing at tomorrow" do
+    trip_at(now - 3.hours)
+    trip_at(now + 1.day)
+    hero = described_class.new(provider).as_json[:hero]
+    expect(hero.values_at(:count, :tone, :text)).to eq [0, "warn", "Today is covered · tomorrow needs runs"]
+  end
+
   it "doesn't count cancelled trips as needing a run" do
     trip_at(now + 1.hour, trip_result: create(:trip_result, code: "CANC"))
     expect(described_class.new(provider).as_json[:hero][:count]).to eq 0
@@ -57,8 +71,8 @@ RSpec.describe TvController, type: :controller do
   it "needs the key, and no sign-in" do
     get :data, params: { k: "wrong" }
     expect(response.status).to eq 403
-    create(:provider)
-    get :data, params: { k: "sekret" }
+    provider = create(:provider)
+    get :data, params: { k: "sekret", p: provider.id }
     expect(response.status).to eq 200
     expect(JSON.parse(response.body).keys).to include("hero", "on_road", "days", "strip")
   end

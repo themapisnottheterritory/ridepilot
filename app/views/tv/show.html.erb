@@ -133,13 +133,14 @@
 
   <div class="wall-main">
     <section class="card now tone-good" id="nowCard" aria-live="polite">
-      <div class="now-label">Trips without a run today</div>
+      <div class="now-label">Trips still to come today without a run</div>
       <div class="now-figure"><span class="big" id="heroNum">–</span><span class="unit" id="heroUnit"></span></div>
       <span class="status-chip"><i></i><span id="heroText">Connecting…</span></span>
       <div class="chips-label" id="chipsLabel"></div>
       <div class="chips" id="chips"></div>
       <div class="now-foot">
         <div><b id="heroTomorrow">–</b>without a run tomorrow</div>
+        <div id="heroPastBox" hidden><b id="heroPast">–</b>earlier today never had a run</div>
       </div>
     </section>
 
@@ -193,6 +194,8 @@
     $('heroUnit').textContent = h.count === 1 ? 'trip' : 'trips';
     $('heroText').textContent = h.text;
     $('heroTomorrow').textContent = h.tomorrow;
+    $('heroPast').textContent = h.past_count;
+    $('heroPastBox').hidden = !h.past_count;
     $('chipsLabel').textContent = h.next_pickups.length ? 'Next pickups without a run' : '';
     $('chips').innerHTML = h.next_pickups.map(function (p) {
       return '<span class="w' + (p.soon ? ' soon' : '') + '">' + esc(p.at) + '</span>';
@@ -214,7 +217,8 @@
       };
       return '<div class="card day"><div class="head"><b>' + esc(day.label) + '</b><span>' + esc(day.date) + '</span></div>' +
              row('Trips booked', day.booked) +
-             row('Without a run', day.without_run, day.label === 'Today' ? 'crit' : 'warn') +
+             // today's red is for trips still to come; once only past ones are left, it's just a count
+             row('Without a run', day.without_run, day.label === 'Today' ? (h.count > 0 ? 'crit' : null) : 'warn') +
              row('Runs with no driver', day.no_driver, 'warn') +
              row('Runs with no bus', day.no_bus, 'warn') + '</div>';
     }).join('');

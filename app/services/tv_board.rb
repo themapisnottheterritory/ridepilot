@@ -2,7 +2,8 @@
 # agency, as JSON the board polls. Counts, run names and drivers only -- a
 # wall in the office never shows riders' names or addresses.
 #
-#   hero       trips without a run: today's count, tone and the next pickups
+#   hero       today's trips still to come without a run: count, tone, the next
+#              pickups; ones already past are only mentioned (past_count)
 #   on_road    runs that have started and not ended
 #   days       today and the next two days: booked, without a run, runs with
 #              trips but no driver / no bus
@@ -11,6 +12,7 @@
 class TvBoard
   CANCELLED = %w[CANC LTCANC SDCANC].freeze
   SOON = 2.hours   # a trip without a run this close to pickup turns the board red
+  GRACE = 30.minutes   # a pickup this late is still worth placing; before that it's in the past
 
   def initialize(provider)
     @provider = provider
@@ -45,11 +47,15 @@ class TvBoard
     live_trips_on(day).where(run_id: nil).where("trips.cab IS NOT TRUE").where("trips.is_stand_by IS NOT TRUE")
   end
 
+  # Only trips still to come count: at 5 PM, pickups that went by without a
+  # run are nothing dispatch can act on, so they're mentioned, not counted.
   def hero
     today_open = without_run(@today)
-    count = today_open.count
-    upcoming = today_open.where("trips.pickup_time >= ?", @now - 30.minutes).order(:pickup_time).limit(8).pluck(:pickup_time)
-    soon = today_open.where("trips.pickup_time BETWEEN ? AND ?", @now - 30.minutes, @now + SOON).count
+    ahead = today_open.where("trips.pickup_time >= ?", @now - GRACE)
+    count = ahead.count
+    past_count = today_open.where("trips.pickup_time < ?", @now - GRACE).count
+    upcoming = ahead.order(:pickup_time).limit(8).pluck(:pickup_time)
+    soon = ahead.where("trips.pickup_time <= ?", @now + SOON).count
     tomorrow = without_run(@today + 1).count
     tone, text =
       if soon > 0 then ["crit", "#{soon} #{soon == 1 ? 'pickup' : 'pickups'} within 2 hours #{soon == 1 ? 'needs' : 'need'} a run"]
@@ -57,7 +63,7 @@ class TvBoard
       elsif tomorrow > 0 then ["warn", "Today is covered · tomorrow needs runs"]
       else ["good", "Every trip has a run"]
       end
-    { count: count, tomorrow: tomorrow, tone: tone, text: text,
+    { count: count, past_count: past_count, tomorrow: tomorrow, tone: tone, text: text,
       next_pickups: upcoming.map { |t| { at: t.in_time_zone.strftime("%-l:%M %P"), soon: t <= @now + SOON } } }
   end
 
