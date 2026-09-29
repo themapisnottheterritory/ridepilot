@@ -48,15 +48,18 @@ class RosterSync
   # stay empty. Two shapes of that:
   #
   # A city block: the bus drives one route's loop then the other's, and the
-  # tablet flips between them on one run. The run is the route driven first --
-  # Gold then Green (gcrpc-fixedroute/ops/one-bus-combo.md).
+  # tablet flips between them on one run. Gold then Green
+  # (gcrpc-fixedroute/ops/one-bus-combo.md). Since 2026-09-28 that run is the
+  # combo route's, "Gold+Green" (FixedRoute::COMBOS), handled like a tandem
+  # below; BLOCK_LEAD is the fallback if that route is missing.
   BLOCK_LEAD = { "Green" => "Gold" }.freeze
   #
   # A commuter double: one interleaved trip through both routes' pickups, which
   # is a route of its own in the authoring tool and in RidePilot (ops/
   # make-tandem-routes.py). The sheet still lists the two single routes with
   # the same operator; the run that gets the driver is the tandem's.
-  TANDEM = { %w[Bay Pal] => "Bay+Pal", ["Port Lavaca", "Vic2"] => "Port Lavaca+Vic2", %w[Edna Vic1] => "Vic1+Edna" }.freeze
+  TANDEM = { %w[Bay Pal] => "Bay+Pal", ["Port Lavaca", "Vic2"] => "Port Lavaca+Vic2", %w[Edna Vic1] => "Vic1+Edna",
+             %w[Gold Green] => "Gold+Green" }.freeze
 
   Row = Struct.new(:category, :route, :shift, :fixed_route, :run, :roster_driver, :driver, :current_driver,
                    :status, :action, :note, keyword_init: true)
@@ -311,7 +314,8 @@ class RosterSync
   # alphabetically.
   def lead_route(routes)
     tandem = TANDEM[routes.sort]
-    return tandem if tandem
+    # a combo RidePilot builds itself may not exist yet: fall back to the block lead
+    return tandem if tandem && (find_route(tandem) || !FixedRoute::COMBOS.key?(tandem))
     known = routes.select { |r| find_route(r) }
     pool = known.any? ? known : routes
     leads = pool.map { |r| BLOCK_LEAD[r] }.compact

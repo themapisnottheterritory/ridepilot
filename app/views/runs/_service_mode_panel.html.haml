@@ -20,7 +20,7 @@
         - if @run.fixed_route
           %span.help-block{style: 'margin: 4px 0 0;'}
             %span{style: "display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;background:#{@run.fixed_route.css_color || '#777'};border:1px solid rgba(0,0,0,.2);"}
-            = "#{@run.fixed_route.stops.count} stops · #{@run.fixed_route.directions.join(' / ')}"
+            = "#{@run.fixed_route.operating_stops.count} stops · #{@run.fixed_route.directions.join(' / ')}"
     - if @run.fixed_route? && !@is_repeating_run
       %p.help-block{style: 'margin: 4px 5px 0;'}
         Riders on a fixed run are logged as walk-ons from the tablet; this run has no trip list.

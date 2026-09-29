@@ -74,6 +74,61 @@ RSpec.describe Api::V1::Driver::FixedRunsController, type: :controller do
   end
 end
 
+# A one-bus day: the driver's run is the combo route's (Gold+Green) while the
+# tablet, driving Gold's loop, sends Gold's GTFS id.
+RSpec.describe Api::V1::Driver::FixedRunsController, "combo route", type: :controller do
+  let(:provider) { create(:provider) }
+  let!(:setup)   { build_fixed_run(provider) }
+  let(:driver)   { setup[1] }
+  let(:gold)     { setup[2].tap { |r| r.update!(name: "Gold", external_route_ids: ["gold-n"]) } }
+  let!(:green) do
+    g = FixedRoute.create!(provider: provider, name: "Green", kind: "city", color: "00AA00", external_route_ids: ["green-e"])
+    FixedRouteStop.create!(fixed_route: g, external_route_id: "green-e", external_stop_id: "g1", direction: "East", sequence: 1, name: "HEB")
+    g
+  end
+  let!(:combo)   { gold; FixedRoute.rebuild_combos!(provider).first }
+
+  before do
+    setup[0].destroy
+    user = driver.user
+    user.update_column(:authentication_token, "tok-#{SecureRandom.hex(8)}") if user.authentication_token.blank?
+    request.headers.merge!("X-User-Username" => user.username, "X-User-Token" => user.authentication_token)
+  end
+
+  it "builds the combo from its parts and gives it no stops of its own" do
+    expect(combo.name).to eq "Gold+Green"
+    expect(combo.external_route_ids).to eq ["gold-n", "green-e"]
+    expect(combo.stops).to be_empty
+    expect(combo.operating_stops.map(&:external_stop_id)).to eq %w[s1 s2 g1]
+  end
+
+  it "finds the driver's combo run from a part's GTFS id and serves both routes' stops" do
+    run = Run.create!(provider: provider, name: "Gold+Green", date: Time.zone.today, service_mode: "fixed_route",
+                      fixed_route: combo, driver: driver, vehicle: setup[0].vehicle)
+    post :open, params: { external_route_id: "gold-n" }
+    body = JSON.parse(response.body)
+    expect([body["run_id"], body["created"]]).to eq [run.id, false]
+    expect(body["stops"].map { |s| s["external_stop_id"] }).to eq %w[s1 s2 g1]
+  end
+
+  it "opens the part route, never the combo, when the driver has no run" do
+    post :open, params: { external_route_id: "green-e" }
+    body = JSON.parse(response.body)
+    expect(body["created"]).to be true
+    expect(Run.find(body["run_id"]).fixed_route).to eq green
+  end
+
+  it "credits a tap on a combo run to the stop's own route" do
+    run = Run.create!(provider: provider, name: "Gold+Green", date: Time.zone.today, service_mode: "fixed_route",
+                      fixed_route: combo, driver: driver, vehicle: setup[0].vehicle)
+    heb = green.stops.first
+    @controller = Api::V1::Driver::BoardingsController.new
+    post :create, params: { id: run.id, stop_id: heb.id, client_uuid: "c1", entries: [{ rider_category_id: RiderCategory.first.id, boarded_count: 2 }] }
+    expect(response.status).to eq 200
+    expect(FixedRouteBoarding.where(run_id: run.id).pluck(:fixed_route_id).uniq).to eq [green.id]
+  end
+end
+
 RSpec.describe Api::V1::Driver::FixedRunsController, "today", type: :controller do
   let(:provider) { create(:provider) }
   let!(:setup)   { build_fixed_run(provider) }

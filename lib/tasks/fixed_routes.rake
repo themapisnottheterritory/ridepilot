@@ -117,9 +117,14 @@ namespace :fixed_routes do
       end
     end
 
+    # Combos (Gold+Green) are RidePilot's own, built from their parts' ids.
+    unless dry
+      FixedRoute.rebuild_combos!(provider).each { |c| puts format("  combo   %-12s from %s", c.name, FixedRoute::COMBOS[c.name].join(" + ")) }
+    end
+
     # Routes that came from the tool before but are no longer offered: keep
-    # them (history), just switch them off.
-    stale = FixedRoute.for_provider(provider.id).active.where.not(name: seen_names).where("cardinality(external_route_ids) > 0")
+    # them (history), just switch them off. Combos are never in the tool.
+    stale = FixedRoute.for_provider(provider.id).active.where.not(name: seen_names + FixedRoute::COMBOS.keys).where("cardinality(external_route_ids) > 0")
     stale.each { |r| puts "  retire  #{r.name} (no longer in the authoring tool)" }
     stale.update_all(active: false) unless dry
 

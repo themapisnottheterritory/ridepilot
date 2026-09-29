@@ -80,6 +80,21 @@ RSpec.describe RosterSync do
     expect(s.report(r, rows, mode: "apply")).to include("one-bus days: Mary Ramos on Gold + Green")
   end
 
+  it "puts a Gold + Green one-bus driver on the Gold+Green run when that route exists" do
+    combo = FixedRoute.rebuild_combos!(provider).find { |r| r.name == "Gold+Green" }
+    run_gold, run_green, run_combo = run_for(gold, date), run_for(green, date), run_for(combo, date)
+    r = roster([["GOLD", "AM", "Mary Ramos", "assigned"], ["GREEN", "AM", "Mary Ramos", "assigned"]],
+               [["Mary Ramos", %w[GOLD GREEN]]])
+    s = sync(r)
+    rows = s.plan(r)
+    by = rows.index_by(&:route)
+    expect([by["GOLD"].action, by["GREEN"].action]).to eq [:combo_partner, :combo_partner]
+    expect(by["GOLD+GREEN"].action).to eq :assign
+    s.apply!(rows)
+    expect(run_combo.reload.driver).to eq mary
+    expect([run_gold.reload.driver, run_green.reload.driver]).to eq [nil, nil]
+  end
+
   it "never clears a driver, never touches a started run, and flags names it cannot match" do
     run_gold = run_for(gold, date, driver: mary)
     run_gold.update_columns(actual_start_time: Time.current)

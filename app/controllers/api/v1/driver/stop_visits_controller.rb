@@ -16,7 +16,7 @@ class Api::V1::Driver::StopVisitsController < Api::V1::Driver::BaseController
   def create
     rows = Array(params[:visits])
     return render fail_response(status: 422, visits: "visits is required.") if rows.empty?
-    stops = @run.fixed_route.stops.index_by { |s| [s.external_route_id, s.external_stop_id] }
+    stops = @run.fixed_route.operating_stops.index_by { |s| [s.external_route_id, s.external_stop_id] }
     accepted = 0
     rows.each do |v|
       uuid = v[:client_uuid].to_s.strip

@@ -27,12 +27,16 @@ class Api::V1::Driver::FixedRunsController < Api::V1::Driver::BaseController
     ext = params[:external_route_id].to_s.strip
     return render fail_response(status: 422, external_route_id: "external_route_id is required.") if ext.blank?
     provider = @driver.provider
-    route = FixedRoute.for_provider(provider.id).active.where("? = ANY(external_route_ids)", ext).first
+    date = Time.zone.today
+    routes = FixedRoute.for_provider(provider.id).active.where("? = ANY(external_route_ids)", ext)
+    # This driver's open run today on any route serving ext: on a one-bus day
+    # that is the combo's (Gold+Green) while the tablet sends Gold's id.
+    run = Run.where(provider: provider, driver: @driver, fixed_route_id: routes.select(:id), date: date, service_mode: "fixed_route")
+             .where(deleted_at: nil, actual_end_time: nil).order(:id).last
+    # Otherwise the route itself, never a combo (its ids are its parts').
+    route = run&.fixed_route || routes.order(Arel.sql("cardinality(external_route_ids)")).first
     return render fail_response(status: 404, code: "unknown_route", route: "RidePilot has no fixed route for #{ext}.") unless route
 
-    date = Time.zone.today
-    run = Run.where(provider: provider, driver: @driver, fixed_route: route, date: date, service_mode: "fixed_route")
-             .where(deleted_at: nil, actual_end_time: nil).order(:id).last
     created = false
     if run.nil?
       run = Run.new(provider: provider, driver: @driver, fixed_route: route, date: date, service_mode: "fixed_route",
@@ -50,7 +54,7 @@ class Api::V1::Driver::FixedRunsController < Api::V1::Driver::BaseController
 
     render success_response(boardings_payload(run).merge(
       created: created,
-      stops: route.stops.map { |s|
+      stops: route.operating_stops.map { |s|
         { id: s.id, external_route_id: s.external_route_id, external_stop_id: s.external_stop_id,
           name: s.name, direction: s.direction, sequence: s.sequence }
       },

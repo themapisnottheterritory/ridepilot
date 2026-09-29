@@ -19,7 +19,7 @@ class Api::V1::Driver::BoardingsController < Api::V1::Driver::BaseController
     render success_response({
       route: route_json(route),
       directions: route.directions,
-      stops: route.stops.map { |s|
+      stops: route.operating_stops.map { |s|
         { id: s.id, name: s.name, direction: s.direction, sequence: s.sequence,
           latitude: s.latitude&.to_f, longitude: s.longitude&.to_f, timepoint: s.timepoint }
       },

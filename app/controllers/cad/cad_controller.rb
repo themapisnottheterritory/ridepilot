@@ -187,7 +187,7 @@ module Cad
         route = @run.fixed_route
         @route_paths = route.directions.map { |dir|
           { color: route.css_color, direction: dir,
-            waypoints: route.stops.for_direction(dir).select(&:coordinates?).map { |st| [st.latitude.to_f, st.longitude.to_f] } }
+            waypoints: route.operating_stops.for_direction(dir).select(&:coordinates?).map { |st| [st.latitude.to_f, st.longitude.to_f] } }
         }.select { |h| h[:waypoints].size >= 2 }
         return
       end
