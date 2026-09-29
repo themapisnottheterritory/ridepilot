@@ -12,6 +12,15 @@
 #   for:       admins            (optional: provider admins and up only)
 #   providers: [1]               (optional: 1 GCRPC, 107 Goliad, 143 Lavaca)
 
+- added: "2026-09-29 15:03"
+  title: A mobility icon next to riders who need one
+  body: |
+    On **Dispatch** (the trips list and each run's manifest) and on the
+    **Trips** page, a rider whose trip lists a wheelchair or scooter now has
+    a wheelchair icon before their name; a walker or other aid shows a person
+    with a cane. Point at the icon to see the exact device. It comes from the
+    trip's mobility section, so keep that filled in.
+
 - added: "2026-09-29 14:56"
   title: Duplicate check for subscription trips
   body: |

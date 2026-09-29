@@ -943,6 +943,16 @@ fieldset {
 	}
 }
 
+// Mobility icon before a rider's name (MobilityIconHelper)
+.mobility-icon {
+	display: inline-block;
+	min-width: 1.3em;
+	margin-right: 3px;
+	color: #1f5fa8;
+	font-size: 1.05em;
+	cursor: help;
+}
+
 // page elements
 
 .action-buttons {

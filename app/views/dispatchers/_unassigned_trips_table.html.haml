@@ -20,6 +20,7 @@
         %td
           %input.trip-selected{type: "checkbox"}
         %td
+          = mobility_icon(trip)
           = trip.customer.try(:name)
           - if trip.repeating_trip_id.present?
             %span.label.label-info.pull-right

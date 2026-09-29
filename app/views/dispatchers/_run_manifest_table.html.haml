@@ -47,7 +47,9 @@
             - if trip.repeating_trip_id
               %span.label.label-info
                 Recur
-          %td= trip.customer.try(:name)
+          %td
+            = mobility_icon(trip)
+            = trip.customer.try(:name)
           %td= itin.address.try(:one_line_text)
           %td= format_time_for_listing(itin.time)
           - if run_date_today_or_future

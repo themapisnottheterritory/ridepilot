@@ -9,6 +9,7 @@
   %td
     = format_time_for_listing_day trip.pickup_time
   %td
+    = mobility_icon(trip)
     = link_to trip.customer.try(:name), trip.customer, :title => translate_helper("view_customer_record_link_text")
   %td
     - if trip.customer.try(:phone_number_1)
