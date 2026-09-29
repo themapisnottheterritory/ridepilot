@@ -1,0 +1,47 @@
+-# Progress while "Optimize Route" works. The request is a plain POST that
+-# takes 12-15 s (the solver always searches for its 10 s limit), so a bar that
+-# fills over ~13 s is honest; it waits at 95% if the answer is late. The
+-# result arrives as the flash message on the run page, as before.
+#optimize-progress{style: "display:none; position:fixed; top:0; right:0; bottom:0; left:0; z-index:2000; background:rgba(0,0,0,.45);"}
+  .panel.panel-default{style: "max-width:460px; margin:18vh auto 0; padding:22px 24px; box-shadow:0 8px 30px rgba(0,0,0,.3);"}
+    %h4{style: "margin-top:0;"} Optimizing route&hellip;
+    .progress{style: "height:22px; margin-bottom:10px;"}
+      .progress-bar.progress-bar-striped.active#optimize-progress-bar{role: "progressbar", style: "width:0%; transition:width .4s linear;"}
+    %p.text-muted#optimize-progress-step{style: "margin:0;"} Getting drive times&hellip;
+
+:javascript
+  $(function() {
+    var STEPS = [
+      [0,  "Getting drive times…"],
+      [2,  "Checking pickup windows, appointments and ride times…"],
+      [11, "Writing the manifest…"],
+      [14, "Almost there…"]
+    ];
+    var timer = null;
+
+    function start() {
+      var began = Date.now();
+      $('#optimize-progress').show();
+      $('a.optimize-route').addClass('disabled').attr('aria-disabled', 'true');
+      timer = setInterval(function() {
+        var s = (Date.now() - began) / 1000;
+        $('#optimize-progress-bar').css('width', Math.min(95, s / 13 * 95) + '%');
+        var text = STEPS[0][1];
+        STEPS.forEach(function(step) { if (s >= step[0]) text = step[1]; });
+        $('#optimize-progress-step').text(text);
+      }, 250);
+    }
+
+    // jquery_ujs: after the confirm box, before it posts
+    $(document).on('confirm:complete', 'a.optimize-route', function(e, answer) {
+      if (answer) start();
+    });
+    // Back button returning to this page from the cache: no stale overlay.
+    // (pageshow also fires on every normal load; only a restored page counts.)
+    $(window).on('pageshow', function(e) {
+      if (!(e.originalEvent && e.originalEvent.persisted)) return;
+      clearInterval(timer);
+      $('#optimize-progress').hide();
+      $('a.optimize-route').removeClass('disabled').removeAttr('aria-disabled');
+    });
+  });
