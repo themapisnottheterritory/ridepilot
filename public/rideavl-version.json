@@ -1,9 +1,9 @@
 {
-  "version": "1.0.16",
-  "version_code": 17,
+  "version": "1.0.17",
+  "version_code": 18,
   "url": "/rideavl-pilot.apk",
   "required": false,
-  "notes": "End run now follows the post-trip inspection.",
-  "published_at": "2026-09-22T17:47:48Z",
-  "sha256": "031f4d22450ec94c9f5c9ee6717f258a7362fb53a7f274b84a6c99dbc242be53"
+  "notes": "Will-call pickups now show a Will call badge. Tap Update, then Install.",
+  "published_at": "2026-09-29T21:09:08Z",
+  "sha256": "08350aee6a0f50691e8503ed7af6c9606c7d5d01ad6c68e8dd14b97ad6e63c64"
 }
