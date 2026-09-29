@@ -57,3 +57,6 @@ destinations_FINAL.csv
 
 # Python bytecode (optimizer_service tests)
 __pycache__/
+
+# Secret for the dispatch TV link (TvController); not in git
+/config/tv_wall_key

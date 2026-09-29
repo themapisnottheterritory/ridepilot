@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Live · RidePilot</title>
+<%# Dispatch TV (TvController, TvBoard). Same look as the call center wall on the PBX (wall.php). %>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #07090d; --panel: #0e1219; --panel-2: #121823;
+    --line: rgba(255,255,255,.07); --line-2: rgba(255,255,255,.12);
+    --ink: #f3f5f9; --ink-2: #aeb6c4; --ink-3: #737d8f;
+    --you: #3987e5; --good: #0ca30c; --warn: #fab219; --crit: #d03b3b;
+    --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { background: var(--bg); margin: 0; }
+  body {
+    font: 14px/1.45 var(--font); color: var(--ink); -webkit-font-smoothing: antialiased; overflow: hidden; height: 100vh;
+    background:
+      radial-gradient(1200px 600px at 12% -10%, rgba(57,135,229,.16), transparent 60%),
+      radial-gradient(900px 500px at 95% 0%, rgba(144,133,233,.10), transparent 60%), var(--bg);
+  }
+  .aurora {
+    position: fixed; inset: -20%; z-index: 0; pointer-events: none; filter: blur(60px); opacity: .25;
+    background:
+      radial-gradient(40% 35% at 30% 30%, rgba(57,135,229,.55), transparent 70%),
+      radial-gradient(35% 30% at 70% 60%, rgba(144,133,233,.35), transparent 70%),
+      radial-gradient(30% 30% at 50% 90%, rgba(27,175,122,.18), transparent 70%);
+    animation: drift 24s ease-in-out infinite alternate;
+  }
+  @keyframes drift { to { transform: translate3d(3%, -2%, 0) rotate(4deg); } }
+
+  .wall-wrap { position: relative; z-index: 1; height: 100vh; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 2.2vh; padding: 3vh 3vw 2.4vh; }
+  .wall-top { display: flex; align-items: center; gap: 2vh; }
+  .brand { display: flex; align-items: center; gap: 1.2vh; font-size: 2.3vh; color: var(--ink-2); white-space: nowrap; }
+  .brand b { color: var(--ink); font-weight: 650; }
+  .brand .agency { color: var(--ink-3); font-size: 1.9vh; margin-left: .6vh; }
+  .brand-mark {
+    width: 3.6vh; height: 3.6vh; border-radius: 1.1vh; flex: none; position: relative;
+    background: linear-gradient(135deg, #6fb0ff, #2a63d6);
+    box-shadow: 0 0 0 1px rgba(255,255,255,.15) inset, 0 6px 18px rgba(42,99,214,.45);
+  }
+  /* a small bus */
+  .brand-mark::before { content: ""; position: absolute; left: 22%; right: 22%; top: 26%; height: 38%; border: .3vh solid #fff; border-radius: .6vh .6vh .3vh .3vh; }
+  .brand-mark::after { content: ""; position: absolute; left: 30%; right: 30%; top: 68%; height: .55vh; border-left: .55vh solid #fff; border-right: .55vh solid #fff; border-radius: 50%; }
+  .live-pill {
+    display: inline-flex; align-items: center; gap: .8vh; padding: .5vh 1.2vh; border-radius: 999px; font-size: 1.5vh; font-weight: 600;
+    letter-spacing: .06em; text-transform: uppercase; color: #9fe29f; background: rgba(12,163,12,.12); border: 1px solid rgba(12,163,12,.35);
+  }
+  .live-pill i { width: .9vh; height: .9vh; border-radius: 50%; background: var(--good); animation: pulse 2s infinite; }
+  .live-pill.stale { color: #ffd47a; background: rgba(250,178,25,.10); border-color: rgba(250,178,25,.35); }
+  .live-pill.stale i { background: var(--warn); animation: none; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(12,163,12,.55); } 70% { box-shadow: 0 0 0 1vh rgba(12,163,12,0); } 100% { box-shadow: 0 0 0 0 rgba(12,163,12,0); } }
+  .clock { margin-left: auto; text-align: right; font-variant-numeric: tabular-nums; }
+  .clock b { display: block; font-size: 3.4vh; font-weight: 600; color: var(--ink-2); line-height: 1.1; }
+  .clock span { font-size: 1.7vh; color: var(--ink-3); }
+
+  .card {
+    position: relative; border-radius: 2vh; padding: 2.2vh 2.4vh; min-width: 0;
+    background: linear-gradient(180deg, var(--panel-2), var(--panel)); border: 1px solid var(--line);
+    box-shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 20px 40px -24px rgba(0,0,0,.7);
+  }
+  .card h3 { margin: 0; font-size: 2vh; font-weight: 600; color: var(--ink-2); }
+  .card .explain { margin: .3vh 0 0; color: var(--ink-3); font-size: 1.6vh; }
+
+  .wall-main { display: grid; grid-template-columns: 1fr 1.6fr; gap: 2.2vh; min-height: 0; }
+  .now { overflow: hidden; display: flex; flex-direction: column; gap: 2vh; padding: 4vh 3.4vh; --tone: var(--good); }
+  .now::before {
+    content: ""; position: absolute; inset: -40% -20% auto auto; width: 70%; height: 140%; pointer-events: none; opacity: .9;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--tone) 22%, transparent), transparent); transition: background .6s;
+  }
+  .now.tone-warn { --tone: var(--warn); } .now.tone-crit { --tone: var(--crit); } .now.tone-good { --tone: var(--good); }
+  .now-label { font-size: 2.3vh; font-weight: 600; color: var(--ink-2); position: relative; }
+  .now-figure { display: flex; align-items: baseline; gap: 1.6vh; position: relative; }
+  .now-figure .big { font-size: 17vh; font-weight: 700; line-height: .9; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .now-figure .unit { font-size: 3vh; color: var(--ink-2); font-weight: 500; }
+  .status-chip {
+    display: inline-flex; align-items: center; gap: .9vh; padding: .8vh 1.8vh; border-radius: 999px; width: fit-content; position: relative;
+    font-size: 2.2vh; font-weight: 600; background: rgba(255,255,255,.05); border: 1px solid var(--line-2);
+  }
+  .status-chip i { width: 1.2vh; height: 1.2vh; border-radius: 50%; background: var(--tone); flex: none; }
+  .chips-label { color: var(--ink-3); font-size: 1.7vh; position: relative; margin-bottom: -.8vh; }
+  .chips { display: flex; flex-wrap: wrap; gap: .8vh; position: relative; min-height: 3.2vh; }
+  .chips .w {
+    font-size: 1.9vh; font-weight: 600; padding: .5vh 1.2vh; border-radius: 1vh; background: rgba(255,255,255,.05);
+    border: 1px solid var(--line-2); color: var(--ink-2); font-variant-numeric: tabular-nums;
+  }
+  .chips .w.soon { border-color: rgba(208,59,59,.55); color: #ff9c9c; }
+  .now-foot { margin-top: auto; padding-top: 1vh; position: relative; display: flex; gap: 3vh; color: var(--ink-3); font-size: 1.8vh; }
+  .now-foot b { display: block; color: var(--ink); font-size: 3vh; font-weight: 650; font-variant-numeric: tabular-nums; }
+
+  .wall-right { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 2.2vh; min-height: 0; }
+  .road { display: flex; flex-direction: column; gap: 1.6vh; overflow: hidden; }
+  .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.6vh; align-content: start; }
+  .tile { border-radius: 1.6vh; padding: 1.6vh 1.8vh; background: rgba(255,255,255,.025); border: 1px solid var(--line); display: flex; flex-direction: column; gap: .7vh; }
+  .tile .name { font-size: 2.5vh; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tile .who { color: var(--ink-3); font-size: 1.7vh; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tile .state { display: flex; align-items: center; gap: 1vh; font-size: 1.9vh; color: var(--ink-2); }
+  .tile .state i { width: 1.3vh; height: 1.3vh; border-radius: 50%; background: var(--you); flex: none; }
+  .tile .state b { margin-left: auto; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .tile.more { align-items: center; justify-content: center; color: var(--ink-2); font-size: 2.2vh; }
+  .empty { flex: 1; display: grid; place-items: center; text-align: center; color: var(--ink-3); font-size: 2.1vh; }
+  .empty b { display: block; color: var(--ink-2); font-size: 2.6vh; font-weight: 600; margin-bottom: .6vh; }
+
+  .days { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.6vh; }
+  .day .head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 1vh; }
+  .day .head b { font-size: 2.2vh; } .day .head span { color: var(--ink-3); font-size: 1.6vh; }
+  .day .row { display: flex; justify-content: space-between; font-size: 1.8vh; color: var(--ink-2); padding: .25vh 0; }
+  .day .row b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .day .row.flag b { color: #ffd47a; }
+  .day .row.flag.crit b { color: #ff9c9c; }
+
+  .wall-strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2vh; }
+  .wall-strip .card { padding: 2vh 2.4vh; }
+  .wall-strip span { display: block; color: var(--ink-3); font-size: 1.8vh; }
+  .wall-strip b { font-size: 5vh; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .wall-foot { text-align: center; color: var(--ink-3); font-size: 1.8vh; }
+  .wall-foot .quote { display: block; color: var(--ink-2); font-style: italic; margin-top: .4vh; }
+  @media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="aurora" aria-hidden="true"></div>
+<div class="wall-wrap">
+  <div class="wall-top">
+    <div class="brand"><span class="brand-mark"></span><span>GCRPC <b>RidePilot</b></span><span class="agency" id="agency"><%= @provider.name %></span></div>
+    <span class="live-pill" id="livePill"><i></i><span>Live</span></span>
+    <div class="clock"><b id="clock"></b><span id="date"></span></div>
+  </div>
+
+  <div class="wall-main">
+    <section class="card now tone-good" id="nowCard" aria-live="polite">
+      <div class="now-label">Trips without a run today</div>
+      <div class="now-figure"><span class="big" id="heroNum">–</span><span class="unit" id="heroUnit"></span></div>
+      <span class="status-chip"><i></i><span id="heroText">Connecting…</span></span>
+      <div class="chips-label" id="chipsLabel"></div>
+      <div class="chips" id="chips"></div>
+      <div class="now-foot">
+        <div><b id="heroTomorrow">–</b>without a run tomorrow</div>
+      </div>
+    </section>
+
+    <div class="wall-right">
+      <section class="card road">
+        <div><h3>On the road</h3><p class="explain">Runs a driver has started on the tablet</p></div>
+        <div class="tiles" id="tiles"></div>
+        <div class="empty" id="roadEmpty" hidden><div><b>No runs on the road right now</b>Runs show up here when a driver starts one on the tablet.</div></div>
+      </section>
+      <div class="days" id="days"></div>
+    </div>
+  </div>
+
+  <div class="wall-strip">
+    <div class="card"><span>Trips today</span><b id="sTrips">–</b></div>
+    <div class="card"><span>Rides completed</span><b id="sDone">–</b></div>
+    <div class="card"><span>No-shows</span><b id="sNoShow">–</b></div>
+    <div class="card"><span>Cancelled</span><b id="sCancel">–</b></div>
+    <div class="card"><span>Fixed-route boardings</span><b id="sBoard">–</b></div>
+  </div>
+
+  <div class="wall-foot">
+    A live view of today's service, so we can help each other, not measure each other.
+    <span class="quote" id="quote"></span>
+  </div>
+</div>
+
+<script>
+(function () {
+  var DATA_URL = <%= raw tv_data_path(k: params[:k], p: @provider.id).to_json %>;
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; };
+  var lastOk = 0;
+
+  function tick() {
+    var now = new Date();
+    // Central time whatever the TV's own clock setting is
+    $('clock').textContent = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Chicago' });
+    $('date').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'America/Chicago' });
+    // more than two missed refreshes: say so instead of showing stale numbers as live
+    var stale = Date.now() - lastOk > 75000;
+    $('livePill').classList.toggle('stale', stale);
+    $('livePill').lastElementChild.textContent = stale ? 'Reconnecting' : 'Live';
+  }
+
+  function render(d) {
+    var h = d.hero;
+    $('agency').textContent = d.provider;
+    $('nowCard').className = 'card now tone-' + h.tone;
+    $('heroNum').textContent = h.count;
+    $('heroUnit').textContent = h.count === 1 ? 'trip' : 'trips';
+    $('heroText').textContent = h.text;
+    $('heroTomorrow').textContent = h.tomorrow;
+    $('chipsLabel').textContent = h.next_pickups.length ? 'Next pickups without a run' : '';
+    $('chips').innerHTML = h.next_pickups.map(function (p) {
+      return '<span class="w' + (p.soon ? ' soon' : '') + '">' + esc(p.at) + '</span>';
+    }).join('');
+
+    var runs = d.on_road;
+    $('roadEmpty').hidden = runs.length > 0;
+    $('tiles').innerHTML = runs.map(function (r) {
+      if (r.more) return '<div class="tile more">+' + r.more + ' more on the road</div>';
+      var who = [r.driver, r.vehicle].filter(Boolean).join(' · ') || 'No driver or bus set';
+      var progress = r.fixed ? (r.done + ' boarded') : (r.done + ' of ' + r.total + ' trips');
+      return '<div class="tile"><div class="name">' + esc(r.name) + '</div><div class="who">' + esc(who) + '</div>' +
+             '<div class="state"><i></i>Since ' + esc(r.since) + '<b>' + esc(progress) + '</b></div></div>';
+    }).join('');
+
+    $('days').innerHTML = d.days.map(function (day) {
+      var row = function (label, n, flag) {
+        return '<div class="row' + (n > 0 && flag ? ' flag' + (flag === 'crit' ? ' crit' : '') : '') + '"><span>' + label + '</span><b>' + n + '</b></div>';
+      };
+      return '<div class="card day"><div class="head"><b>' + esc(day.label) + '</b><span>' + esc(day.date) + '</span></div>' +
+             row('Trips booked', day.booked) +
+             row('Without a run', day.without_run, day.label === 'Today' ? 'crit' : 'warn') +
+             row('Runs with no driver', day.no_driver, 'warn') +
+             row('Runs with no bus', day.no_bus, 'warn') + '</div>';
+    }).join('');
+
+    var s = d.strip;
+    $('sTrips').textContent = s.trips; $('sDone').textContent = s.completed; $('sNoShow').textContent = s.no_shows;
+    $('sCancel').textContent = s.cancelled; $('sBoard').textContent = s.boardings;
+    $('quote').textContent = d.quote || '';
+  }
+
+  function load() {
+    fetch(DATA_URL, { headers: { Accept: 'application/json' }, cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (d) { lastOk = Date.now(); render(d); tick(); })
+      .catch(function () { tick(); });
+  }
+
+  load(); tick();
+  setInterval(load, 30000);
+  setInterval(tick, 5000);
+  // a fresh page once a night, like the call center wall
+  setInterval(function () { if (new Date().getHours() === 3 && performance.now() > 3600000) location.reload(); }, 600000);
+})();
+</script>
+</body>
+</html>

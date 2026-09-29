@@ -222,6 +222,10 @@ Rails.application.routes.draw do
     # GCRPC I.T.: where RidePilot is getting in people's way (TroubleBoard)
     get  "trouble_board"     => "trouble_board#index", as: :trouble_board
 
+    # dispatch TV, opened with its key (TvController)
+    get  "tv"                => "tv#show",  as: :tv
+    get  "tv/data"           => "tv#data",  as: :tv_data
+
     resources :address_groups
 
     resources :device_pools, :except => [:index, :show] do
