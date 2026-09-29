@@ -215,6 +215,11 @@ Rails.application.routes.draw do
 
     # What's new (WhatsNew, config/whats_new.yml)
     get  "whats_new"         => "whats_new#index", as: :whats_new
+    # Send a suggestion (Suggestion): staff -> GCRPC I.T.
+    resources :suggestions, only: [:index, :new, :create, :update]
+
+    # GCRPC I.T.: where RidePilot is getting in people's way (TroubleBoard)
+    get  "trouble_board"     => "trouble_board#index", as: :trouble_board
 
     resources :address_groups
 

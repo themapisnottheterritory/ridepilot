@@ -1374,6 +1374,23 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.index ["street", "last_attempted_at"], name: "index_street_dictionary_on_street_and_last_attempted_at"
   end
 
+  create_table "suggestions", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "provider_id"
+    t.string "kind", default: "idea", null: false
+    t.text "body", null: false
+    t.string "page_path"
+    t.integer "help_question_id"
+    t.string "status", default: "new", null: false
+    t.text "reply"
+    t.integer "replied_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["provider_id"], name: "index_suggestions_on_provider_id"
+    t.index ["status"], name: "index_suggestions_on_status"
+    t.index ["user_id"], name: "index_suggestions_on_user_id"
+  end
+
   create_table "translation_keys", id: :serial, force: :cascade do |t|
     t.string "name", limit: 255
     t.datetime "created_at", precision: nil
@@ -1492,6 +1509,18 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.index ["service_level_id"], name: "index_trips_on_service_level_id"
     t.index ["trip_purpose_id"], name: "index_trips_on_trip_purpose_id"
     t.index ["trip_result_id"], name: "index_trips_on_trip_result_id"
+  end
+
+  create_table "trouble_events", force: :cascade do |t|
+    t.string "kind", null: false
+    t.string "screen"
+    t.string "action"
+    t.string "detail"
+    t.integer "provider_id"
+    t.integer "duration_ms"
+    t.datetime "created_at", null: false
+    t.index ["created_at"], name: "index_trouble_events_on_created_at"
+    t.index ["kind", "created_at"], name: "index_trouble_events_on_kind_and_created_at"
   end
 
   create_table "users", id: :serial, force: :cascade do |t|

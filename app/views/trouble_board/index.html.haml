@@ -1,0 +1,167 @@
+- content_for :title, "Trouble board"
+- b = @board
+- kinds = TroubleBoard::KINDS
+.tb-page
+  .tb-hero
+    .tb-hero-text
+      .tb-eyebrow GCRPC I.T.
+      %h1 Trouble board
+      %p Where RidePilot is getting in people's way. Counted by screen, never by person.
+    .tb-filters
+      .tb-range{role: "group", "aria-label": "Period"}
+        - TroubleBoard::RANGES.each do |d|
+          = link_to "#{d} days", trouble_board_path(days: d, provider_id: b.provider_id), class: ("active" if b.days == d), "aria-current": (b.days == d ? "true" : nil)
+      = form_tag trouble_board_path, method: :get, class: "tb-agency" do
+        = hidden_field_tag :days, b.days
+        %label.sr-only{for: "provider_id"} Agency
+        = select_tag :provider_id, options_for_select([["All agencies", ""]] + @providers, b.provider_id), onchange: "this.form.submit()"
+
+  .tb-cards
+    - kinds.each do |kind, meta|
+      - s = b.summary[kind]
+      .tb-card{style: "--tb-color: #{meta[:color]}"}
+        .tb-card-top
+          .tb-card-label= meta[:label]
+          = tb_sparkline(s[:daily], meta[:color])
+        .tb-card-number= number_with_delimiter(s[:count])
+        = tb_delta(s[:count], s[:previous], b.days)
+        .tb-card-blurb= meta[:blurb]
+
+  .tb-panel
+    .tb-panel-head
+      %h2 Day by day
+      .tb-legend
+        - kinds.each do |kind, meta|
+          %span
+            %i{style: "background: #{meta[:color]}"}
+            = meta[:label]
+    - if b.total.zero?
+      .tb-empty
+        %i.fas.fa-check-circle
+        Nothing in the last #{b.days} days.
+    - else
+      = tb_daily_bars(b)
+
+  .tb-grid
+    .tb-panel{style: "--tb-color: #{kinds['error'][:color]}"}
+      .tb-panel-head
+        %h2 Errors
+        .tb-sub Pages that broke or saves that failed, most frequent first
+      - if (rows = b.errors).empty?
+        .tb-empty
+          %i.fas.fa-check-circle
+          No errors in the last #{b.days} days.
+      - else
+        .tb-scroll
+          %table.tb-table
+            %thead
+              %tr
+                %th What broke
+                %th.tb-num Times
+                %th Trend
+                %th Last
+            %tbody
+              - rows.each do |r|
+                - klass, message = tb_split_error(r[:detail])
+                %tr
+                  %td
+                    .tb-where
+                      %strong= r[:screen]
+                      %code= r[:action]
+                    - if klass
+                      .tb-class= klass
+                    .tb-detail= message
+                  %td.tb-num
+                    %span.tb-count= r[:count]
+                  %td= tb_sparkline(r[:daily], kinds["error"][:color], width: 90, height: 26)
+                  %td.tb-when= tb_ago(r[:last])
+
+    .tb-panel{style: "--tb-color: #{kinds['message'][:color]}"}
+      .tb-panel-head
+        %h2 Refusals
+        .tb-sub The same message over and over usually means a confusing screen
+      - if (rows = b.refusals).empty?
+        .tb-empty
+          %i.fas.fa-check-circle
+          No refusals in the last #{b.days} days.
+      - else
+        .tb-scroll
+          %table.tb-table
+            %thead
+              %tr
+                %th Message people saw
+                %th.tb-num Times
+                %th Trend
+                %th Last
+            %tbody
+              - rows.each do |r|
+                %tr
+                  %td
+                    .tb-detail.tb-quote= "“#{r[:detail]}”"
+                    .tb-where
+                      %strong= r[:screen]
+                  %td.tb-num
+                    %span.tb-count= r[:count]
+                  %td= tb_sparkline(r[:daily], kinds["message"][:color], width: 90, height: 26)
+                  %td.tb-when= tb_ago(r[:last])
+
+    .tb-panel{style: "--tb-color: #{kinds['slow'][:color]}"}
+      .tb-panel-head
+        %h2 Slow pages
+        .tb-sub Loads that took #{TroubleWatch::SLOW_MS / 1000} seconds or more
+      - if (rows = b.slow_pages).empty?
+        .tb-empty
+          %i.fas.fa-check-circle
+          No slow pages in the last #{b.days} days.
+      - else
+        .tb-scroll
+          %table.tb-table
+            %thead
+              %tr
+                %th Page
+                %th.tb-num Slow loads
+                %th.tb-num Typical
+                %th.tb-num Worst
+                %th Last
+            %tbody
+              - rows.each do |r|
+                %tr
+                  %td
+                    .tb-where
+                      %strong= r[:screen]
+                      %code= r[:action]
+                  %td.tb-num
+                    %span.tb-count= r[:count]
+                  %td.tb-num= "#{r[:median_s].round(1)} s"
+                  %td.tb-num= "#{r[:worst_s].round(1)} s"
+                  %td.tb-when= tb_ago(r[:last])
+
+    .tb-panel{style: "--tb-color: #{kinds['help'][:color]}"}
+      .tb-panel-head
+        %h2 Ask RidePilot misses
+        .tb-sub
+          Where the guide or the screen needs work.
+          = link_to "All questions", help_log_path
+      - if (groups = b.help_misses).empty?
+        .tb-empty
+          %i.fas.fa-check-circle
+          No misses in the last #{b.days} days.
+      - else
+        - groups.first(6).each do |g|
+          .tb-help-group
+            .tb-help-head
+              %strong= g[:screen]
+              %span.tb-count= g[:count]
+            %ul.tb-help-questions
+              - g[:questions].each do |q|
+                %li
+                  %span.tb-quote= "“#{q[:text].truncate(140)}”"
+                  %span.tb-why{class: "tb-why-#{q[:why].parameterize}"}= q[:why]
+
+  .tb-privacy
+    %i.fas.fa-user-shield
+    %div
+      %strong What this records, and what it doesn't.
+      For each error, refusal or slow page: the screen, the agency, the time, and the message with numbers
+      taken out. Never who it happened to, their IP address, or what they entered. Ask RidePilot misses show
+      the question that was asked, without the name. Everything here is deleted after 90 days.

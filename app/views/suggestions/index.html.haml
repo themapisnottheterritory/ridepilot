@@ -1,0 +1,48 @@
+- content_for :title, "Suggestions"
+#page-header
+  %h1.page-title= @manager ? "Suggestions" : "Your suggestions"
+.suggestions-page.suggestions-list
+  %p
+    = link_to "Send a suggestion", new_suggestion_path, class: "btn btn-primary btn-sm"
+    - if @manager
+      %span.suggestion-filters
+        = link_to "All (#{@counts.values.sum})", suggestions_path, class: ("active" unless @status)
+        - Suggestion::STATUSES.each do |value, label|
+          = link_to "#{label} (#{@counts[value] || 0})", suggestions_path(status: value), class: ("active" if @status == value)
+  - if @suggestions.empty?
+    %p.text-muted= @manager ? "No suggestions here." : "You haven't sent any yet."
+  - @suggestions.each do |s|
+    .suggestion{class: "status-#{s.status}"}
+      .suggestion-meta
+        %span.label{class: s.status == "new" ? "label-warning" : (s.status == "done" ? "label-success" : "label-default")}= s.status_label
+        %strong= s.kind_label
+        &middot;
+        = s.created_at.in_time_zone.strftime("%-m/%-d/%Y %-l:%M %p")
+        - if @manager
+          &middot;
+          = s.user.name.presence || s.user.username
+          - if current_user.super_admin? && s.provider
+            = "(#{s.provider.name})"
+        - if s.screen
+          &middot; Screen: #{s.screen}
+      - if s.help_question
+        .text-muted
+          After asking Ask RidePilot:
+          %em= "“#{s.help_question.question.truncate(200)}”"
+      .suggestion-body= simple_format(h(s.body))
+      - if @manager
+        = form_with model: s, url: suggestion_path(s), method: :patch, local: true, class: "suggestion-reply" do |f|
+          = hidden_field_tag :return_status, @status
+          .row
+            .col-sm-3
+              = f.select :status, Suggestion::STATUSES.invert, {}, class: "form-control input-sm"
+            .col-sm-7
+              = f.text_area :reply, rows: 2, class: "form-control input-sm", placeholder: "Reply to #{s.user.first_name.presence || 'them'} (they see this under Your suggestions)"
+            .col-sm-2
+              = f.submit "Save", class: "btn btn-default btn-sm"
+          - if s.replied_by && s.reply.present?
+            .text-muted.small= "Reply by #{s.replied_by.name.presence || s.replied_by.username}, #{s.updated_at.in_time_zone.strftime('%-m/%-d/%Y')}"
+      - elsif s.reply.present?
+        .suggestion-reply-text
+          %strong= "GCRPC I.T.:"
+          = s.reply

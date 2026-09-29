@@ -6,6 +6,11 @@
     Changes to RidePilot, newest first. Questions about any of them? Use
     %strong Ask RidePilot
     at the bottom right, or ask Kristie or GCRPC I.T.
+  - if Suggestion.enabled?
+    %p
+      Have an idea, or is something not working?
+      = link_to "Send a suggestion", new_suggestion_path, class: "btn btn-primary btn-sm"
+      = link_to (Suggestion.manageable_by?(current_user) ? "Suggestions" : "Your suggestions"), suggestions_path, class: "btn btn-link btn-sm"
   - if @notes.empty?
     %p Nothing yet.
   - @notes.group_by { |n| n.added.to_date }.each do |day, notes|

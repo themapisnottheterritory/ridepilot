@@ -90,6 +90,7 @@ class TripScheduler
         @errors = @trip.errors.full_messages 
       end
     end
+    TroubleWatch.messages(errors)   # the reasons dispatch was shown (trouble board)
 
   end
 

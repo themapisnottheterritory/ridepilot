@@ -12,6 +12,14 @@
 #   for:       admins            (optional: provider admins and up only)
 #   providers: [1]               (optional: 1 GCRPC, 107 Goliad, 143 Lavaca)
 
+- added: "2026-09-29 13:11"
+  title: Helping I.T. find the rough spots
+  body: |
+    RidePilot now lets GCRPC I.T. know when a page breaks, loads slowly, or
+    turns down a save, so they can fix the rough spots. It records only the
+    screen, the agency, the time and the message shown, never who it
+    happened to or what was typed, and it keeps them for 90 days.
+
 - added: "2026-09-29 12:15"
   title: What's new in RidePilot
   body: |

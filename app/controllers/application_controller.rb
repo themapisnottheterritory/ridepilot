@@ -18,9 +18,16 @@ class ApplicationController < ActionController::Base
   before_action :get_providers
   before_action :set_locale
   before_action :set_cache_buster_for_xhr
+  around_action { |controller, action| TroubleWatch.watch(controller, &action) }   # trouble board
   
   rescue_from CanCan::AccessDenied do |exception|
     render :file => "#{Rails.root}/public/403.html", :status => 403
+  end
+
+  # the agency, for the trouble board's error and slow-page counts (TroubleWatch)
+  def append_info_to_payload(payload)
+    super
+    payload[:trouble_provider_id] = (current_provider&.id rescue nil)
   end
 
   def get_providers

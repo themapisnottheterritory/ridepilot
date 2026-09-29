@@ -1,0 +1,10 @@
+<%= @suggestion.kind_label %>
+From: <%= @from %><%= " (#{@suggestion.user.username})" if @suggestion.user.username.present? %>
+Agency: <%= @suggestion.provider&.name || "-" %>
+Screen: <%= @suggestion.screen || "-" %>
+<% if @suggestion.help_question %>After asking Ask RidePilot: "<%= @suggestion.help_question.question.truncate(300) %>"
+<% end %>
+<%= @suggestion.body %>
+
+Mark it planned, done or not planned, and reply to them, at:
+<%= suggestions_url %>

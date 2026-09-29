@@ -26,6 +26,7 @@
   #askrp-log .askrp-feedback { font-size: 12px; color: #777; margin: -4px 0 10px 2px; }
   #askrp-log .askrp-feedback button { background: none; border: 1px solid #ccd; border-radius: 12px; padding: 1px 8px; margin-left: 4px; }
   #askrp-log .askrp-feedback button.picked { background: #1f3864; color: #fff; border-color: #1f3864; }
+  #askrp-log .askrp-feedback .askrp-tell { display: block; margin-top: 4px; }
   #askrp-panel .askrp-suggest { padding: 0 14px 6px; }
   #askrp-panel .askrp-suggest button { display: block; width: 100%; text-align: left; margin: 0 0 5px; padding: 6px 9px;
     font-size: 12.5px; background: #fff; border: 1px solid #c9d2df; border-radius: 6px; color: #1f3864; }
@@ -54,11 +55,15 @@
   %form#askrp-form
     %textarea#askrp-input{placeholder: "Type your question (English or Spanish)...", "aria-label": "Your question"}
     %button.btn.btn-primary{type: "submit"} Ask
-  .askrp-note Answers come from GCRPC's RidePilot guide and can be wrong. For anything important, check with Kristie or GCRPC I.T.
+  .askrp-note
+    Answers come from GCRPC's RidePilot guide and can be wrong. For anything important, check with Kristie or GCRPC I.T.
+    - if Suggestion.enabled?
+      = link_to "Send a suggestion", new_suggestion_path
 
 :javascript
   (function() {
     var ASK_URL = #{help_ask_path.to_json}, FEEDBACK_URL = #{help_feedback_path(id: "ID").to_json};
+    var SUGGEST_URL = #{(Suggestion.enabled? ? new_suggestion_path : nil).to_json};   // null while suggestions are off
     var panel = document.getElementById('askrp-panel'), button = document.getElementById('askrp-button');
     var log = document.getElementById('askrp-log'), form = document.getElementById('askrp-form');
     var input = document.getElementById('askrp-input'), suggest = document.getElementById('askrp-suggest');
@@ -148,10 +153,19 @@
       f.innerHTML = 'Was this helpful? <button type="button" data-v="true">&#128077; Yes</button><button type="button" data-v="false">&#128078; No</button>';
       if (msg.helpful) f.querySelector('[data-v="' + msg.helpful + '"]').classList.add('picked');
       var id = msg.id;
+      // after a thumbs-down, offer to tell I.T. what was needed
+      function offerTell() {
+        if (!SUGGEST_URL || msg.helpful !== 'false' || f.querySelector('.askrp-tell')) return;
+        var a = document.createElement('a'); a.className = 'askrp-tell';
+        a.href = SUGGEST_URL + '?kind=question&help_question_id=' + encodeURIComponent(id) + '&from=' + encodeURIComponent(location.pathname);
+        a.textContent = 'Tell GCRPC I.T. what you needed \u2192';
+        f.appendChild(a);
+      }
+      offerTell();
       f.addEventListener('click', function(e) {
         var b = e.target.closest('button'); if (!b) return;
         f.querySelectorAll('button').forEach(function(x) { x.classList.remove('picked'); }); b.classList.add('picked');
-        msg.helpful = b.dataset.v; saveChat();
+        msg.helpful = b.dataset.v; saveChat(); offerTell();
         var body = new FormData(); body.append('helpful', b.dataset.v);
         fetch(FEEDBACK_URL.replace('ID', id), { method: 'POST', body: body, credentials: 'same-origin',
           headers: { 'X-CSRF-Token': (document.querySelector('meta[name="csrf-token"]') || {}).content } });
@@ -209,7 +223,8 @@
     });
     // pick up where the user left off on the previous page
     if (chat.length) { suggest.style.display = 'none'; chat.forEach(show); }
-    if (tabGet(OPEN_KEY)) open(false);
+    // reopen it if it was open, except over the suggestion form it just sent them to
+    if (tabGet(OPEN_KEY) && location.pathname.indexOf('/suggestions') < 0) open(false);
     form.addEventListener('submit', function(e) { e.preventDefault(); ask(input.value); });
     input.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ask(input.value); } });
     suggest.addEventListener('click', function(e) { var b = e.target.closest('button'); if (b) ask(b.textContent); });

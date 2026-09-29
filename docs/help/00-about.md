@@ -7,3 +7,4 @@ Ask RidePilot answers questions about using RidePilot at GCRPC, Goliad County Ru
 - Operations questions (how dispatch should handle something, run times, policy): Kristie Kaiser, Transit Operations Manager, kristiek@gcrpc.org.
 - System problems (errors, something broken, login trouble, a screen that looks wrong): GCRPC I.T. Email all three: philz@gcrpc.org, andrewv@gcrpc.org, ronaldm@gcrpc.org.
 - If Ask RidePilot is not sure, it says so and points you to one of them.
+- What RidePilot records about problems: when a page breaks, loads slowly (4 seconds or more) or turns down a save, RidePilot notes the screen, the agency, the time and the message shown, so GCRPC I.T. can fix the rough spots. It never records who it happened to, their IP address or what they typed, and it deletes these notes after 90 days. Questions asked in Ask RidePilot are kept in a log, with your name, that GCRPC I.T. and your agency's admins review to improve this guide.

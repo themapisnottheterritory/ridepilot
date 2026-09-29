@@ -49,6 +49,7 @@ class RecurringTripScheduler
       unschedule
       @run.add_trip_manifest!(@trip.id, @wday)
     end
+    TroubleWatch.messages(errors)   # the reasons dispatch was shown (trouble board)
   end
 
   # run avaiability validations

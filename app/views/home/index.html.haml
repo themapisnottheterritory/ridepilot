@@ -15,6 +15,9 @@
     %li= link_to translate_helper("lookup_tables_link_text"), lookup_tables_path
   - if can? :manage, Translation
     %li= link_to translate_helper("translation_engine_link_text"), translation_engine.translations_path
+  - if TroubleWatch.can_view?(current_user)
+    %li= link_to "Trouble board", trouble_board_path
+    %li= link_to "Ask RidePilot questions", help_log_path
 
 - if !Rails.env.production? || ENV['HAS_RECURRING_TRIP_RUN_SCHDULING_BUTTON'] == 'true'
   .col-sm-12

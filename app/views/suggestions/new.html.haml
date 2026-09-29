@@ -1,0 +1,33 @@
+- content_for :title, "Send a suggestion"
+#page-header
+  %h1.page-title Send a suggestion
+.suggestions-page
+  %p
+    Have an idea, is something not working, or have a question about RidePilot? Tell GCRPC I.T. here.
+    Your name goes with it so I.T. can follow up. Only GCRPC I.T. and your agency's admins see it.
+  = form_with model: @suggestion, url: suggestions_path, local: true, id: "suggestion-form" do |f|
+    - if @suggestion.errors.any?
+      .alert.alert-danger= @suggestion.errors.full_messages.to_sentence
+    = f.hidden_field :page_path
+    = f.hidden_field :help_question_id
+    .form-group
+      %label What is it?
+      - Suggestion::KINDS.each do |value, label|
+        .radio
+          %label
+            = f.radio_button :kind, value
+            = label
+    - if @suggestion.help_question
+      %p.text-muted
+        About your Ask RidePilot question:
+        %em= "“#{@suggestion.help_question.question.truncate(200)}”"
+    - if @suggestion.screen
+      %p.text-muted
+        Screen:
+        %strong= @suggestion.screen
+    .form-group
+      = f.label :body, "Tell us about it", for: "suggestion_body"
+      = f.text_area :body, id: "suggestion_body", rows: 6, class: "form-control", maxlength: 4000, required: true,
+        placeholder: "What were you trying to do, and what would make it easier? If something went wrong, what did it say?"
+    = f.submit "Send to GCRPC I.T.", class: "btn btn-primary"
+    = link_to "Your suggestions", suggestions_path, class: "btn btn-link"
