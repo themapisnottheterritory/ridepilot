@@ -16,6 +16,15 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-09-29 16:39"
+  title: Typed addresses work on subscription trips
+  body: |
+    On a subscription trip you can now type an address instead of picking it
+    from the suggestions, just like on a regular trip: RidePilot matches the
+    rider's saved addresses and common addresses, or finds it on the map. If
+    it can't find the place, it now says so ("couldn't be located...")
+    instead of "can't be blank."
+
 - added: "2026-09-29 16:14"
   title: "Driver tablet 1.0.17: will-call badge"
   apps: [tablet]

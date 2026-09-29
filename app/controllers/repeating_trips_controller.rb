@@ -1,4 +1,5 @@
 class RepeatingTripsController < ApplicationController
+  include TypedAddressResolution   # typed pickup/drop-off addresses, like the trip form
   before_action :set_trip, except: [:index, :new, :create, :clone_from_daily_trip, :check_duplicates]
   authorize_resource :except=>[:show, :check_duplicates]
 
@@ -66,6 +67,7 @@ class RepeatingTripsController < ApplicationController
           end
         }
       else
+        clarify_unresolved_address_errors
         prep_view
         format.html { render :action => "new" }
       end
@@ -101,6 +103,7 @@ class RepeatingTripsController < ApplicationController
           end
         }
       else
+        clarify_unresolved_address_errors
         prep_view
         format.html { render :action => "edit"  }
       end
@@ -234,6 +237,14 @@ class RepeatingTripsController < ApplicationController
         new_temp_addr = GeocodedAddress.new
         new_temp_addr.the_geom = Address.compute_geom(params['trip_pickup_lat'], params['trip_pickup_lon'])
         @trip.pickup_address = new_temp_addr
+      elsif params[:pickup_address].present?
+        # typed but not picked from the list: resolve it like the trip form does (2026-09-29, Kelly)
+        resolved = resolve_typed_address(params[:pickup_address])
+        resolved ? (@trip.pickup_address = resolved) : (@pickup_address_unresolved = true)
+      end
+
+      if params[:save_pickup_address].present? && @trip.pickup_address && !@pickup_address_unresolved
+        @trip.pickup_address = promote_to_customer_common_address(@trip.pickup_address, params[:pickup_address_name])
       end
     end
 
@@ -247,6 +258,13 @@ class RepeatingTripsController < ApplicationController
         new_temp_addr = GeocodedAddress.new
         new_temp_addr.the_geom = Address.compute_geom(params['trip_dropoff_lat'], params['trip_dropoff_lon'])
         @trip.dropoff_address = new_temp_addr
+      elsif params[:dropoff_address].present?
+        resolved = resolve_typed_address(params[:dropoff_address])
+        resolved ? (@trip.dropoff_address = resolved) : (@dropoff_address_unresolved = true)
+      end
+
+      if params[:save_dropoff_address].present? && @trip.dropoff_address && !@dropoff_address_unresolved
+        @trip.dropoff_address = promote_to_customer_common_address(@trip.dropoff_address, params[:dropoff_address_name])
       end
     end
   end
