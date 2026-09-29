@@ -12,6 +12,15 @@
 #   for:       admins            (optional: provider admins and up only)
 #   providers: [1]               (optional: 1 GCRPC, 107 Goliad, 143 Lavaca)
 
+- added: "2026-09-29 13:34"
+  title: Addresses that aren't on the map
+  body: |
+    Some saved addresses have no map location, and those never come up when
+    booking a trip, which is why some got saved more than once. The
+    **Addresses** page now marks them **Not on map**, and saving one shows a
+    warning. Ask GCRPC I.T. to place any you need. Searching by street and
+    city ("600 hospital circle, bay city") works now too.
+
 - added: "2026-09-29 13:11"
   title: Helping I.T. find the rough spots
   body: |

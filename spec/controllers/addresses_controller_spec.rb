@@ -63,6 +63,14 @@ RSpec.describe AddressesController, type: :controller do
       expect(response.content_type).to start_with("application/json")
     end
 
+    it "finds an address by street and city in any case" do
+      address = create(:provider_common_address, provider: @current_user.current_provider, name: "Clinic",
+        address: "600 Hospital Circle", city: "Bay City", state: "TX", zip: "77414",
+        the_geom: RGeo::Geographic.spherical_factory(srid: 4326).point(-95.99, 28.98))
+      post :trippable_autocomplete, params: {term: "600 hospital circle, bay city", format: "json"}
+      expect(JSON.parse(response.body).map { |a| a["id"] }).to include(address.id)
+    end
+
     it "include matching address info in the json response" do
       address = create(:provider_common_address, 
         :provider => @current_user.current_provider, 

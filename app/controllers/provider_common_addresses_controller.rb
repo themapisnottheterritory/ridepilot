@@ -69,6 +69,10 @@ class ProviderCommonAddressesController < AddressesController
       attrs = address.attributes
       attrs[:label] = address.text.gsub(/\s+/, ' ')
       attrs[:prefix] = prefix
+      if address.the_geom.nil?
+        attrs[:not_on_map] = true
+        flash[:alert] = not_on_map_warning(address)   # shown when the Addresses page reloads; also lands on the trouble board
+      end
       render json: attrs.to_json 
     else
       # errors.messages is frozen on Rails 7.1 (see addresses_controller).
@@ -102,7 +106,9 @@ class ProviderCommonAddressesController < AddressesController
     end
 
     if @address.update new_addr_params
-      flash.now[:notice] = "Address '#{@address.name}' was successfully updated"
+      # flash, not flash.now: the message has to survive the redirect
+      flash[:notice] = "Address '#{@address.name}' was successfully updated"
+      flash[:alert] = not_on_map_warning(@address) if @address.the_geom.nil?
       redirect_to addresses_provider_path(@address.provider)
     else
       render :action => :edit
@@ -202,4 +208,14 @@ class ProviderCommonAddressesController < AddressesController
   def address_params
     params.require(:provider_common_address).permit(:address_group_id, :name, :building_name, :address, :city, :state, :zip, :county, :in_district, :provider_id, :phone_number, :inactive, :trip_purpose_id, :notes)
   end
+
+  # An address with no map location never comes up in the trip form's search
+  # (AddressesController#trippable_autocomplete needs the_geom), which is how
+  # the same place ended up saved four times.
+  def not_on_map_warning(address)
+    "Saved \u201C#{address.name.presence || address.address}\u201D, but RidePilot couldn't place it on the map, " \
+      "so it won't come up when booking trips. Edit it and pick the address from the suggestions, " \
+      "or ask GCRPC I.T. to place it."
+  end
+
 end

@@ -354,4 +354,27 @@ RSpec.describe ProviderCommonAddressesController, type: :controller do
       expect(response.media_type).to eq("application/json")
     end
   end
+
+  describe "an address RidePilot can't place on the map" do
+    # Without a pin an address never comes up in the trip form's search, so
+    # Matagorda Medical Group got saved four times (2026-09-29).
+    let(:params) {
+      {"prefix" => "provider_common_address", format: :json,
+       "provider_common_address" => {name: "Matagorda Medical Group", address: "600 Hospital Circle", city: "Bay City", state: "TX", zip: "77414",
+                                            address_group_id: test_group.id}}
+    }
+
+    it "saves it but says so, for the Addresses page and the trouble board" do
+      post :create, params: params
+      expect(JSON.parse(response.body)["not_on_map"]).to be true
+      expect(flash[:alert]).to include("Matagorda Medical Group", "couldn't place it on the map", "won't come up when booking trips")
+    end
+
+    it "says nothing when the address has a pin" do
+      post :create, params: params.merge(lat: 28.98, lon: -95.99)
+      expect(JSON.parse(response.body)["not_on_map"]).to be_nil
+      expect(flash[:alert]).to be_nil
+    end
+  end
+
 end

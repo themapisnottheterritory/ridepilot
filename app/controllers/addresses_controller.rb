@@ -59,7 +59,7 @@ class AddressesController < ApplicationController
     addresses = Address.where(base_arel.to_sql)
       .where('inactive is NULL or inactive != ?', true)
       .where.not(the_geom: nil)
-      .where(["((LOWER(address) like '%' || ? || '%' ) and  (city || ', ' || state || ' ' || zip like ? || '%')) or LOWER(building_name) like '%' || ? || '%' or LOWER(name) like '%' || ? || '%' ", address, city_state_zip, term, term])
+      .where(["((LOWER(address) like '%' || ? || '%' ) and  (LOWER(city || ', ' || state || ' ' || zip) like ? || '%')) or LOWER(building_name) like '%' || ? || '%' or LOWER(name) like '%' || ? || '%' ", address, city_state_zip, term, term])
 
     if params[:exclude].present?
       addresses = addresses.where.not(id: params[:exclude].split(','))

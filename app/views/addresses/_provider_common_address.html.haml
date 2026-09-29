@@ -7,6 +7,8 @@
     = address.address_group.try(:name)
   %td.name
     = link_to_if ctx[:can_edit_common], address.name || '' , edit_provider_common_address_path(address)
+    - if address.the_geom.nil?
+      %span.label.label-danger.not-on-map{title: "No map location, so this address won't come up when booking trips"} Not on map
   %td= address.coded_by_lat_lng? ? address.address_text : address.address
   %td= address.city
   %td= address.county
