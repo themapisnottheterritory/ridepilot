@@ -262,12 +262,22 @@ class RunsController < ApplicationController
     end
   end
 
+  # The button runs the optimizer on the spot (a ~10 s solve) so dispatch sees
+  # what happened: the new route, or which trips don't fit. JSON callers queue it.
   def optimize
     authorize! :update, @run
-    RouteOptimizeJob.perform_later(@run.id)
     respond_to do |format|
-      format.json { render json: { status: "queued", run_id: @run.id } }
-      format.html { redirect_to run_path(@run), notice: "Route optimization queued." }
+      format.json do
+        RouteOptimizeJob.perform_later(@run.id)
+        render json: { status: "queued", run_id: @run.id }
+      end
+      format.html do
+        result = RouteOptimizerService.optimize_run(@run)
+        redirect_to run_path(@run), (result["applied"] ? :notice : :alert) => result["message"]
+      rescue StandardError => e
+        Rails.logger.error("Route optimizer, run #{@run.id}: #{e.class}: #{e.message}")
+        redirect_to run_path(@run), alert: "The route optimizer could not finish (#{e.message.truncate(80)}). Nothing was changed."
+      end
     end
   end
 

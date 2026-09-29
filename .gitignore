@@ -54,3 +54,6 @@ destinations_FINAL.csv
 
 # RideAVL over-the-air release file (ops/release-rideavl.sh); the rest of *.json stays ignored
 !public/rideavl-version.json
+
+# Python bytecode (optimizer_service tests)
+__pycache__/

@@ -5,7 +5,7 @@ class RouteOptimizeJob < ApplicationJob
   def perform(run_id)
     run = Run.find(run_id)
     result = RouteOptimizerService.optimize_run(run)
-    Rails.logger.info("Route optimization for run #{run_id}: #{result['solver_status']}")
+    Rails.logger.info("Route optimization for run #{run_id}: #{result['solver_status']} -- #{result['message']}")
     result
   end
 end

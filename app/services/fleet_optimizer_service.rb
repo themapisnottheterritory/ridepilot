@@ -1,3 +1,8 @@
+# Spreads one provider's demand-response trips for a date across its runs and
+# orders each run's stops (optimizer_service /optimize/fleet). Same rules as
+# RouteOptimizerService: pickup windows, appointment deadlines, ride-time
+# limit, boarding time, run hours. Applied only when every trip fits
+# ("success"); runs that have started are left out. Not wired to the UI yet.
 class FleetOptimizerService
   OPTIMIZER_URL = ENV.fetch("OPTIMIZER_URL", "http://localhost:8765")
   PICKUP_SLACK_BEFORE = 5.minutes.to_i
@@ -13,7 +18,7 @@ class FleetOptimizerService
   end
 
   def call
-    runs = @provider.runs.for_date(@date).not_cancelled
+    runs = @provider.runs.for_date(@date).not_cancelled.where(service_mode: "demand_response", actual_start_time: nil)
                     .includes(:vehicle, :from_garage_address, trips: [:pickup_address, :dropoff_address, :ridership_mobilities])
     return { "error" => "No runs for date" } if runs.empty?
 
@@ -80,34 +85,30 @@ class FleetOptimizerService
       dropoff_lng: trip.dropoff_address.longitude.to_f,
       earliest_pickup: [pickup_seconds - PICKUP_SLACK_BEFORE, 0].max,
       latest_pickup: [pickup_seconds + PICKUP_SLACK_AFTER, 86399].min,
+      latest_dropoff: trip.appointment_time && seconds_from_midnight(trip.appointment_time),
       seats: trip_seat_count(trip),
       tie_downs: trip_tiedown_count(trip)
     }
   end
 
+  # Each run's stop sequence becomes its manifest; trips move to the run the
+  # optimizer put them on. Every trip moves first, then every run's stops are
+  # rebuilt: rebuilding a run while trips it is losing are still on it leaves
+  # stale stops behind.
   def apply_result(result)
     midnight = @date.in_time_zone(timezone).beginning_of_day
 
-    # Group assignments by run_id
-    by_run = result["assignments"].group_by { |a| a["run_id"] }
-
     ActiveRecord::Base.transaction do
-      by_run.each do |run_id, assignments|
-        run = Run.find(run_id)
-
-        manifest_order = ["run_begin"]
-        assignments.sort_by { |a| a["position"] }.each do |assignment|
-          trip_id = assignment["trip_id"]
-          eta_time = midnight + assignment["eta"].seconds
-
-          Trip.where(id: trip_id).update_all(
-            run_id: run_id,
-            estimated_pickup_time: eta_time
-          )
-
-          manifest_order << "trip_#{trip_id}_leg_1"
-          manifest_order << "trip_#{trip_id}_leg_2"
+      result["runs"].each do |route|
+        route["stops"].select { |s| s["kind"] == "pickup" }.each do |stop|
+          Trip.where(id: stop["trip_id"]).update_all(run_id: route["run_id"], estimated_pickup_time: midnight + stop["eta"].seconds)
         end
+      end
+
+      result["runs"].each do |route|
+        run = Run.find(route["run_id"])
+        manifest_order = ["run_begin"]
+        route["stops"].each { |stop| manifest_order << "trip_#{stop['trip_id']}_leg_#{stop['kind'] == 'pickup' ? 1 : 2}" }
         manifest_order << "run_end"
 
         run.manifest_order = manifest_order
