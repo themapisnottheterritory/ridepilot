@@ -210,6 +210,9 @@ Rails.application.routes.draw do
     post "help/:id/feedback" => "help#feedback", as: :help_feedback
     get  "help/log"          => "help#log",      as: :help_log
 
+    # footer: rides completed today (FooterNote)
+    get  "footer/today"      => "footer#today",  as: :footer_today
+
     resources :address_groups
 
     resources :device_pools, :except => [:index, :show] do

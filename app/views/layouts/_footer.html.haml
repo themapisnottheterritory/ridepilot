@@ -1,6 +1,9 @@
 #footer{:role => "contentinfo", :aria => {:label => 'Footer'}}
   .footer-text
-    = translate_helper("footer_content")
+    %span.footer-quote= FooterNote.quote
+    - if current_user.present?
+      - rides = FooterNote.rides_text(FooterNote.rides_completed(current_provider))
+      %span#footer-today{style: ("display:none" unless rides)}= rides
   .version-lang
     %span.version
       - unless Rails.env.production?
@@ -13,3 +16,17 @@
       -else
         = links_to_each_locale(false)
 / end of footer
+- if current_user.present?
+  :javascript
+    // keep "Today so far" current while the page sits open
+    setInterval(function() {
+      fetch(#{footer_today_path.to_json}, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(d) {
+          var el = document.getElementById('footer-today');
+          if (!d || !el) return;
+          el.textContent = d.text || '';
+          el.style.display = d.text ? '' : 'none';
+        })
+        .catch(function() {});
+    }, 120000);

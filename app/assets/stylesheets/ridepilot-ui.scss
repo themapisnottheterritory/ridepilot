@@ -735,6 +735,18 @@ fieldset {
 	}
 	.footer-text {
 		float: left;
+		max-width: calc(100% - 300px);   // leave room for the version and language links
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.footer-quote {
+		font-style: italic;
+		font-weight: 400;
+	}
+	#footer-today {
+		margin-left: 1.5em;
+		color: $brand-primary;
 	}
 	.version-lang {
 		float: right;
