@@ -12,6 +12,15 @@
 #   for:       admins            (optional: provider admins and up only)
 #   providers: [1]               (optional: 1 GCRPC, 107 Goliad, 143 Lavaca)
 
+- added: "2026-09-29 14:56"
+  title: Duplicate check for subscription trips
+  body: |
+    Saving a subscription trip now checks whether the rider already has one
+    on the same days with the same pickup and drop-off, or a pickup within
+    an hour. If so, RidePilot shows it and asks: **Back** to check, or
+    **Save anyway** if it's a different ride. A matching ride home doesn't
+    count.
+
 - added: "2026-09-29 14:48"
   title: Duplicate trip warning works again
   body: |

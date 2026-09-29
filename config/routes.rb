@@ -95,6 +95,7 @@ Rails.application.routes.draw do
     resources :repeating_trips do
       collection do
         get :clone_from_daily_trip
+        post :check_duplicates   # SubscriptionDuplicates
       end
 
       member do

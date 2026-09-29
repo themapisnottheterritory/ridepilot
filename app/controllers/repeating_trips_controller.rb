@@ -1,6 +1,15 @@
 class RepeatingTripsController < ApplicationController
-  before_action :set_trip, except: [:index, :new, :create, :clone_from_daily_trip]
-  authorize_resource :except=>[:show]
+  before_action :set_trip, except: [:index, :new, :create, :clone_from_daily_trip, :check_duplicates]
+  authorize_resource :except=>[:show, :check_duplicates]
+
+  # POST /repeating_trips/check_duplicates -- the rider's other subscriptions
+  # that could be this one (SubscriptionDuplicates); the form asks before saving.
+  def check_duplicates
+    authorize! :read, RepeatingTrip
+    fields = [:id, :customer_id, :start_date, :end_date, :pickup_time, :pickup_address_id, :dropoff_address_id] +
+             SubscriptionDuplicates::DAYS.map { |d| :"repeats_#{d}" }
+    render json: { trips: SubscriptionDuplicates.new(params.require(:repeating_trip).permit(*fields), current_provider_id).matches }
+  end
 
   def index
     @trips = RepeatingTrip.active.for_provider(current_provider_id).order(created_at: :desc)

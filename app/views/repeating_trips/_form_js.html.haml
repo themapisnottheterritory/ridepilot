@@ -1,5 +1,34 @@
 = render 'shared/hide_invisible_form_fields_js', model_name: "repeatingtrip", table_name: 'repeating_trips', provider_id:  current_provider.try(:id)
 
+-# Before saving, ask if the rider already has a subscription that could be
+-# this one (SubscriptionDuplicates). If the check can't be made, save anyway.
+:javascript
+  function confirm_no_duplicate_subscription(form, callback) {
+    var data = $(form).serializeArray().filter(function(f) { return f.name !== '_method'; });
+    data.push({ name: 'repeating_trip[id]', value: #{(@trip.id || '').to_json} });
+    $.ajax({ type: 'POST', url: #{check_duplicates_repeating_trips_path.to_json}, data: $.param(data), dataType: 'json' })
+      .done(function(res) {
+        if (!res.trips || !res.trips.length) { callback(); return; }
+        var esc = function(v) { return $('<div>').text(v || '').html(); };
+        var rows = res.trips.map(function(t) {
+          return '<tr><td>' + esc(t.days) + '</td><td>' + esc(t.pickup_time) + '</td><td>' + esc(t.pickup) + '</td><td>' +
+                 esc(t.dropoff) + '</td><td>' + esc(t.dates) + '</td></tr>';
+        }).join('');
+        bootbox.dialog({
+          title: '<b>Warning: this rider may already have this subscription</b>',
+          message: '<p>This rider already has ' + (res.trips.length == 1 ? 'a subscription' : 'subscriptions') +
+                   ' on the same days that could be the same ride:</p>' +
+                   '<table class="table table-condensed"><tr><th>Days</th><th>Pickup</th><th>From</th><th>To</th><th>Dates</th></tr>' +
+                   rows + '</table><p>Go <b>Back</b> to check, or <b>Save anyway</b> if this is a different ride.</p>',
+          buttons: {
+            back: { label: 'Back', className: 'btn-default' },
+            save: { label: 'Save anyway', className: 'btn-warning', callback: function() { callback(); } }
+          }
+        });
+      })
+      .fail(function() { callback(); });
+  }
+
 - if !@trip.new_record? && @trip.weekday_assignments.any?
   :javascript
     $(function() {
@@ -47,12 +76,14 @@
         var callback = function() {
           handle_client_code_verification($('#repeating_trip_customer_id').val(), form);
         };
-        // first check run disruption warning
-        if(typeof check_run_disruption != 'undefined') {
-          check_run_disruption(callback);
-        } else {
-          callback();
-        }
+        // the duplicate question, then the run disruption warning
+        confirm_no_duplicate_subscription(form, function() {
+          if(typeof check_run_disruption != 'undefined') {
+            check_run_disruption(callback);
+          } else {
+            callback();
+          }
+        });
 
       });
     });
@@ -62,6 +93,8 @@
       $('.trip_form').submit(function(e) {
         var form = this;
         e.preventDefault();
-        handle_client_code_verification($('#repeating_trip_customer_id').val(), form);
+        confirm_no_duplicate_subscription(form, function() {
+          handle_client_code_verification($('#repeating_trip_customer_id').val(), form);
+        });
       });
     });
