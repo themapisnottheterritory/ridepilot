@@ -15,6 +15,7 @@
         return {
           trip_id: #{@trip.id.to_json},
           customer_id: form.find('.trip-customer-id').val(),
+          funding_source_id: form.find('#trip_funding_source_id').val(),
           pickup_address_id: form.find('.trip_pickup_address_id').val(),
           dropoff_address_id: form.find('.trip_dropoff_address_id').val(),
           guest_count: form.find('#trip_guest_count').val(),

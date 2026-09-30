@@ -6,7 +6,8 @@
 # For a list, pass one schedule for the provider and skip the distance
 # lookup: TripFareQuote.new(trip, schedule: s, compute_distance: false).
 #
-# An amount already typed on the trip wins. Otherwise the provider's fare
+# A funding source marked no_fare (the funder pays the whole ride) quotes no
+# fare. Then an amount already typed on the trip wins. Otherwise the provider's fare
 # tables price it (FareSchedule#quote). The trip's drive distance is filled
 # by a background job after save, so an unsaved trip, or one saved seconds
 # ago, gets its distance worked out here (not saved).
@@ -19,6 +20,9 @@ class TripFareQuote
 
   def call
     return nil unless @trip&.provider
+    if (paid = @trip.funding_source)&.no_fare?
+      return FareSchedule::Quote.new(amount: 0.to_d, rider: 0.to_d, guests: 0, basis: paid.no_fare_text, no_fare: true)
+    end
     if @trip.fare_amount.to_f > 0
       amount = @trip.fare_amount.to_d.round(2)
       return FareSchedule::Quote.new(amount: amount, rider: amount, guests: 0, basis: "set on the trip")

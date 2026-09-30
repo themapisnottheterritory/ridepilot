@@ -1,5 +1,10 @@
 -# The fare to quote a cash rider (TripFareQuote). quote may be nil.
-- if quote
+- if quote&.no_fare
+  %p{style: 'font-size: 20px; margin: 0 0 4px;'}
+    %strong No fare
+  %p.text-muted{style: 'margin: 0;'}= quote.basis.sub(/\ANo fare:?\s*/, '').presence || 'The funding source pays for this ride.'
+  %p.text-muted{style: 'margin: 4px 0 0;'} Don't collect a fare from the rider. The driver's tablet says so too.
+- elsif quote
   %p{style: 'font-size: 20px; margin: 0 0 4px;'}
     %strong= number_to_currency(quote.amount)
     - if quote.guests.to_i > 0

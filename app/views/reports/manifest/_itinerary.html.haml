@@ -50,7 +50,9 @@
       .ms-note= trip.notes
   %td.ms-fare
     - if is_pickup
-      - if card
+      - if quote&.no_fare
+        %strong no fare
+      - elsif card
         card
       - elsif quote && quote.amount.to_f > 0
         = number_to_currency(quote.amount)

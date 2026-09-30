@@ -40,11 +40,16 @@ class ItinerarySerializer
 
   WILL_CALL_NOTE = "WILL CALL: the rider calls when ready. The time is an estimate; check with dispatch before heading there.".freeze
 
-  # a will-call pickup says so first, so drivers see it on the app they have
+  # a will-call pickup says so first, and a pickup whose funding source pays
+  # the whole ride says NO FARE, so drivers see both on the app they have
   attribute :trip_notes do |object|
     if object.trip
-      will_call = object.trip.will_call && object.is_pickup?
-      will_call ? [WILL_CALL_NOTE, object.trip.notes.presence].compact.join("\n") : object.trip.notes
+      pickup = object.is_pickup?
+      lines = []
+      lines << WILL_CALL_NOTE if object.trip.will_call && pickup
+      lines << object.trip.funding_source&.driver_note if pickup
+      lines << object.trip.notes.presence
+      lines.compact.join("\n").presence
     end
   end
 
@@ -90,8 +95,10 @@ class ItinerarySerializer
     object.trip.customer.phone_number_1 || object.trip.customer.phone_number_1 if object.trip && object.trip.customer
   end
 
+  # no fare box on a trip whose funding source pays the whole ride
   attribute :fare do |object|
     fare = object.fare
+    fare = nil if object.trip&.funding_source&.no_fare?
     if fare
       trip = object.trip
       collected_time = trip.fare_collected_time

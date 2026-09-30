@@ -319,6 +319,7 @@ class TripsController < ApplicationController
     authorize! :read, Trip
     trip = params[:trip_id].present? ? Trip.for_provider(current_provider_id).find(params[:trip_id]) : Trip.new(provider: current_provider)
     trip.customer_id = params[:customer_id] if params[:customer_id].present?
+    trip.funding_source_id = params[:funding_source_id].presence if params.key?(:funding_source_id)
     trip.pickup_address_id = params[:pickup_address_id] if params[:pickup_address_id].present?
     trip.dropoff_address_id = params[:dropoff_address_id] if params[:dropoff_address_id].present?
     trip.guest_count = params[:guest_count].to_i if params[:guest_count].present?

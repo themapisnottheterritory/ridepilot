@@ -28,7 +28,7 @@ class FareSchedule
   # quoting a trip whose guests are not counted yet. category_source: where
   # the rider's category came from (see #rider_category).
   Quote = Struct.new(:amount, :rider, :guest_each, :guests, :category, :category_assumed, :category_source,
-                     :county, :basis, :miles, keyword_init: true)
+                     :county, :basis, :miles, :no_fare, keyword_init: true)
 
   attr_reader :provider, :service, :county
 

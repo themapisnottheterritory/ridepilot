@@ -38,7 +38,9 @@
               Mobility?
         -# The fare to quote a cash rider (county fare tables); blank until the trip has a distance.
         %td
-          - if (quote = TripFareQuote.new(trip, schedule: fare_schedule, compute_distance: false).call)
+          - if (quote = TripFareQuote.new(trip, schedule: fare_schedule, compute_distance: false).call)&.no_fare
+            %span{title: quote.basis} no fare
+          - elsif quote
             %span{title: [quote.basis, quote.category&.name].compact.join(' · ')}= number_to_currency(quote.amount)
             - if quote.category_assumed
               %span.text-warning{title: 'No fare category on the customer: Adult fare shown'} *

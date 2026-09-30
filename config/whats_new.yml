@@ -17,6 +17,17 @@
 #                                 (GCRPC Fixed Route); shown as badges)
 
 - added: "2026-09-30 12:10"
+  title: "Lavaca: Title III rides have no fare"
+  body: |
+    New funding source **Title III – New Horizons**, for riders New Horizons
+    pays for (billed monthly). Choose it as the trip's **Funding Source**, or
+    make it the customer's default. The fare panel then says **No fare**,
+    Dispatch and the manifest say **no fare**, and the driver's tablet shows
+    no fare box and a "NO FARE" note on the pickup.
+  providers: [143]
+  apps: [web, tablet]
+
+- added: "2026-09-30 12:10"
   title: "Ask RidePilot: find a place, or paste one from Google Maps"
   body: |
     Ask **Ask RidePilot** to find a place ("where is the Walmart on Navarro?")

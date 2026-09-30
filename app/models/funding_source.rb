@@ -12,6 +12,20 @@ class FundingSource < ApplicationRecord
 
   SHOW_ALL_ID = -1
 
+  # no_fare: the funding source pays for the whole ride and the rider pays
+  # nothing (e.g. Lavaca's Title III riders, billed to New Horizons monthly).
+  # The office quotes no fare, the manifest says so, and the driver's tablet
+  # shows no fare box and a NO FARE line on the pickup.
+  def no_fare_text
+    return nil unless no_fare?
+    ["No fare", fare_note.presence].compact.join(": ")
+  end
+
+  def driver_note
+    return nil unless no_fare?
+    "NO FARE: #{fare_note.presence || "paid by #{name}"}. Don't collect a fare."
+  end
+
   def self.by_provider(provider)
     hidden_ids = HiddenLookupTableValue.hidden_ids self.table_name, provider.try(:id)
     where.not(id: hidden_ids).where("provider_id is NULL or provider_id = ?", provider.try(:id))

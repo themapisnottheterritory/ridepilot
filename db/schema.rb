@@ -662,6 +662,8 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.datetime "deleted_at", precision: nil
     t.integer "provider_id"
     t.boolean "ntd_reportable"
+    t.boolean "no_fare", default: false, null: false
+    t.string "fare_note"
     t.index ["deleted_at"], name: "index_funding_sources_on_deleted_at"
     t.index ["provider_id"], name: "index_funding_sources_on_provider_id"
   end
