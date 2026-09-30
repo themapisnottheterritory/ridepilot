@@ -8,6 +8,14 @@
     height: 520px; max-height: calc(100vh - 90px); display: none; flex-direction: column; background: #fff;
     border: 1px solid #c9d2df; border-radius: 8px; box-shadow: 0 8px 30px rgba(0,0,0,.28); }
   #askrp-panel.open { display: flex; }
+  /* size: Bigger in the header, or drag the corner grip; the card's map grows with it */
+  #askrp-panel { --askrp-map: 190px; min-width: 320px; min-height: 360px; }
+  #askrp-panel.big { width: min(1100px, calc(100vw - 36px)); height: calc(100vh - 90px); }
+  /* top-left, because the panel lives in the bottom-right corner and grows up and left */
+  #askrp-panel .askrp-grip { position: absolute; left: 0; top: 0; width: 18px; height: 18px; cursor: nwse-resize; touch-action: none; z-index: 2;
+    background: linear-gradient(315deg, transparent 50%, rgba(255,255,255,.75) 50%, rgba(255,255,255,.75) 58%, transparent 58%, transparent 70%, rgba(255,255,255,.75) 70%, rgba(255,255,255,.75) 78%, transparent 78%);
+    border-top-left-radius: 8px; }
+  #askrp-panel .askrp-head button#askrp-size { font-size: 12px; border: 1px solid rgba(255,255,255,.5); border-radius: 12px; padding: 2px 9px; margin-right: 8px; }
   #askrp-button, #askrp-panel .askrp-head { touch-action: none; user-select: none; }
   #askrp-button { cursor: grab; }
   #askrp-panel .askrp-head { cursor: move; }
@@ -41,7 +49,7 @@
   #askrp-log .askrp-card .row label { flex: 0 0 62px; color: #5f6b7a; font-size: 11px; margin: 0; font-weight: 400; }
   #askrp-log .askrp-card .row input, #askrp-log .askrp-card .row select { flex: 1; min-width: 0; font-size: 13px; padding: 3px 6px; border: 1px solid #c9d2df; border-radius: 4px; height: auto; }
   #askrp-log .askrp-card .row input.short { flex: 0 0 64px; }
-  #askrp-log .askrp-card .map { height: 190px; }
+  #askrp-log .askrp-card .map { height: var(--askrp-map); }
   #askrp-log .askrp-card .hint { padding: 5px 11px; font-size: 11.5px; color: #5f6b7a; }
   #askrp-log .askrp-card .warn { padding: 6px 11px; border-left: 4px solid #CC9900; background: #fff8e6; font-size: 12px; }
   #askrp-log .askrp-card .existing { padding: 6px 11px; font-size: 12px; background: #f4f6fa; }
@@ -62,11 +70,12 @@
       %i.fa.fa-question-circle
       Ask RidePilot
     %span
+      %button#askrp-size{type: "button", title: "Make the panel bigger or smaller (or drag its top-left corner)"} Bigger
       %button#askrp-new{type: "button", title: "Clear this conversation and start over"} New chat
       %button#askrp-close{type: "button", title: "Close"} &times;
   #askrp-log{"aria-live": "polite"}
     .msg.bot#askrp-hello
-      Hi! Ask me how to do something in RidePilot: booking trips, dispatching, runs, fares, customers, drivers. I explain; I can't see or change your data.
+      Hi! Ask me how to do something in RidePilot: booking trips, dispatching, runs, fares, customers, drivers. I explain, and I can add a saved place for you ("add 311 Spring Green Blvd, Victoria, it's the VA Clinic").
   .askrp-suggest#askrp-suggest
     %button{type: "button"} How do I put a trip on a run?
     %button{type: "button"} How do I set a rider's fare category?
@@ -78,6 +87,7 @@
     Answers come from GCRPC's RidePilot guide and can be wrong. For anything important, check with Kristie or GCRPC I.T.
     - if Suggestion.enabled?
       = link_to "Send a suggestion", new_suggestion_path
+  .askrp-grip{title: "Drag to resize"}
 
 :javascript
   (function() {
@@ -106,7 +116,7 @@
 
     function open(focus) {
       panel.classList.add('open'); button.style.display = 'none'; tabSet(OPEN_KEY, true);
-      place(panel, recall('askrp.panel')); log.scrollTop = log.scrollHeight;
+      place(panel, recall('askrp.panel')); fitMaps(); log.scrollTop = log.scrollHeight;
       if (focus) input.focus();
     }
     function close() { panel.classList.remove('open'); button.style.display = ''; tabSet(OPEN_KEY, null); }
@@ -126,7 +136,7 @@
     }
     function draggable(el, handle, key) {
       handle.addEventListener('pointerdown', function(e) {
-        if (e.button !== 0 || e.target.closest('#askrp-close')) return;
+        if (e.button !== 0 || e.target.closest('#askrp-close, .askrp-grip, #askrp-size, #askrp-new')) return;
         var r = el.getBoundingClientRect(), sx = e.clientX, sy = e.clientY, moved = false;
         function move(ev) {
           if (!moved && Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) < 6) return;
@@ -145,6 +155,49 @@
     }
     draggable(button, button, 'askrp.button');
     draggable(panel, panel.querySelector('.askrp-head'), 'askrp.panel');
+
+    // Size: Bigger / Smaller in the header, or drag the grip in the corner.
+    // A custom size is remembered per browser; the card's map takes about half
+    // the panel's height, so there's room to find the building.
+    var sizeBtn = document.getElementById('askrp-size'), grip = panel.querySelector('.askrp-grip'), liveMaps = [];
+    function applySize() {
+      var big = !!recall('askrp.big'), custom = recall('askrp.size');
+      panel.classList.toggle('big', big);
+      panel.style.width = !big && custom ? custom.w + 'px' : '';
+      panel.style.height = !big && custom ? custom.h + 'px' : '';
+      sizeBtn.textContent = big ? 'Smaller' : 'Bigger';
+      fitMaps();
+    }
+    function fitMaps() {
+      panel.style.setProperty('--askrp-map', Math.max(190, Math.round(panel.offsetHeight * 0.5)) + 'px');
+      liveMaps = liveMaps.filter(function(m) { return document.body.contains(m.getContainer()); });
+      liveMaps.forEach(function(m) { m.invalidateSize(); });
+      if (panel.style.left) place(panel, { left: parseFloat(panel.style.left), top: parseFloat(panel.style.top) });
+    }
+    sizeBtn.addEventListener('click', function() { store('askrp.big', recall('askrp.big') ? null : true); applySize(); });
+    grip.addEventListener('pointerdown', function(e) {
+      if (e.button !== 0) return;
+      e.preventDefault(); e.stopPropagation();   // not a header drag
+      var r = panel.getBoundingClientRect(), sx = e.clientX, sy = e.clientY;
+      store('askrp.big', null); panel.classList.remove('big'); sizeBtn.textContent = 'Bigger';
+      // the bottom-right corner stays put; the top-left follows the pointer
+      function move(ev) {
+        var w = Math.min(r.right, Math.max(320, r.width - (ev.clientX - sx)));
+        var h = Math.min(r.bottom, Math.max(360, r.height - (ev.clientY - sy)));
+        panel.style.width = w + 'px'; panel.style.height = h + 'px';
+        panel.style.left = (r.right - w) + 'px'; panel.style.top = (r.bottom - h) + 'px';
+        panel.style.right = 'auto'; panel.style.bottom = 'auto';
+        fitMaps();
+      }
+      function up() {
+        document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up);
+        store('askrp.size', { w: panel.offsetWidth, h: panel.offsetHeight });
+        store('askrp.panel', { left: parseFloat(panel.style.left), top: parseFloat(panel.style.top) });
+      }
+      document.addEventListener('pointermove', move); document.addEventListener('pointerup', up);
+    });
+    window.addEventListener('resize', fitMaps);
+    applySize();
 
     function esc(s) { return s.replace(/[&<>"]/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
     // plain text with **bold**, *italics*, numbered and bulleted lists; steps
@@ -199,6 +252,7 @@
         L.tileLayer('/tiles/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
         marker = L.marker(pin, { draggable: true }).addTo(map);
         marker.on('dragend', function() { moved = true; var b = card.querySelector('.go'); if (b) b.disabled = false; });
+        liveMaps.push(map);
         setTimeout(function() { map.invalidateSize(); }, 50);
       }
       var go = card.querySelector('.go');
