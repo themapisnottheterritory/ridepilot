@@ -1,5 +1,11 @@
+# RidePilot runs RAILS_ENV=development on .16, and broadcasts come from the
+# Sidekiq container (EmergencyAlertWorker and friends): the in-process "async"
+# adapter dropped every one, so no emergency alert ever reached a dispatcher's
+# screen (found 2026-09-30). Redis carries them between the containers.
 development:
-  adapter: async
+  adapter: redis
+  url: <%= ENV.fetch("REDIS_URL") { "redis://localhost:6379/1" } %>
+  channel_prefix: ridepilot_development
 
 test:
   adapter: test

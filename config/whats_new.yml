@@ -16,6 +16,15 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-09-30 13:34"
+  title: "Driver emergency alerts now reach the office"
+  body: |
+    When a driver presses the emergency button on the tablet, a red
+    **Emergency Alert** now pops up on every RidePilot screen open for that
+    agency (this wasn't getting through before). Click **Got it!** once you're
+    handling it; it closes on everyone else's screen. Stay on your own
+    agency in RidePilot to see your drivers' alerts.
+
 - added: "2026-09-30 12:10"
   title: "Lavaca: Title III and New Horizons rides have no fare"
   body: |
