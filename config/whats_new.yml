@@ -16,6 +16,15 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-09-30 14:25"
+  title: "5310 funding ended: Rider Fares / Donations is the default"
+  body: |
+    FTA Section 5310 is no longer available to Victoria Transit, so it is gone
+    from the **Funding Source** lists. Customers who defaulted to it now
+    default to **Rider Fares / Donations**, and so do their subscriptions and
+    trips from October 1 on. Trips before October 1 keep 5310.
+  providers: [1]
+
 - added: "2026-09-30 13:52"
   title: "Driver tablet 1.0.18: the emergency button tells the driver what happened"
   body: |
