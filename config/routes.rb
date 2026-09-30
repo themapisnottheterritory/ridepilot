@@ -423,6 +423,12 @@ Rails.application.routes.draw do
       end
     end
 
+    # Next Bus: fixed-route arrival times for CSRs on the phone (NextBus)
+    get 'next_bus'        => 'next_bus#index',  as: :next_bus
+    get 'next_bus/lookup' => 'next_bus#lookup', as: :next_bus_lookup
+    get 'next_bus/map'    => 'next_bus#map',    as: :next_bus_map
+    get 'next_bus/buses'  => 'next_bus#buses',  as: :next_bus_buses
+
     # CAD/AVL dispatcher interface (formerly ridepilot_cad_avl engine)
     get 'cad_avl' => 'cad/cad#index', as: :cad_avl
     resource :cad, controller: 'cad/cad', only: [] do

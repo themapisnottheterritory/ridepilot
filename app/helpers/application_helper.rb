@@ -15,6 +15,14 @@ module ApplicationHelper
     current_user && current_provider.scheduling?
   end
 
+  # Next Bus tab: agencies that run fixed routes (GCRPC's Victoria Transit);
+  # NEXT_BUS_PROVIDER_IDS="1,143" would add Lavaca, e.g. if its CSRs take
+  # Victoria calls
+  NEXT_BUS_PROVIDER_IDS = ENV.fetch("NEXT_BUS_PROVIDER_IDS", "1").split(",").map(&:to_i).freeze
+  def show_next_bus?
+    show_scheduling? && NEXT_BUS_PROVIDER_IDS.include?(current_provider&.id)
+  end
+
   def is_admin_or_system_admin?
     current_user.present? && (current_user.admin? || current_user.super_admin?)
   end

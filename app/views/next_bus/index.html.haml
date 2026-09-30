@@ -1,0 +1,188 @@
+-# Next Bus: a fixed-route rider on the phone asks when the next bus is.
+-# Left (38%): where the caller is, the sentence to read out, the stops near
+-# them with the next buses. Right (62%): the map, with live buses.
+-# docs/design-language.md: the answer is the biggest thing; one row per route.
+= render 'shared/highlight_active_tab_js', is_primary_nav: true, tab_class: 'next_bus'
+- content_for :title, "Next Bus"
+
+:css
+  body.next-bus #main { padding: 16px; }
+  .nb { display: flex; gap: 16px; height: calc(100vh - 230px); min-height: 520px; font-size: 13px; }
+  .nb-left { flex: 0 0 38%; display: flex; flex-direction: column; min-width: 0; }
+  .nb-right { flex: 1; min-width: 0; position: relative; border: 1px solid #cfd6e4; border-radius: 10px; overflow: hidden; }
+  #nb-map { position: absolute; inset: 0; }
+  .nb-search { display: flex; gap: 8px; }
+  .nb-search input { flex: 1; font-size: 18px; padding: 10px 14px; border: 2px solid #12264F; border-radius: 8px; }
+  .nb-search button { border-radius: 8px; padding: 0 16px; font-size: 14px; font-weight: 600; border: 1px solid #12264F; }
+  .nb-search .go { background: #12264F; color: #fff; }
+  .nb-search .new { background: #fff; color: #12264F; }
+  .nb-hint { color: #5f6b7a; font-size: 12px; margin: 6px 2px 0; }
+  .nb-place { margin: 12px 2px 0; color: #5f6b7a; }
+  .nb-place strong { color: #131313; }
+  .nb-place .other { display: inline-block; margin: 4px 6px 0 0; padding: 2px 10px; border: 1px solid #cfd6e4; border-radius: 999px; background: #fff; color: #12264F; font-size: 12px; cursor: pointer; }
+  .nb-say { margin: 12px 0 0; padding: 14px 16px; border-left: 4px solid #CC9900; background: #fffaf0; border-radius: 0 8px 8px 0;
+    font-size: 18px; line-height: 1.4; color: #131313; }
+  .nb-say .copy { float: right; margin: -4px -6px 0 8px; font-size: 11px; border: 1px solid #cfd6e4; background: #fff; border-radius: 999px; padding: 1px 9px; color: #5f6b7a; }
+  .nb-list { flex: 1; overflow-y: auto; margin-top: 12px; padding-right: 4px; }
+  .nb-stop { border: 1px solid #cfd6e4; border-radius: 10px; margin-bottom: 10px; background: #fff; }
+  .nb-stop .sh { display: flex; align-items: baseline; gap: 8px; padding: 8px 12px; border-bottom: 1px solid #eef1f6; cursor: pointer; }
+  .nb-stop .sh .nm { font-weight: 700; font-size: 14px; color: #12264F; }
+  .nb-stop .sh .side { font-size: 11px; border: 1px solid #12264F; color: #12264F; border-radius: 3px; padding: 0 5px; }
+  .nb-stop .sh .walk { margin-left: auto; color: #5f6b7a; font-size: 12px; white-space: nowrap; }
+  .nb-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid #f1f3f7; }
+  .nb-row:last-child { border-bottom: 0; }
+  .nb-row .rt { flex: 0 0 64px; text-align: center; font-weight: 700; font-size: 12px; border-radius: 4px; padding: 3px 0; }
+  .nb-row .to { flex: 1; min-width: 0; }
+  .nb-row .to .hs { font-weight: 600; }
+  .nb-row .to .note { color: #5f6b7a; font-size: 11.5px; }
+  .nb-row .when { text-align: right; white-space: nowrap; }
+  .nb-row .when .t { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .nb-row .when .in { color: #5f6b7a; font-size: 12px; }
+  .nb-row .when .more { color: #5f6b7a; font-size: 12px; font-variant-numeric: tabular-nums; }
+  .nb-badge { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 3px; padding: 0 5px; margin-right: 4px; vertical-align: 1px; }
+  .nb-badge.live { background: #e6f6e6; color: #0a7a0a; border: 1px solid #0ca30c; }
+  .nb-badge.late { background: #fff4db; color: #8a5a00; border: 1px solid #fab219; }
+  .nb-badge.last { background: #CC9900; color: #12264F; }
+  .nb-badge.day { background: #12264F; color: #fff; }
+  .nb-badge.sched { border: 1px solid #cfd6e4; color: #5f6b7a; }
+  .nb-empty { color: #5f6b7a; padding: 16px 4px; }
+  .nb-empty.err { color: #8a1f11; }
+  .nb-foot { color: #5f6b7a; font-size: 11.5px; padding-top: 8px; border-top: 1px solid #eef1f6; margin-top: 6px; }
+  .nb-bus { border-radius: 999px; color: #fff; font-weight: 700; font-size: 11px; padding: 1px 6px; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35); white-space: nowrap; }
+  .nb-bus.off { opacity: .45; }
+  .nb-legend { position: absolute; left: 10px; bottom: 10px; z-index: 500; background: rgba(255,255,255,.92); border-radius: 8px; padding: 6px 10px; font-size: 11.5px; color: #5f6b7a; }
+
+.nb
+  .nb-left
+    %form.nb-search#nb-form{autocomplete: "off"}
+      %input#nb-q{type: "text", autofocus: true, placeholder: "Where is the caller? A corner, place or stop (Mockingbird & Navarro, the mall)", "aria-label": "Where is the caller"}
+      %button.go{type: "submit"} Find
+      %button.new#nb-new{type: "button", title: "Clear for the next caller (Esc)"} New call
+    .nb-hint Type the corner or place the caller gives you, then Enter. Click a stop on the map to see its buses.
+    #nb-place.nb-place
+    #nb-say
+    #nb-list.nb-list
+      .nb-empty Waiting for a caller.
+    .nb-foot#nb-foot
+  .nb-right
+    #nb-map
+    .nb-legend
+      Coloured lines are the routes; numbered dots are buses reporting now (faded: not on its route right now).
+
+:javascript
+  (function() {
+    var LOOKUP = #{next_bus_lookup_path.to_json}, MAPDATA = #{next_bus_map_path.to_json}, BUSES = #{next_bus_buses_path.to_json};
+    var q = document.getElementById('nb-q'), list = document.getElementById('nb-list'), sayBox = document.getElementById('nb-say');
+    var placeBox = document.getElementById('nb-place'), foot = document.getElementById('nb-foot');
+    var current = null, busLayer = null, placeMarker = null, stopLayer = null, timer = null;
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+    var map = L.map('nb-map', { zoomControl: true, attributionControl: false }).setView([28.82, -96.99], 13);
+    L.tileLayer('/tiles/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+    stopLayer = L.layerGroup().addTo(map); busLayer = L.layerGroup().addTo(map);
+    // the map is made before the page has its final height; measure again
+    [50, 300, 1000].forEach(function(ms) { setTimeout(function() { map.invalidateSize(); }, ms); });
+    window.addEventListener('resize', function() { map.invalidateSize(); });
+
+    fetch(MAPDATA, { credentials: 'same-origin' }).then(function(r) { return r.json(); }).then(function(d) {
+      d.routes.forEach(function(r) { r.lines.forEach(function(line) { L.polyline(line, { color: r.color, weight: 4, opacity: .75 }).addTo(map).bindTooltip(r.name); }); });
+      d.stops.forEach(function(s) {
+        L.circleMarker([s.lat, s.lon], { radius: 4, color: '#12264F', weight: 1, fillColor: '#fff', fillOpacity: 1 })
+          .bindTooltip(s.name).on('click', function() { lookupAt(s.lat, s.lon, s.name); }).addTo(stopLayer);
+      });
+      var f = {}; d.fares.forEach(function(x) { f[x.id] = x.price; });
+      var money = function(v) { return v == null ? '?' : (v === 0 ? 'free' : '$' + v.toFixed(2)); };
+      foot.innerHTML = '<strong>Fare</strong> ' + money(f.adult) + ' adult · ' + money(f.youth_5_17) + ' youth 5–17 · ' + money(f.senior_60) +
+        ' seniors 60+, disability, Medicare · under 5 ' + money(f.youth_0_4) + '. Weekdays only; no service on holidays. <span style="float:right">Timetable ' + esc(d.feed || '') + '</span>';
+    });
+
+    function drawBuses() {
+      fetch(BUSES, { credentials: 'same-origin' }).then(function(r) { return r.json(); }).then(function(bs) {
+        busLayer.clearLayers();
+        bs.forEach(function(b) {
+          var tip = 'Bus ' + b.unit + ' · ' + (b.route || '?') + (b.on_line ? (' toward ' + b.headsign + (b.late_min > 1 ? ', ' + b.late_min + ' min late' : ', on time')) : ', not on its route right now') + ' · GPS ' + b.seen;
+          L.marker([b.lat, b.lon], { icon: L.divIcon({ className: '', html: '<span class="nb-bus' + (b.on_line ? '' : ' off') + '" style="background:' + b.color + '">' + esc(b.unit) + '</span>', iconSize: null }) })
+            .bindTooltip(tip).addTo(busLayer);
+        });
+      }).catch(function() {});
+    }
+    drawBuses(); setInterval(drawBuses, 20000);
+
+    function show(d) {
+      current = d;
+      if (d.error) { list.innerHTML = '<div class="nb-empty err">' + esc(d.error) + '</div>'; return; }
+      if (!d.place) {
+        placeBox.innerHTML = ''; sayBox.innerHTML = '';
+        list.innerHTML = '<div class="nb-empty">No stop, corner or place in Victoria matches that. Try the two streets of the corner ("Rio Grande and Laurent"), a landmark ("HEB on Navarro"), or click the stop on the map.</div>';
+        return;
+      }
+      placeBox.innerHTML = 'Caller at <strong>' + esc(d.place.label) + '</strong>' +
+        (d.others.length ? '<div>Or did they mean ' + d.others.map(function(o, i) { return '<span class="other" data-i="' + i + '">' + esc(o.label) + '</span>'; }).join('') + '</div>' : '');
+      placeBox.querySelectorAll('.other').forEach(function(el) { el.addEventListener('click', function() { var o = d.others[+el.dataset.i]; lookupAt(o.lat, o.lon, o.label); }); });
+      sayBox.innerHTML = d.say ? '<div class="nb-say"><button type="button" class="copy" title="Copy the sentence">Copy</button>' + esc(d.say) + '</div>' : '';
+      var cp = sayBox.querySelector('.copy'); if (cp) cp.addEventListener('click', function() { try { navigator.clipboard.writeText(d.say); cp.textContent = 'Copied'; } catch (e) {} });
+      if (!d.stops.length) {
+        list.innerHTML = '<div class="nb-empty">No bus stop within about 8 minutes\' walk of there. The nearest route is on the map; click a stop to see its buses.</div>';
+      } else {
+        list.innerHTML = d.stops.map(stopCard).join('');
+        list.querySelectorAll('.nb-stop .sh').forEach(function(el) { el.addEventListener('click', function() { map.setView([+el.dataset.lat, +el.dataset.lon], 17); }); });
+      }
+      if (placeMarker) map.removeLayer(placeMarker);
+      placeMarker = L.circleMarker([d.place.lat, d.place.lon], { radius: 9, color: '#CC9900', weight: 3, fillColor: '#CC9900', fillOpacity: .35 }).addTo(map).bindTooltip('Caller: ' + d.place.label);
+      var pts = [[d.place.lat, d.place.lon]].concat(d.stops.map(function(s) { return [s.lat, s.lon]; }));
+      map.fitBounds(pts, { padding: [60, 60], maxZoom: 16 });
+    }
+
+    function stopCard(s) {
+      return '<div class="nb-stop"><div class="sh" data-lat="' + s.lat + '" data-lon="' + s.lon + '" title="Show on the map">' +
+        '<span class="nm">' + esc(s.corner) + '</span>' + (s.side ? '<span class="side">' + esc(s.side) + '</span>' : '') +
+        '<span class="walk">' + (s.walk_min <= 1 ? 'right there' : s.walk_min + ' min walk') + '</span></div>' + s.routes.map(routeRow).join('') + '</div>';
+    }
+
+    function routeRow(g) {
+      var b = g.buses[0], rest = g.buses.slice(1);
+      var badges = '';
+      if (b.day) badges += '<span class="nb-badge day">' + esc(b.day) + '</span>';
+      if (b.live) {
+        badges += b.delay_min > 1 ? '<span class="nb-badge late">Live · ' + b.delay_min + ' min late</span>' : '<span class="nb-badge live">Live · on time</span>';
+      } else if (!b.day) {
+        badges += '<span class="nb-badge sched" title="No bus on this route is reporting its position right now">Timetable</span>';
+      }
+      if (b.last) badges += '<span class="nb-badge last">Last bus today</span>';
+      var notes = [];
+      if (b.live) notes.push(b.stops_away === 0 ? 'bus ' + esc(b.unit) + ' is coming to this stop next'
+        : b.stops_away <= 12 ? 'bus ' + esc(b.unit) + ' is ' + b.stops_away + ' stop' + (b.stops_away === 1 ? '' : 's') + ' away'
+        : 'bus ' + esc(b.unit) + ' is out on the route');
+      if (b.live && b.clock !== b.scheduled_clock) notes.push('timetable ' + esc(b.scheduled_clock));
+      if (b.turns_here) notes.push('end of the line; continues from ' + esc(b.continues_from));
+      var when = b.day ? '' : (b.in_min <= 1 ? 'due now' : 'in ' + b.in_min + ' min');
+      return '<div class="nb-row"><span class="rt" style="background:' + g.color + ';color:' + g.text_color + '">' + esc(g.route) + '</span>' +
+        '<div class="to"><div>toward <span class="hs">' + esc(g.headsign) + '</span></div><div class="note">' + badges + notes.join(' · ') + '</div></div>' +
+        '<div class="when"><div class="t">' + esc(b.clock) + '</div><div class="in">' + when + '</div>' +
+        (rest.length ? '<div class="more">then ' + rest.map(function(x) { return esc(x.clock) + (x.last ? ' (last)' : ''); }).join(', ') + '</div>' : '') + '</div></div>';
+    }
+
+    function run(params) {
+      list.innerHTML = '<div class="nb-empty">Looking…</div>';
+      fetch(LOOKUP + '?' + new URLSearchParams(params), { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+        .then(function(r) { return r.json(); }).then(function(d) { d.params = params; show(d); })
+        .catch(function() { show({ error: "Next Bus can't reach the bus timetable right now. Try again in a minute, or ask GCRPC I.T." }); });
+      clearInterval(timer);
+      timer = setInterval(function() { if (current && current.place) refresh(); }, 30000);   // keep the times current while on the call
+    }
+    function refresh() {
+      fetch(LOOKUP + '?' + new URLSearchParams({ lat: current.place.lat, lon: current.place.lon, label: current.place.label }), { credentials: 'same-origin' })
+        .then(function(r) { return r.json(); }).then(function(d) { if (!d.error && current && current.place && d.place) { d.others = current.others; show(d); } }).catch(function() {});
+    }
+    function lookupAt(lat, lon, label) { q.value = label; run({ lat: lat, lon: lon, label: label }); }
+
+    document.getElementById('nb-form').addEventListener('submit', function(e) { e.preventDefault(); if (q.value.trim()) run({ q: q.value.trim() }); });
+    function newCall() {
+      current = null; clearInterval(timer); q.value = ''; placeBox.innerHTML = ''; sayBox.innerHTML = '';
+      list.innerHTML = '<div class="nb-empty">Waiting for a caller.</div>';
+      if (placeMarker) { map.removeLayer(placeMarker); placeMarker = null; }
+      map.setView([28.82, -96.99], 13); q.focus();
+    }
+    document.getElementById('nb-new').addEventListener('click', newCall);
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') newCall(); });
+  })();

@@ -17,6 +17,16 @@
 #                                 (GCRPC Fixed Route); shown as badges)
 
 - added: "2026-09-30 13:34"
+  title: "Next Bus: when a fixed-route rider calls"
+  body: |
+    New **Next Bus** tab (before CAD/AVL). Type where the caller is
+    ("Mockingbird and Navarro", "the mall") and press Enter: read out the
+    sentence in the gold box, with the next buses for the stops nearby below
+    it. **Live** means the bus is reporting and includes how late it's
+    running; **Timetable** is the published time. **New call** clears it.
+  providers: [1]
+
+- added: "2026-09-30 13:34"
   title: "Driver emergency alerts now reach the office"
   body: |
     When a driver presses the emergency button on the tablet, a red

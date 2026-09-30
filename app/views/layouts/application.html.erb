@@ -88,6 +88,7 @@
         <% if show_scheduling? %><li class="vehicles"><%= link_to translate_helper("application_vehicles_link_text"), vehicles_path %></li><% end %>
         <% if show_scheduling? %><li class="reports"><%= link_to translate_helper("application_reports_link_text"), reporting.reports_path %></li><% end %>
         <% if current_provider.try(:cab_enabled?) %><li class="cab_trips"><%= link_to translate_helper("application_cabs_link_text"), cab_trips_path %></li><% end %>
+        <% if show_next_bus? %><li class="next_bus"><%= link_to "Next Bus", next_bus_path %></li><% end %>
         <% if show_scheduling? %><li class="cad"><%= link_to translate_helper("application_cad_link_text"), cad_avl_path, target: :_blank %></li><% end %>
       </ul>
     </div><!-- /.wrap -->
