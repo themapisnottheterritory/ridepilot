@@ -15,10 +15,14 @@ class Api::V1::Driver::DriverSessionsController < Api::V2::SessionsController
     end
 
     if @errors.empty?
-      render(success_response(
-          message: "Driver Signed In Successfully",
-          session: session_hash
-        )) and return
+      # The session goes out twice: under data (this API's shape, which the
+      # Demand Response app reads) and at the top level, where the fixed-route
+      # tablet (GCRPC Fixed Route 1.9-1.12) looks for it. Without the second
+      # copy every fixed-route sign-in failed with "Sign-in failed (200)"
+      # (Andrew, 2026-09-30).
+      response = success_response(message: "Driver Signed In Successfully", session: session_hash)
+      response[:json][:session] = session_hash
+      render(response) and return
     else
       render(fail_response(errors: @errors, status: @fail_status))
     end

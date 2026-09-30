@@ -16,6 +16,16 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-09-30 10:22"
+  title: "Fixed-route tablet: driver sign-in works"
+  body: |
+    Drivers can now sign in on the **GCRPC Fixed Route** tablet with their
+    usual tablet login (the same one as the Demand Response app). Before
+    this it always said **Sign-in failed (200)**. Nothing to update on the
+    tablet.
+  providers: [1]
+  apps: [fixed]
+
 - added: "2026-09-30 10:21"
   title: "Ask RidePilot can add a saved place"
   body: |
