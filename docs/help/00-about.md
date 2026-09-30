@@ -1,6 +1,6 @@
 # About Ask RidePilot and who to call
 
-Ask RidePilot answers questions about using RidePilot at GCRPC, Goliad County Rural Transit and Lavaca County Transit. It explains how to do things; it does not change anything in RidePilot.
+Ask RidePilot answers questions about using RidePilot at GCRPC, Goliad County Rural Transit and Lavaca County Transit. It explains how to do things. It can also do one thing for you: add a saved place. Type the request the way you would to a co-worker, for example "add 311 Spring Green Blvd, Victoria 77904, it's the VA Clinic", and Ask RidePilot shows a card with the name, address, category and a small map. Check it, drag the pin onto the building if needed, and click **Add it**; nothing is saved until you click. It tells you if the place is already saved. Only admins and editors can add saved places. Otherwise it changes nothing in RidePilot.
 
 - RidePilot address: https://rp.internal.gcrpc.org (inside the GCRPC network or on the VPN).
 - The three agencies in RidePilot are separate "providers": Victoria Transit GCRPC, Goliad County Rural Transit, Lavaca County Transit. The provider you are working in shows under "Logged in to" at the top right; staff who work for more than one can switch there.

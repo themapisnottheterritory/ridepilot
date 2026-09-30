@@ -16,6 +16,15 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-09-30 10:21"
+  title: "Ask RidePilot can add a saved place"
+  body: |
+    Ask **Ask RidePilot** to add a place the way you'd ask a co-worker:
+    "add 311 Spring Green Blvd, Victoria 77904, it's the VA Clinic". It shows
+    a card with the name, address, category and a map; check it, drag the pin
+    onto the building if needed, and click **Add it**. It warns you if the
+    place is already saved. Nothing is saved until you click.
+
 - added: "2026-09-30 09:47"
   title: "Address search: highways, and add the town"
   body: |
