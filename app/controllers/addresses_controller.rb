@@ -168,6 +168,18 @@ class AddressesController < ApplicationController
         convincing_suggestions?(results, typed_number)
     end
 
+    # Highways: dispatchers type "1219 West State Highway 72, Cuero"; the map
+    # knows that road only by its route number ("TX 72") outside the town, and
+    # the one road spelled "West State Highway 72" is in Kenedy (Kelly,
+    # 2026-09-30). Ask again in the map's spelling, and when a town was typed,
+    # keep the answers near it, nearest first.
+    street_part, town = split_town(term)
+    if !convincing_suggestions?(results, typed_number) && (route = route_spelling(strip_unit(street_part))) != strip_unit(street_part)
+      results += nominatim_suggest(q: route)
+      results += nominatim_suggest(street: route, state: NOMINATIM_FALLBACK_STATE) unless convincing_suggestions?(results, typed_number)
+    end
+    results = near_town(results, town) if town
+
     results = rank_suggestions(results, typed_number)
     results = carry_typed_house_number(results, typed_number)
 
@@ -192,6 +204,41 @@ class AddressesController < ApplicationController
   # 1760", "8 Pvt RD 1192" -- so the scrap rule has to stand down for those or it
   # amputates the address it was meant to repair.
   ROUTE_TAIL = /\b(?:fm|cr|rr|rd|hwy|highway|us|sh|tx|loop|spur|route|farm)\s+\S*\d\S*\z/i
+
+  # "1219 West State Highway 72" -> "1219 TX 72"; "Farm to Market Road 953" ->
+  # "FM 953": the map names highways by route number, and a direction word is
+  # part of the local name only where the town gave it one.
+  def route_spelling(text)
+    text.gsub(/\b(?:(?:N|S|E|W|North|South|East|West)\.?\s+)?(?:State\s+)?(?:Highway|Hwy\.?|SH|TX)\s*-?\s*(\d+[A-Z]?)\b/i, 'TX \\1')
+        .gsub(/\b(?:Farm\s+to\s+Market(?:\s+Road)?|F\.?M\.?)\s*-?\s*(\d+)\b/i, 'FM \\1')
+        .squish
+  end
+
+  # "1219 W SH 72, Cuero, TX 77954" -> ["1219 W SH 72", "Cuero"]; no comma -> [term, nil]
+  def split_town(term)
+    street, rest = term.split(',', 2).map { |x| x.to_s.strip }
+    return [term, nil] if rest.blank?
+    town = rest.sub(/,?\s*(?:TX|Texas)\b.*\z/i, '').sub(/\s*\d{5}(?:-\d{4})?\z/, '').strip
+    [street, town.presence]
+  end
+
+  # Only results within 30 miles of the town typed, nearest first. Nominatim
+  # can't filter by town for a road segment that carries no town of its own
+  # (a highway just outside the city limit), so this does it from the town's
+  # own location.
+  def near_town(results, town)
+    centre = nominatim_suggest(city: town, state: NOMINATIM_FALLBACK_STATE).first
+    return results unless centre
+    lat, lon = centre['lat'].to_f, centre['lon'].to_f
+    results.map { |r| [r, miles_between(lat, lon, r['lat'].to_f, r['lon'].to_f)] }
+           .select { |_, d| d <= 30 }.sort_by(&:last).map(&:first)
+  end
+
+  def miles_between(lat1, lon1, lat2, lon2)
+    rad = ->(x) { x * Math::PI / 180 }
+    a = Math.sin(rad.(lat2 - lat1) / 2)**2 + Math.cos(rad.(lat1)) * Math.cos(rad.(lat2)) * Math.sin(rad.(lon2 - lon1) / 2)**2
+    2 * 3958.8 * Math.asin(Math.sqrt(a))
+  end
 
   def strip_unit(term)
     base = term.sub(UNIT_MARKER, '').strip

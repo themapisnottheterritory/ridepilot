@@ -99,7 +99,10 @@ class Run < ApplicationRecord
 
   scope :other_overlapped_runs, -> (run) { overlapped(run).other_than(run) }
 
-  scope :default_order, -> { order(:date, :scheduled_start_time_string, :scheduled_end_time_string, :name) }
+  # Names sort the way people read them (UDR1, UDR2, ... UDR10): the name
+  # without its trailing number, then that number, then the whole name.
+  NATURAL_NAME_ORDER = Arel.sql("regexp_replace(runs.name, '\\d+$', ''), NULLIF(substring(runs.name from '(\\d+)$'), '')::integer NULLS FIRST, runs.name").freeze
+  scope :default_order, -> { order(:date, :scheduled_start_time_string, :scheduled_end_time_string).order(NATURAL_NAME_ORDER) }
   scope :demand_response_runs, -> { where(service_mode: 'demand_response') }
   scope :fixed_route_runs,     -> { where(service_mode: 'fixed_route') }
 

@@ -4,12 +4,15 @@
     .input-group-btn
       %button.btn.btn-default{:type => "button"}
         = image_tag "calendar-clock.png"
+  = f.select :dispatch_service_mode,
+    options_for_select([["Demand response runs", "demand_response"], ["Fixed route runs", "fixed_route"], ["All runs", "all"]], session[:dispatch_service_mode].presence || "demand_response"),
+    {}, { class: "form-control", style: "margin-left: 8px;", title: "Which runs to show", "aria-label": "Which runs to show" }
 = render "shared/date_time_picker_javascript"
 :javascript
   $(document).ready(function(){
     makeDatePickers();
 
-    $('#run_trip_filters_run_trip_day').change(function() {
+    $('#run_trip_filters_run_trip_day, #run_trip_filters_dispatch_service_mode').change(function() {
       $(this).parents('form').submit();
     });
   });

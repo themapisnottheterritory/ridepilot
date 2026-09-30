@@ -4,6 +4,7 @@ class DispatchersController < ApplicationController
   def index
     Date.beginning_of_week= :sunday
     filters_hash = runs_trips_params || {}
+    filters_hash.delete(:dispatch_service_mode) unless filters_hash[:dispatch_service_mode].to_s.in?(DISPATCH_SERVICE_MODES)
     update_sessions(filters_hash.except(:start, :end))
     update_unassigned_trip_type_session
 
@@ -276,7 +277,7 @@ class DispatchersController < ApplicationController
       @schedule_options += [[Run::UNSCHEDULED_RUN_ID, 'Unscheduled']]
     end
 
-    @schedule_options += @runs.incomplete.pluck(:id, :name)
+    @schedule_options += @runs.incomplete.where.not(service_mode: "fixed_route").pluck(:id, :name)
 
     if session[:unassigned_trip_status_id].try(:to_i) == Run::STANDBY_RUN_ID
       @schedule_options += [[Run::TRIP_UNMET_NEED_ID, 'Unmet Need']] 
@@ -350,12 +351,21 @@ class DispatchersController < ApplicationController
     end
   end
 
+  # Dispatch shows demand-response runs unless the person picks otherwise
+  # (fixed-route runs can't take a trip; 27 of them buried the 28 DR runs).
+  DISPATCH_SERVICE_MODES = %w[demand_response fixed_route all].freeze
+
+  def dispatch_service_mode
+    session[:dispatch_service_mode].presence_in(DISPATCH_SERVICE_MODES) || "demand_response"
+  end
+
   def run_sessions
     {
       start: session[:run_trip_day],
       end: session[:run_trip_day], 
       run_id: session[:run_id], 
-      run_result_id: session[:run_result_id]
+      run_result_id: session[:run_result_id],
+      service_mode: (dispatch_service_mode unless dispatch_service_mode == "all")
     }
   end
 

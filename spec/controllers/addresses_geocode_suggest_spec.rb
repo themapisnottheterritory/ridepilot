@@ -70,4 +70,31 @@ RSpec.describe AddressesController, type: :controller do
       end
     end
   end
+
+  # Kelly, 2026-09-30: "1219 West State Highway 72" offered only the road in
+  # Kenedy; the map calls the Cuero stretch "TX 72".
+  describe "highways and a town" do
+    let(:kenedy)  { { "place_id" => 1, "lat" => "28.8189", "lon" => "-97.8486", "address" => { "road" => "West State Highway 72", "city" => "Kenedy" } } }
+    let(:cuero)   { { "place_id" => 2, "lat" => "29.0886", "lon" => "-97.3147", "address" => { "house_number" => "1219", "road" => "TX 72", "county" => "DeWitt County" } } }
+    let(:yorktown) { { "place_id" => 3, "lat" => "28.9956", "lon" => "-97.4838", "address" => { "house_number" => "1219", "road" => "TX 72", "city" => "Yorktown" } } }
+
+    it "asks again in the map's route-number spelling when the typed spelling found no house number" do
+      allow(controller).to receive(:nominatim_suggest).and_return([])
+      allow(controller).to receive(:nominatim_suggest).with(q: "1219 West State Highway 72").and_return([kenedy])
+      expect(controller).to receive(:nominatim_suggest).with(q: "1219 TX 72").and_return([yorktown, cuero])
+      get :geocode_suggest, params: { q: "1219 West State Highway 72" }
+      ids = JSON.parse(response.body).map { |r| r["place_id"] }
+      expect(ids.first(2)).to contain_exactly(2, 3)
+      expect(ids).to include(1)
+    end
+
+    it "keeps the answers near the town typed, nearest first" do
+      allow(controller).to receive(:nominatim_suggest).and_return([])
+      allow(controller).to receive(:nominatim_suggest).with(q: "1219 TX 72").and_return([kenedy, yorktown, cuero])
+      allow(controller).to receive(:nominatim_suggest).with(city: "Cuero", state: "TX").and_return([{ "lat" => "29.0938", "lon" => "-97.2890" }])
+      get :geocode_suggest, params: { q: "1219 West State Highway 72, Cuero" }
+      expect(JSON.parse(response.body).map { |r| r["place_id"] }).to eq [2, 3]   # Kenedy is 40 miles off
+    end
+  end
+
 end

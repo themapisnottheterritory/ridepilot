@@ -16,6 +16,24 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-09-30 09:47"
+  title: "Address search: highways, and add the town"
+  body: |
+    Typing a highway address such as **1219 West State Highway 72, Cuero**
+    now finds the Cuero stretch of the road, not just a town far away with
+    the same street name. The map knows highways as "TX 72" or "FM 953";
+    RidePilot tries that spelling for you. Add the town after a comma and
+    suggestions near that town come first.
+
+- added: "2026-09-30 09:46"
+  title: "Dispatch: demand-response runs first, in order"
+  body: |
+    **Dispatch** now shows demand-response runs only, in the order you'd
+    expect (UDR1, UDR2 ... UDR10), and the "move trips to" menu lists only
+    runs that can take a trip. To see fixed-route runs, or everything,
+    use the new choice next to the date; RidePilot remembers it for you.
+    The **Runs** page sorts the same way.
+
 - added: "2026-09-30 07:07"
   title: A new driver manifest printout
   body: |
