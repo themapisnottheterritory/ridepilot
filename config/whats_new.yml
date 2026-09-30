@@ -16,6 +16,15 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-09-30 13:52"
+  title: "Driver tablet 1.0.18: the emergency button tells the driver what happened"
+  body: |
+    After pressing the emergency button, the driver sees a red banner until
+    someone at dispatch clicks **Got it!**, then a green one naming who
+    received it. If nobody answers within a minute, or the alert can't be
+    sent, the banner tells the driver to call dispatch.
+  apps: [tablet]
+
 - added: "2026-09-30 13:34"
   title: "Next Bus: when a fixed-route rider calls"
   body: |
