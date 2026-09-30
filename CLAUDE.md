@@ -38,3 +38,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Code reloading is OFF (config/environments/development.rb, 2026-09-29): editing a file changes nothing until `docker restart ridepilot_app_1` (about 12 s of downtime). Restart when staff aren't mid-task, and say so.
 - Reason: with reloading on, an edit during an Ask RidePilot streaming answer deadlocked the whole app for 6 minutes.
 
+## Design
+- Anything staff, drivers or a manager will look at follows `docs/design-language.md` (GCRPC navy/gold, Open Sans, a golden-ratio type ladder, one row per thing, plain words). Read it before building or restyling a screen, printout or board.
+
