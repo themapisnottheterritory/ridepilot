@@ -1,57 +1,64 @@
+-# One stop on the driver manifest.
 - trip = itinerary.trip
 - is_pickup = itinerary.leg_flag == 1
 - address = is_pickup ? trip.pickup_address : trip.dropoff_address
 - address_notes = is_pickup ? trip.pickup_address_notes : trip.dropoff_address_notes
-- schedule_time = itinerary.time
 - customer = trip.customer
+- needs = trip_mobility_needs(trip)
+- extras = []
+- extras << "+#{trip.guest_count} #{trip.guest_count == 1 ? 'guest' : 'guests'}" if trip.guest_count.to_i > 0
+- extras << "+#{trip.attendant_count} #{trip.attendant_count == 1 ? 'attendant' : 'attendants'}" if trip.attendant_count.to_i > 0
+- quote = is_pickup ? (TripFareQuote.new(trip, schedule: fare_schedule, compute_distance: false).call rescue nil) : nil
+- card = is_pickup && customer && customer.fare_tokens.active.exists?
 
-%tr{style: 'font-weight: bold; font-size: 12pt;'}
-  %td= is_pickup ? "PU" : "DO" 
-  %td{style: 'width: 420px;'} 
-    %p{style: 'white-space: nowrap;'}= trip.customer.try(:name)
-    %p{style: 'white-space: nowrap;'}= "#{address.name}"
-    %p.col-sm-12{style: 'padding: 0px;'}
-      %span.pull-left{style:'max-width: 250px;'} 
-        = address.address
-      %span.pull-right
-        = address.city
-    - if address_notes
-      %br
-      %p= address_notes
-
-  %td{style: 'text-align: right;'}= format_time_for_listing(schedule_time) if schedule_time
-  %td
-
-%tr
-  %td= (trip.notes.blank? ? "" : translate_helper("driver_manifest_trip_notes") )
-  %td= trip.notes
-  %td{style: 'min-width: 150px; text-align: right;'}
-    = translate_helper("driver_manifest_time_arrive")   
-    &nbsp;(&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)
-  %td{style: 'min-width: 150px; text-align: right;'}  
-    = translate_helper("driver_manifest_time_depart") 
-    &nbsp;(&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)
-%tr
-  %td= translate_helper("run_manifest_table_header_occupancy") 
-  %td
-    - is_occupied = false
-    - @capacity_types_hash.each do |c_id, c_name|
-      - val = itinerary.capacity[c_id].to_i
-      - if val > 0
-        - is_occupied = true
-        = "#{c_name}: #{val}; "
-    - unless is_occupied
-      0
-  %td.text-right= translate_helper("funding_source") if trip.funding_source
-  %td= trip.funding_source.try(:name) 
-
-- if customer && customer.mobility_notes.present?
-  %tr
-    %td= translate_helper("driver_manifest_mobility_notes") 
-    %td= customer.mobility_notes
-    %td
-    %td
-%tr
-  %td{colspan:"4", style: "border-bottom: 2px solid darkgray;"}
-
-
+%tr{class: (index.odd? ? "ms-even" : "")}
+  %td.ms-n= index + 1
+  %td.ms-pd
+    %span{class: (is_pickup ? "pu" : "do")}= is_pickup ? "PU" : "DO"
+  %td.ms-time
+    - estimated = itinerary.time.nil? && itinerary.try(:eta).present?
+    - if itinerary.time || estimated
+      %b= format_time_for_listing(itinerary.time || itinerary.eta)
+    - else
+      %b.ms-muted &mdash;
+    - if is_pickup && trip.will_call
+      %small will call
+    - elsif !is_pickup && trip.appointment_time
+      %small= "appt #{format_time_for_listing(trip.appointment_time)}"
+    - elsif estimated
+      %small est.
+  %td.ms-rider
+    %b= customer.try(:name)
+    - if is_pickup && trip.will_call
+      %span.ms-tag.willcall WILL CALL
+    - needs.each do |need|
+      %span.ms-tag{class: (need =~ MobilityIconHelper::WHEELED ? "wc" : "aid")}= need
+    - extras.each do |extra|
+      %span.ms-tag.plus= extra
+    - if customer.try(:phone_number_1).present?
+      %div= format_phone_number(customer.phone_number_1)
+    - if is_pickup && customer.try(:mobility_notes).present?
+      .ms-note= customer.mobility_notes
+  %td.ms-addr
+    - if address
+      - if address.name.present? && address.name != address.address
+        %b= address.name
+      %div= [address.address, address.city].compact.reject(&:blank?).join(", ")
+    - if address_notes.present?
+      .ms-note= address_notes
+    - if is_pickup && trip.notes.present?
+      .ms-note= trip.notes
+  %td.ms-fare
+    - if is_pickup
+      - if card
+        card
+      - elsif quote && quote.amount.to_f > 0
+        = number_to_currency(quote.amount)
+      - elsif quote && quote.amount.to_f == 0
+        free
+      - else
+        %span.ms-muted &mdash;
+  %td.ms-blank
+    %span
+  %td.ms-blank
+    %span

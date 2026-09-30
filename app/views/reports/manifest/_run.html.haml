@@ -1,21 +1,76 @@
-
-
-= render partial: "reports/manifest/run_header", formats: [:html], locals: {run: run}
--# The published stop list is what the driver's tablet has. Before dispatch
--# publishes, print the working one (as on Dispatch) and say so -- it used to
--# print an empty table (Kristie, 2026-09-29).
+-# One run: header with a summary, the write-in blanks, the DRAFT notice when
+-# the manifest hasn't been published, and one row per stop.
+-# The published stop list is what the driver's tablet has; before dispatch
+-# publishes, the working one (as on Dispatch) prints instead.
 - published = run.public_itineraries.exists?
+- itins = published ? get_public_itineraries(run, true) : draft_manifest_itineraries(run)
+- trips = itins.map(&:trip).compact.uniq
+- riders = trips.sum { |t| 1 + t.guest_count.to_i + t.attendant_count.to_i }
+- wheelchairs = trips.count { |t| trip_mobility_needs(t).any? { |n| n =~ MobilityIconHelper::WHEELED } }
+- fare_schedule = FareSchedule.new(run.provider)
+
+.ms-head
+  .ms-when
+    .ms-day= run.date.strftime("%A")
+    .ms-date= run.date.strftime("%B %-d, %Y")
+  .ms-who
+    .ms-runname= run.name
+    .ms-line
+      %b Driver:
+      = run.driver.try(:user_name) || "(#{translate_helper('no_driver')})"
+      &nbsp;&nbsp;
+      %b Bus:
+      = run.vehicle.try(:name) || "(none)"
+    .ms-line
+      %b Hours:
+      = "#{format_time_for_listing(run.scheduled_start_time)} to #{format_time_for_listing(run.scheduled_end_time)}"
+  .ms-sum
+    %span.ms-chip
+      %b= trips.size
+      = trips.size == 1 ? "trip" : "trips"
+    %span.ms-chip
+      %b= riders
+      = riders == 1 ? "rider" : "riders"
+    - if wheelchairs > 0
+      %span.ms-chip
+        %b= wheelchairs
+        wheelchair
+    - if run.provider&.phone_number.present?
+      %span.ms-dispatch= "Dispatch #{format_phone_number(run.provider.phone_number)}"
+
+%table.ms-paper
+  %tr
+    %td
+      Start time
+      %span
+    %td
+      End time
+      %span
+    %td
+      Pull-out mileage
+      %span
+    %td
+      Pull-in mileage
+      %span
+
 - unless published
-  .row{style: 'font-size: 13pt; font-weight: bold; margin: 6px 0;'}
-    DRAFT: not yet published to the driver. The stops below are the run as it stands in Dispatch.
-.row
-  %table{style: 'font-size: 12pt; width: 100% !important;'}
+  .ms-draft DRAFT: not yet published to the driver. These stops are the run as it stands in Dispatch.
+
+%table.ms-stops
+  %thead
     %tr
-      %th{style: 'border-left: 2px black solid;'}= translate_helper("driver_manifest_p_d") 
-      %th= translate_helper("driver_manifest_client_address") 
-      %th{style: 'text-align: right;'}= translate_helper("run_manifest_table_header_scheduled_time") 
-      %th{style: 'border-right: 2px black solid;'}
-    %tbody
-      - itins = published ? get_public_itineraries(run, true) : draft_manifest_itineraries(run)
-      - itins.each_with_index do |itin, index|
-        = render partial: "reports/manifest/itinerary", formats: [:html], locals: {itinerary: itin}
+      %th.ms-n #
+      %th.ms-pd P/D
+      %th.ms-time Time
+      %th.ms-rider Rider
+      %th.ms-addr Address
+      %th.ms-fare Fare
+      %th.ms-blank Arrived
+      %th.ms-blank Departed
+  %tbody
+    - itins.each_with_index do |itin, index|
+      = render partial: "reports/manifest/itinerary", formats: [:html], locals: {itinerary: itin, index: index, fare_schedule: fare_schedule}
+- if itins.empty?
+  %p.ms-muted No stops on this run.
+.ms-foot
+  PU = pick up, DO = drop off. Fare is what to collect at pick-up; "card" means the rider pays with their fare card.

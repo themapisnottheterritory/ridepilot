@@ -1,61 +1,67 @@
+-# The driver manifest, on screen and as the PDF (reports/show.pdf.haml sets
+-# @is_pdf). Redesigned 2026-09-30: one compact row per stop with what a driver
+-# needs (phone, mobility, will call, fare, notes), a run header with a summary,
+-# and a single row of write-in blanks for the paper backup. Type scale is a
+-# golden-ratio ladder from 9pt (9 / 11 / 14.5 / 23.5); the rider and address
+-# columns split the middle of the table 38 / 62.
 :css
-  table {
-    border: none;
-  }
+  .manifest-sheet { font-family: 'Open Sans', 'DejaVu Sans', sans-serif; color: #131313; font-size: 9pt; line-height: 1.35; }
+  .manifest-sheet * { box-sizing: border-box; }
+  .manifest-sheet .ms-run { page-break-before: always; }
+  .manifest-sheet .ms-run:first-child { page-break-before: auto; }
 
-  table th {
-    background: white;
-    color: black;
-    border-top: 2px black solid;
-    border-bottom: 2px black solid;
-  }
+  /* run header: a table, which wkhtmltopdf lays out reliably */
+  .ms-head { display: table; width: 100%; border-bottom: 2px solid #CC9900; padding-bottom: 6px; margin-bottom: 8px; }
+  .ms-head > div { display: table-cell; vertical-align: bottom; }
+  .ms-when { width: 34%; }
+  .ms-when .ms-day { font-size: 11pt; color: #5f6b7a; text-transform: uppercase; letter-spacing: .08em; }
+  .ms-when .ms-date { font-size: 23.5pt; font-weight: 700; color: #12264F; line-height: 1.05; }
+  .ms-who { width: 40%; padding-left: 12px; border-left: 1px solid #cfd6e4; }
+  .ms-who .ms-runname { font-size: 14.5pt; font-weight: 700; color: #12264F; }
+  .ms-who .ms-line { font-size: 9pt; color: #131313; }
+  .ms-who .ms-line b { color: #12264F; }
+  .ms-sum { width: 26%; text-align: right; }
+  .ms-sum .ms-chip { display: inline-block; margin: 0 0 3px 4px; padding: 2px 8px; border: 1px solid #12264F; border-radius: 9px; font-size: 9pt; color: #12264F; white-space: nowrap; }
+  .ms-sum .ms-chip b { font-size: 11pt; }
+  .ms-sum .ms-dispatch { display: block; margin-top: 3px; font-size: 9pt; color: #5f6b7a; }
 
-  tr.odd {
-    background: white;
-  }
+  /* the paper backup: one row of write-in blanks */
+  .ms-paper { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+  .ms-paper td { padding: 3px 6px 3px 0; font-size: 9pt; color: #5f6b7a; white-space: nowrap; }
+  .ms-paper td span { display: inline-block; width: 78px; border-bottom: 1px solid #131313; height: 14px; vertical-align: bottom; margin-left: 4px; }
 
-  @media print {
-    table td, table th{
-      border: none;
-    }
+  .ms-draft { border: 1px solid #CC9900; background: #fff8e1; color: #6b4e00; padding: 4px 8px; margin-bottom: 8px; font-size: 9pt; font-weight: 600; }
 
-    .page-break {
-      page-break-before: always;
-    }
-  }
-  
-  p {
-    line-height: normal;
-  }
+  /* the stops */
+  .ms-stops { width: 100%; border-collapse: collapse; }
+  .ms-stops thead { display: table-header-group; }
+  .ms-stops th { background: #12264F; color: #fff; font-weight: 600; font-size: 9pt; text-align: left; padding: 4px 6px; border: 1px solid #12264F; }
+  .ms-stops td { padding: 5px 6px; border-bottom: 1px solid #cfd6e4; vertical-align: top; font-size: 9pt; }
+  .ms-stops tr { page-break-inside: avoid; }
+  .ms-stops tr.ms-even td { background: #f4f6fa; }
+  .ms-stops .ms-n { width: 22px; color: #5f6b7a; text-align: right; }
+  .ms-stops .ms-pd { width: 34px; text-align: center; }
+  .ms-stops .ms-pd span { display: inline-block; min-width: 26px; padding: 1px 4px; border: 1px solid #12264F; border-radius: 3px; font-weight: 700; font-size: 9pt; color: #12264F; }
+  .ms-stops .ms-pd span.pu { background: #12264F; color: #fff; }
+  .ms-stops .ms-time { width: 62px; white-space: nowrap; }
+  .ms-stops .ms-time b { font-size: 11pt; }
+  .ms-stops .ms-time small { display: block; color: #5f6b7a; font-size: 8pt; }
+  .ms-stops .ms-rider { width: 27%; }
+  .ms-stops .ms-rider b { font-size: 11pt; }
+  .ms-stops .ms-addr b { font-size: 9pt; }
+  .ms-stops .ms-fare { width: 52px; text-align: right; white-space: nowrap; }
+  .ms-stops .ms-blank { width: 58px; }
+  .ms-stops .ms-blank span { display: block; height: 16px; border-bottom: 1px solid #131313; }
+  .ms-stops .ms-muted { color: #5f6b7a; }
+  .ms-stops .ms-note { color: #131313; font-style: italic; }
+  .ms-stops .ms-tag { display: inline-block; padding: 0 5px; border-radius: 3px; font-size: 8pt; font-weight: 700; margin-left: 3px; vertical-align: 1px; }
+  .ms-stops .ms-tag.wc { background: #12264F; color: #fff; }
+  .ms-stops .ms-tag.aid { background: #dfe6f2; color: #12264F; }
+  .ms-stops .ms-tag.willcall { background: #CC9900; color: #fff; }
+  .ms-stops .ms-tag.plus { background: #eef1f6; color: #131313; }
+  .ms-foot { margin-top: 6px; font-size: 8pt; color: #5f6b7a; }
 
-  table td, table th {
-    padding: 4px;
-  }
-
-.col-sm-12.col-md-10.col-md-offset-1.col-lg-8.col-lg-offset-2
-  - @runs.each_with_index do |run, index|
-    .page-break{style: (index == 0 ? "page-break-before: auto;" : "")}
-    .row
-      .col-xs-6{style: 'font-size: 18px; font-weight: bold; padding-left: 0px;'}
-        .col-sm-12{style: 'padding-left: 0px;'}
-          = "#{translate_helper('driver_manifest_date')}: #{run.date.strftime('%A')}"
-        .col-sm-12{style: 'padding-left: 0px;'}
-          = format_date(run.date)
-      .col-xs-6{style: 'padding-right: 0px;'}
-        .pull-right
-          -# Option One, the Primary Logo, taken from the official delivery and
-          -# trimmed of its canvas padding. The brand book puts this one alone on
-          -# page 2 with its clear-space grid and uses it on the letterhead, which
-          -# is the nearest thing to a manifest header. 76x70 is its own 756x700
-          -# proportions -- the mark it replaced was a 151x40 banner and those
-          -# numbers would flatten it.
-          - if @is_pdf
-            = wicked_pdf_image_tag "/gcrpc-logo.png", height:70, width:76, alt: "GCRPC"
-          - else
-            %img{src: "/gcrpc-logo.png", height:70, width:76, alt: "GCRPC"}
-          
-    %br  
-    = render partial: "reports/manifest/run", formats: [:html], locals: {run: run}
-
-
-       
+.manifest-sheet
+  - @runs.each do |run|
+    .ms-run
+      = render partial: "reports/manifest/run", formats: [:html], locals: {run: run}

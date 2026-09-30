@@ -16,6 +16,16 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-09-30 07:07"
+  title: A new driver manifest printout
+  body: |
+    **Print manifest** has a new one-page layout: one line per stop with the
+    rider's phone, wheelchair or walker, will call, guests, the fare to
+    collect, the address and its notes, and blanks for arrived and departed
+    times. The header shows the driver, bus, hours and a count of trips,
+    riders and wheelchairs. A run with 13 trips prints on 2 pages instead
+    of 7.
+
 - added: "2026-09-29 17:07"
   title: Print manifest works before a run is published
   body: |
