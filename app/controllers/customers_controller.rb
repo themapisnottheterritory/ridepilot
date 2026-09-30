@@ -1,5 +1,5 @@
 class CustomersController < ApplicationController
-  load_and_authorize_resource :except=>[:autocomplete, :found, :edit, :create, :show, :update, :delete_photo, :inactivate, :reactivate, :prompt_code, :verify_code, :data_for_trip, :get_eligibilities_mobilities_for_trip]
+  load_and_authorize_resource :except=>[:card, :autocomplete, :found, :edit, :create, :show, :update, :delete_photo, :inactivate, :reactivate, :prompt_code, :verify_code, :data_for_trip, :get_eligibilities_mobilities_for_trip]
 
   def autocomplete
     customers = Customer.for_provider(current_provider_id).by_term( params['term'].downcase, 10 ).accessible_by(current_ability)
@@ -57,6 +57,18 @@ class CustomersController < ApplicationController
       paginate(:page => params[:page], :per_page => PER_PAGE)
       
     render :action => :index
+  end
+
+  # GET /customers/:id/card: the small summary shown when hovering a
+  # customer's name anywhere in RidePilot, so staff can tell riders apart
+  # before opening the full record. Fetched only after the pointer rests on a
+  # name, and cached by the page; a handful of small queries.
+  def card
+    @customer = Customer.find_by(id: params[:id])
+    return head(:not_found) unless @customer
+    return head(:forbidden) unless @customer.authorized_for_provider(current_provider_id)
+    @last_trip, @next_trip = CustomerTrips.new(@customer).last_and_next
+    render partial: "customers/card", layout: false
   end
 
   def show

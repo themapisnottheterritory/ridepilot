@@ -17,6 +17,17 @@
 #                                 (GCRPC Fixed Route); shown as badges)
 
 - added: "2026-09-30 17:00"
+  title: "A customer's trips, and a card when you hover their name"
+  body: |
+    The customer's page has a new **Trips** panel: their next 10 and last 10
+    trips side by side, with whether each is on a run. And rest the pointer
+    on any customer's name (Customers, Trips, Dispatch) for a quick card:
+    phone, home, mobility, fare category, alerts, and their next and last trip.
+
+    The red alert at the top of a customer's record now shows only real
+    alerts: the "Imported from legacy system" notes moved to **Private Notes**.
+
+- added: "2026-09-30 17:00"
   title: "Next Bus: landmarks by each stop"
   body: |
     Each stop in **Next Bus** now lists places riders recognise nearby

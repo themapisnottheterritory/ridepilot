@@ -55,6 +55,7 @@ Rails.application.routes.draw do
       end
 
       member do
+        get :card    # hover card on a customer's name (CustomersController#card)
         get :delete_photo
         get :customer_comments_report
         post :inactivate

@@ -1,0 +1,36 @@
+-# The hover card on a customer's name (CustomersController#card): enough to
+-# tell riders with the same name apart before opening the record.
+- c = @customer
+- needs = c.ridership_mobilities.includes(:mobility).select { |m| m.capacity.to_i > 0 }.map { |m| m.mobility&.name }.compact.uniq - MobilityIconHelper::NOT_A_NEED
+.cc
+  .cc-head
+    %strong= c.name
+    - unless c.active
+      %span.cc-b.off Inactive
+    - if c.group
+      %span.cc-b.off Group
+    - if c.ada_eligible
+      %span.cc-b ADA
+    - needs.each do |n|
+      %span.cc-b.need= n
+  -# nearly every imported customer carries an import note in this field;
+  -# only a real alert gets the red flag
+  - if c.message.present? && c.message !~ /\A(Imported|Copied \d{4}-\d{2}-\d{2}) /
+    .cc-flag= c.message
+  .cc-row
+    - phones = [c.phone_number_1, c.phone_number_2].compact_blank
+    = phones.any? ? phones.join(" · ") : "No phone on file"
+  - if c.address
+    .cc-row= c.address.try(:one_line_text) || c.address.address
+  .cc-row.cc-muted
+    = [c.default_rider_category&.name || "Fare category not set", c.default_funding_source&.name&.sub(/\s*\(.*\)\z/, "")].compact.join(" · ")
+    - if c.birth_date
+      = "· born #{c.birth_date.strftime('%-m/%-d/%Y')}"
+  - if @next_trip
+    .cc-row
+      %span.cc-l Next
+      = "#{@next_trip.pickup_time.strftime('%a %-m/%-d %-l:%M %p')} to #{trip_place_label(@next_trip.dropoff_address)}"
+  - if @last_trip
+    .cc-row.cc-muted
+      %span.cc-l Last
+      = "#{@last_trip.pickup_time.strftime('%a %-m/%-d')} to #{trip_place_label(@last_trip.dropoff_address)}#{" · #{@last_trip.trip_result.name}" if @last_trip.trip_result}"

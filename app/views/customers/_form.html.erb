@@ -49,6 +49,7 @@
     </div>
 
     <div class="col-sm-12 col-md-6">
+      <%= render 'trips_overview' if @customer.persisted? %>
       <%= render 'common_addresses_panel', edit_mode: edit_mode %>
       <%= render 'eligibility_panel', f: f, edit_mode: edit_mode %>
       <%= render 'providers_panel', f: f, edit_mode: edit_mode %>

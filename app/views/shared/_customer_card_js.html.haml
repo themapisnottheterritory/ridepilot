@@ -1,0 +1,56 @@
+-# Hover card on customer names, everywhere (CustomersController#card). Any
+-# link to a customer's record, and anything marked data-customer-card="<id>"
+-# (Dispatch's trips table, where names aren't links). Nothing is fetched
+-# until the pointer rests on a name for DELAY ms; each card is fetched once
+-# per page and kept.
+:css
+  #cust-card { position: absolute; z-index: 1700; display: none; width: 330px; background: #fff; border: 1px solid #cfd6e4; border-top: 4px solid #12264F;
+    border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.18); padding: 10px 12px; font-size: 12.5px; line-height: 1.45; color: #131313; pointer-events: none; }
+  #cust-card .cc-head strong { font-size: 14px; color: #12264F; margin-right: 4px; }
+  #cust-card .cc-b { display: inline-block; font-size: 10.5px; font-weight: 700; border-radius: 3px; padding: 0 5px; margin-right: 3px; background: #12264F; color: #fff; vertical-align: 1px; }
+  #cust-card .cc-b.off { background: none; border: 1px solid #cfd6e4; color: #5f6b7a; }
+  #cust-card .cc-b.need { background: #CC9900; color: #12264F; }
+  #cust-card .cc-flag { margin: 5px 0 2px; padding: 3px 7px; border-left: 3px solid #d03b3b; background: #fdecea; color: #8a1f11; }
+  #cust-card .cc-row { margin-top: 3px; }
+  #cust-card .cc-muted { color: #5f6b7a; }
+  #cust-card .cc-l { display: inline-block; width: 34px; font-size: 11px; font-weight: 700; color: #5f6b7a; text-transform: uppercase; }
+:javascript
+  (function() {
+    var DELAY = 400, URL = #{card_customer_path(id: 'ID').to_json};
+    var card = document.createElement('div'); card.id = 'cust-card'; document.body.appendChild(card);
+    var cache = {}, timer = null, current = null;
+    function customerId(el) {
+      var t = el.closest && el.closest('[data-customer-card], a[href]');
+      if (!t) return null;
+      if (t.dataset.customerCard) return [t, t.dataset.customerCard];
+      var m = (t.getAttribute('href') || '').match(/^(?:https?:\/\/[^\/]+)?(?:\/en)?\/customers\/(\d+)\/?(?:[?#].*)?$/);
+      return m ? [t, m[1]] : null;
+    }
+    function place(target) {
+      var r = target.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+      var left = Math.min(window.scrollX + r.left, window.scrollX + document.documentElement.clientWidth - w - 12);
+      var top = window.scrollY + r.bottom + 6;
+      if (r.bottom + h + 12 > window.innerHeight) top = window.scrollY + r.top - h - 6;   // no room below: above
+      card.style.left = Math.max(window.scrollX + 8, left) + 'px'; card.style.top = top + 'px';
+    }
+    function show(target, id) {
+      var got = cache[id] || (cache[id] = fetch(URL.replace('ID', id), { credentials: 'same-origin' }).then(function(r) { return r.ok ? r.text() : ''; }).catch(function() { return ''; }));
+      got.then(function(html) {
+        if (current !== target || !html) return;
+        card.innerHTML = html; card.style.display = 'block'; place(target);
+      });
+    }
+    function hide() { clearTimeout(timer); current = null; card.style.display = 'none'; }
+    document.addEventListener('mouseover', function(e) {
+      var hit = customerId(e.target);
+      if (!hit) return;
+      if (hit[0] === current) return;
+      hide(); current = hit[0];
+      timer = setTimeout(function() { show(hit[0], hit[1]); }, DELAY);
+    });
+    document.addEventListener('mouseout', function(e) {
+      if (current && !current.contains(e.relatedTarget)) hide();
+    });
+    window.addEventListener('scroll', hide, true);
+    document.addEventListener('mousedown', hide);
+  })();
