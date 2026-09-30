@@ -37,6 +37,14 @@
     place that isn't listed? Click **+ landmark** to add it for everyone.
   providers: [1]
 
+- added: "2026-09-30 15:45"
+  title: "Lavaca: book up to 92 days ahead"
+  body: |
+    Trips can now be booked up to 92 days ahead (through December 31 from
+    today), instead of 21. Subscriptions and recurring runs fill in that far
+    ahead too, starting tonight.
+  providers: [143]
+
 - added: "2026-09-30 14:25"
   title: "5310 funding ended: Rider Fares / Donations is the default"
   body: |
