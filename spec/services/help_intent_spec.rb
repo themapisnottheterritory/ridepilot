@@ -18,6 +18,12 @@ RSpec.describe HelpIntent do
     expect(described_class.detect("How do I add a saved address?")).to be_nil
   end
 
+  it "knows a request to find a place on the map" do
+    reply = { intent: "find_place", name: "Walmart", address: "Navarro", city: "Victoria" }.to_json
+    allow(Net::HTTP).to receive(:start).and_return(double(code: "200", body: { choices: [{ message: { content: reply } }] }.to_json))
+    expect(described_class.detect("where is the Walmart on Navarro? find it on the map")).to include("intent" => "find_place", "address" => "Navarro")
+  end
+
   it "answers nil, not an error, when the model server is down or talks nonsense" do
     allow(Net::HTTP).to receive(:start).and_raise(Errno::ECONNREFUSED)
     expect(described_class.detect("add 1 Main St")).to be_nil

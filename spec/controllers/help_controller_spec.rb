@@ -47,6 +47,14 @@ RSpec.describe HelpController, type: :controller do
       expect(response.body).not_to include('"action"')
     end
 
+    it "answers a find with the same card, worded as a lookup" do
+      intent.merge!("intent" => "find_place", "name" => nil)
+      post :ask, params: { question: "can you find 311 Spring Green Blvd in Victoria?", history: "[]" }
+      events = response.body.split("\n\n").map { |e| JSON.parse(e.sub(/\Adata: /, "")) }
+      expect(events.map { |e| e["t"] }.compact.join).to start_with "Here's 311 Spring Green Blvd, Victoria 77904 on the map."
+      expect(events.find { |e| e["action"] }["action"]).to include("mode" => "find", "pin_kind" => "exact")
+    end
+
     it "adds the saved place when the button is clicked, as this person, once" do
       q = HelpQuestion.create!(user: @current_user, question: "add it", action: "{}")
       medical = AddressGroup.create!(name: "Medical")

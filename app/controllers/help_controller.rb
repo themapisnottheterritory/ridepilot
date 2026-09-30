@@ -95,12 +95,14 @@ class HelpController < ApplicationController
   # The chat text and the card for a recognised request; nil falls back to the
   # ordinary answer (e.g. a place named without its street address).
   def card_for(intent)
-    return nil unless intent["intent"] == "add_saved_place"
-    unless intent["address"].to_s.match?(/\A\d+\s+\S/)
+    return nil unless %w[add_saved_place find_place].include?(intent["intent"])
+    find = intent["intent"] == "find_place"
+    if !find && !intent["address"].to_s.match?(/\A\d+\s+\S/)
       return { text: "I can add **#{intent['name'] || 'that place'}** as a saved place. Give me the street address with the house number and the town, e.g. \"add 311 Spring Green Blvd, Victoria 77904, it's the VA Clinic\"." }
     end
     proposal = SavedPlaceProposal.new(provider: current_provider, user: current_user, name: intent["name"], address: intent["address"],
-                                      city: intent["city"], state: intent["state"], zip: intent["zip"], category: intent["category"]).check
+                                      city: intent["city"], state: intent["state"], zip: intent["zip"], category: intent["category"],
+                                      mode: find ? :find : :add).check
     { text: proposal.summary, action: proposal.to_h }
   end
 end

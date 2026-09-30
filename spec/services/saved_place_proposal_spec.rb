@@ -10,25 +10,55 @@ RSpec.describe SavedPlaceProposal do
     { "lat" => lat.to_s, "lon" => lon.to_s, "address" => { "house_number" => number } }
   end
 
-  # the map server answers: search by fields, free text, then the town
+  # the map server answers in order: search by fields, free text, the street
+  # alone (only when no house number matched), then the town
   def map_answers(*answers)
     allow_any_instance_of(described_class).to receive(:nominatim).and_return(*answers)
   end
 
   it "reads the request, finds the pin and the category, and warns about nothing" do
-    map_answers([hit("311", 28.83, -97.01)], [hit("0", 28.80, -97.00)])
+    map_answers([hit("311", 28.83, -97.01).merge("osm_type" => "node")], [hit("0", 28.80, -97.00)])
     p = described_class.new(provider: provider, user: admin, name: "VA Clinic", address: "311 Spring Green Blvd",
                             city: "victoria", state: "tx", zip: "77904", category: "Medical").check
     expect(p.to_h).to include(name: "VA Clinic", city: "Victoria", state: "TX", zip: "77904", address_group_id: medical.id,
-                              pin: { lat: 28.83, lon: -97.01 }, on_map: true, warnings: [], existing: [], can_add: true)
+                              pin: { lat: 28.83, lon: -97.01 }, pin_kind: "exact", on_map: true, warnings: [], existing: [], can_add: true, mode: "add")
     expect(p.summary).to include("**VA Clinic**, 311 Spring Green Blvd, Victoria 77904", "under Medical", "**Add it**")
   end
 
-  it "opens the map on the town and asks for the pin when the map has no house number" do
-    map_answers([hit("1", 28.9, -97.1)], [], [hit(nil, 28.80, -97.00)])
+  it "opens the map on the town and says how to place the pin when the street isn't on the map" do
+    # fields, free text, the street alone, the town
+    map_answers([hit("1", 28.9, -97.1)], [], [], [hit(nil, 28.80, -97.00)])
     p = described_class.new(provider: provider, user: admin, name: "VA Clinic", address: "311 Spring Green Blvd", city: "Victoria").check
-    expect(p.to_h).to include(pin: nil, on_map: false, map_center: { lat: 28.8, lon: -97.0 })
-    expect(p.warnings.first).to include "Drag the pin"
+    expect(p.to_h).to include(pin: nil, pin_kind: nil, on_map: false, map_center: { lat: 28.8, lon: -97.0 })
+    expect(p.warnings.first).to include("Spring Green Blvd isn't on our map yet", "Google Maps", "paste")
+  end
+
+  it "puts the pin on the street when the map knows the street but not the number" do
+    map_answers([], [], [{ "lat" => "28.85", "lon" => "-96.99", "class" => "highway", "address" => {} }], [hit(nil, 28.80, -97.00)])
+    p = described_class.new(provider: provider, user: admin, name: "X", address: "311 Main St", city: "Victoria").check
+    expect(p.to_h).to include(pin: { lat: 28.85, lon: -96.99 }, pin_kind: "street", on_map: false)
+    expect(p.warnings.first).to include("knows Main St but not number 311")
+  end
+
+  it "calls a number the map only estimates along the street an estimate, not a match" do
+    estimate = hit("9999", 28.886, -96.995).merge("class" => "place", "type" => "house", "osm_type" => "way")
+    map_answers([estimate], [hit(nil, 28.80, -97.00)])
+    p = described_class.new(provider: provider, user: admin, name: "X", address: "9999 N Navarro St", city: "Victoria").check
+    expect(p.to_h).to include(pin_kind: "estimate", on_map: true)
+    expect(p.warnings.first).to include "estimates where number 9999 falls"
+  end
+
+  it "finds a landmark by name, worded as a lookup, and still offers to add it" do
+    map_answers([{ "lat" => "28.878", "lon" => "-96.994", "address" => {} }], [hit(nil, 28.80, -97.00)])
+    p = described_class.new(provider: provider, user: admin, name: "Walmart", address: "Navarro", city: "Victoria", mode: :find).check
+    expect(p.to_h).to include(mode: "find", pin_kind: "landmark", pin: { lat: 28.878, lon: -96.994 }, can_add: true)
+    expect(p.summary).to include("Here's **Walmart**, Navarro, Victoria on the map", "give it a name below")
+  end
+
+  it "says plainly when a find comes up empty" do
+    map_answers([], [], [], [hit(nil, 28.80, -97.00)])
+    p = described_class.new(provider: provider, user: admin, name: nil, address: "311 Spring Green Blvd", city: "Victoria", mode: :find).check
+    expect(p.summary).to start_with "I couldn't find 311 Spring Green Blvd, Victoria on our map."
   end
 
   it "warns when the map's pin is far from the town typed" do

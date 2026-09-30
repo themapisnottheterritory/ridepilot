@@ -1,7 +1,8 @@
 require "net/http"
 
 # Ask RidePilot, step one of "it fills, they save": does this message ask
-# RidePilot to DO something it has a form for, rather than explain something?
+# RidePilot to DO something it has a form for (add a saved place, or find a
+# place on the map), rather than explain something?
 #
 #   HelpIntent.detect("please add 311 Spring Green Blvd, Victoria TX 77904 its the VA Clinic")
 #   => { "intent" => "add_saved_place", "name" => "VA Clinic", "address" => "311 Spring Green Blvd",
@@ -15,10 +16,11 @@ require "net/http"
 class HelpIntent
   LLM_URL   = HelpAssistant::LLM_URL
   LLM_MODEL = HelpAssistant::LLM_MODEL
-  INTENTS   = %w[add_saved_place].freeze
+  INTENTS   = %w[add_saved_place find_place].freeze
 
   # a house number and street, or a word that asks for something to be added
-  TRIGGER = /\b\d{1,6}\s+[A-Za-z]|\b(add|save|new|create|put in|agreg|añad|anad|guard|crea)/i
+  # or found on the map
+  TRIGGER = /\b\d{1,6}\s+[A-Za-z]|\b(add|save|new|create|put in|find|locate|look up|on the map|agreg|añad|anad|guard|crea|busca|encuentra)/i
 
   def self.detect(question)
     text = question.to_s.strip.first(1000)
@@ -54,9 +56,10 @@ class HelpIntent
 
   def prompt
     <<~PROMPT
-      You read one message from transit staff and decide whether it asks to ADD A SAVED PLACE (a named destination with a street address) to RidePilot. Reply with JSON only.
+      You read one message from transit staff and decide whether it asks RidePilot to ADD A SAVED PLACE (a named destination with a street address) or to FIND a place on the map. Reply with JSON only.
       If it does: {"intent":"add_saved_place","name":"<place name, or null>","address":"<house number and street>","city":"<city or null>","state":"<2-letter state or null>","zip":"<5-digit zip or null>","category":"<one of: #{AddressGroup.where.not(name: AddressGroup::UNKNOWN_TYPE).order(:id).pluck(:name).join(', ')}, or null>"}
-      Otherwise, including questions about HOW to add one: {"intent":"none"}
+      If it asks to FIND, LOCATE or SHOW a place or address on the map (not to add it): the same fields with "intent":"find_place" (address may be a street or a landmark without a number).
+      Otherwise, including questions about HOW to add or find one: {"intent":"none"}
       Copy the address as typed; fix only obvious capitalisation. Do not invent a city, state or zip that was not typed.
     PROMPT
   end

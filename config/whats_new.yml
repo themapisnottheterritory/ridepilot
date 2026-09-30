@@ -16,6 +16,14 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-09-30 12:10"
+  title: "Ask RidePilot: find a place, or paste one from Google Maps"
+  body: |
+    Ask **Ask RidePilot** to find a place ("where is the Walmart on Navarro?")
+    and it shows it on a map. When our map doesn't know an address, use the
+    **Find** box on the card: search for something nearby, or paste a spot
+    copied from Google Maps (right-click the building, click the numbers).
+
 - added: "2026-09-30 11:09"
   title: "Ask RidePilot: make it bigger"
   body: |
