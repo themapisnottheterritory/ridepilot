@@ -21,6 +21,59 @@ RSpec.describe HelpController, type: :controller do
     expect(HelpQuestion.last.error).to include "ECONNREFUSED"
   end
 
+  describe "a request RidePilot has a form for" do
+    let(:intent) { { "intent" => "add_saved_place", "name" => "VA Clinic", "address" => "311 Spring Green Blvd", "city" => "Victoria", "state" => "TX", "zip" => "77904", "category" => "Medical" } }
+    before do
+      allow(HelpIntent).to receive(:detect).and_return(intent)
+      allow_any_instance_of(SavedPlaceProposal).to receive(:nominatim).and_return([{ "lat" => "28.83", "lon" => "-97.01", "address" => { "house_number" => "311" } }])
+      allow_any_instance_of(HelpAssistant).to receive(:stream).and_raise("the model must not be asked for an answer")
+    end
+
+    it "answers with a card instead of the guide, and keeps the card on the question" do
+      post :ask, params: { question: "please add 311 Spring Green Blvd, Victoria TX 77904 its the VA Clinic", history: "[]" }
+      events = response.body.split("\n\n").map { |e| JSON.parse(e.sub(/\Adata: /, "")) }
+      expect(events.map { |e| e["t"] }.compact.join).to include("**VA Clinic**, 311 Spring Green Blvd, Victoria 77904", "**Add it**")
+      card = events.find { |e| e["action"] }["action"]
+      expect(card).to include("kind" => "add_saved_place", "name" => "VA Clinic", "on_map" => true, "can_add" => true)
+      expect(card["pin"]).to eq("lat" => 28.83, "lon" => -97.01)
+      expect(JSON.parse(HelpQuestion.last.action)["name"]).to eq "VA Clinic"
+      expect(events.last["done"]).to be true
+    end
+
+    it "asks for the house number when the place was named without its address" do
+      intent.merge!("address" => "Navarro", "name" => "Walmart")
+      post :ask, params: { question: "add the walmart on navarro", history: "[]" }
+      expect(response.body).to include("**Walmart**", "house number")
+      expect(response.body).not_to include('"action"')
+    end
+
+    it "adds the saved place when the button is clicked, as this person, once" do
+      q = HelpQuestion.create!(user: @current_user, question: "add it", action: "{}")
+      medical = AddressGroup.create!(name: "Medical")
+      expect {
+        post :act, params: { id: q.id, name: "VA Clinic", address: "311 Spring Green Blvd", city: "Victoria", state: "tx", zip: "77904", address_group_id: medical.id, lat: "28.83", lon: "-97.01" }
+      }.to change(ProviderCommonAddress, :count).by(1)
+      body = JSON.parse(response.body)
+      added = ProviderCommonAddress.last
+      expect(body).to include("ok" => true, "id" => added.id, "label" => "VA Clinic")
+      expect([added.provider_id, added.name, added.city, added.state, added.address_group_id, added.latitude.round(2)]).to eq [@current_user.current_provider.id, "VA Clinic", "Victoria", "TX", medical.id, 28.83]
+      expect(q.reload.action_result).to eq "added ProviderCommonAddress #{added.id}"
+      post :act, params: { id: q.id, name: "VA Clinic", address: "311 Spring Green Blvd", city: "Victoria", lat: "28.83", lon: "-97.01" }
+      expect(response.status).to eq 409
+    end
+
+    it "refuses without a pin, and for someone who may not add saved places" do
+      q = HelpQuestion.create!(user: @current_user, question: "add it", action: "{}")
+      post :act, params: { id: q.id, name: "VA Clinic", address: "311 Spring Green Blvd", city: "Victoria", state: "TX" }
+      expect(response.status).to eq 422
+      expect(JSON.parse(response.body)["error"]).to include "pin"
+      allow_any_instance_of(Ability).to receive(:can?).and_return(false)
+      post :act, params: { id: q.id, name: "VA Clinic", address: "311 Spring Green Blvd", city: "Victoria", state: "TX", lat: "28.83", lon: "-97.01" }
+      expect(response.status).to eq 403
+      expect(q.reload.acted_at).to be_nil
+    end
+  end
+
   it "records thumbs up or down only on the user's own question" do
     mine = HelpQuestion.create!(user: @current_user, question: "Mine")
     theirs = HelpQuestion.create!(user: create(:user), question: "Theirs")

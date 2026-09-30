@@ -209,6 +209,7 @@ Rails.application.routes.draw do
     # Ask RidePilot, the help panel (HelpAssistant)
     post "help/ask"          => "help#ask",      as: :help_ask
     post "help/:id/feedback" => "help#feedback", as: :help_feedback
+    post "help/:id/act"      => "help#act",      as: :help_act
     get  "help/log"          => "help#log",      as: :help_log
 
     # footer: rides completed today (FooterNote)

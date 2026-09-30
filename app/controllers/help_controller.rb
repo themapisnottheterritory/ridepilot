@@ -26,7 +26,16 @@ class HelpController < ApplicationController
     begin
       # waiting on the model is plain IO; let code reloading proceed meanwhile
       ActiveSupport::Dependencies.interlock.permit_concurrent_loads do
-        assistant.stream(question, history) { |text| answer << text; emit.(t: text) }
+        # a request RidePilot has a form for ("add 311 Spring Green Blvd, it's
+        # the VA Clinic") gets a card to check and click instead of an answer
+        if (intent = HelpIntent.detect(question)) && (card = card_for(intent))
+          answer << card[:text]
+          emit.(t: card[:text])
+          emit.(action: card[:action]) if card[:action]
+          record.update_columns(action: card[:action]&.to_json)
+        else
+          assistant.stream(question, history) { |text| answer << text; emit.(t: text) }
+        end
       end
       record.update_columns(answer: answer, duration_ms: elapsed.())
       emit.(done: true, id: record.id)
@@ -39,6 +48,31 @@ class HelpController < ApplicationController
     ensure
       response.stream.close
     end
+  end
+
+  # POST /help/:id/act -- the button on a card: do what the card proposed, as
+  # this person, with their own permissions. Only add_saved_place so far.
+  # Answers JSON: {ok: true, label:, url:} or {ok: false, error:}.
+  def act
+    question = HelpQuestion.where(user_id: current_user.id).find(params[:id])
+    return render(json: { ok: false, error: "That was already done." }, status: :conflict) if question.acted_at
+    authorize! :new, ProviderCommonAddress
+    fields = params.permit(:name, :address, :city, :state, :zip, :address_group_id, :lat, :lon)
+    address = ProviderCommonAddress.new(
+      provider_id: current_provider_id, name: fields[:name].to_s.squish, address: fields[:address].to_s.squish,
+      city: fields[:city].to_s.squish, state: fields[:state].to_s.upcase.first(2), zip: fields[:zip].presence,
+      address_group_id: fields[:address_group_id].presence || AddressGroup.default_address_group&.id,
+      the_geom: Address.compute_geom(fields[:lat], fields[:lon]))
+    if address.the_geom.nil?
+      render json: { ok: false, error: "Put the pin on the building first; a saved place needs a spot on the map." }, status: :unprocessable_entity
+    elsif address.save
+      question.update_columns(acted_at: Time.current, action_result: "added ProviderCommonAddress #{address.id}")
+      render json: { ok: true, id: address.id, label: address.name, url: addresses_provider_path(current_provider) }
+    else
+      render json: { ok: false, error: address.errors.full_messages.to_sentence }, status: :unprocessable_entity
+    end
+  rescue CanCan::AccessDenied
+    render json: { ok: false, error: "Only admins and editors can add saved places; ask Kristie or GCRPC I.T." }, status: :forbidden
   end
 
   # POST /help/:id/feedback -- helpful=true|false, on the user's own question
@@ -54,5 +88,19 @@ class HelpController < ApplicationController
     raise CanCan::AccessDenied unless current_user.admin?
     @questions = HelpQuestion.recent.includes(:user, :provider).limit(300)
     @questions = @questions.where(provider_id: current_provider_id) unless current_user.super_admin?
+  end
+
+  private
+
+  # The chat text and the card for a recognised request; nil falls back to the
+  # ordinary answer (e.g. a place named without its street address).
+  def card_for(intent)
+    return nil unless intent["intent"] == "add_saved_place"
+    unless intent["address"].to_s.match?(/\A\d+\s+\S/)
+      return { text: "I can add **#{intent['name'] || 'that place'}** as a saved place. Give me the street address with the house number and the town, e.g. \"add 311 Spring Green Blvd, Victoria 77904, it's the VA Clinic\"." }
+    end
+    proposal = SavedPlaceProposal.new(provider: current_provider, user: current_user, name: intent["name"], address: intent["address"],
+                                      city: intent["city"], state: intent["state"], zip: intent["zip"], category: intent["category"]).check
+    { text: proposal.summary, action: proposal.to_h }
   end
 end

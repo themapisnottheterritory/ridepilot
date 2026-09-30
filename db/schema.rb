@@ -701,6 +701,9 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.string "error"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "action"
+    t.datetime "acted_at"
+    t.string "action_result"
     t.index ["created_at"], name: "index_help_questions_on_created_at"
     t.index ["provider_id"], name: "index_help_questions_on_provider_id"
   end

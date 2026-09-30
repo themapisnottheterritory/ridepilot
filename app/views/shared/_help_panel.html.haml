@@ -33,6 +33,25 @@
   #askrp-panel form { display: flex; gap: 6px; padding: 8px 10px 10px; border-top: 1px solid #e3e6ea; }
   #askrp-panel textarea { flex: 1; resize: none; height: 54px; font-size: 13.5px; padding: 6px 8px; border: 1px solid #c9d2df; border-radius: 6px; }
   #askrp-panel .askrp-note { font-size: 11px; color: #888; padding: 0 12px 8px; }
+  /* a card: what Ask RidePilot understood, to check and click (docs/design-language.md) */
+  #askrp-log .askrp-card { border: 1px solid #cfd6e4; border-radius: 8px; margin: -4px 12px 10px 0; overflow: hidden; background: #fff; font-size: 13px; }
+  #askrp-log .askrp-card .head { background: #12264F; color: #fff; padding: 6px 11px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+  #askrp-log .askrp-card .head .badge { background: #CC9900; color: #12264F; border-radius: 3px; padding: 1px 6px; font-size: 11px; font-weight: 700; }
+  #askrp-log .askrp-card .row { display: flex; align-items: center; gap: 8px; padding: 5px 11px; border-bottom: 1px solid #eef1f6; }
+  #askrp-log .askrp-card .row label { flex: 0 0 62px; color: #5f6b7a; font-size: 11px; margin: 0; font-weight: 400; }
+  #askrp-log .askrp-card .row input, #askrp-log .askrp-card .row select { flex: 1; min-width: 0; font-size: 13px; padding: 3px 6px; border: 1px solid #c9d2df; border-radius: 4px; height: auto; }
+  #askrp-log .askrp-card .row input.short { flex: 0 0 64px; }
+  #askrp-log .askrp-card .map { height: 190px; }
+  #askrp-log .askrp-card .hint { padding: 5px 11px; font-size: 11.5px; color: #5f6b7a; }
+  #askrp-log .askrp-card .warn { padding: 6px 11px; border-left: 4px solid #CC9900; background: #fff8e6; font-size: 12px; }
+  #askrp-log .askrp-card .existing { padding: 6px 11px; font-size: 12px; background: #f4f6fa; }
+  #askrp-log .askrp-card .existing div { padding: 1px 0; }
+  #askrp-log .askrp-card .actions { display: flex; gap: 8px; padding: 8px 11px; }
+  #askrp-log .askrp-card .actions button { border-radius: 4px; padding: 5px 14px; font-size: 13px; border: 1px solid #12264F; background: #fff; color: #12264F; }
+  #askrp-log .askrp-card .actions button.go { background: #12264F; color: #fff; }
+  #askrp-log .askrp-card .actions button[disabled] { opacity: .5; }
+  #askrp-log .askrp-card .done { padding: 8px 11px; color: #0a7a0a; }
+  #askrp-log .askrp-card .done a { margin-left: 6px; }
 
 %button#askrp-button{type: "button", title: "Ask a question about using RidePilot (drag to move)"}
   %i.fa.fa-question-circle
@@ -73,6 +92,7 @@
     // "go to Customers"), for as long as the browser tab is open. It is kept
     // per signed-in user, so someone else signing in on the same tab starts clean.
     var CHAT_KEY = 'askrp.chat.' + #{current_user.id.to_json}, OPEN_KEY = 'askrp.open';
+    var ACT_URL = #{help_act_path(id: 'ID').to_json}, csrf = function() { return (document.querySelector('meta[name="csrf-token"]') || {}).content; };
     function tabGet(key) { try { return JSON.parse(sessionStorage.getItem(key) || 'null'); } catch (e) { return null; } }
     function tabSet(key, v) { try { v ? sessionStorage.setItem(key, JSON.stringify(v)) : sessionStorage.removeItem(key); } catch (e) {} }
     try { Object.keys(sessionStorage).forEach(function(k) { if (k.indexOf('askrp.chat.') === 0 && k !== CHAT_KEY) sessionStorage.removeItem(k); }); } catch (e) {}
@@ -148,6 +168,66 @@
       var d = document.createElement('div'); d.className = 'msg ' + cls; d.innerHTML = html;
       log.appendChild(d); log.scrollTop = log.scrollHeight; return d;
     }
+    // The card for a request RidePilot has a form for: the fields it understood,
+    // the pin to check (or drag onto the building), what's already saved, and a
+    // button that does it as this person. msg.action is the proposal; msg.acted
+    // is the result once the button was clicked.
+    function cardFor(msg) {
+      var a = msg.action; if (!a || a.kind !== 'add_saved_place') return;
+      var card = document.createElement('div'); card.className = 'askrp-card';
+      if (msg.acted) {
+        card.innerHTML = '<div class="head">Saved place<span class="badge">Added</span></div><div class="done">&#10003; <strong>' + esc(msg.acted.label) + '</strong> is a saved place now and comes up when booking trips.' +
+          (msg.acted.url ? '<a href="' + esc(msg.acted.url) + '">Open Addresses &rarr;</a>' : '') + '</div>';
+        log.appendChild(card); return;
+      }
+      if (msg.dismissed) return;
+      var opts = a.groups.map(function(g) { return '<option value="' + g[0] + '"' + (g[0] === a.address_group_id ? ' selected' : '') + '>' + esc(g[1]) + '</option>'; }).join('');
+      card.innerHTML = '<div class="head">Add a saved place<span class="badge">' + (a.on_map ? 'On the map' : 'Needs a pin') + '</span></div>' +
+        '<div class="row"><label>Name</label><input name="name" value="' + esc(a.name || '') + '"></div>' +
+        '<div class="row"><label>Address</label><input name="address" value="' + esc(a.address || '') + '"></div>' +
+        '<div class="row"><label>City</label><input name="city" value="' + esc(a.city || '') + '"><input name="state" class="short" value="' + esc(a.state || '') + '" maxlength="2"><input name="zip" class="short" value="' + esc(a.zip || '') + '" maxlength="5" placeholder="zip"></div>' +
+        '<div class="row"><label>Category</label><select name="address_group_id"><option value="">(choose)</option>' + opts + '</select></div>' +
+        '<div class="map"></div>' +
+        '<div class="hint">' + (a.on_map ? 'The map placed it here. Drag the pin if the building is somewhere else.' : 'Drag the pin onto the building.') + '</div>' +
+        a.warnings.map(function(w) { return '<div class="warn">' + esc(w) + '</div>'; }).join('') +
+        (a.existing.length ? '<div class="existing"><strong>Already saved:</strong>' + a.existing.map(function(x) { return '<div>' + esc(x.name) + ' &middot; ' + esc(x.address) + (x.on_map ? '' : ' (not on the map)') + '</div>'; }).join('') + '</div>' : '') +
+        (a.can_add ? '<div class="actions"><button type="button" class="go">Add it</button><button type="button" class="no">Not now</button></div>' : '');
+      log.appendChild(card);
+      var pin = a.pin ? [a.pin.lat, a.pin.lon] : [a.map_center.lat, a.map_center.lon], moved = !!a.on_map, map = null, marker = null;
+      if (window.L) {
+        map = L.map(card.querySelector('.map'), { center: pin, zoom: a.on_map ? 17 : 14, attributionControl: false });
+        L.tileLayer('/tiles/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+        marker = L.marker(pin, { draggable: true }).addTo(map);
+        marker.on('dragend', function() { moved = true; var b = card.querySelector('.go'); if (b) b.disabled = false; });
+        setTimeout(function() { map.invalidateSize(); }, 50);
+      }
+      var go = card.querySelector('.go');
+      if (go) {
+        if (!moved) go.disabled = true;
+        go.addEventListener('click', async function() {
+          go.disabled = true; go.textContent = 'Adding…';
+          var ll = marker ? marker.getLatLng() : null, body = new FormData();
+          ['name', 'address', 'city', 'state', 'zip', 'address_group_id'].forEach(function(f) { body.append(f, card.querySelector('[name="' + f + '"]').value); });
+          if (ll) { body.append('lat', ll.lat); body.append('lon', ll.lng); }
+          var result = null;
+          try {
+            var res = await fetch(ACT_URL.replace('ID', msg.id), { method: 'POST', body: body, credentials: 'same-origin', headers: { 'X-CSRF-Token': csrf(), 'Accept': 'application/json' } });
+            result = await res.json();
+          } catch (e) { result = { ok: false, error: "RidePilot couldn't do that right now. Try again in a minute, or ask Kristie or GCRPC I.T." }; }
+          if (result.ok) {
+            msg.acted = { label: result.label, url: result.url }; saveChat();
+            if (map) map.remove();
+            log.removeChild(card); cardFor(msg); log.scrollTop = log.scrollHeight;
+          } else {
+            go.disabled = false; go.textContent = 'Add it';
+            var w = card.querySelector('.warn.err') || document.createElement('div'); w.className = 'warn err'; w.textContent = result.error || 'That did not work.';
+            card.insertBefore(w, card.querySelector('.actions'));
+          }
+        });
+        card.querySelector('.no').addEventListener('click', function() { msg.dismissed = true; saveChat(); if (map) map.remove(); log.removeChild(card); });
+      }
+      log.scrollTop = log.scrollHeight;
+    }
     function feedbackFor(msg) {
       var f = document.createElement('div'); f.className = 'askrp-feedback';
       f.innerHTML = 'Was this helpful? <button type="button" data-v="true">&#128077; Yes</button><button type="button" data-v="false">&#128078; No</button>';
@@ -177,7 +257,7 @@
       if (busy || !question.trim()) return;
       busy = true; suggest.style.display = 'none'; input.value = '';
       add('user', esc(question));
-      var bot = add('bot', '<em>Thinking…</em>'), answer = '', doneId = null, failed = null;
+      var bot = add('bot', '<em>Thinking…</em>'), answer = '', doneId = null, failed = null, action = null;
       var body = new FormData();
       body.append('question', question); body.append('history', JSON.stringify(recentTurns()));
       body.append('page_path', location.pathname); body.append('page_title', document.title);
@@ -194,6 +274,7 @@
             var line = p.replace(/^data:\s*/, ''); if (!line) return;
             var ev; try { ev = JSON.parse(line); } catch (e) { return; }
             if (ev.t) { answer += ev.t; bot.innerHTML = render(answer); log.scrollTop = log.scrollHeight; }
+            if (ev.action) action = ev.action;
             if (ev.done) doneId = ev.id;
             if (ev.error) failed = ev.error;
           });
@@ -203,8 +284,9 @@
         bot.className = 'msg err'; bot.textContent = failed;
         chat.push({ cls: 'user', text: question }, { cls: 'err', text: failed });
       } else {
-        var msg = { cls: 'bot', text: answer, id: doneId };
+        var msg = { cls: 'bot', text: answer, id: doneId, action: action };
         chat.push({ cls: 'user', text: question }, msg);
+        if (action && doneId) cardFor(msg);
         if (doneId) feedbackFor(msg);
       }
       saveChat();
@@ -213,6 +295,7 @@
 
     function show(m) {
       add(m.cls, m.cls === 'bot' ? render(m.text) : esc(m.text));
+      if (m.cls === 'bot' && m.action && m.id) cardFor(m);
       if (m.cls === 'bot' && m.id) feedbackFor(m);
     }
     document.getElementById('askrp-new').addEventListener('click', function() {
