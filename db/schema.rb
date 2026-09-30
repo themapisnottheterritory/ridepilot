@@ -1363,6 +1363,24 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.index ["thing_type", "thing_id", "var"], name: "index_settings_on_thing_type_and_thing_id_and_var", unique: true
   end
 
+  create_table "stop_landmarks", force: :cascade do |t|
+    t.string "stop_id", null: false
+    t.string "name", null: false
+    t.string "kind"
+    t.decimal "lat", precision: 9, scale: 6
+    t.decimal "lon", precision: 9, scale: 6
+    t.integer "meters"
+    t.boolean "brand", default: false, null: false
+    t.string "source", default: "staff", null: false
+    t.boolean "hidden", default: false, null: false
+    t.bigint "created_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index "stop_id, lower((name)::text)", name: "index_stop_landmarks_on_stop_and_name", unique: true
+    t.index ["created_by_id"], name: "index_stop_landmarks_on_created_by_id"
+    t.index ["stop_id"], name: "index_stop_landmarks_on_stop_id"
+  end
+
   create_table "street_dictionary_entries", force: :cascade do |t|
     t.string "raw_street", null: false
     t.string "city", null: false
@@ -1822,6 +1840,7 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
   add_foreign_key "run_vehicle_inspections", "runs"
   add_foreign_key "run_vehicle_inspections", "vehicle_inspection_reports"
   add_foreign_key "run_vehicle_inspections", "vehicle_inspections"
+  add_foreign_key "stop_landmarks", "users", column: "created_by_id"
   add_foreign_key "vehicle_inspection_reports", "drivers"
   add_foreign_key "vehicle_inspection_reports", "providers"
   add_foreign_key "vehicle_inspection_reports", "runs"

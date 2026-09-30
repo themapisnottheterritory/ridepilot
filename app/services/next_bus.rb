@@ -52,11 +52,39 @@ class NextBus
         { label: corner, lat: ss.sum(&:lat) / ss.size, lon: ss.sum(&:lon) / ss.size, how: "stop" }
       end
     end
+    marks = landmark_places(text)
+    return marks if marks.any?
     a, b = text.split(/\s+(?:and|&|@|at|y)\s+|\s*[&@\/]\s*/i, 2)
     if b.present? && (x = crossing(a, b))
       return [x]
     end
     search(text)
+  end
+
+  # "I'm at the Whataburger on Navarro": landmarks whose every word was said,
+  # best first by how many of the other words match the stop's name (Navarro).
+  def landmark_places(text)
+    said = landmark_words(text)
+    return [] if said.empty?
+    hits = StopLandmark.shown.to_a.filter_map do |lm|
+      words = landmark_words(lm.name)
+      next if words.empty? || !(words - said).empty?
+      stop = @s.stops[lm.stop_id] or next
+      rest = said - words
+      # more of the words said: the landmark's own ("HEB pharmacy" is the
+      # pharmacy, not the H-E-B), then the stop's street ("on Navarro")
+      [[words.size, rest.count { |w| stop.name.downcase.include?(w) }], lm, stop]
+    end
+    return [] if hits.empty?
+    best = hits.map(&:first).max
+    hits.select { |score, _, _| score == best }.uniq { |_, lm, _| [lm.name.downcase, (lm.lat.to_f * 500).round, (lm.lon.to_f * 500).round] }.map do |_, lm, stop|
+      { label: "#{lm.name} (#{stop.corner})", lat: (lm.lat || stop.lat).to_f, lon: (lm.lon || stop.lon).to_f, how: "landmark" }
+    end
+  end
+
+  # "H-E-B", "HEB" and "H E B" are the same word; so are "McDonald's" and "mcdonalds"
+  def landmark_words(text)
+    text.downcase.gsub(/(?<=\b[a-z])[\s.-](?=[a-z]\b)/, "").gsub(/['’.-]/, "").scan(/[a-z0-9]+/) - FixedRouteSchedule::IGNORED_WORDS
   end
 
   # Two streets that cross: their lines from the map, and the closest pair of
@@ -100,7 +128,9 @@ class NextBus
 
   def stops_near(lat, lon)
     seen = {}
-    @s.stops_near(lat, lon, miles: WALK_MILES).map do |stop, miles|
+    near = @s.stops_near(lat, lon, miles: WALK_MILES)
+    marks = StopLandmark.for_stops(near.map { |stop, _| stop.id })
+    near.map do |stop, miles|
       # a route and direction shows at the nearest stop that has it; further
       # along the same street it's the same bus a minute earlier or later
       rows = @s.departures(stop.id, @now - LOOKBACK).filter_map { |dep| estimate(dep) }
@@ -111,7 +141,7 @@ class NextBus
         rs.first.slice(:route_id, :route, :color, :text_color, :headsign, :direction_id).merge(buses: rs.map { |r| r.except(:route_id, :route, :color, :text_color, :headsign, :direction_id) })
       end.sort_by { |g| g[:buses].first[:at] }
       { id: stop.id, code: stop.code, name: stop.name, corner: stop.corner, side: stop.side, lat: stop.lat, lon: stop.lon,
-        miles: miles.round(2), walk_min: (miles * WALK_MIN_PER_MILE).ceil, routes: groups }
+        miles: miles.round(2), walk_min: (miles * WALK_MIN_PER_MILE).ceil, routes: groups, landmarks: (marks[stop.id] || []).map(&:as_json) }
     end.reject { |s| s[:routes].empty? }
   end
 
@@ -237,8 +267,11 @@ class NextBus
     live = if b[:live]
       b[:delay_min] > 1 ? ", running about #{pluralize_min(b[:delay_min])} late" : ", on time"
     end
-    "The next #{g[:route]} bus toward #{spoken(g[:headsign], place: true)}, from the stop at #{spoken(stop[:corner])}#{", #{stop[:side].downcase.sub(/ side\z/, '')} side" if stop[:side]}, is #{when_}#{live}."
+    by = stop[:landmarks]&.find { |lm| lm[:meters].nil? || lm[:meters] <= NEAR_LANDMARK_M }
+    "The next #{g[:route]} bus toward #{spoken(g[:headsign], place: true)}, from the stop at #{spoken(stop[:corner])}#{", #{stop[:side].downcase.sub(/ side\z/, '')} side" if stop[:side]}#{", by the #{by[:name]}" if by}, is #{when_}#{live}."
   end
+
+  NEAR_LANDMARK_M = 100   # close enough to say "by the Whataburger"
 
   # For reading out: "@" between two streets is "and" ("N Navarro and E
   # Mockingbird"), before a place it's "at" ("Victoria Mall at Cinemark").

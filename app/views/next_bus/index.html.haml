@@ -50,6 +50,15 @@
   .nb-foot { color: #5f6b7a; font-size: 11.5px; padding-top: 8px; border-top: 1px solid #eef1f6; margin-top: 6px; }
   .nb-bus { border-radius: 999px; color: #fff; font-weight: 700; font-size: 11px; padding: 1px 6px; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35); white-space: nowrap; }
   .nb-bus.off { opacity: .45; }
+  .nb-marks { padding: 5px 12px 7px; border-bottom: 1px solid #eef1f6; color: #5f6b7a; font-size: 12px; }
+  .nb-marks .by { color: #5f6b7a; margin-right: 2px; }
+  .nb-marks .lm { display: inline-block; margin: 2px 4px 2px 0; padding: 1px 8px; border-radius: 999px; background: #f4f6fa; border: 1px solid #cfd6e4; color: #131313; }
+  .nb-marks .lm .x { display: none; margin-left: 5px; color: #8a1f11; cursor: pointer; font-weight: 700; }
+  .nb-marks .lm:hover .x { display: inline; }
+  .nb-marks .lm.staff { border-color: #CC9900; }
+  .nb-marks .add { border: 0; background: none; color: #12264F; font-size: 12px; padding: 0 2px; text-decoration: underline; }
+  .nb-stop.hot { border-color: #CC9900; box-shadow: 0 0 0 2px rgba(204,153,0,.25); }
+  .nb-lm-pin { background: #CC9900; color: #12264F; font-weight: 700; font-size: 11px; padding: 1px 7px; border-radius: 4px; white-space: nowrap; box-shadow: 0 1px 4px rgba(0,0,0,.35); border: 1px solid #fff; }
   .nb-legend { position: absolute; left: 10px; bottom: 10px; z-index: 500; background: rgba(255,255,255,.92); border-radius: 8px; padding: 6px 10px; font-size: 11.5px; color: #5f6b7a; }
 
 .nb
@@ -72,6 +81,9 @@
 :javascript
   (function() {
     var LOOKUP = #{next_bus_lookup_path.to_json}, MAPDATA = #{next_bus_map_path.to_json}, BUSES = #{next_bus_buses_path.to_json};
+    var LANDMARKS = #{next_bus_landmarks_path.to_json}, LANDMARK = #{next_bus_landmark_path(id: 'ID').to_json};
+    var csrf = function() { return (document.querySelector('meta[name="csrf-token"]') || {}).content; };
+    var stopsById = {}, markLayer = null;
     var q = document.getElementById('nb-q'), list = document.getElementById('nb-list'), sayBox = document.getElementById('nb-say');
     var placeBox = document.getElementById('nb-place'), foot = document.getElementById('nb-foot');
     var current = null, busLayer = null, placeMarker = null, stopLayer = null, timer = null;
@@ -79,7 +91,7 @@
 
     var map = L.map('nb-map', { zoomControl: true, attributionControl: false }).setView([28.82, -96.99], 13);
     L.tileLayer('/tiles/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-    stopLayer = L.layerGroup().addTo(map); busLayer = L.layerGroup().addTo(map);
+    stopLayer = L.layerGroup().addTo(map); busLayer = L.layerGroup().addTo(map); markLayer = L.layerGroup().addTo(map);
     // the map is made before the page has its final height; measure again
     [50, 300, 1000].forEach(function(ms) { setTimeout(function() { map.invalidateSize(); }, ms); });
     window.addEventListener('resize', function() { map.invalidateSize(); });
@@ -88,7 +100,8 @@
       d.routes.forEach(function(r) { r.lines.forEach(function(line) { L.polyline(line, { color: r.color, weight: 4, opacity: .75 }).addTo(map).bindTooltip(r.name); }); });
       d.stops.forEach(function(s) {
         L.circleMarker([s.lat, s.lon], { radius: 4, color: '#12264F', weight: 1, fillColor: '#fff', fillOpacity: 1 })
-          .bindTooltip(s.name).on('click', function() { lookupAt(s.lat, s.lon, s.name); }).addTo(stopLayer);
+          .bindTooltip(s.name).on('click', function() { lookupAt(s.lat, s.lon, s.name); })
+          .on('mouseover', function() { showMarks(s.id); }).on('mouseout', function() { showMarks(null); }).addTo(stopLayer);
       });
       var f = {}; d.fares.forEach(function(x) { f[x.id] = x.price; });
       var money = function(v) { return v == null ? '?' : (v === 0 ? 'free' : '$' + v.toFixed(2)); };
@@ -106,7 +119,7 @@
         });
       }).catch(function() {});
     }
-    drawBuses(); setInterval(drawBuses, 20000);
+    drawBuses(); setInterval(drawBuses, 15000);
 
     function show(d) {
       current = d;
@@ -124,8 +137,15 @@
       if (!d.stops.length) {
         list.innerHTML = '<div class="nb-empty">No bus stop within about 8 minutes\' walk of there. The nearest route is on the map; click a stop to see its buses.</div>';
       } else {
+        stopsById = {}; d.stops.forEach(function(s) { stopsById[s.id] = s; });
         list.innerHTML = d.stops.map(stopCard).join('');
         list.querySelectorAll('.nb-stop .sh').forEach(function(el) { el.addEventListener('click', function() { map.setView([+el.dataset.lat, +el.dataset.lon], 17); }); });
+        list.querySelectorAll('.nb-stop').forEach(function(card) {
+          card.addEventListener('mouseenter', function() { showMarks(card.dataset.id); });
+          card.addEventListener('mouseleave', function() { showMarks(null); });
+        });
+        list.querySelectorAll('.nb-marks .add').forEach(function(b) { b.addEventListener('click', function() { addMark(b.dataset.id); }); });
+        list.querySelectorAll('.nb-marks .x').forEach(function(x) { x.addEventListener('click', function() { hideMark(x.dataset.id, x.dataset.name); }); });
       }
       if (placeMarker) map.removeLayer(placeMarker);
       placeMarker = L.circleMarker([d.place.lat, d.place.lon], { radius: 9, color: '#CC9900', weight: 3, fillColor: '#CC9900', fillOpacity: .35 }).addTo(map).bindTooltip('Caller: ' + d.place.label);
@@ -134,9 +154,48 @@
     }
 
     function stopCard(s) {
-      return '<div class="nb-stop"><div class="sh" data-lat="' + s.lat + '" data-lon="' + s.lon + '" title="Show on the map">' +
+      return '<div class="nb-stop" data-id="' + esc(s.id) + '"><div class="sh" data-lat="' + s.lat + '" data-lon="' + s.lon + '" title="Show on the map">' +
         '<span class="nm">' + esc(s.corner) + '</span>' + (s.side ? '<span class="side">' + esc(s.side) + '</span>' : '') +
-        '<span class="walk">' + (s.walk_min <= 1 ? 'right there' : s.walk_min + ' min walk') + '</span></div>' + s.routes.map(routeRow).join('') + '</div>';
+        '<span class="walk">' + (s.walk_min <= 1 ? 'right there' : s.walk_min + ' min walk') + '</span></div>' + marksLine(s) + s.routes.map(routeRow).join('') + '</div>';
+    }
+
+    // Landmarks riders would know, nearest-recognisable first. Hover one for
+    // the x that hides it; "+ landmark" adds a CSR's own.
+    function marksLine(s) {
+      var lms = s.landmarks || [];
+      return '<div class="nb-marks">' + (lms.length ? '<span class="by">By</span>' : '') +
+        lms.map(function(l) {
+          var dist = l.meters > 25 ? ' <span style="color:#5f6b7a">' + Math.max(1, Math.round(l.meters / 80)) + ' min</span>' : '';
+          return '<span class="lm' + (l.source === 'staff' ? ' staff' : '') + '" title="' + (l.source === 'staff' ? 'Added by staff' : 'From the map') + '">' + esc(l.name) + dist +
+            '<span class="x" data-id="' + l.id + '" data-name="' + esc(l.name) + '" title="Hide this landmark">×</span></span>';
+        }).join('') +
+        '<button type="button" class="add" data-id="' + esc(s.id) + '" title="Add something riders would recognise near this stop">+ landmark</button></div>';
+    }
+
+    function showMarks(stopId) {
+      markLayer.clearLayers();
+      list.querySelectorAll('.nb-stop.hot').forEach(function(c) { c.classList.remove('hot'); });
+      var s = stopId && stopsById[stopId]; if (!s) return;
+      var card = list.querySelector('.nb-stop[data-id="' + stopId + '"]'); if (card) card.classList.add('hot');
+      L.circleMarker([s.lat, s.lon], { radius: 9, color: '#CC9900', weight: 3, fill: false }).addTo(markLayer);
+      (s.landmarks || []).forEach(function(l) {
+        if (l.lat == null) return;
+        L.marker([l.lat, l.lon], { interactive: false, icon: L.divIcon({ className: '', html: '<span class="nb-lm-pin">' + esc(l.name) + '</span>', iconSize: null }) }).addTo(markLayer);
+      });
+    }
+
+    function addMark(stopId) {
+      var s = stopsById[stopId]; if (!s) return;
+      var name = window.prompt('What would a rider recognise near the ' + s.corner + (s.side ? ' (' + s.side + ')' : '') + ' stop?\n(e.g. "Sonic", "the blue church", "across from Walgreens")');
+      if (!name || !name.trim()) return;
+      var body = new FormData(); body.append('stop_id', stopId); body.append('name', name.trim());
+      fetch(LANDMARKS, { method: 'POST', body: body, credentials: 'same-origin', headers: { 'X-CSRF-Token': csrf(), 'Accept': 'application/json' } })
+        .then(function(r) { return r.json(); }).then(function(d) { if (d.error) alert(d.error); else refresh(); });
+    }
+
+    function hideMark(id, name) {
+      if (!window.confirm('Hide "' + name + '" for this stop? (Add it back any time with + landmark.)')) return;
+      fetch(LANDMARK.replace('ID', id), { method: 'DELETE', credentials: 'same-origin', headers: { 'X-CSRF-Token': csrf() } }).then(function() { refresh(); });
     }
 
     function routeRow(g) {
@@ -168,7 +227,7 @@
         .then(function(r) { return r.json(); }).then(function(d) { d.params = params; show(d); })
         .catch(function() { show({ error: "Next Bus can't reach the bus timetable right now. Try again in a minute, or ask GCRPC I.T." }); });
       clearInterval(timer);
-      timer = setInterval(function() { if (current && current.place) refresh(); }, 30000);   // keep the times current while on the call
+      timer = setInterval(function() { if (current && current.place) refresh(); }, 15000);   // keep the times current while on the call
     }
     function refresh() {
       fetch(LOOKUP + '?' + new URLSearchParams({ lat: current.place.lat, lon: current.place.lon, label: current.place.label }), { credentials: 'same-origin' })
@@ -181,6 +240,7 @@
       current = null; clearInterval(timer); q.value = ''; placeBox.innerHTML = ''; sayBox.innerHTML = '';
       list.innerHTML = '<div class="nb-empty">Waiting for a caller.</div>';
       if (placeMarker) { map.removeLayer(placeMarker); placeMarker = null; }
+      showMarks(null); stopsById = {};
       map.setView([28.82, -96.99], 13); q.focus();
     }
     document.getElementById('nb-new').addEventListener('click', newCall);

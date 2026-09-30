@@ -428,6 +428,8 @@ Rails.application.routes.draw do
     get 'next_bus/lookup' => 'next_bus#lookup', as: :next_bus_lookup
     get 'next_bus/map'    => 'next_bus#map',    as: :next_bus_map
     get 'next_bus/buses'  => 'next_bus#buses',  as: :next_bus_buses
+    post   'next_bus/landmarks'     => 'next_bus#add_landmark',  as: :next_bus_landmarks
+    delete 'next_bus/landmarks/:id' => 'next_bus#hide_landmark', as: :next_bus_landmark
 
     # CAD/AVL dispatcher interface (formerly ridepilot_cad_avl engine)
     get 'cad_avl' => 'cad/cad#index', as: :cad_avl

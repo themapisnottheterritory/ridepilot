@@ -43,6 +43,29 @@ class NextBusController < ApplicationController
     render json: out
   end
 
+  # POST /next_bus/landmarks {stop_id, name}: a CSR's own landmark for a stop
+  # ("the blue church", "across from Sonic"), placed at the stop.
+  def add_landmark
+    stop = FixedRouteSchedule.current.stops[params[:stop_id].to_s]
+    return render(json: { error: "No such stop." }, status: :not_found) unless stop
+    name = params[:name].to_s.squish
+    lm = StopLandmark.where(stop_id: stop.id).where("lower(name) = ?", name.downcase).first
+    if lm&.hidden
+      lm.update!(hidden: false)                  # hidden by mistake: bring it back
+    elsif lm.nil?
+      lm = StopLandmark.new(stop_id: stop.id, name: name, lat: stop.lat, lon: stop.lon, meters: 0, source: "staff", created_by: current_user)
+      return render(json: { error: lm.errors.full_messages.to_sentence }, status: :unprocessable_entity) unless lm.save
+    end
+    render json: lm
+  end
+
+  # DELETE /next_bus/landmarks/:id: hide it (kept, so re-seeding from the map
+  # doesn't bring it back)
+  def hide_landmark
+    StopLandmark.find(params[:id]).update!(hidden: true)
+    head :no_content
+  end
+
   private
 
   def require_next_bus

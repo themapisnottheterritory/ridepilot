@@ -16,6 +16,16 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-09-30 17:00"
+  title: "Next Bus: landmarks by each stop"
+  body: |
+    Each stop in **Next Bus** now lists places riders recognise nearby
+    ("By Wendy's · Pizza Hut"); hover a stop to see them on the map, and the
+    sentence to read out says "by the Whataburger" when it's right there.
+    Search by landmark too ("the Whataburger on Navarro"). Riders know a
+    place that isn't listed? Click **+ landmark** to add it for everyone.
+  providers: [1]
+
 - added: "2026-09-30 14:25"
   title: "5310 funding ended: Rider Fares / Donations is the default"
   body: |

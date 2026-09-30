@@ -11,6 +11,8 @@ For Victoria Transit riders who call asking "when is the next bus?". Click **Nex
 
 **End of the line**: at the last stop of a route (Citizens HealthPlex for Blue, for example) the bus arrives and then continues from where its next trip starts; the row says so.
 
+**Landmarks**: each stop shows places riders recognise nearby ("By Wendy's · Pizza Hut"), and the gold sentence mentions one when it's right at the stop ("by the Whataburger"). Hover a stop, in the list or on the map, to see its landmarks on the map. You can search by landmark too: "the Whataburger on Navarro", "HEB pharmacy". Click **+ landmark** to add something riders would know that isn't listed ("Sonic", "the blue church", "across from Walgreens"); hover a landmark and click its **×** to hide a wrong one. Landmarks came from the map to start with, so about a third of the stops have none yet: add them as callers mention them.
+
 **The map** shows all the routes, the stops, the caller's spot and the buses reporting now (by bus number; a faded bus is not on its route right now).
 
 Victoria Transit runs weekdays only, with no service on holidays. Fares are shown at the bottom of the page. The times come from the published timetable riders' apps use, and the live buses from dispatch's Bus Assignments (Fixed): if a route shows Timetable while its bus is out, check that the bus is assigned there.

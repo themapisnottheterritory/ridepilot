@@ -97,6 +97,68 @@ RSpec.describe NextBus do
   end
 end
 
+RSpec.describe StopLandmark do
+  it "seeds from the map, skipping markers and parking, never undoing what staff hid or added" do
+    rows = [
+      ["B", "amenity", "fast_food", "Whataburger", "Whataburger", "28.8102", "-97.0004", "40"],
+      ["B", "historic", "memorial", "Old Mission Marker", "", "28.81", "-97.0", "20"],
+      ["B", "amenity", "parking", "Lot V", "", "28.81", "-97.0", "10"],
+      ["B", "amenity", "place_of_worship", "First Baptist", "", "28.81", "-97.0", "90"]
+    ]
+    expect(described_class.seed_from(rows)).to eq 2
+    described_class.find_by(name: "First Baptist").update!(hidden: true)
+    described_class.create!(stop_id: "B", name: "the blue house", source: "staff")
+    expect(described_class.seed_from(rows)).to eq 0
+    expect(described_class.for_stops(["B"])["B"].map(&:name)).to eq ["the blue house", "Whataburger"]
+  end
+end
+
+RSpec.describe NextBus, "landmarks" do
+  let(:schedule) { FixedRouteSchedule.new(FEED) }
+  def next_bus = described_class.new(schedule: schedule, buses: {}, now: Time.zone.parse("2026-09-30 08:05"))
+
+  before do
+    StopLandmark.create!(stop_id: "B", name: "Whataburger", kind: "fast_food", lat: 28.8102, lon: -97.0004, meters: 40, brand: true, source: "map")
+    StopLandmark.create!(stop_id: "A", name: "H-E-B", kind: "supermarket", lat: 28.8001, lon: -97.0001, meters: 20, brand: true, source: "map")
+    StopLandmark.create!(stop_id: "A", name: "H-E-B Pharmacy", kind: "pharmacy", lat: 28.8002, lon: -97.0002, meters: 30, brand: true, source: "map")
+  end
+
+  it "finds the caller by a landmark, however it's spelled" do
+    expect(next_bus.find_places("I'm at the whataburger on main").first).to include(label: "Whataburger (N Main @ E Oak)", how: "landmark")
+    expect(next_bus.find_places("HEB pharmacy").first[:label]).to eq "H-E-B Pharmacy (Rio Grande @ Base)"
+  end
+
+  it "puts the landmarks on each stop and says the one right there" do
+    r = next_bus.at(28.8101, -97.0001, "x")
+    expect(r[:stops].find { |s| s[:id] == "B" }[:landmarks].map { |l| l[:name] }).to eq ["Whataburger"]
+    expect(r[:say]).to include "northbound side, by the Whataburger, is at 8:10 AM"
+  end
+end
+
+RSpec.describe NextBusController, "landmarks", type: :controller do
+  login_admin_as_current_user
+  before do
+    stub_const("ApplicationHelper::NEXT_BUS_PROVIDER_IDS", [@current_user.current_provider.id])
+    allow(FixedRouteSchedule).to receive(:current).and_return(FixedRouteSchedule.new(FEED))
+  end
+
+  it "adds a CSR's landmark at the stop, and hides one without deleting it" do
+    post :add_landmark, params: { stop_id: "B", name: "  across from Sonic " }
+    lm = StopLandmark.last
+    expect([lm.stop_id, lm.name, lm.source, lm.created_by_id, lm.lat.to_f]).to eq ["B", "across from Sonic", "staff", @current_user.id, 28.81]
+    delete :hide_landmark, params: { id: lm.id }
+    expect(lm.reload.hidden).to be true
+    post :add_landmark, params: { stop_id: "B", name: "Across From Sonic" }
+    expect(lm.reload.hidden).to be false
+    expect(StopLandmark.count).to eq 1
+  end
+
+  it "refuses a stop that isn't in the timetable" do
+    post :add_landmark, params: { stop_id: "nope", name: "x" }
+    expect(response.status).to eq 404
+  end
+end
+
 RSpec.describe LiveBuses do
   it "keeps the freshest bus per route and drops ones not heard from lately" do
     rows = [
