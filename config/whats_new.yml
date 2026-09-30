@@ -16,6 +16,14 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-09-30 11:09"
+  title: "Ask RidePilot: make it bigger"
+  body: |
+    Click **Bigger** at the top of the **Ask RidePilot** panel for a large
+    panel with a large map, handy for dropping a pin on a building;
+    **Smaller** puts it back. Or drag the panel's top-left corner to any size
+    you like. RidePilot remembers the size.
+
 - added: "2026-09-30 10:50"
   title: "Fixed-route tablet 1.13: the keyboard fits"
   body: |
