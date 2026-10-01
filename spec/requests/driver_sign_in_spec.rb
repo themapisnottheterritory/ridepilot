@@ -23,9 +23,11 @@ RSpec.describe "POST /api/v1/driver_sign_in", type: :request do
   context "initials typed in lowercase" do
     before { driver.user.update!(password: "JT123456", password_confirmation: "JT123456") }
 
-    it "lets a driver in with jt123456 for JT123456" do
-      post "/api/v1/driver_sign_in", params: { user: { username: driver.user.username, password: "jt123456" } }, as: :json
-      expect(response.status).to eq 200
+    it "lets a driver in with jt123456, Jt123456 or jT123456 for JT123456" do
+      %w[jt123456 Jt123456 jT123456].each do |pw|
+        post "/api/v1/driver_sign_in", params: { user: { username: driver.user.username, password: pw } }, as: :json
+        expect(response.status).to eq(200), "#{pw} should sign in"
+      end
     end
 
     it "still refuses other wrong passwords, and other kinds of case slip" do

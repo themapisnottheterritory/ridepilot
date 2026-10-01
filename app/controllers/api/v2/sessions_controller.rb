@@ -70,12 +70,13 @@ class Api::V2::SessionsController < Api::V2::BaseController
 
   # Drivers' passwords are their initials in capitals and digits (JT123456,
   # set for launch 2026-10-01). On launch morning many typed the initials in
-  # lowercase (pj123456) and were turned away at pull-out. For a driver
-  # account only, a password shaped like that is tried once more with its
-  # two letters capitalised; anything else is compared exactly as typed.
+  # lowercase (pj123456), or with the tablet keyboard capitalising only the
+  # first letter (Tj123456), and were turned away at pull-out. For a driver
+  # account only, a password shaped like that is tried once more with its two
+  # letters capitalised; anything else is compared exactly as typed.
   def initials_typed_lowercase?(user, password)
     password = password.to_s
-    return false unless password.match?(/\A[a-z]{2}\d{4,}\z/)
+    return false unless password.match?(/\A[a-zA-Z]{2}\d{4,}\z/) && password[0, 2] != password[0, 2].upcase
     return false unless Driver.exists?(user_id: user.id)
     user.valid_for_api_authentication?(password[0, 2].upcase + password[2..])
   end
