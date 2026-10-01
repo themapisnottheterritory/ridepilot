@@ -16,6 +16,11 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-01 17:20"
+  title: "Revoke a run's cancellation"
+  body: |
+    On **Runs**, tick the runs and choose **Apply Action to Selected Runs > Revoke cancellation** to undo a cancellation. The run loses its **Cancelled** label, and recurring trips for that day go back on it; trips booked one at a time have to be put back from **Dispatch**. Publish each run's manifest again afterwards.
+
 - added: "2026-10-01 14:00"
   title: "Driver tablet 1.0.21: messages from dispatch"
   apps: [tablet]

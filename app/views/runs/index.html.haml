@@ -24,7 +24,7 @@
           -Run::BATCH_ACTIONS.each do |action|
             %li
               %a{href: '#', 'data-run-batch-action' => action.to_s }
-                =translate_helper("#{action}_run")
+                = action == :revoke_cancellation ? "Revoke cancellation" : translate_helper("#{action}_run")
 
     = render :partial => 'list'
 
@@ -63,6 +63,11 @@
           if(!confirmation) { return; } // Return if cancel clicked
           form = $('form.cancel-multiple-runs');
           form.find('#cancel_multiple_runs_run_ids').val(runIds);
+        } else if (action === "revoke_cancellation") {
+          confirmation = confirm("Revoke the cancellation of the selected runs? Recurring trips go back on them; trips booked one at a time have to be put back from Dispatch.");
+          if(!confirmation) { return; }
+          form = $('form.revoke-cancellation-multiple-runs');
+          form.find('#revoke_cancellation_multiple_runs_run_ids').val(runIds);
         } else if (action === "delete") {        
           confirmation = confirm("#{translate_helper('confirm_runs_batch_delete')}");
           if(!confirmation) { return; } // Return if cancel clicked

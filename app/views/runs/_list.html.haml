@@ -23,6 +23,12 @@
   html: { class: 'cancel-multiple-runs' }  do |f|
   = f.text_field :run_ids, label: false, value: nil, style: 'display: none'
   
+-# Form for sending batch "revoke cancellation" requests
+= form_for :revoke_cancellation_multiple_runs, url: revoke_cancellation_multiple_runs_path,
+  method: :patch,
+  html: { class: 'revoke-cancellation-multiple-runs' } do |f|
+  = f.text_field :run_ids, label: false, value: nil, style: 'display: none'
+
 -# Form for sending batch delete requests
 = form_for :delete_multiple_runs, url: delete_multiple_runs_path, 
   method: :delete, 

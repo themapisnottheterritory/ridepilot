@@ -15,3 +15,5 @@ The bus listed is the anticipated vehicle; change it on the run when fleet assig
 **Driver not available**: if RidePilot says the driver is unavailable, check the driver's availability hours (Drivers page, the driver's Recurring Availability) cover the run's hours.
 
 **Don't make a run per rider**: a run is a bus's day, not one person's ride. Put a regular rider's trips on the day's run (a Subscription Trip for standing rides), rather than creating a run named after the rider.
+
+**Undo a cancelled run (Revoke cancellation)**: on **Runs**, tick the cancelled runs, then **Apply Action to Selected Runs > Revoke cancellation**. Each run loses its **Cancelled** label, and if it is a recurring run, that weekday's recurring trips for the date go back on it (the ones still unassigned and not cancelled). Trips booked one at a time were taken off when the run was cancelled and RidePilot did not keep which run they were on, so put those back from **Dispatch**. Publish each run's manifest again afterwards. A run that was already started can't be revoked.
