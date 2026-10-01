@@ -55,6 +55,19 @@ RSpec.describe ReportsController do
       expect(assigns(:grand)[:total]).to eq 3.5
     end
 
+    it "downloads the same rows as an Excel workbook, amounts as numbers" do
+      get :fares_collected, params: params.deep_merge(query: { report_format: "xlsx" })
+      expect(response).to be_successful
+      sheet = RubyXL::Parser.parse_buffer(response.body)[0]
+      expect(sheet.sheet_name).to eq @report.title.first(31)
+      rows = sheet.sheet_data.rows.compact.map { |r| r.cells.map { |c| c&.value } }
+      header = rows.index { |r| r.first == "Agency" && r[1] == "Collected" }
+      expect(header).to be_present
+      amounts = rows[(header + 1)..].map { |r| r[7] }
+      expect(amounts).to contain_exactly(2, 1.5)
+      expect(amounts).to all(be_a(Numeric))
+    end
+
     it "downloads a row per fare as CSV" do
       get :fares_collected, params: params.deep_merge(query: { report_format: "csv" })
       expect(response).to be_successful

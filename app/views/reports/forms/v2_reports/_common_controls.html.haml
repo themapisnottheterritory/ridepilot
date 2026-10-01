@@ -2,7 +2,7 @@
 
 %label
   = "#{translate_helper(:report_format)}:"
-  = f.select :report_format, options_for_select([['HTML', 'html'],['CSV', 'csv'],['PDF', 'pdf']], @query.report_format || 'html')
+  = f.select :report_format, options_for_select([['HTML', 'html'],['Excel', 'xlsx'],['CSV', 'csv'],['PDF', 'pdf']], @query.report_format || 'html')
 
 - if has_multiple_report_types
   %label

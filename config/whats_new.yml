@@ -16,6 +16,11 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-01 12:15"
+  title: "Reports download as Excel"
+  body: |
+    Reports with a **CSV** download can now also be downloaded as **Excel**: choose **Excel** in the report's format list before you press **Run**. Amounts come through as numbers, so Excel can total them.
+
 - added: "2026-10-01 12:00"
   title: "New report: Fares Collected"
   body: |
