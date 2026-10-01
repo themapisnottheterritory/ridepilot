@@ -16,6 +16,12 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-01 14:00"
+  title: "Driver tablet 1.0.21: messages from dispatch"
+  apps: [tablet]
+  body: |
+    On version 1.0.21, a message you send a driver pops up over whatever screen they're on, with a sound and a vibration, and buttons to **OK**, **Reply** or (for a will-call) **Go to stop**. The chat icon shows how many they haven't read, the chat screen has big one-tap replies, and the screen stays on while the app is open.
+
 - added: "2026-10-01 13:58"
   title: "Will call ready, and no-shows from drivers"
   body: |

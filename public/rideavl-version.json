@@ -1,9 +1,9 @@
 {
-  "version": "1.0.20",
-  "version_code": 21,
+  "version": "1.0.21",
+  "version_code": 22,
   "url": "/rideavl-pilot.apk",
   "required": false,
-  "notes": "Shows its version and build date at the bottom of every screen, and tells the office which version each tablet is running.",
-  "published_at": "2026-10-01T17:28:39Z",
-  "sha256": "fd3bd961456967d50362ba93f0a3f7843206a5a74587cf96cb0fc8d40c477fb5"
+  "notes": "Messages from dispatch show on every screen with a sound and vibration; unread count on the chat icon; quick replies; Go to stop for will-call riders.",
+  "published_at": "2026-10-01T19:01:46Z",
+  "sha256": "4284568305b3eab85fdb6a1fd43b960e3c3b2b7684e80800eb199784352c66b0"
 }

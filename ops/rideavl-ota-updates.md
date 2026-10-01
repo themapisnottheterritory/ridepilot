@@ -44,6 +44,8 @@ release (plus the Play Protect tap) is as far as Android allows without an MDM.
 
 **1.0.20 (2026-10-01 12:28 CT, published to all tablets, optional, rideavl-v2 db8bfe9):** a "v1.0.20 · built …" tag bottom-centre on every screen, and the app reports its version/code/build at sign-in and as X-App-* headers on every request (RidePilot f4e354ec, TabletAppVersion in Redis; "[tablet app]" log lines). Several tablets had re-downloaded 1.0.19 without, apparently, installing it.
 
+**1.0.21 (2026-10-01 14:00 CT, published to all tablets, optional, rideavl-v2 e03fe92):** app-wide DispatchMessagesService: dispatch messages raise a banner on any screen (vibrate, tone, read-aloud where supported; OK / Reply / Go to stop), unread badge on the chat icons, threaded chat with optimistic send and retry, seen receipts both ways, refetch on resume/reconnect, FLAG_KEEP_SCREEN_ON. Server side RidePilot 378f1fb6 + b7872141 (will-call Ready, no-show note, SeenByDispatch/SeenByDriver).
+
 **1.0.18 (2026-09-30, published to all tablets the same day, rideavl-v2 e585aa2 on `fixed-route-wp6`):** the emergency button now shows a banner on every screen: red while waiting, green "Dispatch has your alert, received by <name>" when someone clicks Got it! (DriverAlertChannel ReceiveAlert), and "call dispatch now" after 60 s with no answer or if the alert can't be sent. Needs RidePilot a371d104 (ActionCable over Redis), without which no alert or acknowledgement was ever delivered. Not required.
 
 **1.0.17 (2026-09-29, published to all tablets the same day, rideavl-v2 95e6af0 on `fixed-route-wp6`, RidePilot 341694fc):**
