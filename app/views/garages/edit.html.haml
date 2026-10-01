@@ -1,0 +1,5 @@
+- content_for :title, "Edit garage"
+.garage{style: "max-width: 640px;"}
+  %h2= "Edit #{@garage.name}"
+  %p.text-muted Changing the address moves it for every bus and run that uses this garage.
+  = render "form"

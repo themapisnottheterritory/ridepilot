@@ -1,0 +1,24 @@
+= form_for @garage, as: :garage_address, url: (@garage.persisted? ? garage_path(@garage) : garages_path), method: (@garage.persisted? ? :patch : :post), html: { class: "garage-form" } do |f|
+  - if @garage.errors.any?
+    .alert.alert-danger
+      - @garage.errors.full_messages.each do |m|
+        %div= m
+  .form-group
+    = f.label :name, "Name (what fleet calls it)"
+    = f.text_field :name, class: "form-control", placeholder: "Port Lavaca yard", required: true
+  .form-group
+    = label_tag :garage_full_address, "Address"
+    = text_field_tag :garage_full_address, (@garage.address.present? ? [@garage.address, @garage.city, @garage.state, @garage.zip].compact.join(", ") : ""), class: "address_search form-control", placeholder: "Start typing, then pick the address from the list", autocomplete: "off"
+    %p.help-block Pick it from the list as you type: that's what puts it on the map. It has to be inside the service area.
+    = f.hidden_field :address, class: "address_text"
+    = f.hidden_field :city, class: "address_city"
+    = f.hidden_field :state, class: "address_state"
+    = f.hidden_field :zip, class: "address_zip"
+    = hidden_field_tag :lat, @garage.latitude, class: "address_lat"
+    = hidden_field_tag :lon, @garage.longitude, class: "address_lon"
+  .form-group
+    = f.label :notes, "Notes (optional)"
+    = f.text_area :notes, class: "form-control", rows: 2, placeholder: "Gate code, where the key is, who to call"
+  = f.submit (@garage.persisted? ? "Save garage" : "Add garage"), class: "btn btn-primary"
+  = link_to "Cancel", garages_path, class: "btn btn-default"
+= render 'addresses/google_place_autocomplete_js', container: '.garage-form'

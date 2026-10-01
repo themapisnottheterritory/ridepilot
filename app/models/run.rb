@@ -851,14 +851,36 @@ class Run < ApplicationRecord
     repeating_run.present?
   end
 
+  # A new bus brings its garage: a named garage is linked, so the run follows
+  # it if the bus is moved later (GarageMove); a bus's own unnamed address is
+  # copied, as before.
   def check_vehicle_change
     if self.changes.include?(:vehicle_id)
-      self.from_garage_address = self.vehicle.try(:garage_address).try(:dup) 
-      self.to_garage_address = self.vehicle.try(:garage_address).try(:dup) 
+      garage = self.vehicle.try(:garage_address)
+      if garage.try(:named?)
+        self.from_garage_address_id = garage.id
+        self.to_garage_address_id = garage.id
+      else
+        self.from_garage_address = garage.try(:dup)
+        self.to_garage_address = garage.try(:dup)
+      end
     end
 
     true
   end
+
+  # The start and end stops still to be driven, moved to where the run now
+  # starts and ends (its own start/end, else its bus's garage). Until
+  # 2026-10-01 changing a run's locations left the old stops in place, so the
+  # tablet still sent the driver to the old garage.
+  def refresh_garage_stops!
+    { 0 => from_garage_address || vehicle.try(:garage_address),
+      3 => to_garage_address || vehicle.try(:garage_address) }.each do |leg, addr|
+      next unless addr
+      itineraries.where(leg_flag: leg, finish_time: nil).where.not(address_id: addr.id).update_all(address_id: addr.id)
+    end
+  end
+  public :refresh_garage_stops!   # GarageMove and Change Locations call it
 
   def check_manifest_change
     if self.changes.include?(:date)

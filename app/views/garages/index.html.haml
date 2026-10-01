@@ -1,0 +1,32 @@
+- content_for :title, "Garages"
+.garages{style: "max-width: 900px;"}
+  %h2
+    Garages
+    - if can?(:edit, Vehicle)
+      = link_to "Add a garage", new_garage_path, class: "btn btn-primary btn-sm pull-right"
+  %p.text-muted
+    The yards this agency's buses live at. A bus's runs start and end at its garage, so moving a bus is a pick from this list on the bus's page; fixing a garage here fixes it for every bus and run that uses it.
+  - if @garages.empty?
+    %p{style: "color: #0ca30c;"} Garages you add show up here, and in the Garage list on each bus.
+  - else
+    %table.table.table-condensed
+      %thead
+        %tr
+          %th Garage
+          %th Address
+          %th{style: "text-align: right;"} Buses
+          %th
+      %tbody
+        - @garages.each do |g|
+          %tr{style: (g.inactive ? "color: #5f6b7a;" : "")}
+            %td
+              %b= g.name
+              - if g.inactive
+                %span.label.label-default Retired
+            %td= [g.address, g.city, g.zip].compact.join(", ")
+            %td{style: "text-align: right; font-variant-numeric: tabular-nums;"}= @counts[g.id].to_i
+            %td{style: "text-align: right; white-space: nowrap;"}
+              - if can?(:edit, Vehicle) && !g.inactive
+                = link_to "Edit", edit_garage_path(g)
+                &nbsp;
+                = link_to "Retire", retire_garage_path(g), method: :patch, data: { confirm: "Retire #{g.name}? It can't be while a bus or an upcoming run uses it." }

@@ -260,6 +260,10 @@ Rails.application.routes.draw do
       resources :driver_compliances
     end
     resources :monthlies, :except => [:show, :destroy]
+    # Vehicles > Garages (GarageAddress named garages)
+    resources :garages, only: [:index, :new, :create, :edit, :update] do
+      member { patch :retire }
+    end
     resources :vehicles do
       resources :documents, except: [:index, :show]
       resources :vehicle_maintenance_events, except: [:index]

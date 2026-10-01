@@ -225,23 +225,38 @@ class RunsController < ApplicationController
   def request_change_locations
   end
 
+  # Change Locations. A named garage picked from the list (from_garage_id /
+  # to_garage_id) links the run to it; otherwise the typed address, as before.
+  # Either way the run's start and end stops move with it, and a run already
+  # on a tablet today is republished.
   def update_locations
+    named = GarageAddress.named.usable.where(provider_id: @run.provider_id)
+    picks = { from: named.find_by(id: params[:from_garage_id]), to: named.find_by(id: params[:to_garage_id]) }
     prev_from_address = @run.from_garage_address.try(:dup)
     prev_to_address = @run.to_garage_address.try(:dup)
 
-    if !prev_from_address || !prev_from_address.same_lat_lng?(params[:from_garage_address_lat], params[:from_garage_address_lon])
+    if picks[:from]
+      @run.from_garage_address_id = picks[:from].id
+    elsif !prev_from_address || !prev_from_address.same_lat_lng?(params[:from_garage_address_lat], params[:from_garage_address_lon])
       @run.build_from_garage_address(provider_id: current_provider_id)
       @run.from_garage_address.the_geom = Address.compute_geom(params[:from_garage_address_lat], params[:from_garage_address_lon])
     end
 
-    if !prev_to_address || !prev_to_address.same_lat_lng?(params[:to_garage_address_lat], params[:to_garage_address_lon])
+    if picks[:to]
+      @run.to_garage_address_id = picks[:to].id
+    elsif !prev_to_address || !prev_to_address.same_lat_lng?(params[:to_garage_address_lat], params[:to_garage_address_lon])
       @run.build_to_garage_address(provider_id: current_provider_id)
       @run.to_garage_address.the_geom = Address.compute_geom(params[:to_garage_address_lat], params[:to_garage_address_lon])
     end
 
-    @run.attributes = run_params
+    run_attrs = run_params
+    run_attrs = run_attrs.except(:from_garage_address_attributes) if picks[:from]
+    run_attrs = run_attrs.except(:to_garage_address_attributes) if picks[:to]
+    @run.attributes = run_attrs
 
     @run.save(validate: false)
+    @run.refresh_garage_stops!
+    @run.publish_manifest!(true) if @run.date == Time.zone.today && @run.actual_start_time.nil? && @run.public_itineraries.exists?
 
     redirect_to run_path(@run)
   end

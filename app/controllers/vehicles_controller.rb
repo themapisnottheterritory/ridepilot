@@ -18,17 +18,27 @@ class VehiclesController < ApplicationController
 
   def update
     new_attrs = vehicle_params
-    is_garage_address_blank = check_blank_garage_address
+    old_garage = @vehicle.garage_address
+    picked = picked_garage
+    is_garage_address_blank = !picked && check_blank_garage_address
 
-    if is_garage_address_blank
+    if picked
+      new_attrs = new_attrs.except(:garage_address_attributes)
+    elsif is_garage_address_blank
       prev_garage_address = @vehicle.garage_address
       @vehicle.garage_address_id = nil
       new_attrs = new_attrs.except(:garage_address_attributes)
+    elsif old_garage.try(:named?)
+      # "Other address": this bus gets its own, and the shared garage stays as it is
+      @vehicle.garage_address_id = nil
+      new_attrs = new_attrs.merge(garage_address_attributes: new_attrs[:garage_address_attributes].to_h.except("id", :id).merge(name: nil))
     end
 
     @vehicle.assign_attributes new_attrs
 
-    if !params[:address_lat].blank? && !params[:address_lon].blank?
+    if picked
+      # linked after the save, by GarageMove
+    elsif !params[:address_lat].blank? && !params[:address_lon].blank?
       @vehicle.build_garage_address.the_geom = Address.compute_geom(params[:address_lat], params[:address_lon])
     elsif @vehicle.garage_address.present?
       @vehicle.garage_address.the_geom = Address.compute_geom(params[:lat], params[:lon])
@@ -40,9 +50,18 @@ class VehiclesController < ApplicationController
       begin      
         Vehicle.transaction do
           @vehicle.save!
-          prev_garage_address.destroy if is_garage_address_blank && prev_garage_address.present?
+          # a named garage is shared by other buses: never delete it
+          prev_garage_address.destroy if is_garage_address_blank && prev_garage_address.present? && !prev_garage_address.try(:named?)
         end
-        redirect_to @vehicle, notice: 'Vehicle was successfully updated.'
+        notice = 'Vehicle was successfully updated.'
+        if picked && picked.id != old_garage.try(:id)
+          moved = GarageMove.new(@vehicle, picked, current_user, from: old_garage).call
+          notice += " It now lives at #{picked.name}; #{moved[:runs]} upcoming #{'run'.pluralize(moved[:runs])} now start and end there" +
+                    (moved[:republished] > 0 ? " (#{moved[:republished]} republished to the tablet)." : ".")
+        elsif !picked && @vehicle.garage_address_id != old_garage.try(:id) && @vehicle.garage_address
+          GarageMove.new(@vehicle, @vehicle.garage_address, current_user, from: old_garage).call
+        end
+        redirect_to @vehicle, notice: notice
       rescue ActiveRecord::RecordInvalid => e
         Rails.logger.debug e.message
         render action: :edit
@@ -52,14 +71,17 @@ class VehiclesController < ApplicationController
 
   def create
     new_attrs = vehicle_params
-    is_garage_address_blank = check_blank_garage_address
-    if is_garage_address_blank
+    picked = picked_garage
+    is_garage_address_blank = !picked && check_blank_garage_address
+    if is_garage_address_blank || picked
       new_attrs = new_attrs.except(:garage_address_attributes)
     end
 
     @vehicle.attributes = new_attrs
 
-    if is_garage_address_blank
+    if picked
+      @vehicle.garage_address_id = picked.id
+    elsif is_garage_address_blank
       @vehicle.garage_address = nil
     elsif !params[:address_lat].blank? && !params[:address_lon].blank?
       @vehicle.build_garage_address.the_geom = Address.compute_geom(params[:address_lat], params[:address_lon])
@@ -195,6 +217,14 @@ class VehiclesController < ApplicationController
 
   def change_initial_mileage_params
     params.require(:vehicle).permit(:initial_mileage, :initial_mileage_change_reason)
+  end
+
+  # The Garage list on the bus form: a named garage of this agency, or nil for
+  # "Other address" (the address fields, as before).
+  def picked_garage
+    id = params[:garage_choice].to_s
+    return nil unless id.match?(/\A\d+\z/)
+    GarageAddress.named.usable.where(provider_id: @vehicle.provider_id || current_provider_id).find_by(id: id)
   end
 
   def check_blank_garage_address
