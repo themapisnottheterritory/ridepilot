@@ -16,6 +16,12 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-01 12:30"
+  title: "Driver tablet 1.0.20: version at the bottom of the screen"
+  apps: [tablet]
+  body: |
+    The driver tablet now shows its version and build date in small grey type at the bottom of every screen (for example **v1.0.20 · built 10-01 12:24**), so you can tell at a glance whether a tablet has the latest update. It also tells RidePilot which version each tablet is running.
+
 - added: "2026-10-01 12:15"
   title: "Reports download as Excel"
   body: |
