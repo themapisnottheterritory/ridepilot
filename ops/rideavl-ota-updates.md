@@ -42,6 +42,8 @@ release (plus the Play Protect tap) is as far as Android allows without an MDM.
 
 **1.0.19 (2026-10-01, launch morning, published to all tablets, optional, rideavl-v2 ac77f12):** times on the manifest list and the stop screen (scheduled pick-up / appointment / estimate, red when late). No earlier build showed any stop time.
 
+**1.0.20 (2026-10-01 12:28 CT, published to all tablets, optional, rideavl-v2 db8bfe9):** a "v1.0.20 · built …" tag bottom-centre on every screen, and the app reports its version/code/build at sign-in and as X-App-* headers on every request (RidePilot f4e354ec, TabletAppVersion in Redis; "[tablet app]" log lines). Several tablets had re-downloaded 1.0.19 without, apparently, installing it.
+
 **1.0.18 (2026-09-30, published to all tablets the same day, rideavl-v2 e585aa2 on `fixed-route-wp6`):** the emergency button now shows a banner on every screen: red while waiting, green "Dispatch has your alert, received by <name>" when someone clicks Got it! (DriverAlertChannel ReceiveAlert), and "call dispatch now" after 60 s with no answer or if the alert can't be sent. Needs RidePilot a371d104 (ActionCable over Redis), without which no alert or acknowledgement was ever delivered. Not required.
 
 **1.0.17 (2026-09-29, published to all tablets the same day, rideavl-v2 95e6af0 on `fixed-route-wp6`, RidePilot 341694fc):**
