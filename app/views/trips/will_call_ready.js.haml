@@ -1,0 +1,4 @@
+- if @message
+  $('#will-call-ready-#{@trip.id}').html('<span class="label label-success" title="Sent to the driver">Ready #{@trip.will_call_ready_at.in_time_zone.strftime('%-l:%M')}</span>');
+- else
+  bootbox.alert("#{j @error}");

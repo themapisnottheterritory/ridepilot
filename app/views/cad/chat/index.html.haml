@@ -37,6 +37,7 @@
   }
 
 - last_read_msg_id = ChatReadReceipt.for_today.where(read_by_id: current_user.try(:id), run_id: @run.id).reorder(created_at: :desc).first.try(:message_id)
+- driver_seen = ChatReadReceipt.for_today.where(read_by_id: @driver.user_id).reorder(created_at: :desc).first
 .panel.panel-primary
   .panel-heading
     %span.glyphicon.glyphicon-comment
@@ -45,6 +46,9 @@
     %ul.chat
       - @messages.each do |message|
         = render 'details', message: message
+    #driver-seen{style: "color: #0ca30c; font-size: 12px; text-align: right; padding: 0 10px; #{'display: none;' unless driver_seen}"}
+      - if driver_seen
+        = "Seen by the driver #{driver_seen.created_at.in_time_zone.strftime('%-l:%M %p')}"
   .panel-footer{style: 'padding-bottom: 40px;'}
     = form_for :chat, :method=>:post, url: chat_path, remote: true do |form|
       = hidden_field_tag 'run_id', @run.id
@@ -81,6 +85,10 @@
       });
     }
     create_chat_channel(provider_id, driver_id, new_message_callback);
+    window.chat_seen_by_driver = function(data) {
+      var t = new Date(data.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      $('#driver-seen').text('Seen by the driver ' + t).show();
+    };
 
     function resizePage() {
       // set height as: window size - (page header + footer)

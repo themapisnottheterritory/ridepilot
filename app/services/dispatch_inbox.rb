@@ -31,6 +31,10 @@ class DispatchInbox
     ids = unhandled.where(driver_id: driver_id).pluck(:id)
     return [] if ids.empty?
     RoutineMessage.where(id: ids).update_all(handled_at: Time.current, handled_by_id: user.id)
+    # the driver's tablet shows "Seen by <name>" under their message
+    ActionCable.server.broadcast("chat_channel_#{@provider_id}_#{driver_id.to_i}", {
+      action: "SeenByDispatch", ids: ids, by: user.display_name, at: Time.current.iso8601
+    })
     ActionCable.server.broadcast(self.class.stream(@provider_id), {
       kind: "handled", driver_id: driver_id.to_i, ids: ids, by: user.display_name, at: Time.current.iso8601,
       unhandled: unhandled_count

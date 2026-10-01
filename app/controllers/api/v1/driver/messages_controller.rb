@@ -47,7 +47,12 @@ class Api::V1::Driver::MessagesController < Api::V1::Driver::BaseController
   def read_message
     if @driver
       message = RoutineMessage.find_by(id: params[:message_id], driver_id: @driver.id)
-      ChatReadReceipt.create(run_id: message.run_id, message_id: message.id, read_by_id: current_user.id) if message
+      if message
+        ChatReadReceipt.create(run_id: message.run_id, message_id: message.id, read_by_id: current_user.id)
+        # the dispatcher's chat window shows "Seen by the driver <time>"
+        ActionCable.server.broadcast("chat_channel_#{message.provider_id}_#{message.driver_id}",
+                                     { action: "SeenByDriver", message_id: message.id, at: Time.current.iso8601 })
+      end
     end
 
     render success_response({success: true})

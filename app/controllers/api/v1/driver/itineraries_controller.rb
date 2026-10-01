@@ -98,6 +98,7 @@ class Api::V1::Driver::ItinerariesController < Api::V1::Driver::BaseController
       if trip
         trip.trip_result = TripResult.find_by_code('NS')
         trip.save(validate: false)
+        tell_dispatch_no_show(trip)
       end
     end
 
@@ -154,6 +155,19 @@ class Api::V1::Driver::ItinerariesController < Api::V1::Driver::BaseController
   end
 
   private
+
+  # A driver marking a no-show tells the dispatch desk (pop-up and chime),
+  # as a message from the driver about that rider. No approval needed
+  # (Philz, 2026-10-01: operators mark no-shows themselves).
+  def tell_dispatch_no_show(trip)
+    return unless @driver && @itin.run
+    who = trip.customer.try(:name) || "Rider"
+    where = @itin.address.try(:one_line_text)
+    RoutineMessage.create(provider_id: @itin.run.provider_id, driver: @driver, run: @itin.run, trip: trip, sender: current_user,
+                          body: "No-show: #{who}#{where.present? ? " at #{where}" : ''} (#{Time.zone.now.strftime('%-l:%M %p')})")
+  rescue StandardError => e
+    Rails.logger.warn("no-show message for trip #{trip.id} failed: #{e.class}: #{e.message}")
+  end
 
   # The stop is gone from the run: dispatch unscheduled or cancelled the trip
   # and republished while the tablet still had the old manifest open. A 404,

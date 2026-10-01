@@ -193,6 +193,18 @@ class TripsController < ApplicationController
     end
   end
 
+  # Dispatch's "Ready" button on a will-call trip (Trip#will_call_ready!)
+  def will_call_ready
+    @trip = Trip.find(params[:trip_id])
+    if can?(:edit, @trip)
+      @message = @trip.will_call_ready!(current_user)
+      @error = @trip.will_call_ready_error unless @message
+    else
+      @error = TranslationEngine.translate_text(:operation_not_authorized)
+    end
+    respond_to { |format| format.js }
+  end
+
   def notify_driver
     @trip = Trip.find(params[:trip_id])
     @prev_driver_notified = @trip.driver_notified ? true: false

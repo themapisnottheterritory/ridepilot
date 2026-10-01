@@ -461,6 +461,22 @@ class Trip < ApplicationRecord
     note_parts.join(", ")
   end
 
+  # "Will call ready" (2026-10-01): the rider phoned to say they're ready.
+  # Records when and who, and messages the driver of the trip's run with the
+  # rider, pickup address and phone; the tablet offers "Go to stop".
+  # Returns the message, or nil with the reason in will_call_ready_error.
+  attr_reader :will_call_ready_error
+
+  def will_call_ready!(user)
+    driver = run.try(:driver)
+    return (@will_call_ready_error = "This trip isn't on a run yet." and nil) unless run
+    return (@will_call_ready_error = "Run #{run.name} has no driver." and nil) unless driver
+    update_columns(will_call_ready_at: Time.current, will_call_ready_by_id: user.id)
+    phone = [customer.try(:phone_number_1), customer.try(:phone_number_2)].compact_blank.first
+    body = "Will call ready: #{customer.try(:name)} at #{pickup_address.try(:one_line_text)}" + (phone ? ". Phone #{phone}" : "")
+    RoutineMessage.create!(provider_id: run.provider_id, driver: driver, run: run, trip: self, sender: user, body: body)
+  end
+
   private
 
   def driver_is_valid_for_vehicle

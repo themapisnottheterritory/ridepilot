@@ -13,8 +13,11 @@ App.chats ||= App.chats || {}
       # Called when the subscription has been terminated by the server
 
     received: (data) ->
-      if new_message_callback
-        new_message_callback(data.id)
+      # the driver read our messages; "SeenByDispatch" is for the tablet
+      if data.action == 'SeenByDriver'
+        window.chat_seen_by_driver(data) if window.chat_seen_by_driver
+      else if data.action == 'CreateMessage' || !data.action
+        new_message_callback(data.id) if new_message_callback
 
     create: (message) ->
       @perform 'create', body: message, driver_id: driver_id

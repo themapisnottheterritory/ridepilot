@@ -74,6 +74,7 @@ Rails.application.routes.draw do
       post :turndown
       patch :callback
       patch :notify_driver
+      post :will_call_ready   # message the driver: the will-call rider is ready
       patch :change_result
 
       member do

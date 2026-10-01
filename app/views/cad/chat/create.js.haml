@@ -3,4 +3,5 @@
   $('.panel-body .chat').append("#{ j render 'cad/chat/details', message: @message}");
   }
 $('textarea[name="message"]').val('');
+$('#driver-seen').hide();
 $(".panel-body").animate({ scrollTop: $('.panel-body')[0].scrollHeight }, "slow");

@@ -14,6 +14,8 @@ class ChatWorker
       driver_id: message.driver_id,
       provider_id: message.provider_id,
       run_id: message.run_id,
+      trip_id: message.trip_id,
+      itinerary_id: message.pickup_itinerary_id,
       created_at: message.created_at,
       id: message.id
     }

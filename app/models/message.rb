@@ -5,6 +5,7 @@ class Message < ApplicationRecord
   belongs_to :handled_by, class_name: 'User', foreign_key: :handled_by_id, optional: true
   belongs_to :driver
   belongs_to :run
+  belongs_to :trip, optional: true   # a message about one rider ("Will call ready")
 
   # "Today" in Central time; Date.today is the server's (UTC) date, which
   # dropped the evening's messages at 7 PM.
@@ -13,6 +14,12 @@ class Message < ApplicationRecord
   # Written by the driver (from the tablet), not by a dispatcher.
   scope :from_drivers, -> { joins(:driver).where("messages.sender_id = drivers.user_id") }
   scope :unhandled, -> { where(handled_at: nil) }
+
+  # The trip's pickup stop on this run, for the tablet's "Go to stop"
+  def pickup_itinerary_id
+    return nil unless trip_id && run_id
+    Itinerary.where(trip_id: trip_id, run_id: run_id, leg_flag: 1).pluck(:id).first
+  end
 
   def from_driver?
     driver.present? && sender_id == driver.user_id
