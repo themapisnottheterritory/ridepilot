@@ -173,8 +173,11 @@ class AddressesController < ApplicationController
     # the one road spelled "West State Highway 72" is in Kenedy (Kelly,
     # 2026-09-30). Ask again in the map's spelling, and when a town was typed,
     # keep the answers near it, nearest first.
+    # Spelled-out numbered streets go the same way: the map has "2nd Street
+    # East", so "202 E Second St Bloomington" found nothing and the trip was
+    # booked by latitude/longitude (Bobbie, 2026-09-30).
     street_part, town = split_town(term)
-    if !convincing_suggestions?(results, typed_number) && (route = route_spelling(strip_unit(street_part))) != strip_unit(street_part)
+    if !convincing_suggestions?(results, typed_number) && (route = ordinal_spelling(route_spelling(strip_unit(street_part)))) != strip_unit(street_part)
       results += nominatim_suggest(q: route)
       results += nominatim_suggest(street: route, state: NOMINATIM_FALLBACK_STATE) unless convincing_suggestions?(results, typed_number)
     end
@@ -212,6 +215,17 @@ class AddressesController < ApplicationController
     text.gsub(/\b(?:(?:N|S|E|W|North|South|East|West)\.?\s+)?(?:State\s+)?(?:Highway|Hwy\.?|SH|TX)\s*-?\s*(\d+[A-Z]?)\b/i, 'TX \\1')
         .gsub(/\b(?:Farm\s+to\s+Market(?:\s+Road)?|F\.?M\.?)\s*-?\s*(\d+)\b/i, 'FM \\1')
         .squish
+  end
+
+  ORDINALS = %w[first second third fourth fifth sixth seventh eighth ninth tenth eleventh twelfth thirteenth
+                fourteenth fifteenth sixteenth seventeenth eighteenth nineteenth twentieth].each_with_index
+               .to_h { |w, i| [w, (i + 1).ordinalize] }.freeze
+  ORDINAL_STREET = /\b(#{ORDINALS.keys.join('|')})(?=\s+(?:St|Street|Ave|Avenue|Rd|Road|Dr|Drive|Ln|Lane|Blvd|Boulevard|Ct|Court|Pl|Place|Way|Ter|Terrace|Cir|Circle)\b\.?)/i
+
+  # "202 E Second St" -> "202 E 2nd St". Only a word followed by a street type,
+  # so "First Baptist Church" and "Second Chance" are left as they are.
+  def ordinal_spelling(text)
+    text.gsub(ORDINAL_STREET) { ORDINALS[Regexp.last_match(1).downcase] }
   end
 
   # "1219 W SH 72, Cuero, TX 77954" -> ["1219 W SH 72", "Cuero"]; no comma -> [term, nil]

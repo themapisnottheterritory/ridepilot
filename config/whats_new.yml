@@ -16,6 +16,11 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-01 11:30"
+  title: "Address search finds spelled-out street numbers"
+  body: |
+    Typing a numbered street in words, such as **202 E Second St Bloomington**, now finds the address the map knows as 2nd Street. Before, it found nothing and the trip had to be booked by latitude and longitude, which drivers see only as coordinates.
+
 - added: "2026-10-01 10:30"
   title: "Export trips in range works again"
   for: admins

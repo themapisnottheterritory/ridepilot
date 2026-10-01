@@ -97,4 +97,33 @@ RSpec.describe AddressesController, type: :controller do
     end
   end
 
+  # Bobbie, 2026-09-30: "202 E Second St Bloomington" found nothing; the map
+  # spells it "2nd Street East", so she booked by latitude/longitude.
+  describe "spelled-out numbered streets" do
+    let(:bloomington) { { "place_id" => 7, "lat" => "28.6461", "lon" => "-96.8964", "address" => { "house_number" => "202", "road" => "2nd Street East", "city" => "Bloomington" } } }
+
+    it "asks again with the number when Second St found nothing" do
+      allow(controller).to receive(:nominatim_suggest).and_return([])
+      expect(controller).to receive(:nominatim_suggest).with(q: "202 E 2nd St Bloomington TX 77951").and_return([bloomington])
+      get :geocode_suggest, params: { q: "202 E Second St Bloomington TX 77951" }
+      expect(JSON.parse(response.body).map { |r| r["place_id"] }).to eq [7]
+    end
+
+    it "only respells a word that names a street" do
+      expect(controller.send(:ordinal_spelling, "100 First Baptist Church Rd")).to eq "100 First Baptist Church Rd"
+      expect(controller.send(:ordinal_spelling, "12 Second Chance Ln")).to eq "12 Second Chance Ln"
+      expect(controller.send(:ordinal_spelling, "305 W TWELFTH STREET")).to eq "305 W 12th STREET"
+      expect(controller.send(:ordinal_spelling, "9 First Ave. N")).to eq "9 1st Ave. N"
+    end
+
+    it "keeps an answer the typed spelling already found" do
+      found = { "place_id" => 8, "address" => { "house_number" => "202", "road" => "Second Street" } }
+      allow(controller).to receive(:nominatim_suggest).and_return([])
+      allow(controller).to receive(:nominatim_suggest).with(q: "202 Second St").and_return([found])
+      expect(controller).not_to receive(:nominatim_suggest).with(q: "202 2nd St")
+      get :geocode_suggest, params: { q: "202 Second St" }
+      expect(JSON.parse(response.body).map { |r| r["place_id"] }).to eq [8]
+    end
+  end
+
 end
