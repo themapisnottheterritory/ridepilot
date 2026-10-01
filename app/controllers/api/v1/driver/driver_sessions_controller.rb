@@ -14,6 +14,11 @@ class Api::V1::Driver::DriverSessionsController < Api::V2::SessionsController
       end
     end
 
+    if @errors.empty? && !@view_token
+      app = params[:app] || {}
+      TabletAppVersion.note(@user.username, version: app[:version], code: app[:version_code], build: app[:build_time], ip: request.remote_ip)
+    end
+
     if @errors.empty?
       # The session goes out twice: under data (this API's shape, which the
       # Demand Response app reads) and at the top level, where the fixed-route

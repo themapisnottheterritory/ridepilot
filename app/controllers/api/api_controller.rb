@@ -8,6 +8,7 @@ class Api::ApiController < ActionController::Base
   # the tablet can leave; the sessions controller leaves the driver's token alone.
   before_action :authenticate_tablet_viewer
   before_action :refuse_changes_when_viewing
+  after_action :note_tablet_app_version
 
   protected
 
@@ -26,6 +27,16 @@ class Api::ApiController < ActionController::Base
     request.env["devise.skip_trackable"] = true   # as the token sign-in does: viewing isn't the driver signing in
     sign_in user, store: false
     send(:after_successful_token_authentication) if respond_to?(:after_successful_token_authentication, true)
+  end
+
+  # The Demand Response app (1.0.20+) sends X-App-Version, X-App-Code and
+  # X-App-Build on every request (TabletAppVersion). A view-only tablet isn't
+  # the driver's, so it isn't recorded as theirs.
+  def note_tablet_app_version
+    version = request.headers["X-App-Version"]
+    return if version.blank? || viewing_only? || !current_user
+    TabletAppVersion.note(current_user.username, version: version, code: request.headers["X-App-Code"],
+                          build: request.headers["X-App-Build"], ip: request.remote_ip)
   end
 
   def refuse_changes_when_viewing
