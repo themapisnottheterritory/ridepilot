@@ -841,12 +841,14 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.bigint "run_id"
     t.datetime "handled_at"
     t.integer "handled_by_id"
+    t.integer "trip_id"
     t.index ["driver_id"], name: "index_messages_on_driver_id"
     t.index ["provider_id", "handled_at"], name: "index_messages_on_provider_id_and_handled_at"
     t.index ["provider_id"], name: "index_messages_on_provider_id"
     t.index ["reader_id"], name: "index_messages_on_reader_id"
     t.index ["run_id"], name: "index_messages_on_run_id"
     t.index ["sender_id"], name: "index_messages_on_sender_id"
+    t.index ["trip_id"], name: "index_messages_on_trip_id"
   end
 
   create_table "mobilities", id: :serial, force: :cascade do |t|
@@ -1521,6 +1523,8 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.datetime "fare_collected_time", precision: nil
     t.datetime "estimated_pickup_time"
     t.boolean "will_call", default: false, null: false
+    t.datetime "will_call_ready_at"
+    t.integer "will_call_ready_by_id"
     t.index ["called_back_by_id"], name: "index_trips_on_called_back_by_id"
     t.index ["customer_id"], name: "index_trips_on_customer_id"
     t.index ["deleted_at"], name: "index_trips_on_deleted_at"

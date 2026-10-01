@@ -16,6 +16,13 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-01 13:58"
+  title: "Will call ready, and no-shows from drivers"
+  body: |
+    When a will-call rider phones to say they're ready, press **Ready** next to **Will call** on their pickup in **Dispatch**. The driver's tablet shows the rider's name, address and phone with a **Go to stop** button, and Dispatch shows the time you sent it.
+
+    When a driver marks a rider **No Show** on the tablet, you get a driver-message pop-up saying so. In a driver's chat window, **Seen by the driver** shows when they've read your messages.
+
 - added: "2026-10-01 13:43"
   title: "Reports: the 31st of a short month"
   for: admins

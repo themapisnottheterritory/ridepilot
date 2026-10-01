@@ -48,6 +48,7 @@
               %span.label.label-info
                 Recur
             = will_call_label(trip)
+            = will_call_ready_control(trip, itin, run)
           %td
             = mobility_icon(trip)
             %span{data: {customer_card: trip.customer_id}}= trip.customer.try(:name)
