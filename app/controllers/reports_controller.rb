@@ -440,7 +440,8 @@ class ReportsController < ApplicationController
     @query = Query.new(params[:query])
     date_range = @query.start_date..@query.end_date
     columns = Trip.column_names.map{|c| "\"#{Trip.table_name}\".\"#{c}\" as \"#{Trip.table_name}.#{c}\""} + Customer.column_names.map{|c| "\"#{Customer.table_name}\".\"#{c}\" as \"#{Customer.table_name}.#{c}\""}
-    sql = Trip.select(columns.join(',')).joins(:customer).where(:pickup_time => date_range).order(:pickup_time).to_sql
+    # this agency's trips only: it had exported every agency's trips and riders
+    sql = Trip.select(columns.join(',')).joins(:customer).where(provider_id: current_provider_id, pickup_time: date_range).order(:pickup_time).to_sql
     trips = ApplicationRecord.connection.select_all(sql)
     csv_string = CSV.generate do |csv|
       csv << columns.collect{|c| c.split(' as ').last.strip.gsub("\"", "") }
@@ -453,7 +454,7 @@ class ReportsController < ApplicationController
 
     attrs = {
       filename:    "#{Time.current.strftime('%Y%m%d%H%M')}_export_trips_in_range-#{@query.start_date.strftime('%b %d %Y').downcase.parameterize}-#{@query.before_end_date.strftime('%b %d %Y').downcase.parameterize}.csv",
-      type:        Mime::CSV,
+      type:        Mime[:csv],   # Mime::CSV went away in Rails 5: the export was a 500
       disposition: "attachment",
       streaming:   "true",
       buffer_size: 4096

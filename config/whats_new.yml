@@ -16,6 +16,12 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-01 10:30"
+  title: "Export trips in range works again"
+  for: admins
+  body: |
+    **Reports > Export trips in range** gave an error instead of a download. It now downloads the CSV, and it holds only your own agency's trips.
+
 - added: "2026-10-01 09:30"
   title: "See a driver's tablet without disturbing them"
   apps: [tablet]
