@@ -16,6 +16,11 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-01 08:40"
+  title: "CAD/AVL keeps following a run after a trip is removed"
+  body: |
+    On **CAD/AVL**, a run whose trip was removed after its manifest was published could stop updating on the map. It now keeps following the bus and skips the removed stop.
+
 - added: "2026-10-01 08:10"
   title: "Driver tablet 1.0.19: pick-up and drop-off times"
   body: |

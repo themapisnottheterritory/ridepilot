@@ -127,6 +127,7 @@ module Cad
 
     def stop_info
       @public_itin = PublicItinerary.find_by_itinerary_id(params[:itinerary_id])
+      @public_itin = nil unless @public_itin&.itinerary   # stop row gone since the last publish
     end
 
     def zoom_to_run
@@ -215,6 +216,9 @@ module Cad
           current_itin_found = false
           itins.each_with_index do |public_itin, idx|
             itin = public_itin.itinerary
+            # A published stop whose itinerary row is gone (hard-deleted since
+            # the last publish) has nothing to draw.
+            next unless itin
             if !@start_latlng
               @start_latlng = get_itin_address_latlng(itin)
             end
