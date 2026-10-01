@@ -396,6 +396,17 @@ class Run < ApplicationRecord
     add_trip_itineraries!(trip_id)
   end
 
+  # Take a trip off the published manifest the tablet reads, without a full
+  # Publish: its unfinished stops go, finished ones stay as the record, and
+  # the tablet is told to reload. Returns how many stops were removed.
+  def withdraw_trip_from_manifest!(trip_id)
+    itin_ids = Itinerary.with_deleted.where(trip_id: trip_id, finish_time: nil).pluck(:id)
+    return 0 if itin_ids.empty?
+    removed = PublicItinerary.where(run_id: id, itinerary_id: itin_ids).delete_all
+    ManifestNotificationWorker.perform_async(id) if removed > 0 && date == Date.current
+    removed
+  end
+
   def delete_trip_manifest!(trip_id)
     unless self.manifest_order.blank? 
       unfinished_trip_itin_flags = self.itineraries.where(trip_id: trip_id).where(finish_time: nil).pluck(:leg_flag)

@@ -38,6 +38,12 @@ class Trip < ApplicationRecord
 
   before_create :find_fare_settings
 
+  # A cancelled, turned-down or deleted trip leaves the driver's tablet now,
+  # not at dispatch's next Publish: a driver should never drive to a ride
+  # that is off. Other manifest changes still wait for Publish.
+  after_save :withdraw_from_tablet, if: :withdrawn_by_result?
+  after_destroy :withdraw_from_tablet
+
   scope :after,              -> (pickup_time) { where('pickup_time > ?', pickup_time.utc) }
   scope :after_today,        -> { where('pickup_time > ?', Date.today.end_of_day) }
   scope :today_and_prior,    -> { where('pickup_time <= ?', Date.today.end_of_day) }
@@ -185,6 +191,19 @@ class Trip < ApplicationRecord
 
   def is_cancelled_or_turned_down?
     trip_result && (trip_result.cancelled? || trip_result.turned_down?)
+  end
+
+  # Result just set to one that takes the trip off its run. No-show and missed
+  # trip keep it on (TripResult::CANCEL_CODES_BUT_KEEP_RUN): the driver is
+  # there and recorded it.
+  def withdrawn_by_result?
+    saved_change_to_trip_result_id? && is_cancelled_or_turned_down? &&
+      !TripResult::CANCEL_CODES_BUT_KEEP_RUN.include?(trip_result.code)
+  end
+
+  def withdraw_from_tablet
+    run_id_was = run_id || run_id_before_last_save
+    Run.find_by_id(run_id_was)&.withdraw_trip_from_manifest!(id) if run_id_was
   end
 
   # Is the trip result one of several codes that needs reason

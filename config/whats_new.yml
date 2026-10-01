@@ -22,6 +22,14 @@
   body: |
     Driver tablets were not receiving live updates from RidePilot, including **emergency alerts**. They now do: an alert reaches the tablet within seconds, and a tablet reloads its manifest when you press **Publish**. RidePilot should also feel faster, since the tablets are no longer reconnecting all day.
 
+- added: "2026-10-01 08:51"
+  title: "Cancelled trips leave the driver's tablet right away"
+  apps: [web, tablet]
+  body: |
+    When you cancel, turn down or delete a trip, it now comes off the driver's tablet within seconds. You no longer need to press **Publish** for that.
+
+    Other changes, such as moving a trip or changing its time, still reach the tablet only when you press **Publish**. No-shows stay on the tablet, since the driver recorded them there.
+
 - added: "2026-10-01 08:40"
   title: "CAD/AVL keeps following a run after a trip is removed"
   body: |
