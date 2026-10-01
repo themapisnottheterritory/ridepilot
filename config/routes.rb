@@ -221,6 +221,8 @@ Rails.application.routes.draw do
     get  "whats_new"         => "whats_new#index", as: :whats_new
     # Driver messages inbox in the header (DispatchInbox)
     get  "dispatch_inbox"    => "dispatch_inbox#index", as: :dispatch_inbox
+    # Morning address check (AddressScan)
+    get  "address_checks"    => "address_checks#index", as: :address_checks
     # Send a suggestion (Suggestion): staff -> GCRPC I.T.
     resources :suggestions, only: [:index, :new, :create, :update]
 

@@ -1,0 +1,9 @@
+<% if @first_run %>RidePilot's morning address check is running. This first email is the starting list: everything it found today. From now on it emails only what is new since the day before.<% else %>The morning address check found <%= @findings.values.sum(&:size) %> new <%= @findings.values.sum(&:size) == 1 ? 'problem' : 'problems' %> since yesterday.<% end %>
+
+All <%= @total %> open items, with a Fix link for each: <%= @page %>
+<% opts = ActionMailer::Base.default_url_options %>
+<% @findings.each do |kind, list| %>
+== <%= AddressScan::KINDS[kind] %> (<%= list.size %>)
+<% list.first(40).each do |f| %>- <%= f.label %> -- <%= f.detail %> [<%= @providers[f.provider_id] %>]<% path = AddressScan.fix_path(f) %><%= path ? "\n    #{opts[:protocol]}://#{opts[:host]}#{path}" : "" %>
+<% end %><% if list.size > 40 %>  ... and <%= list.size - 40 %> more on the page.
+<% end %><% end %>

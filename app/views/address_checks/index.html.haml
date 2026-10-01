@@ -1,0 +1,21 @@
+- content_for :title, "Address check"
+.address-checks{style: "max-width: 980px;"}
+  %h2 Address check
+  %p.text-muted
+    Saved addresses and upcoming trips that would send a driver, or work out a fare, wrong. Checked each morning; GCRPC I.T. gets an email when something new turns up. Fix each one from its link.
+  - if @by_kind.values.all?(&:empty?)
+    %p{style: "color: #0ca30c;"} Nothing to fix: every saved address is on the map, in the service area and near its town, and no upcoming trip is over #{AddressScan::TRIP_MILES} miles.
+  - @by_kind.each do |kind, list|
+    - next if list.empty?
+    %h4{style: "margin-top: 22px;"}= "#{AddressScan::KINDS[kind]} (#{list.size})"
+    %table.table.table-condensed
+      %tbody
+        - list.each do |f|
+          %tr
+            %td{style: "width: 52%;"}= f.label
+            %td.text-muted= f.detail
+            %td.text-muted= @providers[f.provider_id]
+            %td
+              - path = AddressScan.fix_path(f)
+              - if path
+                = link_to "Fix", path, target: "_blank"
