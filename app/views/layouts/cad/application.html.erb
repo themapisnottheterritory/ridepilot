@@ -69,6 +69,7 @@
   <%= render 'shared/application_alert_dialog' %>
 
   <% if current_user %>
+    <%= render 'shared/dispatch_desk' if can?(:read, Run) %>
     <%= javascript_tag do %>
       var current_provider_id = <%= current_provider_id %>;
       var current_user_id = <%= current_user.id %>;

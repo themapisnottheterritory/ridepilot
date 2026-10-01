@@ -19,7 +19,7 @@ class Api::V1::Driver::MessagesController < Api::V1::Driver::BaseController
   def chats
     opts = {}
     if @driver
-      @messages = RoutineMessage.for_today.where(provider_id: @driver.provider_id, driver: @driver)
+      @messages = RoutineMessage.for_today.where(provider_id: @driver.provider_id, driver: @driver).order(:created_at)
     end
 
     render success_response(@messages, opts)
@@ -35,7 +35,10 @@ class Api::V1::Driver::MessagesController < Api::V1::Driver::BaseController
 
   def send_message
     if @driver
-      RoutineMessage.create(provider_id: @driver.provider_id, driver: @driver, sender: @driver.user, run_id: params[:run_id], body: params[:body])
+      # a run the driver has today (the tablet may send none, or another driver's)
+      run = Message.run_for(@driver, params[:run_id])
+      message = RoutineMessage.create(provider_id: @driver.provider_id, driver: @driver, sender: @driver.user, run: run, body: params[:body])
+      Rails.logger.warn "send_message: NOT saved for driver #{@driver.id}: #{message.errors.full_messages.join(', ')}" unless message.persisted?
     end
 
     render success_response({success: true})
@@ -43,7 +46,8 @@ class Api::V1::Driver::MessagesController < Api::V1::Driver::BaseController
 
   def read_message
     if @driver
-      ChatReadReceipt.create(run_id: params[:run_id], message_id: params[:message_id], read_by_id: params[:read_by_id])
+      message = RoutineMessage.find_by(id: params[:message_id], driver_id: @driver.id)
+      ChatReadReceipt.create(run_id: message.run_id, message_id: message.id, read_by_id: current_user.id) if message
     end
 
     render success_response({success: true})

@@ -1,0 +1,62 @@
+<%# The dispatch desk on every staff page (main RidePilot and CAD/AVL):
+    driver-message pop-ups bottom-left with a chime, the header inbox list,
+    and emergency alerts that stay on screen and sound until someone presses
+    "Got it!" (channels/dispatch_desk.js). Ask RidePilot owns bottom-right. %>
+<style>
+  #dd-toasts { position: fixed; left: 16px; bottom: 44px; z-index: 1700; width: 340px; max-width: calc(100vw - 32px);
+    display: flex; flex-direction: column-reverse; gap: 8px; font-family: 'Open Sans', sans-serif; }
+  .dd-toast { background: #fff; border-top: 4px solid #12264F; border-radius: 10px; box-shadow: 0 6px 22px rgba(19,19,19,.22);
+    padding: 10px 16px 12px; color: #131313; animation: dd-in .18s ease-out; }
+  .dd-toast .dd-top { display: flex; align-items: baseline; gap: 8px; }
+  .dd-toast .dd-who { font-size: 14px; }
+  .dd-run { background: #12264F; color: #fff; border-radius: 3px; padding: 0 6px; font-size: 11px; font-weight: 600; }
+  .dd-time { color: #5f6b7a; font-size: 11px; margin-left: auto; font-variant-numeric: tabular-nums; }
+  .dd-toast .dd-body { font-size: 13px; margin: 4px 0 10px; white-space: pre-wrap; word-break: break-word; }
+  .dd-toast .dd-actions { display: flex; gap: 8px; }
+  .dd-btn { border: 0; border-radius: 4px; padding: 5px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .dd-btn.primary { background: #12264F; color: #fff; }
+  .dd-btn.quiet { background: transparent; color: #5f6b7a; }
+  @keyframes dd-in { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+  #dd-emergencies { position: fixed; top: 0; left: 0; right: 0; z-index: 100000; font-family: 'Open Sans', sans-serif; }
+  .dd-emergency { background: #d03b3b; color: #fff; display: flex; align-items: center; gap: 16px; padding: 14px 22px;
+    font-size: 18px; font-weight: 700; box-shadow: 0 4px 16px rgba(0,0,0,.3); border-bottom: 1px solid rgba(255,255,255,.35);
+    animation: dd-pulse 1.2s ease-in-out infinite alternate; }
+  .dd-emergency i { font-size: 28px; }
+  .dd-emergency .dd-em-text { flex: 1; }
+  .dd-emergency .dd-em-time { font-size: 13px; font-weight: 600; opacity: .9; }
+  .dd-emergency button { background: #fff; color: #d03b3b; border: 0; border-radius: 4px; padding: 8px 22px; font-size: 16px; font-weight: 800; cursor: pointer; }
+  @keyframes dd-pulse { from { background: #d03b3b; } to { background: #a82424; } }
+
+  #dispatch-inbox-link { position: relative; }
+  #dispatch-inbox-link .dd-count { position: absolute; top: -8px; right: -10px; min-width: 18px; padding: 1px 5px; border-radius: 9px;
+    background: #c9302c; color: #fff; font-size: 11px; font-weight: 700; line-height: 16px; text-align: center; }
+  #dd-panel { position: fixed; z-index: 1800; width: 380px; max-width: calc(100vw - 24px); background: #fff; color: #131313;
+    border: 1px solid #cfd6e4; border-radius: 10px; box-shadow: 0 10px 30px rgba(19,19,19,.25); font-family: 'Open Sans', sans-serif;
+    text-align: left; display: none; }
+  #dd-panel .dd-head { background: #12264F; color: #fff; padding: 8px 16px; border-radius: 10px 10px 0 0; font-size: 14px; font-weight: 600; }
+  #dd-panel .dd-list { max-height: 60vh; overflow-y: auto; }
+  #dd-panel .dd-row { display: block; padding: 8px 16px; border-bottom: 1px solid #cfd6e4; color: #131313; text-decoration: none; }
+  #dd-panel .dd-row:hover { background: #f4f6fa; }
+  #dd-panel .dd-row.unhandled { border-left: 4px solid #CC9900; padding-left: 12px; }
+  #dd-panel .dd-row.handled { color: #5f6b7a; }
+  #dd-panel .dd-top { display: flex; align-items: baseline; gap: 8px; }
+  #dd-panel .dd-body { font-size: 13px; margin-top: 2px; }
+  #dd-panel .dd-handled { font-size: 11px; color: #0ca30c; margin-top: 2px; }
+  #dd-panel .dd-empty { padding: 14px 16px; color: #0ca30c; font-size: 13px; }
+  #dd-panel .dd-foot { display: flex; gap: 14px; padding: 8px 16px; font-size: 12px; background: #f4f6fa; border-radius: 0 0 10px 10px; }
+  #dd-panel .dd-foot a { color: #12264F; cursor: pointer; }
+</style>
+<div id="dd-emergencies"></div>
+<div id="dd-toasts"></div>
+<div id="dd-panel"><div class="dd-head">Messages from drivers today</div><div class="dd-list"></div>
+  <div class="dd-foot"><a id="dd-sound"></a><a id="dd-desktop"></a></div></div>
+<%= javascript_tag do %>
+  window.DispatchDesk = {
+    providerId: <%= current_provider_id.to_i %>,
+    userId: <%= current_user.id %>,
+    inboxUrl: "<%= dispatch_inbox_path %>",
+    chatUrl: "<%= driver_chat_path(run_id: 'RUN') %>",
+    openEmergencies: <%= raw EmergencyAlert.open_for(current_provider_id).order(:created_at).map { |a| { id: a.id, message: a.body, at: a.created_at.iso8601 } }.to_json %>
+  };
+<% end %>

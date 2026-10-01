@@ -1,0 +1,13 @@
+- if @messages.empty?
+  .dd-empty Messages from drivers show up here as they come in.
+- else
+  - @messages.each do |m|
+    - handled = m.handled_at.present?
+    %a.dd-row{href: '#', class: (handled ? 'handled' : 'unhandled'), data: { run_id: m.run_id, driver_id: m.driver_id }}
+      .dd-top
+        %b.dd-who= m.driver.try(:user).try(:display_name) || m.driver.try(:name)
+        %span.dd-run= m.run.try(:name)
+        %span.dd-time= m.created_at.in_time_zone.strftime('%-l:%M %p')
+      .dd-body= m.body
+      - if handled
+        .dd-handled= "Seen by #{m.handled_by.try(:display_name) || 'dispatch'} #{m.handled_at.in_time_zone.strftime('%-l:%M %p')}"

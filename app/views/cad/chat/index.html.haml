@@ -69,6 +69,8 @@
     var is_focused = true;
     
     function new_message_callback(message_id) {
+      // your own message is already on screen (the form put it there)
+      if ($(".chat-body[data-id='" + message_id + "']").length) { return; }
       $.ajax({
         url: "#{chat_path(id: 'xxx')}".replace('xxx', message_id),
         success: function() {

@@ -52,6 +52,10 @@
           <%= link_to whats_new_path, id: "whats-new-link", title: (whats_new_count > 0 ? "What's new (#{whats_new_count} you haven't seen)" : "What's new") do %>
             <i class="fas fa-bullhorn"></i><% if whats_new_count > 0 %><span class="whats-new-count"><%= whats_new_count %></span><% end %>
           <% end %>
+          <% if can?(:read, Run) %>
+            <% inbox_count = DispatchInbox.new(current_provider_id).unhandled_count %>
+            <a href="#" id="dispatch-inbox-link" title="Messages from drivers"><i class="fas fa-comments"></i><% if inbox_count > 0 %><span class="dd-count"><%= inbox_count %></span><% end %></a>
+          <% end %>
           <a href=<%= user_path(current_user)%> title="<%= current_user.display_name %>"><i class="fas fa-user-edit"></i></a>
           <%= link_to show_change_password_path, title: translate_helper("change_password") do %>
             <i class="fas fa-key"></i>
@@ -126,6 +130,7 @@
       });
     <% end %>
     <%= render 'shared/help_panel' %>
+    <%= render 'shared/dispatch_desk' if can?(:read, Run) %>
     <%= render 'shared/customer_card_js' %>
   <% end %>
   </div>

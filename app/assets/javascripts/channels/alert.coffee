@@ -1,4 +1,7 @@
 show_emergency_alert_dialog = (id, provider_id, message) ->
+  # staff pages: a banner that stays and sounds until "Got it!" (dispatch_desk.js)
+  if window.DispatchDeskEmergency
+    return window.DispatchDeskEmergency.show(id, message)
   bootbox.alert
     className: "emergency_alert_" + id
     backdrop: false
@@ -30,6 +33,7 @@ create_alert_channel = (provider_id) ->
       # Called when there's incoming data on the websocket for this channel
       if data.dismiss
         $(".emergency_alert_" + data.id).hide();
+        window.DispatchDeskEmergency.drop(data.id) if window.DispatchDeskEmergency
       else
         show_emergency_alert_dialog(data.id, data.provider_id, data.message);
 

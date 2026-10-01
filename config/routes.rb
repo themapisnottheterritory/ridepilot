@@ -218,6 +218,8 @@ Rails.application.routes.draw do
 
     # What's new (WhatsNew, config/whats_new.yml)
     get  "whats_new"         => "whats_new#index", as: :whats_new
+    # Driver messages inbox in the header (DispatchInbox)
+    get  "dispatch_inbox"    => "dispatch_inbox#index", as: :dispatch_inbox
     # Send a suggestion (Suggestion): staff -> GCRPC I.T.
     resources :suggestions, only: [:index, :new, :create, :update]
 

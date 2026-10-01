@@ -16,6 +16,13 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-01 14:00"
+  title: "Driver messages reach you on every page"
+  body: |
+    When a driver sends a message, a pop-up appears in the bottom-left corner with a chime, on any RidePilot page, not just CAD/AVL. Press **Reply** to answer. The chat-bubbles icon at the top shows how many driver messages nobody has seen yet; click it for today's list. Once anyone opens or answers a driver's chat, it shows **Seen by** their name for everyone.
+
+    Emergency alerts now stay across the top of every page with an alarm until someone presses **Got it!**. Turn the chime off, or turn on desktop alerts, from the chat-bubbles list.
+
 - added: "2026-10-01 12:30"
   title: "Driver tablet 1.0.20: version at the bottom of the screen"
   apps: [tablet]

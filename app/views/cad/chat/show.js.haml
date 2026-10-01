@@ -1,2 +1,5 @@
-$('.panel-body .chat').append("#{ j render 'cad/chat/details', message: @message}");
-$(".panel-body").animate({ scrollTop: $(this).height() }, "slow");
+- if @message
+  if (!$(".chat-body[data-id='#{@message.id}']").length) {
+  $('.panel-body .chat').append("#{ j render 'cad/chat/details', message: @message}");
+  }
+  $(".panel-body").animate({ scrollTop: $('.panel-body')[0].scrollHeight }, "slow");
