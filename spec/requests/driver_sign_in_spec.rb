@@ -64,6 +64,14 @@ RSpec.describe "POST /api/v1/driver_sign_in", type: :request do
     expect(response.status).to eq 401
   end
 
+  it "signing out on one tablet leaves the driver signed in on the others" do
+    post "/api/v1/driver_sign_in", params: { user: { username: driver.user.username, password: "Password#1" } }, as: :json
+    s = JSON.parse(response.body)["session"]
+    delete "/api/v2/sign_out", headers: { "X-User-Username" => s["username"], "X-User-Token" => s["authentication_token"] }
+    expect(response.status).to eq 200
+    expect(driver.user.reload.authentication_token).to eq s["authentication_token"]
+  end
+
   it "still says no, with a 401 and no session, for a wrong password" do
     post "/api/v1/driver_sign_in", params: { user: { username: driver.user.username, password: "nope" } }, as: :json
     expect(response.status).to eq 401

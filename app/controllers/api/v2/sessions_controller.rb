@@ -23,6 +23,12 @@ class Api::V2::SessionsController < Api::V2::BaseController
   def destroy
     # a view-only tablet leaving: the driver's own token stays as it is
     return render(success_response(message: "View-only session ended.")) if viewing_only?
+    # A driver keeps their key: it is shared by every tablet they are signed in
+    # on, and resetting it here signed James out on the bus when the office
+    # tablet signed out of his account (2026-10-01). The tablet forgets it.
+    if current_user && Driver.exists?(user_id: current_user.id)
+      return render(success_response(message: "User #{current_user.username} successfully signed out."))
+    end
     if current_user && current_user.reset_authentication_token
       render(success_response(message: "User #{current_user.username} successfully signed out."))
     else
