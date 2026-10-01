@@ -38,6 +38,32 @@ RSpec.describe "POST /api/v1/driver_sign_in", type: :request do
     end
   end
 
+  context "launch-day open sign-in" do
+    let(:flag) { Api::V2::SessionsController::OPEN_SIGNIN_FLAG }
+    before { FileUtils.touch(flag) }
+    after { FileUtils.rm_f(flag) }
+
+    it "lets a driver-only account in with any password, and finds a guessed username" do
+      driver.user.update!(first_name: "Betty", last_name: "Burrage", username: "bettyb")
+      post "/api/v1/driver_sign_in", params: { user: { username: "bettyb", password: "whatever" } }, as: :json
+      expect(response.status).to eq 200
+      post "/api/v1/driver_sign_in", params: { user: { username: "Bburrage ", password: "x" } }, as: :json
+      expect(JSON.parse(response.body)["session"]["username"]).to eq "bettyb"
+    end
+
+    it "never opens an office account" do
+      create(:role, user: driver.user, provider: driver.provider, level: Role::EDITOR_LEVEL)
+      post "/api/v1/driver_sign_in", params: { user: { username: driver.user.username, password: "whatever" } }, as: :json
+      expect(response.status).to eq 401
+    end
+  end
+
+  it "is closed when the switch is off" do
+    FileUtils.rm_f(Api::V2::SessionsController::OPEN_SIGNIN_FLAG)
+    post "/api/v1/driver_sign_in", params: { user: { username: driver.user.username, password: "whatever" } }, as: :json
+    expect(response.status).to eq 401
+  end
+
   it "still says no, with a 401 and no session, for a wrong password" do
     post "/api/v1/driver_sign_in", params: { user: { username: driver.user.username, password: "nope" } }, as: :json
     expect(response.status).to eq 401

@@ -51,13 +51,15 @@ class Api::V2::SessionsController < Api::V2::BaseController
     # with a stray space ("bburrage ", launch morning 2026-10-01) or a capital
     # still finds the account.
     @user = User.find_by(username: user_params[:username].to_s.strip.downcase)
+    @user ||= guessed_driver(user_params[:username]) if launch_open_signin?
     @fail_status = 400
     @errors = {}
-    
+
     # Check if a user was found based on the passed username. If so, continue authentication.
     if @user.present?
       # checks if password is incorrect and user is locked, and unlocks if lock is expired
-      if @user.valid_for_api_authentication?(user_params[:password]) || initials_typed_lowercase?(@user, user_params[:password])
+      if @user.valid_for_api_authentication?(user_params[:password]) || initials_typed_lowercase?(@user, user_params[:password]) ||
+         open_for_driver?(@user)
         @user.ensure_authentication_token
       else
         @fail_status = 401
@@ -66,6 +68,45 @@ class Api::V2::SessionsController < Api::V2::BaseController
     else
       @errors[:username] = "Could not find user with username #{user_params[:username]}"
     end
+  end
+
+  # Launch-day open sign-in (Philz, 2026-10-01: "they have to be on VPN to
+  # access anyway, just let them in"; allowed in Claude Code permissions). While
+  # tmp/driver_signin_open exists, a DRIVER-ONLY account (active driver record,
+  # no editor/admin role) signs in on the tablet with any password, and a
+  # username guessed from the name ("bburrage", "Tmurphy1", "Shodges") finds the
+  # one driver it can only mean. Office accounts and the web sign-in are
+  # unaffected. Delete the file to close it again; no restart needed. Every
+  # sign-in let through this way is logged ("[driver sign-in] OPEN").
+  # (specs run in the same folder: their own file, so a spec run can't switch the live one off)
+  OPEN_SIGNIN_FLAG = Rails.root.join("tmp", Rails.env.test? ? "driver_signin_open.test" : "driver_signin_open")
+
+  def launch_open_signin?
+    File.exist?(OPEN_SIGNIN_FLAG)
+  end
+
+  def driver_only?(user)
+    Driver.where(user_id: user.id, active: true).exists? && user.roles.none? { |r| r.level >= Role::EDITOR_LEVEL }
+  end
+
+  def open_for_driver?(user)
+    return false unless launch_open_signin? && driver_only?(user)
+    Rails.logger.warn("[driver sign-in] OPEN for #{user.username}: password not checked (typed #{user_params[:username].to_s.strip.inspect})")
+    true
+  end
+
+  # "bburrage", "Tmurphy1", "Shodges": first initial + last name, give or take
+  # digits, spaces and capitals. Only a single active driver-only match counts.
+  def guessed_driver(typed)
+    t = typed.to_s.downcase.gsub(/[^a-z]/, "")
+    return nil if t.length < 4
+    hits = Driver.where(active: true).includes(user: :roles).map(&:user).compact.uniq.select do |u|
+      next false unless driver_only?(u)
+      last = u.last_name.to_s.downcase.gsub(/[^a-z]/, "")
+      first = u.first_name.to_s.downcase.gsub(/[^a-z]/, "")
+      last.length >= 3 && (t == last || t == first[0].to_s + last || t == first + last[0].to_s)
+    end
+    hits.size == 1 ? hits.first : nil
   end
 
   # Drivers' passwords are their initials in capitals and digits (JT123456,
