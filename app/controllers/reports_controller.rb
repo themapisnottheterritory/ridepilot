@@ -1715,29 +1715,12 @@ class ReportsController < ApplicationController
     end
   end
 
-  # Excel for any report that has a CSV download: the same rows, in a real
-  # .xlsx, with numbers as numbers so Excel can total them (Philz, 2026-10-01).
-  # A report that builds its own workbook (NTD) sets @workbook first.
+  # Excel for any report that has a CSV download: the same rows as a branded
+  # .xlsx (ReportWorkbook), numbers as numbers (Philz, 2026-10-01). A report
+  # that builds its own workbook (NTD) sets @workbook first.
   def workbook_from_csv
     csv = render_to_string(template: "reports/show", formats: [:csv], layout: false)
-    workbook = RubyXL::Workbook.new
-    sheet = workbook[0]
-    sheet.sheet_name = @custom_report.title.to_s.gsub(%r{[\\/?*\[\]:]}, ' ').first(31).presence || 'Report'
-    CSV.parse(csv).each_with_index do |row, r|
-      row.each_with_index do |value, c|
-        next if value.nil?
-        cell = sheet.add_cell(r, c, excel_value(value))
-        cell.change_font_bold(true) if r.zero?
-      end
-    end
-    workbook
-  end
-
-  # "12" -> 12, "3.50" -> 3.5; anything else, including "007" and long ids, stays text
-  def excel_value(text)
-    return text.to_i if text.match?(/\A-?(?:0|[1-9]\d{0,14})\z/)
-    return text.to_f if text.match?(/\A-?(?:0|[1-9]\d{0,14})\.\d+\z/)
-    text
+    ReportWorkbook.from_csv(csv, title: @custom_report.title)
   end
 
   # given saved report date range type, re-process date range params
