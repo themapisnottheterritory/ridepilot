@@ -839,7 +839,10 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.datetime "updated_at", precision: nil, null: false
     t.bigint "driver_id"
     t.bigint "run_id"
+    t.datetime "handled_at"
+    t.integer "handled_by_id"
     t.index ["driver_id"], name: "index_messages_on_driver_id"
+    t.index ["provider_id", "handled_at"], name: "index_messages_on_provider_id_and_handled_at"
     t.index ["provider_id"], name: "index_messages_on_provider_id"
     t.index ["reader_id"], name: "index_messages_on_reader_id"
     t.index ["run_id"], name: "index_messages_on_run_id"
