@@ -35,8 +35,39 @@ class Address < ApplicationRecord
   scope :search_for_term, -> (term) { where("LOWER(name) LIKE '%' || :term || '%' OR LOWER(building_name) LIKE '%' || :term || '%' OR LOWER(address) LIKE '%' || :term || '%'",{:term => term}) }
 
   # compute RGeo geom 
+  # Where GCRPC's riders are (Utility#get_provider_bounds, 2026): every real
+  # pin is inside this box.
+  SERVICE_AREA = { min_lat: 27.5, max_lat: 30.6, min_lon: -98.9, max_lon: -95.0 }.freeze
+
   def self.compute_geom(lat, lon)
-    RGeo::Geographic.spherical_factory(srid: 4326).point(lon.to_f, lat.to_f) if lat.present? && lon.present?
+    return nil unless lat.present? && lon.present?
+    lat = coordinate(lat, :lat)
+    lon = coordinate(lon, :lon)
+    return nil unless lat && lon
+    RGeo::Geographic.spherical_factory(srid: 4326).point(lon, lat)
+  end
+
+  # Since 2026-09-30 the address dialog's longitude box has arrived as bare
+  # digits ("9765114006172236" for -97.65114006172236), sign and decimal point
+  # gone; the point factory wrapped that to a whole-number longitude (-84, 114,
+  # -174 ...) half a world away, and a 2-mile trip measured 313 or 648 miles.
+  # Cause in the browser not yet found. A digits-only value is put back the way
+  # it must have been (two-digit degrees, west of Greenwich for longitude) only
+  # if that lands in the service area; anything else impossible gives no pin,
+  # so the save says the address isn't on the map instead of placing it abroad.
+  def self.coordinate(value, axis)
+    text = value.to_s.strip
+    if text.match?(/\A\d{6,}\z/)
+      fixed = (axis == :lon ? -1 : 1) * "#{text[0, 2]}.#{text[2..]}".to_f
+      lo, hi = axis == :lon ? SERVICE_AREA.values_at(:min_lon, :max_lon) : SERVICE_AREA.values_at(:min_lat, :max_lat)
+      return nil unless fixed.between?(lo, hi)
+      Rails.logger.warn("[address] repaired a digits-only #{axis} #{text} -> #{fixed}")
+      return fixed
+    end
+    number = Float(text, exception: false)
+    return nil unless number
+    limit = axis == :lon ? 180 : 90
+    number.abs <= limit ? number : nil
   end
 
   def as_json
