@@ -16,6 +16,14 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-01 09:00"
+  title: "Drivers can complete stops on the tablet"
+  apps: [tablet]
+  body: |
+    Until 9:00 this morning, drivers saw only **Undo** on a stop and could not mark it started or done, so stops stayed **Pending**. That is fixed: drivers open the stop and tap **Depart**, **Arrive**, then **Pick Up** or **Drop Off**.
+
+    Stops finished on the road before 9:00 were not recorded. Fill those in from the run, or have the driver tap through them.
+
 - added: "2026-10-01 08:51"
   title: "Driver tablets get live updates again"
   apps: [web, tablet]

@@ -19,6 +19,12 @@ class Itinerary < ApplicationRecord
   STATUS_COMPLETED = 2
   STATUS_OTHER = 3
 
+  # A new stop is Pending. Launch morning (2026-10-01) every stop was built with
+  # no status, and the driver tablet only offers Depart on a Pending stop, so no
+  # stop could be started. The before_save also catches stops saved without one.
+  attribute :status_code, :integer, default: STATUS_PENDING
+  before_save { self.status_code = STATUS_PENDING if status_code.nil? }
+
   # get associated fare info from trip
   def fare
     trip = self.trip
@@ -47,7 +53,7 @@ class Itinerary < ApplicationRecord
   end
 
   def reset!
-    self.status_code = nil
+    self.status_code = STATUS_PENDING
     self.departure_time = nil
     self.arrival_time = nil
     self.finish_time = nil

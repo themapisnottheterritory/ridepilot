@@ -6,6 +6,11 @@ class ItinerarySerializer
 
   attribute :id, :trip_id, :leg_flag, :status_code, :departure_time, :arrival_time, :finish_time, :eta, :time
 
+  # an older stop with no status is Pending to the tablet, which offers Depart only then
+  attribute :status_code do |object|
+    object.status_code || Itinerary::STATUS_PENDING
+  end
+
   attribute :eta do |object|
     if object.public_itinerary
       object.public_itinerary.eta
