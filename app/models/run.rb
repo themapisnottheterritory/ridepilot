@@ -16,6 +16,7 @@ class Run < ApplicationRecord
   
   BATCH_ACTIONS = [
     :cancel,
+    :revoke_cancellation,
     :delete
   ].freeze
 
@@ -300,6 +301,26 @@ class Run < ApplicationRecord
   def cancel!
     self.cancelled = true
     unschedule!
+  end
+
+  # Undoes a cancellation (Runs page, "Revoke cancellation", 2026-10-01): the
+  # run is no longer Cancelled, and when it comes from a recurring run, that
+  # weekday's recurring trips for this date go back on it -- the ones still
+  # unassigned and not cancelled -- with its stops rebuilt. One-off trips were
+  # unscheduled without a record of which run they were on, so dispatch puts
+  # those back by hand. A run that was started is left alone. Returns the
+  # number of trips put back, or nil if the run can't be revoked.
+  def revoke_cancellation!
+    return nil if actual_start_time.present?
+    self.cancelled = false
+    save(validate: false)
+
+    ids = repeating_run ? repeating_run.weekday_assignments.for_wday(date.wday).pluck(:repeating_trip_id) : []
+    back = ids.empty? ? [] : Trip.where(provider_id: provider_id, run_id: nil, repeating_trip_id: ids).for_date(date)
+                                 .includes(:trip_result).reject { |t| TripResult::NON_DISPATCHABLE_CODES.include?(t.trip_result.try(:code)) }
+    Trip.where(id: back.map(&:id)).update_all(run_id: id) if back.any?
+    reset_itineraries if back.any? || itineraries.empty?
+    back.size
   end
 
   # unschedule trips

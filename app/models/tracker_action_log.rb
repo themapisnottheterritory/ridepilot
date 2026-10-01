@@ -285,6 +285,11 @@ class TrackerActionLog < PublicActivity::Activity
     end
   end
 
+  def self.revoke_run_cancellation(run, user, trips_back)
+    return if !run
+    run.create_activity :run_cancellation_revoked, owner: user, params: { trips_back: trips_back }
+  end
+
   def self.cancel_run(run, user, day_of_week = nil)
     return if !run
 

@@ -167,6 +167,29 @@ class RunsController < ApplicationController
     end
   end
   
+  # Runs page, "Revoke cancellation" (Run#revoke_cancellation!)
+  def revoke_cancellation_multiple
+    authorize! :edit, Run
+    runs = Run.for_provider(current_provider_id).where(id: params.require(:revoke_cancellation_multiple_runs)[:run_ids].to_s.split(',').map(&:to_i))
+    revoked = 0
+    trips_back = 0
+    started = 0
+    runs.each do |run|
+      n = run.revoke_cancellation!
+      if n.nil?
+        started += 1
+        next
+      end
+      revoked += 1
+      trips_back += n
+      TrackerActionLog.revoke_run_cancellation(run, current_user, n)
+    end
+    notice = "Cancellation revoked on #{revoked} #{'run'.pluralize(revoked)}; #{trips_back} recurring #{'trip'.pluralize(trips_back)} put back on them. " \
+             "Trips booked one at a time have to be put back from Dispatch, and each run's manifest published again."
+    notice += " #{started} started #{'run'.pluralize(started)} left as they were." if started > 0
+    redirect_to runs_path, notice: notice
+  end
+
   # Destroys multiple runs by id, deleting them from the database
   def delete_multiple
     @runs = Run.where(actual_start_time: nil).where(id: delete_multiple_params[:run_ids].split(',').map(&:to_i))

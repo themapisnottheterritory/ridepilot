@@ -278,6 +278,7 @@ Rails.application.routes.draw do
         get :for_date
         get :uncompleted_runs
         patch :cancel_multiple
+        patch :revoke_cancellation_multiple
         delete :delete_multiple
         get :check_driver_vehicle_availability
         get :reload_drivers
