@@ -40,6 +40,8 @@ release (plus the Play Protect tap) is as far as Android allows without an MDM.
 
 **1.0.16 (2026-09-22):** End run is gated on the post-trip inspection (it used to be a separate button a driver could skip). Not yet tested on a device.
 
+**1.0.19 (2026-10-01, launch morning, published to all tablets, optional, rideavl-v2 ac77f12):** times on the manifest list and the stop screen (scheduled pick-up / appointment / estimate, red when late). No earlier build showed any stop time.
+
 **1.0.18 (2026-09-30, published to all tablets the same day, rideavl-v2 e585aa2 on `fixed-route-wp6`):** the emergency button now shows a banner on every screen: red while waiting, green "Dispatch has your alert, received by <name>" when someone clicks Got it! (DriverAlertChannel ReceiveAlert), and "call dispatch now" after 60 s with no answer or if the alert can't be sent. Needs RidePilot a371d104 (ActionCable over Redis), without which no alert or acknowledgement was ever delivered. Not required.
 
 **1.0.17 (2026-09-29, published to all tablets the same day, rideavl-v2 95e6af0 on `fixed-route-wp6`, RidePilot 341694fc):**

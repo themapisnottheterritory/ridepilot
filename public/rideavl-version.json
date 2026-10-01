@@ -1,9 +1,9 @@
 {
-  "version": "1.0.18",
-  "version_code": 19,
+  "version": "1.0.19",
+  "version_code": 20,
   "url": "/rideavl-pilot.apk",
   "required": false,
-  "notes": "The emergency button now shows whether dispatch got your alert.",
-  "published_at": "2026-09-30T18:52:11Z",
-  "sha256": "da99ac9a73c86975312fb7e11858aa5ce5339a93b9f19f33a984e3a5a7302f2e"
+  "notes": "Times on the manifest: pick-up time, appointment time, and when the bus is expected.",
+  "published_at": "2026-10-01T13:10:54Z",
+  "sha256": "d18eea1adbebc55a629b4f879c884689cec37ce2ba72d5761d101ade069f909c"
 }

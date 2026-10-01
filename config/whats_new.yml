@@ -16,6 +16,15 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-01 08:10"
+  title: "Driver tablet 1.0.19: pick-up and drop-off times"
+  body: |
+    The manifest now shows each stop's time: the pick-up time, the
+    appointment time for drop-offs ("by 8:30 AM"), and when the bus is
+    expected, in red if it's running late. The stop screen says "Pick up at
+    8:00 AM" under the rider's name. Tap Update on the tablet, then Install.
+  apps: [tablet]
+
 - added: "2026-09-30 17:00"
   title: "A customer's trips, and a card when you hover their name"
   body: |
