@@ -9,9 +9,14 @@ module ApplicationCable
     private
       def find_verified_user
         if request.params["username"]
-          # API
-          if current_user = User.find_by(username: request.params["username"], authentication_token: request.params["authentication_token"])
-            current_user
+          # API (driver tablets). The Demand Response app (rideavl-v2) sends the
+          # token as `token`; older clients sent `authentication_token`. Reading
+          # only the latter rejected every tablet, which then reconnected every
+          # 3 s all day (~35,000 attempts on 2026-10-01) and never got a push.
+          token = request.params["authentication_token"].presence || request.params["token"].presence
+          user = token && User.find_by(username: request.params["username"])
+          if user && user.authentication_token.present? && Devise.secure_compare(user.authentication_token, token)
+            user
           else
             reject_unauthorized_connection
           end

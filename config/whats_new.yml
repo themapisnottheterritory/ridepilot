@@ -16,6 +16,12 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-01 08:51"
+  title: "Driver tablets get live updates again"
+  apps: [web, tablet]
+  body: |
+    Driver tablets were not receiving live updates from RidePilot, including **emergency alerts**. They now do: an alert reaches the tablet within seconds, and a tablet reloads its manifest when you press **Publish**. RidePilot should also feel faster, since the tablets are no longer reconnecting all day.
+
 - added: "2026-10-01 08:40"
   title: "CAD/AVL keeps following a run after a trip is removed"
   body: |
