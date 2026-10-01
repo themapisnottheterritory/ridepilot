@@ -47,14 +47,17 @@ class Api::V2::SessionsController < Api::V2::BaseController
   end
 
   def validate_user
-    @user = User.find_by(username: user_params[:username].downcase)
+    # As the web sign-in does (Devise strip_whitespace_keys): a tablet username
+    # with a stray space ("bburrage ", launch morning 2026-10-01) or a capital
+    # still finds the account.
+    @user = User.find_by(username: user_params[:username].to_s.strip.downcase)
     @fail_status = 400
     @errors = {}
     
     # Check if a user was found based on the passed username. If so, continue authentication.
     if @user.present?
       # checks if password is incorrect and user is locked, and unlocks if lock is expired
-      if @user.valid_for_api_authentication?(user_params[:password])
+      if @user.valid_for_api_authentication?(user_params[:password]) || initials_typed_lowercase?(@user, user_params[:password])
         @user.ensure_authentication_token
       else
         @fail_status = 401
@@ -63,5 +66,17 @@ class Api::V2::SessionsController < Api::V2::BaseController
     else
       @errors[:username] = "Could not find user with username #{user_params[:username]}"
     end
+  end
+
+  # Drivers' passwords are their initials in capitals and digits (JT123456,
+  # set for launch 2026-10-01). On launch morning many typed the initials in
+  # lowercase (pj123456) and were turned away at pull-out. For a driver
+  # account only, a password shaped like that is tried once more with its
+  # two letters capitalised; anything else is compared exactly as typed.
+  def initials_typed_lowercase?(user, password)
+    password = password.to_s
+    return false unless password.match?(/\A[a-z]{2}\d{4,}\z/)
+    return false unless Driver.exists?(user_id: user.id)
+    user.valid_for_api_authentication?(password[0, 2].upcase + password[2..])
   end
 end

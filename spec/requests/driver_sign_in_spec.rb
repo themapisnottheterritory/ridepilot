@@ -14,6 +14,28 @@ RSpec.describe "POST /api/v1/driver_sign_in", type: :request do
     expect(body["session"]["authentication_token"]).to be_present
   end
 
+  it "ignores spaces and capitals around the username, as the web sign-in does" do
+    post "/api/v1/driver_sign_in", params: { user: { username: "  #{driver.user.username.upcase} ", password: "Password#1" } }, as: :json
+    expect(response.status).to eq 200
+    expect(JSON.parse(response.body)["session"]["username"]).to eq driver.user.username
+  end
+
+  context "initials typed in lowercase" do
+    before { driver.user.update!(password: "JT123456", password_confirmation: "JT123456") }
+
+    it "lets a driver in with jt123456 for JT123456" do
+      post "/api/v1/driver_sign_in", params: { user: { username: driver.user.username, password: "jt123456" } }, as: :json
+      expect(response.status).to eq 200
+    end
+
+    it "still refuses other wrong passwords, and other kinds of case slip" do
+      %w[jt123457 Jt12345 JT12345 xx123456].each do |pw|
+        post "/api/v1/driver_sign_in", params: { user: { username: driver.user.username, password: pw } }, as: :json
+        expect(response.status).to eq(401), "#{pw} should be refused"
+      end
+    end
+  end
+
   it "still says no, with a 401 and no session, for a wrong password" do
     post "/api/v1/driver_sign_in", params: { user: { username: driver.user.username, password: "nope" } }, as: :json
     expect(response.status).to eq 401
