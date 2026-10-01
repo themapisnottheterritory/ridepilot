@@ -20,6 +20,7 @@ class Query
   attr_accessor :ntd_mode
   attr_accessor :fixed_route_id
   attr_accessor :group_by
+  attr_accessor :agencies
   attr_accessor :run_inspection_type
   attr_accessor :report_format
   attr_accessor :report_type
@@ -93,6 +94,7 @@ class Query
       if params["group_by"]
         @group_by = params["group_by"] unless params["group_by"].blank?
       end
+      @agencies = params["agencies"] if params["agencies"] == "all"
       if params["run_inspection_type"]
         @run_inspection_type = params["run_inspection_type"]
       end
@@ -1385,27 +1387,34 @@ class ReportsController < ApplicationController
   # Fares the drivers recorded on the tablet (Collect Fare, or a fare card) over
   # a date range, to match each driver's cash to what the tablet holds (Tasha,
   # 2026-10-01). One row per fare, with totals by day, driver or run, split into
-  # cash, card and pass.
+  # cash, card and pass. "All my agencies" covers every agency the user has a
+  # role in (all of them for a system admin), grouped by agency first.
   def fares_collected
     authorize! :read, Trip
     query_params = params[:query] || {start_date: Date.today, end_date: Date.today + 1}
     @query = Query.new(query_params)
     @group_by = %w[day driver run].include?(@query.group_by) ? @query.group_by : 'driver'
+    @my_agencies = current_user.super_admin? ? Provider.order(:id).to_a : Provider.where(id: current_user.roles.pluck(:provider_id)).order(:id).to_a
+    agencies = @query.agencies == 'all' ? @my_agencies : @my_agencies.select { |p| p.id == current_provider_id }
+    agencies = [current_provider] if agencies.empty?
+    @by_agency = agencies.size > 1
 
     if params[:query]
       @report_params = []
       @report_params << ["Date Range", "#{@query.start_date.strftime('%m/%d/%Y')} - #{@query.before_end_date.strftime('%m/%d/%Y')}"]
+      @report_params << ["Agencies", agencies.map(&:name).join(', ')]
       @report_params << ["Grouped by", @group_by.humanize]
 
       tz = Time.zone
-      trips = Trip.for_provider(current_provider_id)
+      trips = Trip.where(provider_id: agencies.map(&:id))
                   .where(fare_collected_time: tz.local(@query.start_date.year, @query.start_date.month, @query.start_date.day)...
                                               tz.local(@query.end_date.year, @query.end_date.month, @query.end_date.day))
                   .includes(:customer, :funding_source, run: { driver: :user }).order(:fare_collected_time).to_a
       card = FareTransaction.where(trip_id: trips.map(&:id), kind: %w[debit pass]).pluck(:trip_id, :kind).to_h
+      names = agencies.to_h { |p| [p.id, p.name] }
 
       @fares = trips.map do |t|
-        { trip: t, collected_at: t.fare_collected_time.in_time_zone(tz), run: t.run.try(:name) || '(no run)',
+        { trip: t, agency: names[t.provider_id], collected_at: t.fare_collected_time.in_time_zone(tz), run: t.run.try(:name) || '(no run)',
           driver: t.run.try(:driver).try(:user_name).presence || '(no driver)',
           rider: t.customer.try(:name), funding: t.funding_source.try(:name),
           paid_by: { 'debit' => 'Card', 'pass' => 'Pass' }[card[t.id]] || 'Cash', amount: t.fare_amount.to_f }
@@ -1415,9 +1424,17 @@ class ReportsController < ApplicationController
         by = ->(how) { fs.select { |f| f[:paid_by] == how }.sum { |f| f[:amount] } }
         { count: fs.size, cash: by.call('Cash'), card: by.call('Card'), passes: fs.count { |f| f[:paid_by] == 'Pass' }, total: fs.sum { |f| f[:amount] } }
       }
-      @report_data = @fares.group_by { |f| key.call(f) }.sort_by { |k, _| k.to_s }.map { |k, fs|
-        build.call(fs).merge(label: @group_by == 'day' ? k.strftime('%a %m/%d/%Y') : k.to_s)
+      groups = ->(fs) {
+        fs.group_by { |f| key.call(f) }.sort_by { |k, _| k.to_s }.map { |k, g|
+          build.call(g).merge(label: @group_by == 'day' ? k.strftime('%a %m/%d/%Y') : k.to_s)
+        }
       }
+      # one section per agency, in agency order, each with its own total
+      @agency_sections = agencies.map { |p|
+        fs = @fares.select { |f| f[:trip].provider_id == p.id }
+        { agency: p.name, total: build.call(fs), groups: groups.call(fs) }
+      }
+      @report_data = @agency_sections.flat_map { |a| a[:groups] }
       @grand = build.call(@fares)
     end
 

@@ -19,7 +19,7 @@
 - added: "2026-10-01 12:00"
   title: "New report: Fares Collected"
   body: |
-    **Reports > Fares Collected** lists every fare drivers recorded on the tablet, with cash and fare card totals by driver, run or day, and each fare with its rider and run. Use it to match a driver's cash to what the tablet recorded; choose CSV to download it.
+    **Reports > Fares Collected** lists every fare drivers recorded on the tablet, with cash and fare card totals by driver, run or day, and each fare with its rider and run. Use it to match a driver's cash to what the tablet recorded; choose CSV to download it. If you work for more than one agency, choose **All my agencies** to see each agency's fares and totals in one report.
 
 - added: "2026-10-01 11:30"
   title: "Address search finds spelled-out street numbers"

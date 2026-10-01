@@ -7,6 +7,9 @@
     = f.date_select  :before_end_date, :order => [:month,:day,:year] rescue nil
     = f.label :group_by, "Group by:"
     = f.select :group_by, options_for_select([['Driver', 'driver'], ['Run', 'run'], ['Day', 'day']], @query.group_by || 'driver')
+    - if @my_agencies.size > 1
+      = f.label :agencies, "Agencies:"
+      = f.select :agencies, options_for_select([['This agency', ''], ['All my agencies', 'all']], @query.agencies)
 
     = render 'reports/forms/v2_reports/common_controls', has_multiple_report_types: false, f: f
     = render 'reports/forms/save_report_controls', custom_report_id: @custom_report.id

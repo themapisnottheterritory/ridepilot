@@ -27,26 +27,41 @@
         %th{style: 'text-align: right;'} Passes
         %th{style: 'text-align: right;'} Total
     %tbody
-      - @report_data.each do |g|
+      - @agency_sections.each do |a|
+        - if @by_agency
+          %tr
+            %th{colspan: 6, style: 'padding-top: 12px;'}= a[:agency]
+        - a[:groups].each do |g|
+          %tr
+            %td= g[:label]
+            %td{style: 'text-align: right;'}= g[:count]
+            %td{style: 'text-align: right;'}= number_to_currency(g[:cash])
+            %td{style: 'text-align: right;'}= g[:card] > 0 ? number_to_currency(g[:card]) : ''
+            %td{style: 'text-align: right;'}= g[:passes] > 0 ? g[:passes] : ''
+            %td{style: 'text-align: right;'}= number_to_currency(g[:total])
+        - t = a[:total]
         %tr
-          %td= g[:label]
-          %td{style: 'text-align: right;'}= g[:count]
-          %td{style: 'text-align: right;'}= number_to_currency(g[:cash])
-          %td{style: 'text-align: right;'}= g[:card] > 0 ? number_to_currency(g[:card]) : ''
-          %td{style: 'text-align: right;'}= g[:passes] > 0 ? g[:passes] : ''
-          %td{style: 'text-align: right;'}= number_to_currency(g[:total])
-      %tr
-        %th Total
-        %th{style: 'text-align: right;'}= @grand[:count]
-        %th{style: 'text-align: right;'}= number_to_currency(@grand[:cash])
-        %th{style: 'text-align: right;'}= number_to_currency(@grand[:card])
-        %th{style: 'text-align: right;'}= @grand[:passes]
-        %th{style: 'text-align: right;'}= number_to_currency(@grand[:total])
+          %th= @by_agency ? "#{a[:agency]} total" : 'Total'
+          %th{style: 'text-align: right;'}= t[:count]
+          %th{style: 'text-align: right;'}= number_to_currency(t[:cash])
+          %th{style: 'text-align: right;'}= number_to_currency(t[:card])
+          %th{style: 'text-align: right;'}= t[:passes]
+          %th{style: 'text-align: right;'}= number_to_currency(t[:total])
+      - if @by_agency
+        %tr
+          %th{style: 'padding-top: 12px;'} All agencies
+          %th{style: 'text-align: right; padding-top: 12px;'}= @grand[:count]
+          %th{style: 'text-align: right; padding-top: 12px;'}= number_to_currency(@grand[:cash])
+          %th{style: 'text-align: right; padding-top: 12px;'}= number_to_currency(@grand[:card])
+          %th{style: 'text-align: right; padding-top: 12px;'}= @grand[:passes]
+          %th{style: 'text-align: right; padding-top: 12px;'}= number_to_currency(@grand[:total])
 
   %h4 Each fare
   %table.table.table-condensed
     %thead
       %tr
+        - if @by_agency
+          %th Agency
         %th Collected
         %th Run
         %th Driver
@@ -55,8 +70,10 @@
         %th Paid by
         %th{style: 'text-align: right;'} Amount
     %tbody
-      - @fares.each do |f|
+      - @fares.sort_by { |f| [f[:agency].to_s, f[:collected_at]] }.each do |f|
         %tr
+          - if @by_agency
+            %td= f[:agency]
           %td= f[:collected_at].strftime('%m/%d %l:%M %p')
           %td= f[:run]
           %td= f[:driver]

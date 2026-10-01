@@ -33,11 +33,33 @@ RSpec.describe ReportsController do
       expect(response.body).to include("Each fare")
     end
 
+    it "groups every agency the user has a role in, and only those" do
+      goliad = create(:provider, name: "Goliad")
+      create(:role, user: @user, provider: goliad, level: 0)
+      theirs = create(:trip, provider: goliad, fare_amount: 3.0, fare_collected_time: Time.zone.now.change(hour: 9))
+      hidden = create(:provider, name: "Lavaca")
+      create(:trip, provider: hidden, fare_amount: 4.0, fare_collected_time: Time.zone.now.change(hour: 9))
+      get :fares_collected, params: params.deep_merge(query: { agencies: "all" })
+      sections = assigns(:agency_sections)
+      expect(sections.map { |a| a[:agency] }).to eq [@provider.name, "Goliad"].sort_by { |n| [@provider, goliad].find { |p| p.name == n }.id }
+      expect(sections.map { |a| a[:total][:total] }).to match_array [3.5, 3.0]
+      expect(assigns(:fares).map { |f| f[:trip].id }).to include(theirs.id)
+      expect(assigns(:grand)[:total]).to eq 6.5
+      expect(response.body).to include("Goliad total", "All agencies")
+    end
+
+    it "stays on the current agency unless all are asked for" do
+      create(:role, user: @user, provider: create(:provider), level: 0)
+      get :fares_collected, params: params
+      expect(assigns(:agency_sections).size).to eq 1
+      expect(assigns(:grand)[:total]).to eq 3.5
+    end
+
     it "downloads a row per fare as CSV" do
       get :fares_collected, params: params.deep_merge(query: { report_format: "csv" })
       expect(response).to be_successful
       lines = response.body.lines.map(&:strip).reject(&:blank?)
-      expect(lines).to include(a_string_starting_with("Collected,Run,Driver"))
+      expect(lines).to include(a_string_starting_with("Agency,Collected,Run,Driver"))
       expect(lines.count { |l| l.end_with?(",#{@cash.id}") || l.end_with?(",#{@card.id}") }).to eq 2
     end
   end
