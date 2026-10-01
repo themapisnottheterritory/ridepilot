@@ -25,8 +25,12 @@ class Query
   attr_accessor :report_format
   attr_accessor :report_type
 
+  # The day list offers 31 for every month, so "Sep 31" means September's
+  # last day rather than an error page (Heather, 2026-10-01).
   def convert_date(obj, base)
-    return Date.new(obj["#{base}(1i)"].to_i,obj["#{base}(2i)"].to_i,(obj["#{base}(3i)"] || 1).to_i)
+    year, month = obj["#{base}(1i)"].to_i, obj["#{base}(2i)"].to_i
+    day = (obj["#{base}(3i)"] || 1).to_i
+    return Date.new(year, month, [day, Date.new(year, month, -1).day].min)
   end
 
   def initialize(params = {})

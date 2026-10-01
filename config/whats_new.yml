@@ -16,6 +16,12 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-01 14:15"
+  title: "Reports: the 31st of a short month"
+  for: admins
+  body: |
+    Choosing a day a month doesn't have, such as **September 31**, on a report's dates gave an error page. It now runs to the last day of that month.
+
 - added: "2026-10-01 14:00"
   title: "Driver messages reach you on every page"
   body: |
