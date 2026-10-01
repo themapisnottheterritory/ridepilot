@@ -6,6 +6,8 @@ class Api::V1::Driver::ItinerariesController < Api::V1::Driver::BaseController
     else
       @run = Run.where(date: Date.today, driver: @driver).incomplete.first
     end
+    # No run (none today, or a stale run id): an empty manifest, not a 500.
+    return render success_response(Itinerary.none) unless @run
     opts = {}
     opts[:include] = [:address]
     itins = Itinerary.unscoped.joins(:public_itinerary).where(public_itineraries: {run_id: @run.id}).order("public_itineraries.sequence")
@@ -16,6 +18,7 @@ class Api::V1::Driver::ItinerariesController < Api::V1::Driver::BaseController
 
   def show
     @itin = Itinerary.find_by_id(params[:id])
+    return render_itinerary_gone unless @itin
 
     opts = {}
     opts[:include] = [:address]
@@ -24,8 +27,9 @@ class Api::V1::Driver::ItinerariesController < Api::V1::Driver::BaseController
 
   def update
     @itin = Itinerary.find_by_id(params[:id])
+    return render_itinerary_gone unless @itin
 
-    @itin.update(itin_params) if @itin
+    @itin.update(itin_params)
 
     opts = {}
     opts[:include] = [:address]
@@ -150,6 +154,14 @@ class Api::V1::Driver::ItinerariesController < Api::V1::Driver::BaseController
   end
 
   private
+
+  # The stop is gone from the run: dispatch unscheduled or cancelled the trip
+  # and republished while the tablet still had the old manifest open. A 404,
+  # not a 500 in the error log; the tablet already treats a failed load as
+  # nothing to show.
+  def render_itinerary_gone
+    render fail_response(status: 404, code: "itinerary_removed", itinerary: "This stop is no longer on your run.")
+  end
 
   def itin_params
     params.require(:itinerary).permit(:status_code, :departure_time, :arrival_time, :finish_time)
