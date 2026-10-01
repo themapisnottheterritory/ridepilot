@@ -30,14 +30,17 @@ class Api::V1::Driver::DriverSessionsController < Api::V2::SessionsController
 
   private
 
+  # A view-only sign-in (TabletView) gets its own key, never the driver's
+  # token, and a name that says so on the tablet.
   def session_hash
     {
       id: @user.id,
       driver_id: @driver.id,
       provider_id: @driver.provider_id,
-      name: @user.name,
+      name: @view_token ? "#{@user.name} (view only)" : @user.name,
       username: @user.username,
-      authentication_token: @user.authentication_token
+      authentication_token: @view_token || @user.authentication_token,
+      view_only: @view_token.present?
     }
   end
 end

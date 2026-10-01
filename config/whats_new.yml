@@ -16,6 +16,14 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-01 09:30"
+  title: "See a driver's tablet without disturbing them"
+  apps: [tablet]
+  body: |
+    To see what a driver sees, sign in on any Demand Response tablet as your username, a slash, and the driver's username (for example **andrewv/jamesc**) with your own password. It shows their runs and stops with **(view only)** after the name.
+
+    Nothing can be changed from a view-only tablet, and signing out of it does not sign the driver out.
+
 - added: "2026-10-01 09:00"
   title: "Drivers can complete stops on the tablet"
   apps: [tablet]

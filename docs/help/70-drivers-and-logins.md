@@ -7,3 +7,5 @@
 **Office staff forgot their RidePilot password**: use "Forgot your password?" on the login page. The email comes from ridepilot@trn.gcrpc.org. Staff with outside email addresses (for example goliadcountytx.gov, co.lavaca.tx.us, outlook.com) should check Junk or quarantine and mark it "Not junk". An administrator can also set a new password: open the user and click **Reset Password**.
 
 **Microsoft sign-in**: GCRPC staff can sign in with their Microsoft 365 account; the RidePilot password still works as a fallback.
+
+**See what a driver sees on their tablet (view only)**: on any tablet running GCRPC Demand Response, sign in with your own username, a slash, then the driver's username (for example `andrewv/jamesc`), and **your own** RidePilot password. The tablet shows the driver's runs and stops exactly as they see them, with "(view only)" after the name. Nothing can be changed from it (Depart, Arrive, fares, chat and the emergency button are refused), and signing out does not sign the driver out. Office staff can view drivers of their own agency; the view lasts 14 hours, then sign in again.

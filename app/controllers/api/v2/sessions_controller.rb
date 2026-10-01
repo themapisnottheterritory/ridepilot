@@ -21,6 +21,8 @@ class Api::V2::SessionsController < Api::V2::BaseController
   # Signs out a user based on username and auth token headers
   # DELETE /sign_out
   def destroy
+    # a view-only tablet leaving: the driver's own token stays as it is
+    return render(success_response(message: "View-only session ended.")) if viewing_only?
     if current_user && current_user.reset_authentication_token
       render(success_response(message: "User #{current_user.username} successfully signed out."))
     else
@@ -35,7 +37,7 @@ class Api::V2::SessionsController < Api::V2::BaseController
   def session_hash(user)
     {
       username: user.username,
-      authentication_token: user.authentication_token
+      authentication_token: @view_token || user.authentication_token   # a view-only sign-in never gets the real token
     }
   end
   
@@ -47,6 +49,8 @@ class Api::V2::SessionsController < Api::V2::BaseController
   end
 
   def validate_user
+    return validate_viewer if TabletView.split_username(user_params[:username])
+
     # As the web sign-in does (Devise strip_whitespace_keys): a tablet username
     # with a stray space ("bburrage ", launch morning 2026-10-01) or a capital
     # still finds the account.
@@ -67,6 +71,28 @@ class Api::V2::SessionsController < Api::V2::BaseController
       end
     else
       @errors[:username] = "Could not find user with username #{user_params[:username]}"
+    end
+  end
+
+  # "andrewv/jamesc" + Andrew's own password: Andrew sees James's tablet, view
+  # only (TabletView). The password is always checked; no open sign-in here.
+  def validate_viewer
+    viewer_name, driver_name = TabletView.split_username(user_params[:username])
+    @fail_status = 401
+    @errors = {}
+    viewer = User.find_by(username: viewer_name)
+    @user = User.find_by(username: driver_name)
+    driver = @user && Driver.find_by(user_id: @user.id)
+    if viewer.nil? || !viewer.valid_for_api_authentication?(user_params[:password])
+      @errors[:password] = "Incorrect username or password for #{viewer_name}."
+    elsif driver.nil?
+      @fail_status = 400
+      @errors[:username] = "Could not find driver #{driver_name}"
+    elsif !TabletView.allowed?(viewer, driver)
+      @errors[:username] = "#{viewer_name} can't view #{driver_name}'s tablet (office staff of the driver's agency only)."
+    else
+      @view_token = TabletView.issue(viewer, @user)
+      Rails.logger.warn("[tablet view] #{viewer.username} signed in to view #{@user.username}'s tablet")
     end
   end
 
