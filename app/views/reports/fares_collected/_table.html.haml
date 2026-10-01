@@ -1,0 +1,66 @@
+- if @report_data.blank?
+  %h4 No fares recorded in this range
+- else
+  - group_label = { 'day' => 'Day', 'driver' => 'Driver', 'run' => 'Run' }[@group_by]
+  %p
+    %b Fares recorded:
+    = @grand[:count]
+    &nbsp;&nbsp;
+    %b Cash:
+    = number_to_currency(@grand[:cash])
+    &nbsp;&nbsp;
+    %b Fare card:
+    = number_to_currency(@grand[:card])
+    &nbsp;&nbsp;
+    %b Monthly passes:
+    = @grand[:passes]
+    &nbsp;&nbsp;
+    %b Total:
+    = number_to_currency(@grand[:total])
+  %table.table.table-condensed{style: 'margin-bottom: 14px;'}
+    %thead
+      %tr
+        %th= group_label
+        %th{style: 'text-align: right;'} Fares
+        %th{style: 'text-align: right;'} Cash
+        %th{style: 'text-align: right;'} Fare card
+        %th{style: 'text-align: right;'} Passes
+        %th{style: 'text-align: right;'} Total
+    %tbody
+      - @report_data.each do |g|
+        %tr
+          %td= g[:label]
+          %td{style: 'text-align: right;'}= g[:count]
+          %td{style: 'text-align: right;'}= number_to_currency(g[:cash])
+          %td{style: 'text-align: right;'}= g[:card] > 0 ? number_to_currency(g[:card]) : ''
+          %td{style: 'text-align: right;'}= g[:passes] > 0 ? g[:passes] : ''
+          %td{style: 'text-align: right;'}= number_to_currency(g[:total])
+      %tr
+        %th Total
+        %th{style: 'text-align: right;'}= @grand[:count]
+        %th{style: 'text-align: right;'}= number_to_currency(@grand[:cash])
+        %th{style: 'text-align: right;'}= number_to_currency(@grand[:card])
+        %th{style: 'text-align: right;'}= @grand[:passes]
+        %th{style: 'text-align: right;'}= number_to_currency(@grand[:total])
+
+  %h4 Each fare
+  %table.table.table-condensed
+    %thead
+      %tr
+        %th Collected
+        %th Run
+        %th Driver
+        %th Rider
+        %th Funding source
+        %th Paid by
+        %th{style: 'text-align: right;'} Amount
+    %tbody
+      - @fares.each do |f|
+        %tr
+          %td= f[:collected_at].strftime('%m/%d %l:%M %p')
+          %td= f[:run]
+          %td= f[:driver]
+          %td= f[:rider]
+          %td= f[:funding]
+          %td= f[:paid_by]
+          %td{style: 'text-align: right;'}= number_to_currency(f[:amount])

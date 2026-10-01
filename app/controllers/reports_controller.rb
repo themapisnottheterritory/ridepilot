@@ -1382,6 +1382,48 @@ class ReportsController < ApplicationController
     apply_v2_response
   end
 
+  # Fares the drivers recorded on the tablet (Collect Fare, or a fare card) over
+  # a date range, to match each driver's cash to what the tablet holds (Tasha,
+  # 2026-10-01). One row per fare, with totals by day, driver or run, split into
+  # cash, card and pass.
+  def fares_collected
+    authorize! :read, Trip
+    query_params = params[:query] || {start_date: Date.today, end_date: Date.today + 1}
+    @query = Query.new(query_params)
+    @group_by = %w[day driver run].include?(@query.group_by) ? @query.group_by : 'driver'
+
+    if params[:query]
+      @report_params = []
+      @report_params << ["Date Range", "#{@query.start_date.strftime('%m/%d/%Y')} - #{@query.before_end_date.strftime('%m/%d/%Y')}"]
+      @report_params << ["Grouped by", @group_by.humanize]
+
+      tz = Time.zone
+      trips = Trip.for_provider(current_provider_id)
+                  .where(fare_collected_time: tz.local(@query.start_date.year, @query.start_date.month, @query.start_date.day)...
+                                              tz.local(@query.end_date.year, @query.end_date.month, @query.end_date.day))
+                  .includes(:customer, :funding_source, run: { driver: :user }).order(:fare_collected_time).to_a
+      card = FareTransaction.where(trip_id: trips.map(&:id), kind: %w[debit pass]).pluck(:trip_id, :kind).to_h
+
+      @fares = trips.map do |t|
+        { trip: t, collected_at: t.fare_collected_time.in_time_zone(tz), run: t.run.try(:name) || '(no run)',
+          driver: t.run.try(:driver).try(:user_name).presence || '(no driver)',
+          rider: t.customer.try(:name), funding: t.funding_source.try(:name),
+          paid_by: { 'debit' => 'Card', 'pass' => 'Pass' }[card[t.id]] || 'Cash', amount: t.fare_amount.to_f }
+      end
+      key = ->(f) { { 'day' => f[:collected_at].to_date, 'run' => f[:run] }[@group_by] || f[:driver] }
+      build = ->(fs) {
+        by = ->(how) { fs.select { |f| f[:paid_by] == how }.sum { |f| f[:amount] } }
+        { count: fs.size, cash: by.call('Cash'), card: by.call('Card'), passes: fs.count { |f| f[:paid_by] == 'Pass' }, total: fs.sum { |f| f[:amount] } }
+      }
+      @report_data = @fares.group_by { |f| key.call(f) }.sort_by { |k, _| k.to_s }.map { |k, fs|
+        build.call(fs).merge(label: @group_by == 'day' ? k.strftime('%a %m/%d/%Y') : k.to_s)
+      }
+      @grand = build.call(@fares)
+    end
+
+    apply_v2_response
+  end
+
   # Fixed-route compliance (app/services/fixed_route_compliance.rb): one row per
   # fixed run with stops served/skipped, early departures, riders, and whether
   # the pre- and post-trip inspections were filed. Skipped stops and early

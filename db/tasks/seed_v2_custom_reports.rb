@@ -78,6 +78,10 @@
   {
     name: 'fixed_route_compliance',
     title: 'Fixed Route Compliance'
+  },
+  {
+    name: 'fares_collected',
+    title: 'Fares Collected'
   }].each do |report_data|
   report = CustomReport.where(name: report_data[:name], version: '2').first_or_create 
   report.update(redirect_to_results: true, title: report_data[:title])

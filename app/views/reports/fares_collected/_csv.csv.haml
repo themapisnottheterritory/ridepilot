@@ -1,0 +1,10 @@
+- # common
+= render 'reports/common_csv_header'
+
+- if @report_data.blank?
+  = CSV.generate_line(["No fares recorded in this range"], row_sep: nil).html_safe
+- else
+  = CSV.generate_line(["Fares", @grand[:count], "Cash", @grand[:cash].round(2), "Fare card", @grand[:card].round(2), "Passes", @grand[:passes], "Total", @grand[:total].round(2)], row_sep: nil).html_safe
+  = CSV.generate_line(["Collected", "Run", "Driver", "Rider", "Funding source", "Paid by", "Amount", "Trip"], row_sep: nil).html_safe
+  - @fares.each do |f|
+    = CSV.generate_line([f[:collected_at].strftime('%m/%d/%Y %H:%M'), f[:run], f[:driver], f[:rider], f[:funding], f[:paid_by], f[:amount].round(2), f[:trip].id], row_sep: nil).html_safe
