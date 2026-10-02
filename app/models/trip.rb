@@ -44,6 +44,9 @@ class Trip < ApplicationRecord
   after_save :withdraw_from_tablet, if: :withdrawn_by_result?
   after_destroy :withdraw_from_tablet
 
+  # Dispatch sorts GCRPC trips by the area the rider lives in (ServiceArea).
+  before_save :tag_service_area, if: -> { new_record? || will_save_change_to_customer_id? || service_area.nil? }
+
   scope :after,              -> (pickup_time) { where('pickup_time > ?', pickup_time.utc) }
   scope :after_today,        -> { where('pickup_time > ?', Date.today.end_of_day) }
   scope :today_and_prior,    -> { where('pickup_time <= ?', Date.today.end_of_day) }
@@ -582,4 +585,13 @@ class Trip < ApplicationRecord
 
     true
   end
+
+  private
+
+  def tag_service_area
+    ServiceArea.tag(self)
+  rescue StandardError => e
+    Rails.logger.warn("[service area] trip #{id}: #{e.class}: #{e.message}")   # never block saving a trip
+  end
+
 end

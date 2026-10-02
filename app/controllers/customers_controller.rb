@@ -330,6 +330,7 @@ class CustomersController < ApplicationController
   
   def customer_params
     params.require(:customer).permit(
+      :service_area_override,
       :gender,
       :ada_eligible,
       :ada_ineligible_reason,

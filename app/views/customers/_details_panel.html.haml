@@ -46,6 +46,16 @@
         = f.label :last_name, translate_helper(:last_name) 
       .form-field
         = f.text_field :last_name, class: 'form-control'
+    -# Dispatch sorts GCRPC trips by the area the rider lives in (ServiceArea, Kristie 2026-10-02)
+    - if current_provider&.id == ServiceArea::PROVIDER_ID
+      .form-group
+        .form-label
+          = f.label :service_area_override, "Area (for Dispatch)"
+        .form-field
+          - auto = ServiceArea.for_address(@customer.address)
+          - auto_text = "Automatic: #{ServiceArea.label(auto.code)}#{" · #{auto.note}" if auto.note}"
+          = f.select :service_area_override, options_for_select([[auto_text, ""]] + (ServiceArea::CODES - %w[NOPIN]).map { |c| [ServiceArea.label(c), c] }, @customer.service_area_override), {}, class: 'form-control', disabled: edit_mode == :show
+          %small.text-muted From where the rider lives (the home's map pin). Pick an area only for a home right on the Victoria city line.
     .form-group
       .form-label
         = f.label :gender, translate_helper(:gender) 

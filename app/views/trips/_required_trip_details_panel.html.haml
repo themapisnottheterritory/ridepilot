@@ -11,6 +11,13 @@
           = render "trips/customer", :f => f, :trip => @trip, edit_mode: edit_mode, prefix: 'repeating_'
         - else
           = render "trips/customer", :f => f, :trip => @trip, edit_mode: edit_mode, prefix: ''
+        - if current_provider&.id == ServiceArea::PROVIDER_ID && @trip.customer
+          - area = ServiceArea.for_customer(@trip.customer)
+          %div.text-muted{style: 'font-size: 0.9em; margin-top: 4px; white-space: normal;'}
+            Area:
+            %b= ServiceArea.label(area.code)
+            = "· #{area.note}" if area.note
+            = area.source == :override ? "(set on the rider)" : "(from the rider's home)"
         
     -# PICKUP AND APPOINTMENT TIME DATE AND TIME PICKERS
     - unless @is_repeating_trip

@@ -12,6 +12,11 @@ class Customer < ApplicationRecord
 
   belongs_to :provider, -> { with_deleted }
   belongs_to :address, :class_name => 'CustomerCommonAddress'
+
+  # Their area for Dispatch (ServiceArea): set by hand for a home on the city line;
+  # a change, or a new home, re-tags their upcoming trips.
+  validates :service_area_override, inclusion: { in: ServiceArea::CODES }, allow_blank: true
+  after_save :retag_service_area, if: -> { saved_change_to_service_area_override? || saved_change_to_address_id? }
   has_many   :addresses, :dependent => :destroy, :class_name => 'CustomerCommonAddress', inverse_of: :customer
   belongs_to :mobility, -> { with_deleted }
   belongs_to :default_funding_source, -> { with_deleted }, :class_name=>'FundingSource'
@@ -411,6 +416,13 @@ class Customer < ApplicationRecord
     end
 
     true
+  end
+
+
+  def retag_service_area
+    ServiceArea.retag_upcoming!(self)
+  rescue StandardError => e
+    Rails.logger.warn("[service area] customer #{id}: #{e.class}: #{e.message}")
   end
 
 end

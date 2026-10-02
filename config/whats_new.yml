@@ -16,6 +16,11 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-02 15:01"
+  title: Dispatch by area
+  providers: [1]
+  body: |
+    On **Dispatch**, unassigned trips now show the **Area** the rider lives in (UDR, RVIC, RCAL, JACK, RGON, DeWitt, MATA), with Bloomington riders marked RVIC1 and Yorktown riders DeWitt1. Use the buttons above the list to show one area, or click the **Area** heading to sort by area. For a home right on the Victoria city line, set **Area (for Dispatch)** on the rider.
 - added: "2026-10-02 14:22"
   title: Where an address belongs
   body: |
