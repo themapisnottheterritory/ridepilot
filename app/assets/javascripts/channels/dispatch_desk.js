@@ -25,6 +25,14 @@
   // emergencies sound even when the chime is muted
   function alarmBurst() { for (var i = 0; i < 3; i++) { tone(988, i * 0.32, 0.22, 0.35, 'square'); tone(740, i * 0.32 + 0.14, 0.16, 0.3, 'square'); } }
 
+  // The Central-time date of a moment, "2026-10-02": pop-ups belong to one
+  // dispatch day and go at Central midnight, whatever zone the PC is set to.
+  function centralDay(d) { return (d || new Date()).toLocaleDateString('en-CA', { timeZone: 'America/Chicago' }); }
+  function clearOldToasts() {
+    var today = centralDay();
+    $('#dd-toasts .dd-toast').each(function () { if ($(this).attr('data-day') !== today) $(this).remove(); });
+  }
+
   function esc(s) { return $('<div>').text(s == null ? '' : String(s)).html(); }
   function clock(iso) { var d = iso ? new Date(iso) : new Date(); return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); }
 
@@ -55,7 +63,7 @@
   function toast(m) {
     var box = $('#dd-toasts');
     box.find('.dd-toast[data-driver-id="' + m.driver_id + '"]').remove();   // one per driver: the latest
-    var t = $('<div class="dd-toast"></div>').attr('data-driver-id', m.driver_id).html(
+    var t = $('<div class="dd-toast"></div>').attr('data-driver-id', m.driver_id).attr('data-day', centralDay(m.at ? new Date(m.at) : new Date())).html(
       '<div class="dd-top"><b class="dd-who">' + esc(m.driver_name) + '</b>' + (m.run_name ? '<span class="dd-run">' + esc(m.run_name) + '</span>' : '') +
       '<span class="dd-time">' + clock(m.at) + '</span></div><div class="dd-body">' + esc(m.body) + '</div>' +
       '<div class="dd-actions"><button class="dd-btn primary dd-reply">Reply</button><button class="dd-btn quiet dd-close">Dismiss</button></div>');
@@ -128,6 +136,9 @@
     // browsers only allow sound after the person has clicked something on the page
     $(document).one('click keydown', function () { audio(); });
     document.addEventListener('visibilitychange', flashTitle);
+    // yesterday's pop-ups go at Central midnight (and when someone comes back to the tab)
+    setInterval(clearOldToasts, 60 * 1000);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) clearOldToasts(); });
 
     (D.openEmergencies || []).forEach(function (a) { showEmergency(a.id, a.message, a.at); });
 
