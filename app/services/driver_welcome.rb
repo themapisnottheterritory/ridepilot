@@ -86,7 +86,7 @@ class DriverWelcome
       place: "Victoria",
       name: period["name"],                     # "Today", "This Afternoon", "Tonight"
       temp: period["temperature"],
-      text: period["shortForecast"],            # "Mostly Sunny", "Chance Showers And Thunderstorms"
+      text: short_text(period["shortForecast"]), # "Mostly Sunny", "Chance Showers And Thunderstorms"
       kind: kind(period["shortForecast"], period["isDaytime"]),
       rain: period.dig("probabilityOfPrecipitation", "value"),
       wind: period["windSpeed"],
@@ -96,6 +96,12 @@ class DriverWelcome
   rescue StandardError => e
     Rails.logger.warn("[driver welcome] weather unavailable: #{e.class}: #{e.message}")
     nil
+  end
+
+  # "Chance Showers And Thunderstorms then Showers And Thunderstorms" wraps onto
+  # four lines on a tablet held upright: the first part is the one that matters.
+  def self.short_text(text)
+    text.to_s.split(/\s+then\s+/i).first.to_s.strip
   end
 
   # One of the tablet's drawn icons, from the NWS short forecast

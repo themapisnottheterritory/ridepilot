@@ -29,6 +29,11 @@ RSpec.describe "GET /api/v1/driver_welcome", type: :request do
     expect(DriverWelcome.day_label(friday, monday)).to eq "on Friday"
   end
 
+  it "keeps only the first part of a two-part forecast" do
+    expect(DriverWelcome.short_text("Chance Showers And Thunderstorms then Showers And Thunderstorms")).to eq "Chance Showers And Thunderstorms"
+    expect(DriverWelcome.short_text("Mostly Sunny")).to eq "Mostly Sunny"
+  end
+
   it "names the forecast's icon" do
     expect(DriverWelcome.kind("Showers And Thunderstorms", true)).to eq "storm"
     expect(DriverWelcome.kind("Mostly Sunny", true)).to eq "partly"
