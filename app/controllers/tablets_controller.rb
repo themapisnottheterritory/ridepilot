@@ -2,7 +2,7 @@
 # Response app reports it (Tablet, TabletPing) for GCRPC I.T.: who is behind
 # on an update, still has the old apps, has WireGuard set up, battery,
 # storage, use. Tablets are GCRPC's, shared by every agency, so this is for
-# GCRPC admins and system admins. Ask/summary: TabletAssistant (local model).
+# GCRPC admins, system admins and Tablet::EXTRA_VIEWERS. Ask/summary: TabletAssistant (local model).
 class TabletsController < ApplicationController
   before_action :require_it_admin
   before_action :load_tablet, only: [:show, :update, :summary, :destroy, :ask_update]
@@ -55,7 +55,6 @@ class TabletsController < ApplicationController
   end
 
   def require_it_admin
-    ok = current_user && (current_user.super_admin? || current_user.roles.where(provider_id: 1).where("level >= ?", Role::ADMIN_LEVEL).exists?)
-    redirect_to root_path, alert: "The Tablets page is for GCRPC I.T." unless ok
+    redirect_to root_path, alert: "The Tablets page is for GCRPC I.T." unless Tablet.viewer?(current_user)
   end
 end

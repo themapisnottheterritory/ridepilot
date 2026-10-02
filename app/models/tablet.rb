@@ -18,6 +18,16 @@ class Tablet < ActiveRecord::Base
 
   scope :by_number, -> { order(Arel.sql("number is null, number, last_seen_at desc")) }
 
+  # Who may open Vehicles > Tablets: GCRPC admins, system admins, and these
+  # people by username without making them admins (Philz 2026-10-02: Shelby).
+  EXTRA_VIEWERS = %w[shelbyw].freeze
+
+  def self.viewer?(user)
+    return false unless user
+    user.super_admin? || EXTRA_VIEWERS.include?(user.username.to_s.downcase) ||
+      user.roles.where(provider_id: 1).where("level >= ?", Role::ADMIN_LEVEL).exists?
+  end
+
   # Store one report. `ip` is what nginx saw: a 10.99.0.x address names the tablet;
   # off the tunnel (office Wi-Fi) the app's own tunnel name stands in.
   def self.record!(report:, app:, ip:)
