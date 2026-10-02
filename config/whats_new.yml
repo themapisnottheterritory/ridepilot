@@ -16,6 +16,12 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-01 21:05"
+  title: "Driver tablet 1.0.22: a welcome on the sign-in screen"
+  apps: [tablet]
+  body: |
+    Under the sign-in form, drivers now see how many neighbors the whole team got where they needed to go the day before (and that week), today's weather for Victoria with any National Weather Service warning for our counties, and a line for the day. Team totals only, never anyone's name or personal numbers.
+
 - added: "2026-10-01 20:35"
   title: "Fixed Route tablet 1.15: one button per line"
   apps: [fixed]

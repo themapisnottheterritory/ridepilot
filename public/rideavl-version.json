@@ -1,9 +1,9 @@
 {
-  "version": "1.0.21",
-  "version_code": 22,
+  "version": "1.0.22",
+  "version_code": 23,
   "url": "/rideavl-pilot.apk",
   "required": false,
-  "notes": "Messages from dispatch show on every screen with a sound and vibration; unread count on the chat icon; quick replies; Go to stop for will-call riders.",
-  "published_at": "2026-10-01T19:01:46Z",
-  "sha256": "4284568305b3eab85fdb6a1fd43b960e3c3b2b7684e80800eb199784352c66b0"
+  "notes": "A welcome under the sign-in form: how many neighbors the team got where they needed to go, today's weather with any warnings, and a line for the day.",
+  "published_at": "2026-10-02T02:01:18Z",
+  "sha256": "f649e0e30e94e09d015244f6b3ae67767f383aac412f2e83bb04e1b0106d225c"
 }

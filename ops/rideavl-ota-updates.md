@@ -46,6 +46,8 @@ release (plus the Play Protect tap) is as far as Android allows without an MDM.
 
 **1.0.21 (2026-10-01 14:00 CT, published to all tablets, optional, rideavl-v2 e03fe92):** app-wide DispatchMessagesService: dispatch messages raise a banner on any screen (vibrate, tone, read-aloud where supported; OK / Reply / Go to stop), unread badge on the chat icons, threaded chat with optimistic send and retry, seen receipts both ways, refetch on resume/reconnect, FLAG_KEEP_SCREEN_ON. Server side RidePilot 378f1fb6 + b7872141 (will-call Ready, no-show note, SeenByDispatch/SeenByDriver).
 
+**1.0.22 (2026-10-01 21:05 CT, published to all tablets, optional, rideavl-v2 9281d9a):** DriverWelcomeComponent under the sign-in form: team completed rides (last service day, past week, milestones), Victoria NWS forecast + county alerts with navy/gold drawn icons, line of the day; from RidePilot /api/v1/driver_welcome (ee3c0f62); cached for offline.
+
 **1.0.18 (2026-09-30, published to all tablets the same day, rideavl-v2 e585aa2 on `fixed-route-wp6`):** the emergency button now shows a banner on every screen: red while waiting, green "Dispatch has your alert, received by <name>" when someone clicks Got it! (DriverAlertChannel ReceiveAlert), and "call dispatch now" after 60 s with no answer or if the alert can't be sent. Needs RidePilot a371d104 (ActionCable over Redis), without which no alert or acknowledgement was ever delivered. Not required.
 
 **1.0.17 (2026-09-29, published to all tablets the same day, rideavl-v2 95e6af0 on `fixed-route-wp6`, RidePilot 341694fc):**
