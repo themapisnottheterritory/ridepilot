@@ -270,6 +270,7 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.decimal "fare_balance_floor", precision: 8, scale: 2
     t.date "fare_pass_expires_on"
     t.integer "default_rider_category_id"
+    t.string "service_area_override"
     t.index ["address_id"], name: "index_customers_on_address_id"
     t.index ["default_funding_source_id"], name: "index_customers_on_default_funding_source_id"
     t.index ["deleted_at"], name: "index_customers_on_deleted_at"
@@ -1350,6 +1351,17 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.index ["provider_id"], name: "index_saved_custom_reports_on_provider_id"
   end
 
+  create_table "service_area_boundaries", force: :cascade do |t|
+    t.string "kind", null: false
+    t.string "name", null: false
+    t.string "geoid"
+    t.geometry "geom", limit: {:srid=>4326, :type=>"multi_polygon"}, null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["geom"], name: "index_service_area_boundaries_on_geom", using: :gist
+    t.index ["kind", "name"], name: "index_service_area_boundaries_on_kind_and_name", unique: true
+  end
+
   create_table "service_levels", id: :serial, force: :cascade do |t|
     t.string "name", limit: 255
     t.datetime "created_at", precision: nil
@@ -1563,6 +1575,8 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.boolean "will_call", default: false, null: false
     t.datetime "will_call_ready_at"
     t.integer "will_call_ready_by_id"
+    t.string "service_area"
+    t.string "service_area_note"
     t.index ["called_back_by_id"], name: "index_trips_on_called_back_by_id"
     t.index ["customer_id"], name: "index_trips_on_customer_id"
     t.index ["deleted_at"], name: "index_trips_on_deleted_at"
@@ -1576,6 +1590,7 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.index ["provider_id", "pickup_time"], name: "index_trips_on_provider_id_and_pickup_time"
     t.index ["repeating_trip_id"], name: "index_trips_on_repeating_trip_id"
     t.index ["run_id"], name: "index_trips_on_run_id"
+    t.index ["service_area"], name: "index_trips_on_service_area"
     t.index ["service_level_id"], name: "index_trips_on_service_level_id"
     t.index ["trip_purpose_id"], name: "index_trips_on_trip_purpose_id"
     t.index ["trip_result_id"], name: "index_trips_on_trip_result_id"
