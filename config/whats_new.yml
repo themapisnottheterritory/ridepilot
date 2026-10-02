@@ -16,6 +16,10 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-02 14:22"
+  title: Where an address belongs
+  body: |
+    A rider's home goes on the rider's record (**Addresses** panel on the rider), not in the shared saved places, where every CSR would see it. RidePilot now asks "This looks like someone's home" when a new saved place is called Home or named after a rider, and says "Not on the map yet" when a rider's address has no pin, with how to fix it. The **Addresses** page links a two-page guide.
 - added: "2026-10-02 12:51"
   title: Typed-in addresses land on the map
   body: |

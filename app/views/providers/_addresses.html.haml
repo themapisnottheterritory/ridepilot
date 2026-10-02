@@ -11,6 +11,11 @@
               0
             %i.fa.fa-exclamation-triangle{style: 'color: red'}
   .panel-body
+    %p.text-muted{style: "margin: 0 0 10px;"}
+      Saved places are shared by everyone who books trips: clinics, stores, employers, offices.
+      %b A rider's home goes on the rider's record
+      (Customers, the rider, Addresses).
+      = link_to "How addresses work (PDF)", "/address-guide.pdf", target: "_blank"
     .row.col-sm-12
       = render 'addresses_table'
     

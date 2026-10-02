@@ -36,20 +36,9 @@ class CensusGeocoder
     nil
   end
 
-  HOME_NAME = /\b(home|house|residence|apt|apartment)\b/i
-
-  # A rider's home saved as a place (named "Home", named only by its street
-  # address, or the same street as a rider's home address): left for a person,
-  # never sent to the Census.
+  # A rider's home saved as a place is never sent (HomeAddressCheck).
   def self.looks_like_a_home?(address)
-    return true if address.name.to_s =~ HOME_NAME
-    street = address.address.to_s.downcase.gsub(/[^a-z0-9 ]/, " ").squish
-    return false if street.blank?
-    # no place name, only its own street address: as likely someone's house as a business
-    name = address.name.to_s.downcase.gsub(/[^a-z0-9 ]/, " ").squish
-    return true if name.blank? || name.start_with?(street) || street.start_with?(name)
-    Customer.joins(:address).where("lower(regexp_replace(addresses.address, '[^A-Za-z0-9 ]', ' ', 'g')) like ?", "#{street.split.first(2).join(' ')}%")
-            .pluck("addresses.address").any? { |s| s.to_s.downcase.gsub(/[^a-z0-9 ]/, " ").squish == street }
+    HomeAddressCheck.reason(address).present?
   end
 
   # Pin a saved place that has no pin. -> Result when it was pinned, else nil.

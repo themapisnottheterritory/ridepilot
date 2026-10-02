@@ -18,6 +18,7 @@
     = form.label :name, translate_helper("address_name")
   .form-field
     = form.text_field :name, maxlength: 30, class: 'form-control'
+    %small.text-muted The place's name, like "DaVita Victoria Dialysis". A rider's home goes on the rider, not here.
 %li.form-group.full_address
   .form-label
     = label_tag "#{prefix}_full_address", translate_helper("full_address_name")

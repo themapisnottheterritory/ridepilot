@@ -2,6 +2,9 @@
   .error {
     color: red;
   }
+  .home-warn { background: #fbf7ea; border-left: 4px solid #CC9900; border-radius: 0 6px 6px 0; padding: 10px 14px; margin: 0 0 12px; font-size: 14px; }
+  .home-warn b { color: #12264F; }
+  .home-warn .btns { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
 
 #addAddressDialog.modal.fade.col-sm-12{:role => "dialog", "aria-hidden" => 'true', :tabindex => "-1"}
   .modal-dialog
@@ -27,6 +30,7 @@
       form.find('form')[0].reset();
       form.find('input[type=hidden][name!=prefix]').val('');
       form.find('.error').html('');
+      form.find('.home-warn').remove();
     });
 
     $('#saveAddress').on('click', function() {
@@ -40,6 +44,21 @@
       if (data && data.hasOwnProperty('id')) {
         $('#addAddressDialog').modal('hide');
         window.location.href = "#{addresses_provider_path(current_provider)}";
+      } else if (data && data.home_warning) {
+        // HomeAddressCheck: a rider's home doesn't belong in the shared saved places
+        var f = $(this);
+        f.find('.home-warn').remove();
+        var box = $('<div class="home-warn"></div>');
+        box.append($('<div></div>').html('<b>This looks like someone\'s home</b> (' + $('<span>').text(data.home_warning).html() + '). Saved places show up for every rider. Put a rider\'s home on their record instead: Customers, the rider, Addresses.'));
+        var btns = $('<div class="btns"></div>');
+        btns.append($('<a class="btn action-button"></a>').attr('href', "#{customers_path}").text('Put it on a rider instead'));
+        btns.append($('<button type="button" class="btn btn-default"></button>').text('Save as a saved place anyway').on('click', function() {
+          f.find('input[name=not_a_home]').remove();
+          f.append('<input type="hidden" name="not_a_home" value="1">');
+          f.trigger('submit');
+        }));
+        box.append(btns);
+        f.prepend(box);
       } else {
         showAddressValidationErrors(this, data);
       }

@@ -65,6 +65,22 @@
     // if no id is returned, error messages are filled in. 
     $("body").on('ajax:success', '.address-validate', function(evt, data, status, xhr){
         console.log('test');
+      if (data.no_pin_warning) {
+        // AddressesController#validate_customer_specific: no map pin yet
+        var f = $(this);
+        f.find('.home-warn').remove();
+        var box = $('<div class="home-warn" style="background:#fbf7ea;border-left:4px solid #CC9900;border-radius:0 6px 6px 0;padding:10px 14px;margin:0 0 12px;font-size:14px;"></div>');
+        box.append('<div><b style="color:#12264F">Not on the map yet,</b> so it won\'t come up when booking. Pick it from the suggestions. If the house number isn\'t listed, type just the street and town in the search box, pick the street, then put the house number in the <b>Address</b> field below.</div>');
+        var keep = $('<button type="button" class="btn btn-default" style="margin-top:8px"></button>').text('Save it without a pin anyway').on('click', function() {
+          f.find('input[name=no_pin_ok]').remove();
+          f.append('<input type="hidden" name="no_pin_ok" value="1">');
+          f.trigger('submit');
+        });
+        box.append(keep);
+        f.prepend(box);
+        return;
+      }
+      $(this).find('.home-warn').remove();
       if (data.success) {
         $('#addAddressDialog').modal('hide');
 

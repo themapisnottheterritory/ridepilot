@@ -20,6 +20,10 @@
           %strong
             = translate_helper(:customer_saved_address_dialog_title)
       .modal-body
+        %p.text-muted{style: "margin: 0 0 10px;"}
+          Only this rider sees this address. Tick
+          %b Mailing
+          on their home. Pick the address from the suggestions so it gets a map pin.
         .address-form#customer-address-form
           = render 'addresses/validate_form', :prefix=>'customer', address: Address.new
 

@@ -110,6 +110,14 @@ class AddressesController < ApplicationController
       address = CustomerCommonAddress.new(address_params)
     end
 
+    # A rider's address with no map pin never comes up when booking: say so before
+    # it's added (the dialog offers "Save it without a pin anyway": no_pin_ok=1).
+    # P.O. boxes are mailing addresses with nothing to pin.
+    if prefix == "customer" && address.the_geom.nil? && params[:no_pin_ok] != "1" &&
+       params["#{prefix}_non_street_mailing_address"] != "yes" && address.valid?
+      return render json: { no_pin_warning: true, prefix: prefix }
+    end
+
     if address.valid?
       render :json => {
         success: true,

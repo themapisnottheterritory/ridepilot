@@ -65,6 +65,11 @@ class ProviderCommonAddressesController < AddressesController
       authorize! :new, ProviderCommonAddress
       address = ProviderCommonAddress.new(new_params)
     end
+    # Looks like somebody's home? Ask first (the dialog shows why, with "Put it on a
+    # rider instead" and "Save as a saved place anyway", which sends not_a_home=1).
+    if address.new_record? && params[:not_a_home] != "1" && (why = HomeAddressCheck.reason(address))
+      return render json: { home_warning: why, prefix: prefix }
+    end
     if address.save
       attrs = address.attributes
       attrs[:label] = address.text.gsub(/\s+/, ' ')

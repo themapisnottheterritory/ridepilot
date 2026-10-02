@@ -74,6 +74,7 @@
               %label{style: 'font-weight:normal; font-size:0.9em;'}
                 = check_box_tag 'save_pickup_address', '1', false, class: 'save-address-check'
                 Save to this customer's addresses
+                %small.text-muted (only this rider sees it)
               = text_field_tag 'pickup_address_name', params[:pickup_address_name], class: 'form-control save-address-name', placeholder: "Label (e.g. Doctor, Daughter's)", style: 'display:none; width:100%; margin-top:3px;'
 
     .form-group.place-picker-div
@@ -100,6 +101,7 @@
               %label{style: 'font-weight:normal; font-size:0.9em;'}
                 = check_box_tag 'save_dropoff_address', '1', false, class: 'save-address-check'
                 Save to this customer's addresses
+                %small.text-muted (only this rider sees it)
               = text_field_tag 'dropoff_address_name', params[:dropoff_address_name], class: 'form-control save-address-name', placeholder: "Label (e.g. Doctor, Daughter's)", style: 'display:none; width:100%; margin-top:3px;'
 
     .form-group
