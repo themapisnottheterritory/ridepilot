@@ -52,6 +52,21 @@ class Vehicle < ApplicationRecord
   scope :is_5310_reportable,    -> { where(is_5310_reportable: true) }
   scope :default_order, -> { order(Arel.sql("lower(name)")) }
 
+  # Disposition (Tony, fleet, 2026-10-02): "pending" from the day a bus is moved to
+  # disposition (it is out of service from then: permanently inactive), "disposed"
+  # once it has left the fleet, with how, when, the last odometer and any proceeds.
+  DISPOSITION_METHODS = ["Sold", "Auctioned", "Transferred to another agency", "Traded in", "Scrapped",
+                         "Returned to lessor", "Other"].freeze
+  scope :in_disposition, -> { where(disposition_status: "pending") }
+
+  def in_disposition?; disposition_status == "pending"; end
+  def disposed?;       disposition_status == "disposed"; end
+
+  # Runs from today on that still have this bus: dispatch has to move them.
+  def upcoming_runs
+    Run.where(vehicle_id: id).where("date >= ?", Time.zone.today)
+  end
+
   after_initialize :set_defaults
 
   def self.unassigned(provider)

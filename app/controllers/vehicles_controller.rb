@@ -1,9 +1,10 @@
 class VehiclesController < ApplicationController
-  load_and_authorize_resource except: [:update_initial_mileage, :inactivate, :reactivate]
+  load_and_authorize_resource except: [:update_initial_mileage, :inactivate, :reactivate, :start_disposition, :record_disposal, :cancel_disposition]
 
   def index
     @vehicles = @vehicles.default_order.for_provider(current_provider.id)
-    @vehicles = @vehicles.active if params[:show_inactive] != 'true'
+    # buses being moved to disposition are out of service but fleet still tracks them, so they stay listed
+    @vehicles = @vehicles.where("vehicles.active = ? or vehicles.disposition_status = ?", true, "pending") if params[:show_inactive] != 'true'
   end
 
   def show
@@ -171,6 +172,56 @@ class VehiclesController < ApplicationController
     TrackerActionLog.vehicle_active_status_changed(@vehicle, current_user, prev_active_text, prev_reason)
 
     redirect_to @vehicle
+  end
+
+  # Tony (fleet), 2026-10-02: "Move to disposition". The bus goes out of service for good
+  # (permanently inactive, so dispatch stops offering it) but stays on the Vehicles list
+  # with a Disposition badge until Record disposal says how it left the fleet.
+  def start_disposition
+    @vehicle = Vehicle.find(params[:id])
+    authorize! :update, @vehicle
+    prev_active_text = @vehicle.active_status_text
+    prev_reason = @vehicle.active_status_changed_reason
+    on = (Date.parse(params[:disposition_started_on].to_s) rescue Time.zone.today)
+    note = params[:disposition_notes].to_s.strip.first(2000)
+    @vehicle.assign_attributes(disposition_status: "pending", disposition_started_on: on, disposition_notes: note.presence,
+                               active: false, inactivated_start_date: nil, inactivated_end_date: nil,
+                               active_status_changed_reason: ["Moved to disposition", note.presence].compact.join(": "))
+    TrackerActionLog.vehicle_active_status_changed(@vehicle, current_user, prev_active_text, prev_reason)
+    @vehicle.save(validate: false)
+    runs = @vehicle.upcoming_runs.count
+    redirect_to @vehicle, notice: "#{@vehicle.name} is moved to disposition and out of service." +
+      (runs.positive? ? " It is still on #{runs} upcoming run#{'s' if runs > 1}: give #{runs > 1 ? 'them' : 'it'} another bus." : "")
+  end
+
+  def record_disposal
+    @vehicle = Vehicle.find(params[:id])
+    authorize! :update, @vehicle
+    d = params.require(:disposal)
+    @vehicle.assign_attributes(
+      disposition_status: "disposed",
+      disposed_on: (Date.parse(d[:disposed_on].to_s) rescue Time.zone.today),
+      disposition_started_on: @vehicle.disposition_started_on || Time.zone.today,
+      disposition_method: Vehicle::DISPOSITION_METHODS.include?(d[:disposition_method]) ? d[:disposition_method] : "Other",
+      disposition_odometer: d[:disposition_odometer].to_s.delete(",").presence&.to_i,
+      disposition_proceeds: d[:disposition_proceeds].to_s.delete(",$").presence,
+      disposition_notes: d[:disposition_notes].to_s.strip.first(2000).presence || @vehicle.disposition_notes,
+      active: false)
+    @vehicle.save(validate: false)
+    redirect_to @vehicle, notice: "Disposal recorded: #{@vehicle.name}, #{@vehicle.disposition_method.downcase} on #{@vehicle.disposed_on.strftime('%b %-d, %Y')}."
+  end
+
+  # Moved by mistake, or the bus is kept after all: back in service, disposition cleared.
+  def cancel_disposition
+    @vehicle = Vehicle.find(params[:id])
+    authorize! :update, @vehicle
+    prev_active_text = @vehicle.active_status_text
+    prev_reason = @vehicle.active_status_changed_reason
+    @vehicle.assign_attributes(disposition_status: nil, disposition_started_on: nil, disposed_on: nil, disposition_method: nil,
+                               disposition_odometer: nil, disposition_proceeds: nil, disposition_notes: nil)
+    @vehicle.reactivate!
+    TrackerActionLog.vehicle_active_status_changed(@vehicle, current_user, prev_active_text, prev_reason)
+    redirect_to @vehicle, notice: "#{@vehicle.name} is back in service."
   end
 
   private

@@ -9,10 +9,15 @@
       = link_to translate_helper("vehicle_documents_add_link_title"), new_vehicle_document_path(@vehicle), class: "btn action-button"
       = link_to translate_helper("delete_vehicle_button"), @vehicle, method: :delete, data: { confirm: translate_helper("delete_vehicle_confirmation") }, class: "btn btn-danger action-button" if can?(:delete, @vehicle)
       = link_to translate_helper("edit_vehicle_button"), edit_vehicle_path(@vehicle), class: "btn action-button"
-      - if @vehicle.permanent_inactivated?
+      - unless @vehicle.disposition_status
+        = button_tag "Move to disposition", type: "button", "data-target" => "#dispositionDialog", "data-toggle" => "modal", class: "btn action-button", title: "Take this bus out of service for disposal; it stays listed until you record how it left the fleet"
+      - if @vehicle.disposition_status
+        -# reactivating a bus in disposition is "Back in service" below
+      - elsif @vehicle.permanent_inactivated?
         = link_to translate_helper("reactivate"), reactivate_vehicle_path(@vehicle), method: :post, :class=>'btn action-button', :data => { :confirm => translate_helper(:reactivate_confirmation)}
       - else
         = button_tag :type => 'button', id: 'inactivateVehicle', "data-target" => "#inactivateDialog", "data-toggle" => "modal", :class => "btn action-button" do
           = !@vehicle.active_for_date?(Date.today) ? translate_helper(:activate) : translate_helper(:inactivate)
+= render partial: "disposition_panel"
 = render partial: "form"
 = render 'shared/date_range_inactivate_dialog', resource: @vehicle, inactivation_url: inactivate_vehicle_path(@vehicle)

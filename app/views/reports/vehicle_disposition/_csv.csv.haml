@@ -1,0 +1,12 @@
+- # common
+= render 'reports/common_csv_header'
+
+- if @report_data.blank?
+  = CSV.generate_line(["No buses in disposition, and none disposed of in this range"], row_sep: nil).html_safe
+- else
+  = CSV.generate_line(["In disposition now", @pending.size, "Disposed in range", @disposed.size, "Proceeds", @proceeds.round(2)], row_sep: nil).html_safe
+  = CSV.generate_line(["Status", "Agency", "Bus", "Year", "Make", "Model", "VIN", "Plate", "Type", "Ownership", "5310", "Moved to disposition", "Disposed", "How", "Final odometer", "Proceeds", "Notes"], row_sep: nil).html_safe
+  - @pending.each do |v|
+    = CSV.generate_line(["In disposition", @agency_names[v.provider_id], v.name, v.year, v.make, v.model, v.vin, v.license_plate, v.vehicle_type&.name, v.ownership.to_s.humanize, v.is_5310_reportable ? 'Yes' : 'No', v.disposition_started_on&.strftime('%m/%d/%Y'), nil, nil, v.last_odometer_reading, nil, v.disposition_notes], row_sep: nil).html_safe
+  - @disposed.each do |v|
+    = CSV.generate_line(["Disposed", @agency_names[v.provider_id], v.name, v.year, v.make, v.model, v.vin, v.license_plate, v.vehicle_type&.name, v.ownership.to_s.humanize, v.is_5310_reportable ? 'Yes' : 'No', v.disposition_started_on&.strftime('%m/%d/%Y'), v.disposed_on&.strftime('%m/%d/%Y'), v.disposition_method, v.disposition_odometer, v.disposition_proceeds&.to_f&.round(2), v.disposition_notes], row_sep: nil).html_safe

@@ -1,0 +1,99 @@
+-# Disposition (Tony, fleet, 2026-10-02): the panel on a bus that is in or through disposition,
+-# and the "Move to disposition" dialog for one that isn't. VehiclesController#start_disposition.
+- v = @vehicle
+- manage = can?(:update, v)
+:css
+  .dispo { border: 1px solid #cfd6e4; border-left: 4px solid #CC9900; border-radius: 10px; background: #fff; padding: 12px 18px; margin: 4px 0 18px; max-width: 900px; font-family: 'Open Sans', sans-serif; }
+  .dispo.done { border-left-color: #5f6b7a; }
+  .dispo h3 { margin: 0 0 4px; font-size: 18px; font-weight: 700; color: #12264F; }
+  .dispo .sub { color: #5f6b7a; font-size: 13px; }
+  .dispo dl { display: grid; grid-template-columns: 160px 1fr; row-gap: 4px; margin: 10px 0 6px; font-size: 13px; }
+  .dispo dt { color: #5f6b7a; font-weight: 400; } .dispo dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .dispo .actions { margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .dispo form.rec { display: none; margin-top: 12px; border-top: 1px solid #cfd6e4; padding-top: 12px; }
+  .dispo form.rec .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px 16px; }
+  .dispo label { font-size: 12px; color: #5f6b7a; font-weight: 600; display: block; margin-bottom: 2px; }
+
+- if v.in_disposition?
+  .dispo
+    %h3 Moved to disposition
+    .sub
+      Out of service since #{v.disposition_started_on&.strftime('%b %-d, %Y')}. Dispatch can't put it on a run; it stays on the Vehicles list until the disposal is recorded.
+    - runs = v.upcoming_runs.count
+    - if runs.positive?
+      %p{style: "color: #d03b3b; font-weight: 600; margin: 8px 0 0;"}= "Still on #{runs} upcoming run#{'s' if runs > 1}: dispatch needs to give #{runs > 1 ? 'them' : 'it'} another bus."
+    - if v.disposition_notes.present?
+      %dl
+        %dt Notes
+        %dd= v.disposition_notes
+    - if manage
+      .actions
+        %button.btn.action-button{type: "button", onclick: "$('#disposalForm').toggle();"} Record disposal
+        = link_to "Back in service", cancel_disposition_vehicle_path(v), method: :post, class: "btn btn-default", data: { confirm: "Put #{v.name} back in service and clear its disposition?" }
+      = form_tag record_disposal_vehicle_path(v), method: :post, id: "disposalForm", class: "rec" do
+        .grid
+          %div
+            %label{for: "disposal_disposition_method"} How it left the fleet
+            = select_tag "disposal[disposition_method]", options_for_select(Vehicle::DISPOSITION_METHODS), class: "form-control", id: "disposal_disposition_method"
+          %div
+            %label{for: "disposal_disposed_on"} Date
+            = date_field_tag "disposal[disposed_on]", Time.zone.today, class: "form-control", id: "disposal_disposed_on"
+          %div
+            %label{for: "disposal_disposition_odometer"} Final odometer (mi.)
+            = text_field_tag "disposal[disposition_odometer]", v.last_odometer_reading, class: "form-control", id: "disposal_disposition_odometer", inputmode: "numeric"
+          %div
+            %label{for: "disposal_disposition_proceeds"} Proceeds ($)
+            = text_field_tag "disposal[disposition_proceeds]", nil, class: "form-control", id: "disposal_disposition_proceeds", inputmode: "decimal", placeholder: "0.00"
+        %div{style: "margin-top: 10px;"}
+          %label{for: "disposal_disposition_notes"} Notes (buyer or agency, title transfer, FTA approval…)
+          = text_area_tag "disposal[disposition_notes]", v.disposition_notes, rows: 2, class: "form-control", id: "disposal_disposition_notes"
+        = submit_tag "Save disposal", class: "btn action-button", style: "margin-top: 10px;"
+
+- elsif v.disposed?
+  .dispo.done
+    %h3 Disposed
+    %dl
+      %dt How
+      %dd= v.disposition_method
+      %dt Date
+      %dd= v.disposed_on&.strftime('%b %-d, %Y')
+      %dt Moved to disposition
+      %dd= v.disposition_started_on&.strftime('%b %-d, %Y')
+      %dt Final odometer
+      %dd= v.disposition_odometer ? "#{number_with_delimiter(v.disposition_odometer)} mi." : "not recorded"
+      %dt Proceeds
+      %dd= v.disposition_proceeds ? number_to_currency(v.disposition_proceeds) : "not recorded"
+      - if v.disposition_notes.present?
+        %dt Notes
+        %dd= v.disposition_notes
+    - if manage
+      .actions
+        = link_to "Back in service", cancel_disposition_vehicle_path(v), method: :post, class: "btn btn-default", data: { confirm: "Put #{v.name} back in service and clear its disposal record?" }
+
+- elsif manage
+  #dispositionDialog.modal.fade{tabindex: "-1", role: "dialog"}
+    .modal-dialog{role: "document"}
+      .modal-content
+        = form_tag start_disposition_vehicle_path(v), method: :post do
+          .modal-header
+            %button.close{type: "button", "data-dismiss" => "modal", "aria-label" => "Close"}
+              %span{"aria-hidden" => "true"} &times;
+            %h4.modal-title= "Move #{v.name} to disposition"
+          .modal-body
+            %p
+              The bus goes out of service from this date and dispatch can no longer put it on a run.
+              It stays on the Vehicles list, marked
+              %b Disposition,
+              until you record how it left the fleet.
+            - runs = v.upcoming_runs.count
+            - if runs.positive?
+              %p{style: "color: #d03b3b; font-weight: 600;"}= "It is on #{runs} upcoming run#{'s' if runs > 1}; dispatch will need to give #{runs > 1 ? 'them' : 'it'} another bus."
+            .form-group
+              %label{for: "disposition_started_on"} Out of service from
+              = date_field_tag :disposition_started_on, Time.zone.today, class: "form-control"
+            .form-group
+              %label{for: "disposition_notes"} Note (optional)
+              = text_area_tag :disposition_notes, nil, rows: 2, class: "form-control", placeholder: "Why, where it is parked, who is handling it…"
+          .modal-footer
+            %button.btn.btn-default{type: "button", "data-dismiss" => "modal"} Cancel
+            = submit_tag "Move to disposition", class: "btn action-button"

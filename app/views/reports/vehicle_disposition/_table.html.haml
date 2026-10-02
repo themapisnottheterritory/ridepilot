@@ -1,0 +1,94 @@
+-# Vehicle disposition (ReportsController#vehicle_disposition): buses still in disposition, then the ones disposed in the range.
+- num = { style: 'text-align: right; font-variant-numeric: tabular-nums;' }
+- if @report_data.blank?
+  %h4 No buses in disposition, and none disposed of in this range.
+- else
+  %p
+    %b In disposition now:
+    = @pending.size
+    &nbsp;&nbsp;
+    %b Disposed in range:
+    = @disposed.size
+    &nbsp;&nbsp;
+    %b Proceeds:
+    = number_to_currency(@proceeds)
+
+  - if @pending.any?
+    %h4{style: 'margin-top: 18px;'} In disposition (not yet disposed)
+    %table.table.table-condensed
+      %thead
+        %tr
+          - if @by_agency
+            %th Agency
+          %th Bus
+          %th Year / make / model
+          %th VIN
+          %th Plate
+          %th Out of service since
+          %th{num} Days
+          %th{num} Last odometer
+          %th Notes
+      %tbody
+        - @pending.each do |v|
+          %tr
+            - if @by_agency
+              %td= @agency_names[v.provider_id]
+            %td= link_to v.name, vehicle_path(v)
+            %td= [v.year, v.make, v.model].compact.join(' ')
+            %td= v.vin
+            %td= v.license_plate
+            %td= v.disposition_started_on&.strftime('%m/%d/%Y')
+            %td{num}= v.disposition_started_on ? (Date.today - v.disposition_started_on).to_i : ''
+            %td{num}= number_with_delimiter(v.last_odometer_reading)
+            %td= v.disposition_notes
+
+  %h4{style: 'margin-top: 18px;'} Disposed in this range
+  - if @disposed.empty?
+    %p.text-muted None.
+  - else
+    %table.table.table-condensed{style: 'margin-bottom: 8px;'}
+      %thead
+        %tr
+          %th How
+          %th{num} Buses
+          %th{num} Proceeds
+      %tbody
+        - @by_method.each do |m|
+          %tr
+            %td= m[:method]
+            %td{num}= m[:count]
+            %td{num}= number_to_currency(m[:proceeds])
+    %table.table.table-condensed
+      %thead
+        %tr
+          - if @by_agency
+            %th Agency
+          %th Bus
+          %th Year / make / model
+          %th VIN
+          %th Type
+          %th Ownership
+          %th 5310
+          %th Moved to disposition
+          %th Disposed
+          %th How
+          %th{num} Final odometer
+          %th{num} Proceeds
+          %th Notes
+      %tbody
+        - @disposed.each do |v|
+          %tr
+            - if @by_agency
+              %td= @agency_names[v.provider_id]
+            %td= link_to v.name, vehicle_path(v)
+            %td= [v.year, v.make, v.model].compact.join(' ')
+            %td= v.vin
+            %td= v.vehicle_type&.name
+            %td= v.ownership.to_s.humanize
+            %td= v.is_5310_reportable ? 'Yes' : 'No'
+            %td= v.disposition_started_on&.strftime('%m/%d/%Y')
+            %td= v.disposed_on&.strftime('%m/%d/%Y')
+            %td= v.disposition_method
+            %td{num}= v.disposition_odometer ? number_with_delimiter(v.disposition_odometer) : ''
+            %td{num}= v.disposition_proceeds ? number_to_currency(v.disposition_proceeds) : ''
+            %td= v.disposition_notes

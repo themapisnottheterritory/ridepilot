@@ -1445,6 +1445,36 @@ class ReportsController < ApplicationController
     apply_v2_response
   end
 
+  # Vehicle disposition (Tony, fleet, 2026-10-02): buses moved to disposition and
+  # not yet gone, then buses disposed of in the date range with how, when, final
+  # odometer and proceeds -- what FTA asks when a grant-funded vehicle leaves the
+  # fleet. "All my agencies" as on Fares Collected. Vehicle#disposition_*.
+  def vehicle_disposition
+    authorize! :read, Vehicle
+    query_params = params[:query] || {start_date: Date.today.beginning_of_year, end_date: Date.today + 1}
+    @query = Query.new(query_params)
+    @my_agencies = current_user.super_admin? ? Provider.order(:id).to_a : Provider.where(id: current_user.roles.pluck(:provider_id)).order(:id).to_a
+    agencies = @query.agencies == 'all' ? @my_agencies : @my_agencies.select { |p| p.id == current_provider_id }
+    agencies = [current_provider] if agencies.empty?
+    @by_agency = agencies.size > 1
+
+    if params[:query]
+      @report_params = []
+      @report_params << ["Disposed between", "#{@query.start_date.strftime('%m/%d/%Y')} - #{@query.before_end_date.strftime('%m/%d/%Y')}"]
+      @report_params << ["Agencies", agencies.map(&:name).join(', ')]
+      @agency_names = agencies.to_h { |p| [p.id, p.name] }
+      base = Vehicle.where(provider_id: agencies.map(&:id)).includes(:vehicle_type)
+      @pending = base.where(disposition_status: 'pending').order(:disposition_started_on, :name).to_a
+      @disposed = base.where(disposition_status: 'disposed', disposed_on: @query.start_date...@query.end_date).order(:disposed_on, :name).to_a
+      @by_method = @disposed.group_by { |v| v.disposition_method.presence || 'Other' }.sort.map { |m, vs|
+        { method: m, count: vs.size, proceeds: vs.sum { |v| v.disposition_proceeds.to_f } } }
+      @proceeds = @disposed.sum { |v| v.disposition_proceeds.to_f }
+      @report_data = @pending + @disposed
+    end
+
+    apply_v2_response
+  end
+
   # Fixed-route compliance (app/services/fixed_route_compliance.rb): one row per
   # fixed run with stops served/skipped, early departures, riders, and whether
   # the pre- and post-trip inspections were filed. Skipped stops and early

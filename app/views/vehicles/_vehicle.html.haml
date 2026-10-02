@@ -3,6 +3,10 @@
   %td{class: vehicle_overdue_check[:class_name], title: vehicle_overdue_check[:tips] }
     = link_to_if can?(:read, vehicle), vehicle.name, vehicle
     .pull-right
+      - if vehicle.in_disposition?
+        %span.label{style: "background: #CC9900;", title: "Moved to disposition #{vehicle.disposition_started_on&.strftime('%b %-d, %Y')}"} Disposition
+      - elsif vehicle.disposed?
+        %span.label{style: "background: #fff; color: #5f6b7a; border: 1px solid #5f6b7a;", title: "#{vehicle.disposition_method} #{vehicle.disposed_on&.strftime('%b %-d, %Y')}"} Disposed
       - unless vehicle.vehicle_type
         %span.label.label-info
           Veh. Type?
