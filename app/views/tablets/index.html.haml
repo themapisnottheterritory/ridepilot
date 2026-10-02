@@ -27,6 +27,11 @@
             = "on #{current} of #{have.size} tablet#{'s' unless have.size == 1} reporting"
           - else
             Release file not found.
+    .app.dl
+      .k Install or reinstall
+      .name Tablet apps page
+      %a{href: "https://fixedroute.internal.gcrpc.org/static/apk/", target: "_blank", rel: "noopener"} Downloads and QR codes ›
+      .s Both apps, every published build, checksums. Open it on the tablet to install by hand.
 
   - behind_n = all.count(&:behind?)
   - if behind_n.positive?
