@@ -16,6 +16,15 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-01 20:35"
+  title: "Fixed Route tablet 1.15: one button per line"
+  apps: [fixed]
+  providers: [1]
+  body: |
+    The fixed-route tablet's first screen now has one button per line: **Blue (one bus)**, **Red (one bus)** and so on, plus **Gold + Green (one bus)**. Each opens that bus's whole day in order. The single directions are still there under **Single directions** at the bottom, and only the button that matches the driver's run in RidePilot says **Scheduled**.
+
+    Gold + Green combined is now hourly: Gold leaves HEB on the hour, Green at :29.
+
 - added: "2026-10-01 20:20"
   title: "Garages: move a bus between yards from a list"
   body: |
