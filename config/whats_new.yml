@@ -16,6 +16,10 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-02 12:51"
+  title: Typed-in addresses land on the map
+  body: |
+    When you save a place with an address the suggestions don't know (a rural house number, for example), RidePilot now looks it up with the US Census and, if it finds that exact address, puts it on the map so it comes up when booking. The message says so; check the pin. Places named like a home, or by their street address alone, are left for you or GCRPC I.T.
 - added: "2026-10-02 12:35"
   title: GCRPC Fixed Route 1.19 on the tablets
   apps: [fixed]

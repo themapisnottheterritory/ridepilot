@@ -2,6 +2,11 @@
 
 All <%= @total %> open items, with a Fix link for each: <%= @page %>
 <% opts = ActionMailer::Base.default_url_options %>
+<% if @pinned.present? %>
+== Placed on the map by the US Census address lookup (<%= @pinned.size %>) -- check each pin
+<% @pinned.each do |a, r| %>- <%= a.name.presence || a.address %>, <%= a.address %>, <%= a.city %> -- matched <%= r.matched %><%= r.county ? " (#{r.county} County)" : "" %><% path = Rails.application.routes.url_helpers.edit_provider_common_address_path(a.id, locale: :en) %>
+    <%= opts[:protocol] %>://<%= opts[:host] %><%= path %>
+<% end %><% end %>
 <% @findings.each do |kind, list| %>
 == <%= AddressScan::KINDS[kind] %> (<%= list.size %>)
 <% list.first(40).each do |f| %>- <%= f.label %> -- <%= f.detail %> [<%= @providers[f.provider_id] %>]<% path = AddressScan.fix_path(f) %><%= path ? "\n    #{opts[:protocol]}://#{opts[:host]}#{path}" : "" %>

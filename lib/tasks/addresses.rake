@@ -7,10 +7,12 @@ namespace :addresses do
   task scan: :environment do
     state = Rails.root.join("tmp", "address_scan_seen.json")
     seen = state.exist? ? JSON.parse(state.read) : nil
+    # Saved places with no pin: try the US Census address lookup first (CensusGeocoder)
+    pinned = CensusGeocoder.pin_missing!
     findings = AddressScan.new.findings
     fresh = seen ? findings.reject { |f| seen.include?(f.key) } : findings
-    puts "#{Time.current}: #{findings.size} open, #{fresh.size} new"
-    AddressScanMailer.new_findings(fresh, findings.size, first_run: seen.nil?).deliver_now if fresh.any?
+    puts "#{Time.current}: #{findings.size} open, #{fresh.size} new, #{pinned.size} pinned by the Census lookup"
+    AddressScanMailer.new_findings(fresh, findings.size, first_run: seen.nil?, pinned: pinned).deliver_now if fresh.any? || pinned.any?
     state.write(JSON.generate(findings.map(&:key)))
   end
 end

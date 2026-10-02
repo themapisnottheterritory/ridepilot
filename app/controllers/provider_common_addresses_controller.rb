@@ -69,6 +69,12 @@ class ProviderCommonAddressesController < AddressesController
       attrs = address.attributes
       attrs[:label] = address.text.gsub(/\s+/, ' ')
       attrs[:prefix] = prefix
+      # Typed by hand (not picked from the suggestions): ask the Census address lookup
+      if address.the_geom.nil? && (census = CensusGeocoder.pin!(address))
+        address.reload
+        attrs = address.attributes.merge(label: address.text.gsub(/\s+/, ' '), prefix: prefix)
+        flash[:notice] = census_pinned_note(address, census)
+      end
       if address.the_geom.nil?
         attrs[:not_on_map] = true
         flash[:alert] = not_on_map_warning(address)   # shown when the Addresses page reloads; also lands on the trouble board
@@ -108,6 +114,10 @@ class ProviderCommonAddressesController < AddressesController
     if @address.update new_addr_params
       # flash, not flash.now: the message has to survive the redirect
       flash[:notice] = "Address '#{@address.name}' was successfully updated"
+      if @address.the_geom.nil? && (census = CensusGeocoder.pin!(@address))
+        @address.reload
+        flash[:notice] = census_pinned_note(@address, census)
+      end
       flash[:alert] = not_on_map_warning(@address) if @address.the_geom.nil?
       redirect_to addresses_provider_path(@address.provider)
     else
@@ -212,6 +222,11 @@ class ProviderCommonAddressesController < AddressesController
   # An address with no map location never comes up in the trip form's search
   # (AddressesController#trippable_autocomplete needs the_geom), which is how
   # the same place ended up saved four times.
+  def census_pinned_note(address, census)
+    "Saved \u201C#{address.name.presence || address.address}\u201D and placed it on the map from the US Census address " \
+      "lookup (#{census.matched}#{", #{census.county} County" if census.county}). Check the pin on the map."
+  end
+
   def not_on_map_warning(address)
     "Saved \u201C#{address.name.presence || address.address}\u201D, but RidePilot couldn't place it on the map, " \
       "so it won't come up when booking trips. Edit it and pick the address from the suggestions, " \
