@@ -16,6 +16,17 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-02 12:35"
+  title: GCRPC Fixed Route 1.19 on the tablets
+  apps: [fixed]
+  providers: [1]
+  body: |
+    Fixed Route has a new gold bus icon. The first screen shows who is signed in, with **Sign out** next to it, and the version at the bottom reads like **v1.19**. A **Finish setting up this tablet** card at the top of the route list walks through GPS, WireGuard and updates once, and the app turns WireGuard back on by itself or says plainly when the tablet is offline.
+- added: "2026-10-02 12:35"
+  title: GCRPC Demand Response 1.0.29 on the tablets
+  apps: [tablet]
+  body: |
+    Demand Response has a new navy bus icon. A **Finish setting up this tablet** card on the sign-in screen walks through GPS, WireGuard and updates once. The app turns WireGuard back on by itself, and says plainly when the tablet has no internet or can't reach RidePilot (taps are kept and sent when it's back). Tablets update from the **Update** bar; GCRPC I.T. can also ask a tablet to update from **Vehicles > Tablets**.
 - added: "2026-10-02 11:00"
   title: Move a bus to disposition
   body: |
