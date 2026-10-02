@@ -1,9 +1,9 @@
 {
-  "version": "1.0.29",
-  "version_code": 30,
+  "version": "1.0.30",
+  "version_code": 31,
   "url": "/rideavl-pilot.apk",
   "required": false,
-  "notes": "New navy bus icon. A setup card on the sign-in screen, and the app turns WireGuard back on by itself. Tap Update, then Install.",
-  "published_at": "2026-10-02T17:35:24Z",
-  "sha256": "da895854e6db1be277381a25d0928a90c8c0d6c920e33a683654f625c8682ccf"
+  "notes": "Your stop taps are now kept on the tablet when there's no signal and sent with the right time when it's back. New Refresh button with "last updated" time, on the run and on each stop. Dispatch changes now say what changed. All buttons are labeled.",
+  "published_at": "2026-10-02T22:15:37Z",
+  "sha256": "379772837f8382ecf6ada00afcbfef42dc30d4c457dd982634b8287dd3ec96be"
 }
