@@ -485,6 +485,7 @@ Rails.application.routes.draw do
   namespace :api, defaults: { format: :json } do
     namespace :v1 do
       get 'fleet' => 'fleet#index'    # read-only fleet feed for the AVL sync (X-Fleet-Token), api/v1/fleet_controller.rb
+      get 'driver_welcome' => 'driver_welcome#show'   # the driver tablet's sign-in screen (DriverWelcome)
       match "authenticate_customer", to: "customers#show", :via => [:get, :options]
       match "authenticate_provider", to: "providers#show", :via => [:get, :options]
       match "trip_purposes", to: "trip_purposes#index", :via => [:get, :options]
