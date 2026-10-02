@@ -1,8 +1,10 @@
 = render 'shared/highlight_active_tab_js', is_primary_nav: true, tab_class: 'vehicles'
 #page-header
   .action-buttons
-    - if can? :create, Vehicle
-      .pull-right
+    .pull-right
+      - if can? :read, Vehicle
+        = link_to "Garages", garages_path, class: "btn action-button", title: "The yards buses live at, where their runs start and end"
+      - if can? :create, Vehicle
         = link_to translate_helper("new_vehicle_link_text"), new_vehicle_path, class: "btn action-button"
   %h1.page-title= translate_helper("index_vehicle_heading")
 .row

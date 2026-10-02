@@ -14,6 +14,12 @@ RSpec.describe "Garages", type: :request do
   end
   def garage(name, lat, lon) = GarageAddress.create!(provider: provider, name: name, address: "#{name} St", city: "Victoria", state: "TX", zip: "77901", the_geom: Address.compute_geom(lat, lon))
 
+  it "is linked from the Vehicles page" do
+    get "/en/vehicles"
+    expect(response).to be_successful
+    expect(response.body).to include('href="/en/garages"')
+  end
+
   it "adds a garage from a picked address, and refuses one with no pin" do
     post "/en/garages", params: { garage_address: { name: "Edna", address: "404 North Kleas Street", city: "Edna", state: "TX", zip: "77957" }, lat: "28.981922", lon: "-96.645456" }
     expect(response).to redirect_to(garages_path)
