@@ -1,0 +1,191 @@
+- t = @tablet
+- content_for :title, t.label
+= render "tablets/style"
+- pub = Tablet.published
+- dev = t.device
+- issues = t.issues
+.tb
+  %p= link_to "‹ All tablets", tablets_path
+  %h2
+    %span.dot{class: t.online? ? "on" : (t.last_seen_at && t.last_seen_at > 24.hours.ago ? "day" : "off")}
+    = t.label
+  .lede
+    = [t.manufacturer, t.model].compact.join(" ")
+    · Android #{t.android_version}
+    · last seen #{t.last_seen_at ? "#{time_ago_in_words(t.last_seen_at)} ago" : "never"} from #{t.last_ip}
+    · first seen #{t.first_seen_at&.strftime('%b %-d, %Y')}
+
+  - if t.update_requested_at
+    %p.is
+      %span.warn= "Asked to update #{t.update_requested_at.in_time_zone.strftime('%b %-d %-l:%M %p')}#{" by #{t.update_requested_by}" if t.update_requested_by}: waiting for its next report."
+  - elsif t.behind?
+    %p
+      = button_to "Ask to update", ask_update_tablet_path(t), method: :post, class: "tb-btn", form: { style: "display: inline;" }
+      %span.tb-sub{style: "margin-left: 8px;"} Its driver gets an Update bar at the next report.
+  - elsif t.update_done_at
+    %p.is
+      %span.ok= "Updated after being asked (#{t.update_done_at.in_time_zone.strftime('%b %-d %-l:%M %p')})."
+
+  .tb-ai{data: {tb_summary: summary_tablet_path(t)}}
+    %h3 Technician's read
+    .ans Reading this tablet's report…
+    .hint From the GX-10 here in the building. Check before acting on it.
+
+  .tb-cards
+    .tb-card
+      %h3 Needs
+      .is
+        - if issues.empty?
+          %span.ok Nothing: this tablet is set up and current.
+        - issues.each do |level, text|
+          %div{class: level}= text
+
+    .tb-card
+      %h3 Device
+      %dl
+        %dt Model
+        %dd= "#{t.manufacturer} #{t.model} (#{dev['device']})"
+        %dt Android
+        %dd= "#{t.android_version} (SDK #{t.sdk})"
+        %dt Security patch
+        %dd= dev["securityPatch"]
+        %dt Build
+        %dd= dev["build"]
+        %dt WebView
+        %dd= dev["webview"]
+        %dt Screen
+        %dd= dev["screen"]
+        %dt Up for
+        %dd= dev["uptimeSec"] ? distance_of_time_in_words(dev["uptimeSec"].to_i) : "?"
+        %dt Clock
+        %dd
+          - skew = t.clock_skew
+          = skew.nil? ? "?" : (skew.abs <= 120 ? "right" : "off by #{skew.abs / 60} min")
+          = "(#{dev['timezone']})"
+        %dt Android ID
+        %dd{style: "font-size: 11px;"}= t.android_id
+
+    .tb-card
+      %h3 Battery and storage
+      %dl
+        %dt Battery
+        %dd= t.battery["percent"] ? "#{t.battery['percent']}%, #{t.battery['charging'] ? "charging (#{t.battery['plugged']})" : 'on battery'}" : "?"
+        %dt Health
+        %dd= "#{t.battery['health']}, #{t.battery['tempC']} °C"
+        %dt Storage free
+        %dd= t.storage["freeMB"] ? "#{number_with_delimiter(t.storage['freeMB'])} of #{number_with_delimiter(t.storage['totalMB'])} MB" : "?"
+        %dt Memory free
+        %dd= t.storage["ramFreeMB"] ? "#{number_with_delimiter(t.storage['ramFreeMB'])} of #{number_with_delimiter(t.storage['ramTotalMB'])} MB#{' (low)' if t.storage['ramLow']}" : "?"
+      - if @pings.size > 1
+        - t0 = 24.hours.ago.to_f
+        - pts = @pings.select(&:battery).map { |p| "#{((p.at.to_f - t0) / 86400 * 300).round(1)},#{(52 - p.battery * 0.5).round(1)}" }.join(" ")
+        %svg.tb-chart{viewBox: "0 0 300 66", width: "100%", style: "margin-top: 8px;"}
+          %line{x1: 0, x2: 300, y1: 52, y2: 52, stroke: "#cfd6e4"}
+          %line{x1: 0, x2: 300, y1: 2, y2: 2, stroke: "#f4f6fa"}
+          %polyline{points: pts, fill: "none", stroke: "#12264F", "stroke-width": 1.6}
+          %text{x: 0, y: 64} 24 h ago
+          %text{x: 300, y: 64, "text-anchor": "end"} now
+          %text{x: 298, y: 10, "text-anchor": "end"} 100%
+
+    .tb-card
+      %h3 Network and WireGuard
+      %dl
+        %dt Now
+        %dd= [("Wi-Fi #{t.network['wifiSsid']}".strip if t.network["wifi"]), ("LTE" if t.network["cellular"])].compact.join(" + ").presence || "no network"
+        - if t.network["wifiRssi"]
+          %dt Wi-Fi signal
+          %dd= "#{t.network['wifiRssi']} dBm"
+        %dt Carrier
+        %dd= "#{t.network['carrier'].presence || '?'}#{", #{t.network['cellBars']} of 4 bars" if t.network['cellBars']}"
+        %dt Tunnel
+        %dd= t.network["vpn"] ? "up, #{t.network['vpnAddress']}" : "down"
+        %dt App sees
+        %dd
+          = { "ok" => "the server", "offline" => "no internet", "vpn_off" => "WireGuard off", "unreachable" => "the server not answering" }[t.app_info["connection"]] || "?"
+          .tb-sub= "last report from #{t.app_info['name'] == 'fixed' ? 'Fixed Route' : 'Demand Response'}"
+        %dt Setup
+        %dd
+          - s = t.setup
+          - [["WireGuard installed", s["wireguard"]], ["app may switch tunnel", s["control"]], ["WireGuard battery", s["wgBattery"]], ["remote control", t.remote_control == "on" ? true : (t.remote_control == "off" ? false : nil)], ["installs updates", s["installUpdates"]], ["GPS", s["location"]]].each do |label, v|
+            %div
+              %span{style: "color: #{v ? '#0ca30c' : (v.nil? ? '#5f6b7a' : '#d03b3b')};"}= v ? "✓" : (v.nil? ? "?" : "✗")
+              = label
+      - if @pings.any?
+        - t0 = 24.hours.ago.to_f
+        - colors = { "ok" => "#0ca30c", "vpn_off" => "#fab219", "unreachable" => "#fab219", "offline" => "#d03b3b" }
+        %svg.tb-chart{viewBox: "0 0 300 26", width: "100%", style: "margin-top: 8px;"}
+          %rect{x: 0, y: 0, width: 300, height: 12, fill: "#f4f6fa"}
+          - @pings.each do |p|
+            %rect{x: ((p.at.to_f - t0) / 86400 * 300).round(1), y: 0, width: 2.2, height: 12, fill: colors[p.connection] || "#cfd6e4"}
+          %text{x: 0, y: 24} connection, 24 h
+          %text{x: 300, y: 24, "text-anchor": "end"} now
+
+    .tb-card
+      %h3 Apps
+      %table.tb-list
+        %thead
+          %tr
+            %th App
+            %th Version
+            %th Updated
+        %tbody
+          - [[Tablet::OUR_DR, "GCRPC Demand Response", pub[:dr]], [Tablet::OUR_FR, "GCRPC Fixed Route", pub[:fr]], [Tablet::WIREGUARD, "WireGuard", nil]].each do |pkg, name, p|
+            - a = t.apps[pkg]
+            %tr
+              %td= name
+              %td
+                - if a
+                  %span{class: (p && a["code"].to_i < p["code"]) ? "behind" : nil}= a["version"]
+                  - if p && a["code"].to_i < p["code"]
+                    .tb-sub= "published #{p['version']}"
+                - else
+                  %span.tb-sub not installed
+              %td.tb-sub= a && a["updated"] ? Time.zone.at(a["updated"].to_i / 1000).strftime("%b %-d %-l:%M %p") : ""
+          - Tablet::OLD_APPS.merge(Tablet::OTHER_APPS).each do |pkg, name|
+            - next unless (a = t.apps[pkg])
+            %tr
+              %td
+                = name
+                - if Tablet::OLD_APPS[pkg]
+                  %span.badge-g{style: "border-color: #d03b3b; color: #d03b3b;"} remove
+              %td= a["version"]
+              %td.tb-sub= a["updated"] ? Time.zone.at(a["updated"].to_i / 1000).strftime("%b %-d, %Y") : ""
+
+    .tb-card
+      %h3 Use
+      - days = t.hours_by_day(14)
+      - max = [days.map(&:last).max.to_f, 8].max
+      %svg.tb-chart{viewBox: "0 0 300 96", width: "100%"}
+        - days.each_with_index do |(d, h), i|
+          - bh = (h / max * 70).round(1)
+          %rect{x: i * 21 + 2, y: 74 - bh, width: 17, height: [bh, 0.5].max, fill: h.positive? ? "#12264F" : "#cfd6e4", rx: 2}
+          %text{x: i * 21 + 10.5, y: 86, "text-anchor": "middle"}= d.strftime("%a")[0]
+          - if h.positive?
+            %text{x: i * 21 + 10.5, y: 72 - bh, "text-anchor": "middle"}= h.round
+      .tb-sub Hours the app was open each day, last two weeks.
+      %dl{style: "margin-top: 10px;"}
+        %dt Signed in lately
+        %dd
+          - users = t.recent_users
+          - if users.empty?
+            %span.tb-sub no one in 30 days
+          - users.first(6).each do |u, at|
+            %div= "#{u}, #{at.strftime('%b %-d')}"
+        %dt Versions
+        %dd
+          - t.version_history.first(5).each do |v, at|
+            %div= "#{v} from #{at.strftime('%b %-d %-l:%M %p')}"
+
+    .tb-card
+      %h3 Notes
+      = form_for t, url: tablet_path(t), method: :patch do |f|
+        = f.text_area :notes, rows: 5, style: "width: 100%; font-size: 13px; border: 1px solid #cfd6e4; border-radius: 6px; padding: 6px;", placeholder: "Case, charger, which bus it lives in, repairs…"
+        %button.tb-btn{type: "submit", style: "margin-top: 6px;"} Save notes
+
+  %details{style: "margin-bottom: 30px;"}
+    %summary.tb-sub{style: "cursor: pointer;"} The whole report (for GCRPC I.T.)
+    %pre{style: "font-size: 11px; max-height: 420px; overflow: auto;"}= JSON.pretty_generate(t.info)
+  %p.tb-sub
+    Same tablet listed twice after a reinstall?
+    = link_to "Remove this entry", tablet_path(t), method: :delete, data: { confirm: "Remove #{t.label} (#{t.android_id.first(6)}) and its history from the list? It comes back if the tablet reports again." }
+= render "tablets/ai"

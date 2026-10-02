@@ -1420,6 +1420,44 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.index ["user_id"], name: "index_suggestions_on_user_id"
   end
 
+  create_table "tablet_pings", force: :cascade do |t|
+    t.bigint "tablet_id", null: false
+    t.datetime "at", precision: nil, null: false
+    t.integer "battery"
+    t.boolean "charging"
+    t.string "network"
+    t.boolean "vpn"
+    t.string "connection"
+    t.string "app_version"
+    t.string "username"
+    t.integer "storage_free_mb"
+    t.index ["tablet_id", "at"], name: "index_tablet_pings_on_tablet_id_and_at"
+  end
+
+  create_table "tablets", force: :cascade do |t|
+    t.string "android_id", null: false
+    t.integer "number"
+    t.string "manufacturer"
+    t.string "model"
+    t.string "android_version"
+    t.integer "sdk"
+    t.string "app_version"
+    t.integer "app_code"
+    t.string "username"
+    t.string "last_ip"
+    t.jsonb "info", default: {}, null: false
+    t.text "notes"
+    t.datetime "first_seen_at", precision: nil
+    t.datetime "last_seen_at", precision: nil
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.datetime "update_requested_at", precision: nil
+    t.string "update_requested_by"
+    t.datetime "update_done_at", precision: nil
+    t.index ["android_id"], name: "index_tablets_on_android_id", unique: true
+    t.index ["number"], name: "index_tablets_on_number"
+  end
+
   create_table "translation_keys", id: :serial, force: :cascade do |t|
     t.string "name", limit: 255
     t.datetime "created_at", precision: nil
@@ -1792,6 +1830,13 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.boolean "is_5310_reportable", default: true
     t.boolean "air_brake", default: false, null: false
     t.boolean "wheelchair_lift", default: false, null: false
+    t.string "disposition_status"
+    t.date "disposition_started_on"
+    t.date "disposed_on"
+    t.string "disposition_method"
+    t.integer "disposition_odometer"
+    t.decimal "disposition_proceeds", precision: 10, scale: 2
+    t.text "disposition_notes"
     t.index ["default_driver_id"], name: "index_vehicles_on_default_driver_id"
     t.index ["deleted_at"], name: "index_vehicles_on_deleted_at"
     t.index ["garage_address_id"], name: "index_vehicles_on_garage_address_id"

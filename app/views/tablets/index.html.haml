@@ -1,0 +1,112 @@
+- content_for :title, "Tablets"
+= render "tablets/style"
+- all = Tablet.all.to_a
+- pub = @published
+.tb
+  %h2 Tablets
+  .lede
+    Every driver tablet, as its apps describe it every ten minutes while one is open (Demand Response 1.0.24+, Fixed Route 1.16+).
+    Fix one by USB with
+    %code ops/tablet-setup.sh NN
+    or have the driver use the "Finish setting up this tablet" card in either app.
+
+  -# the current release of each app, the thing a technician checks a tablet against
+  .tb-rel
+    - [[:dr, "GCRPC Demand Response", Tablet::OUR_DR], [:fr, "GCRPC Fixed Route", Tablet::OUR_FR]].each do |key, name, pkg|
+      - rel = pub[key]
+      - have = all.select { |t| t.apps[pkg] }
+      - current = rel ? have.count { |t| t.apps.dig(pkg, "code").to_i >= rel["code"] } : 0
+      .app
+        .k Current release
+        .name= name
+        .v= rel ? rel["version"] : "?"
+        .s
+          - if rel
+            = "Published #{rel['published_at'] ? rel['published_at'].strftime('%b %-d, %-l:%M %p') : '?'}"
+            ·
+            = "on #{current} of #{have.size} tablet#{'s' unless have.size == 1} reporting"
+          - else
+            Release file not found.
+
+  - behind_n = all.count(&:behind?)
+  - if behind_n.positive?
+    %p
+      = button_to "Ask the #{behind_n} tablet#{'s' if behind_n > 1} behind to update", ask_update_all_tablets_path, method: :post, class: "tb-btn", form: { style: "display: inline;" }, data: { confirm: "Each one shows its driver an Update bar at its next report (within 10 minutes of the app being open). Go ahead?" }
+      %span.tb-sub{style: "margin-left: 8px;"} The driver taps Update, then Install. Nothing interrupts a run: the bar shows on the sign-in and runs screens.
+
+  .tb-strip
+    .tb-stat.good
+      .n= all.count(&:online?)
+      .l Reporting now
+    .tb-stat.warn
+      .n= all.count { |t| t.issues.any? }
+      .l Need a look
+    .tb-stat
+      .n= all.size
+      .l Tablets known
+
+  .tb-ask
+    %form#tb-ask-form{action: ask_tablets_path}
+      %input#tb-q{type: "text", placeholder: "Ask about the tablets: which still have old apps? who hasn't updated? any batteries going bad?", autocomplete: "off"}
+      %button.tb-btn{type: "submit"} Ask
+    #tb-ask-ans.ans
+    .hint Answers come from the GX-10 here in the building, from the reports on this page. Check before acting on them.
+
+  %p
+    - if params[:attention].present?
+      Showing tablets that need a look.
+      = link_to "Show all", tablets_path
+    - else
+      = link_to "Only the ones that need a look", tablets_path(attention: 1)
+
+  - if @tablets.empty?
+    %p{style: "color: #0ca30c;"} Tablets show up here once they run Demand Response 1.0.24 or newer and open the app.
+  - else
+    %table.tb-list
+      %thead
+        %tr
+          %th Tablet
+          %th Last seen
+          %th Demand Response
+          %th Fixed Route
+          %th Android
+          %th{style: "text-align: right;"} Battery
+          %th Network
+          %th Needs
+      %tbody
+        - @tablets.each do |t|
+          - issues = t.issues
+          %tr
+            %td
+              %span.dot{class: t.online? ? "on" : (t.last_seen_at && t.last_seen_at > 24.hours.ago ? "day" : "off")}
+              = link_to t.label, tablet_path(t), class: "tb-name"
+              .tb-sub= t.username ? "last: #{t.username}" : "no one signed in"
+            %td{style: "white-space: nowrap;"}
+              = t.last_seen_at ? "#{time_ago_in_words(t.last_seen_at)} ago" : "never"
+              .tb-sub= t.last_ip
+            %td
+              %span{class: (pub[:dr] && t.app_code.to_i < pub[:dr]["code"]) ? "behind" : nil}= t.app_version
+            %td
+              - if t.fr_version
+                %span{class: (pub[:fr] && t.apps.dig(Tablet::OUR_FR, "code").to_i < pub[:fr]["code"]) ? "behind" : nil}= t.fr_version
+              - else
+                %span.tb-sub not installed
+            %td
+              = t.android_version
+              .tb-sub= t.model
+            %td.num
+              - if t.battery["percent"]
+                = "#{t.battery['percent']}%"
+                .tb-sub= t.battery["charging"] ? "charging" : "on battery"
+            %td
+              = [("Wi-Fi" if t.network["wifi"]), ("LTE" if t.network["cellular"])].compact.join(" + ").presence || "none"
+              .tb-sub= t.network["vpn"] ? "WireGuard up" : "WireGuard down"
+            %td.is
+              - if issues.empty?
+                %span.ok All good
+              - else
+                - issues.first(3).each do |level, text|
+                  %div{class: level}= text
+                - if issues.size > 3
+                  .tb-sub= "and #{issues.size - 3} more"
+= render "tablets/ai"

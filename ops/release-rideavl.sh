@@ -47,7 +47,10 @@ fi
 cp "$APK" public/rideavl-pilot.apk
 cp "$APK" "$HOME/ridepilot-ops/rideavl-${VERSION}.apk"
 
-cat > public/rideavl-version.json <<JSON
+# 1.0.24+ read gcrpc-demandresponse-version.json; 1.0.22 and older read rideavl-version.json.
+# Both get the release until every tablet is on 1.0.24+ (then rideavl-version.json can point the
+# pre-rename RideAVL app at its "this app has moved" build instead).
+cat > public/gcrpc-demandresponse-version.json <<JSON
 {
   "version": "${VERSION}",
   "version_code": ${CODE},
@@ -58,6 +61,7 @@ cat > public/rideavl-version.json <<JSON
   "sha256": "$(sha256sum public/rideavl-pilot.apk | cut -c1-64)"
 }
 JSON
+cp public/gcrpc-demandresponse-version.json public/rideavl-version.json
 
 # Also list it on the tablet-apps page (fixedroute.internal.gcrpc.org/static/apk/), the place
 # Ron goes for every tablet build; the publisher checks the signing key first.
@@ -66,5 +70,6 @@ if [ -f "$HOME/gcrpc-fixedroute/ops/publish-apk.py" ]; then
 fi
 
 git add public/rideavl-pilot.apk public/rideavl-version.json
+git add -f public/gcrpc-demandresponse-version.json   # *.json is gitignored; rideavl-version.json was force-added the same way
 echo "staged RideAVL ${VERSION} (code ${CODE}), required=${REQUIRED}. Now:"
 echo "  git commit -m \"Pilot APK: RideAVL ${VERSION}\" && git push"

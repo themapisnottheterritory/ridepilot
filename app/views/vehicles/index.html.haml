@@ -4,6 +4,8 @@
     .pull-right
       - if can? :read, Vehicle
         = link_to "Garages", garages_path, class: "btn action-button", title: "The yards buses live at, where their runs start and end"
+      - if current_user.super_admin? || current_user.roles.where(provider_id: 1).where("level >= ?", Role::ADMIN_LEVEL).exists?
+        = link_to "Tablets", tablets_path, class: "btn action-button", title: "Every driver tablet: app versions, WireGuard, battery, use (GCRPC I.T.)"
       - if can? :create, Vehicle
         = link_to translate_helper("new_vehicle_link_text"), new_vehicle_path, class: "btn action-button"
   %h1.page-title= translate_helper("index_vehicle_heading")

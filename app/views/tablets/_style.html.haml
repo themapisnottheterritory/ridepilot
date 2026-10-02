@@ -1,0 +1,45 @@
+:css
+  .tb { max-width: 1180px; font-family: 'Open Sans', sans-serif; color: #131313; }
+  .tb h2 { color: #12264F; font-size: 28px; font-weight: 700; margin: 6px 0 4px; }
+  .tb .lede { color: #5f6b7a; font-size: 13px; margin-bottom: 16px; }
+  .tb-strip { display: flex; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+  .tb-stat { background: #fff; border: 1px solid #cfd6e4; border-top: 4px solid #12264F; border-radius: 10px; padding: 10px 16px; min-width: 150px; }
+  .tb-stat .n { font-size: 38px; font-weight: 700; line-height: 1.1; color: #12264F; font-variant-numeric: tabular-nums; }
+  .tb-stat .l { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #5f6b7a; }
+  .tb-stat.warn { border-top-color: #fab219; } .tb-stat.good { border-top-color: #0ca30c; }
+  .tb table.tb-list { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
+  .tb-list th { background: #12264F; color: #fff; font-weight: 600; padding: 7px 10px; text-align: left; white-space: nowrap; }
+  .tb-list td { padding: 8px 10px; border-bottom: 1px solid #cfd6e4; vertical-align: top; }
+  .tb-list tr:nth-child(even) td { background: #f4f6fa; }
+  .tb-list td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tb-name { font-weight: 700; color: #12264F; font-size: 14px; }
+  .tb-sub { color: #5f6b7a; font-size: 11px; }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+  .dot.on { background: #0ca30c; } .dot.day { background: #fab219; } .dot.off { background: #cfd6e4; }
+  .is { font-size: 12px; line-height: 1.5; }
+  .is .crit { color: #d03b3b; font-weight: 600; } .is .warn { color: #8a6200; }
+  .is .ok { color: #0ca30c; }
+  .behind { color: #8a6200; font-weight: 600; }
+  .tb-ask { background: #fff; border: 1px solid #cfd6e4; border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; }
+  .tb-ask form { display: flex; gap: 10px; }
+  .tb-ask input[type=text] { flex: 1; font-size: 14px; padding: 7px 10px; border: 1px solid #cfd6e4; border-radius: 6px; }
+  .tb-ask .ans, .tb-ai .ans { white-space: pre-wrap; font-size: 13px; margin-top: 10px; line-height: 1.55; }
+  .tb-ask .hint, .tb-ai .hint { font-size: 11px; color: #5f6b7a; margin-top: 6px; }
+  .tb-btn { background: #1f3864; color: #fff; border: 0; border-radius: 6px; padding: 7px 14px; font-weight: 600; font-size: 13px; }
+  .tb-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin-bottom: 18px; }
+  .tb-card { background: #fff; border: 1px solid #cfd6e4; border-radius: 10px; padding: 12px 16px; }
+  .tb-card h3 { font-size: 18px; color: #12264F; margin: 0 0 8px; font-weight: 700; }
+  .tb-card dl { display: grid; grid-template-columns: 38% 62%; margin: 0; font-size: 13px; row-gap: 4px; }
+  .tb-card dt { color: #5f6b7a; font-weight: 400; } .tb-card dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .tb-ai { background: #fff; border: 1px solid #cfd6e4; border-left: 4px solid #CC9900; border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; }
+  .tb-ai h3 { font-size: 14px; color: #12264F; margin: 0; font-weight: 700; }
+  .badge-g { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 3px; border: 1px solid #12264F; color: #12264F; }
+  .tb-chart text { font-size: 10px; fill: #5f6b7a; font-family: 'Open Sans', sans-serif; }
+  .tb-rel { display: flex; gap: 0; background: #12264F; color: #fff; border-radius: 10px; margin-bottom: 18px; overflow: hidden; border-bottom: 4px solid #CC9900; }
+  .tb-rel .app { flex: 1; padding: 14px 22px; }
+  .tb-rel .app + .app { border-left: 1px solid rgba(255,255,255,.18); }
+  .tb-rel .k { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #CC9900; font-weight: 700; }
+  .tb-rel .name { font-size: 14px; font-weight: 600; margin-top: 2px; }
+  .tb-rel .v { font-size: 38px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; }
+  .tb-rel .s { font-size: 13px; color: #cfd6e4; }
+  @media (max-width: 640px) { .tb-rel { flex-direction: column; } .tb-rel .app + .app { border-left: 0; border-top: 1px solid rgba(255,255,255,.18); } }

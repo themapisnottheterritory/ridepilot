@@ -260,6 +260,14 @@ Rails.application.routes.draw do
       resources :driver_compliances
     end
     resources :monthlies, :except => [:show, :destroy]
+    # Vehicles > Tablets: driver tablets as their apps report them (TabletsController)
+    resources :tablets, only: [:index, :show, :update, :destroy] do
+      get :summary, on: :member
+      post :ask, on: :collection
+      post :ask_update, on: :member          # "Ask to update" (the app's next report gets update: true)
+      post :ask_update_all, on: :collection
+    end
+
     # Vehicles > Garages (GarageAddress named garages)
     resources :garages, only: [:index, :new, :create, :edit, :update] do
       member { patch :retire }
@@ -276,6 +284,9 @@ Rails.application.routes.draw do
         post :update_initial_mileage
         post :inactivate
         post :reactivate
+        post :start_disposition    # Tony, 2026-10-02: moved to disposition (VehiclesController)
+        post :record_disposal
+        post :cancel_disposition
       end
     end
 
@@ -400,7 +411,7 @@ Rails.application.routes.draw do
       "export_trips_in_range", "fare_card_activity", "fares_collected", "fixed_route_compliance", "fixed_route_ridership", "inactive_driver_status_report", "ineligible_customer_status_report", "manifest", 
       "missing_data_report", "monthlies", "ntd", "pre_run_inspections", "provider_common_location_report", "provider_service_productivity_report", 
       "service_summary", "show_runs_for_verification", "show_trips_for_verification", "update_runs_for_verification", 
-      "update_trips_for_verification", "vehicle_monthly_service_report", "vehicle_report", "vehicle_5310_report", "vehicles_monthly"].each do |action|
+      "update_trips_for_verification", "vehicle_disposition", "vehicle_monthly_service_report", "vehicle_report", "vehicle_5310_report", "vehicles_monthly"].each do |action|
         #get action, action: action
         get "#{action}/:id", action: action
       end
@@ -486,6 +497,7 @@ Rails.application.routes.draw do
     namespace :v1 do
       get 'fleet' => 'fleet#index'    # read-only fleet feed for the AVL sync (X-Fleet-Token), api/v1/fleet_controller.rb
       get 'driver_welcome' => 'driver_welcome#show'   # the driver tablet's sign-in screen (DriverWelcome)
+      post 'tablet_report' => 'tablet_reports#create' # the Demand Response app describing its tablet (Tablets page)
       match "authenticate_customer", to: "customers#show", :via => [:get, :options]
       match "authenticate_provider", to: "providers#show", :via => [:get, :options]
       match "trip_purposes", to: "trip_purposes#index", :via => [:get, :options]

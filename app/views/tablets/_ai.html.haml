@@ -1,0 +1,19 @@
+-# The local model's answers (TabletAssistant): fetched after the page shows, so a slow model never holds it up.
+:javascript
+  $(function () {
+    $('[data-tb-summary]').each(function () {
+      var box = $(this);
+      $.getJSON(box.data('tb-summary')).done(function (r) {
+        box.find('.ans').text(r.text || 'The assistant is not answering right now.');
+      }).fail(function () { box.find('.ans').text('The assistant is not answering right now.'); });
+    });
+    $('#tb-ask-form').on('submit', function (e) {
+      e.preventDefault();
+      var q = $.trim($('#tb-q').val()); if (!q) return;
+      var out = $('#tb-ask-ans').text('Thinking…');
+      $.ajax({ url: $(this).attr('action'), method: 'POST', data: { question: q }, dataType: 'json',
+               headers: { 'X-CSRF-Token': $('meta[name=csrf-token]').attr('content') } })
+        .done(function (r) { out.text(r.text || 'The assistant is not answering right now.'); })
+        .fail(function () { out.text('The assistant is not answering right now.'); });
+    });
+  });

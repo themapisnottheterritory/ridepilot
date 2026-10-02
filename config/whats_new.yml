@@ -16,6 +16,16 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-02 11:00"
+  title: Move a bus to disposition
+  body: |
+    On a bus's page, **Move to disposition** takes it out of service for good: dispatch can't put it on a run, and it stays on **Vehicles** with a gold **Disposition** badge. When it has left the fleet, **Record disposal** keeps how (sold, auctioned, transferred…), the date, final odometer and proceeds. **Back in service** undoes it. **Reports > Vehicle Disposition** lists buses in disposition and the ones disposed of in a date range, with method, final odometer and proceeds, as Excel or PDF.
+- added: "2026-10-02 09:45"
+  title: Tablets page for GCRPC I.T.
+  for: admins
+  providers: [1]
+  body: |
+    **Vehicles > Tablets** lists every driver tablet as its apps report it (Demand Response 1.0.24+, Fixed Route 1.16+). The current release of each app is at the top; each row shows the tablet's versions, old apps, WireGuard setup, battery, network and who used it. **Ask to update** puts an Update bar on a tablet that's behind. Open a tablet for details, a short technician's read, and notes.
 - added: "2026-10-01 21:05"
   title: "Driver tablet 1.0.22: a welcome on the sign-in screen"
   apps: [tablet]

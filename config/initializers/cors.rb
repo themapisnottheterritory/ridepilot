@@ -22,5 +22,14 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
       headers: :any,
       methods: [:get, :options, :head],
       credentials: false
+    # 1.0.24+: their own release file, and the connection check's tiny ping file
+    resource "/gcrpc-demandresponse-*.json",
+      headers: :any,
+      methods: [:get, :options, :head],
+      credentials: false
+    resource "/ping.txt",
+      headers: :any,
+      methods: [:get, :options, :head],
+      credentials: false
   end
 end
