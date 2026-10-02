@@ -3,7 +3,7 @@
   "version_code": 31,
   "url": "/rideavl-pilot.apk",
   "required": false,
-  "notes": "Your stop taps are now kept on the tablet when there's no signal and sent with the right time when it's back. New Refresh button with "last updated" time, on the run and on each stop. Dispatch changes now say what changed. All buttons are labeled.",
+  "notes": "Your stop taps are now kept on the tablet when there's no signal and sent with the right time when it's back. New Refresh button with \"last updated\" time, on the run and on each stop. Dispatch changes now say what changed. All buttons are labeled.",
   "published_at": "2026-10-02T22:15:37Z",
   "sha256": "379772837f8382ecf6ada00afcbfef42dc30d4c457dd982634b8287dd3ec96be"
 }

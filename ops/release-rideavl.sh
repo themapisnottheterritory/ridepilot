@@ -50,13 +50,15 @@ cp "$APK" "$HOME/ridepilot-ops/rideavl-${VERSION}.apk"
 # 1.0.24+ read gcrpc-demandresponse-version.json; 1.0.22 and older read rideavl-version.json.
 # Both get the release until every tablet is on 1.0.24+ (then rideavl-version.json can point the
 # pre-rename RideAVL app at its "this app has moved" build instead).
+# notes may hold quotes (1.0.30's "last updated" broke the file): JSON-escape them
+NOTES_JSON=$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$NOTES")
 cat > public/gcrpc-demandresponse-version.json <<JSON
 {
   "version": "${VERSION}",
   "version_code": ${CODE},
   "url": "/rideavl-pilot.apk",
   "required": ${REQUIRED},
-  "notes": "${NOTES}",
+  "notes": ${NOTES_JSON},
   "published_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "sha256": "$(sha256sum public/rideavl-pilot.apk | cut -c1-64)"
 }
