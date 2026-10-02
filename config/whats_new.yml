@@ -16,6 +16,10 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-02 16:05"
+  title: Place a rider's address on the map
+  body: |
+    When a rider's address isn't on the map, the address box now offers **Place it on the map**. RidePilot looks up the house on our own map, then with the US Census address lookup, and if neither knows the house it puts the pin on the street. The message tells you which; when it says "on the street", check the pin and move it to the house.
 - added: "2026-10-02 15:23"
   title: Added trips reach the tablet
   body: |

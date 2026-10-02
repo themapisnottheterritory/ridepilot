@@ -99,6 +99,13 @@
         %dd= "#{t.network['carrier'].presence || '?'}#{", #{t.network['cellBars']} of 4 bars" if t.network['cellBars']}"
         %dt Tunnel
         %dd= t.network["vpn"] ? "up, #{t.network['vpnAddress']}" : "down"
+        - dr = (t.info["by_app"] || {})["dr"] || {}
+        - if dr["manifest_synced_at"].present? || dr.key?("pending_taps")
+          %dt Manifest synced
+          %dd
+            = dr["manifest_synced_at"].present? ? "#{time_ago_in_words(Time.zone.parse(dr['manifest_synced_at']))} ago" : "not yet"
+            - if dr["pending_taps"].to_i.positive?
+              %span.warn= "· #{dr['pending_taps']} tap#{'s' if dr['pending_taps'].to_i > 1} waiting to send"
         %dt App sees
         %dd
           = { "ok" => "the server", "offline" => "no internet", "vpn_off" => "WireGuard off", "unreachable" => "the server not answering" }[t.app_info["connection"]] || "?"

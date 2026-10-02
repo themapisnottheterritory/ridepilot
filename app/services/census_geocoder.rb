@@ -7,10 +7,12 @@ require "net/http"
 # come up when booking (Philz 2026-10-02: "DaVita El Campo Dialysis, 307
 # Sandy Corner Rd" saved three times, Not on map each time).
 #
-# Only saved places (ProviderCommonAddress) are looked up -- facility
-# addresses, never riders' homes or names: a saved place named like a home, or
-# on the same street address as a rider's home, is skipped. Only an exact,
-# single match is used; anything ambiguous is left for a person.
+# Saved places (ProviderCommonAddress) are looked up nightly; a saved place
+# named like a home, or on a rider's home address, is skipped there. Since
+# 2026-10-02 a rider's home is also looked up, but only when staff click "Place
+# it on the map" on it and our own map doesn't know the house (Philz: "use the
+# Census for exact home pins"). Only the street address is sent, never a name.
+# Only an exact, single match is used; anything ambiguous is left for a person.
 class CensusGeocoder
   URL = "https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress".freeze
   NIGHTLY_LIMIT = 50

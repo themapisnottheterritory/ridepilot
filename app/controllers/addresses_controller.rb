@@ -110,17 +110,38 @@ class AddressesController < ApplicationController
       address = CustomerCommonAddress.new(address_params)
     end
 
+    # "Place it on the street" (the no-pin box): pin it the way the trip form does when
+    # the map doesn't know the house number -- on the matched street, keeping the
+    # house number as typed. Only the pin is taken; the address stays as entered.
+    placed_on_street = false
+    if address.the_geom.nil? && params[:place_on_street] == "1"
+      text = [address.address, address.city, [address.state.presence || "TX", address.zip].compact.join(" ")].reject(&:blank?).join(", ")
+      # The house on our own map first; then the US Census, which knows the
+      # rural house numbers OpenStreetMap lacks (street address only, never a
+      # name; Philz 2026-10-02); then just the street.
+      geo = (RelaxedGeocoder.call(text, current_provider) rescue nil)
+      unless geo && geo["exact"]
+        census = CensusGeocoder.lookup(street: address.address, city: address.city, state: address.state, zip: address.zip)
+        geo = { "lat" => census.lat, "lon" => census.lon, "exact" => true } if census
+      end
+      if geo && (geom = Address.compute_geom(geo["lat"], geo["lon"]))
+        address.the_geom = geom
+        placed_on_street = geo["exact"] ? "house" : "street"
+      end
+    end
+
     # A rider's address with no map pin never comes up when booking: say so before
     # it's added (the dialog offers "Save it without a pin anyway": no_pin_ok=1).
     # P.O. boxes are mailing addresses with nothing to pin.
     if prefix == "customer" && address.the_geom.nil? && params[:no_pin_ok] != "1" &&
        params["#{prefix}_non_street_mailing_address"] != "yes" && address.valid?
-      return render json: { no_pin_warning: true, prefix: prefix }
+      return render json: { no_pin_warning: true, street_not_found: params[:place_on_street] == "1", prefix: prefix }
     end
 
     if address.valid?
       render :json => {
         success: true,
+        placed_on_street: placed_on_street,
         prefix: prefix,
         address_text: address.address_text,
         attributes: address.as_json

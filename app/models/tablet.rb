@@ -162,6 +162,8 @@ class Tablet < ActiveRecord::Base
       out << [:warn, "Asked to update #{update_requested_at.in_time_zone.strftime('%b %-d %-l:%M %p')}#{" by #{update_requested_by}" if update_requested_by}, not done yet"]
     end
     out << [:crit, "WireGuard is not installed"] if setup.key?("wireguard") && !setup["wireguard"]
+    waiting = (info["by_app"] || {}).dig("dr", "pending_taps").to_i
+    out << [:warn, "#{waiting} stop tap#{'s' if waiting > 1} saved on the tablet, waiting to send"] if waiting.positive?
     if pub[:dr] && app_code.to_i < pub[:dr]["code"]
       out << [:warn, "Demand Response #{app_version}, published is #{pub[:dr]['version']}"]
     end

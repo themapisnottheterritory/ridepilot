@@ -70,19 +70,33 @@
         var f = $(this);
         f.find('.home-warn').remove();
         var box = $('<div class="home-warn" style="background:#fbf7ea;border-left:4px solid #CC9900;border-radius:0 6px 6px 0;padding:10px 14px;margin:0 0 12px;font-size:14px;"></div>');
-        box.append('<div><b style="color:#12264F">Not on the map yet,</b> so it won\'t come up when booking. Pick it from the suggestions. If the house number isn\'t listed, type just the street and town in the search box, pick the street, then put the house number in the <b>Address</b> field below.</div>');
-        var keep = $('<button type="button" class="btn btn-default" style="margin-top:8px"></button>').text('Save it without a pin anyway').on('click', function() {
-          f.find('input[name=no_pin_ok]').remove();
-          f.append('<input type="hidden" name="no_pin_ok" value="1">');
+        if (data.street_not_found) {
+          box.append('<div><b style="color:#12264F">RidePilot couldn\'t find that street either.</b> Check the street name and town, pick it from the suggestions, or save it without a pin and ask GCRPC I.T. to place it.</div>');
+        } else {
+          box.append('<div><b style="color:#12264F">Not on the map yet,</b> so it won\'t come up when booking. Pick it from the suggestions, or let RidePilot <b>place it on the map</b>: it looks up the house (on our map, then with the US Census), or at least the street, and keeps the address you typed.</div>');
+        }
+        var btns = $('<div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;"></div>');
+        var send = function(flag) {
+          f.find('input[name=no_pin_ok], input[name=place_on_street]').remove();
+          f.append('<input type="hidden" name="' + flag + '" value="1">');
           f.trigger('submit');
-        });
-        box.append(keep);
+        };
+        if (!data.street_not_found) {
+          btns.append($('<button type="button" class="btn action-button"></button>').text('Place it on the map').on('click', function() { send('place_on_street'); }));
+        }
+        btns.append($('<button type="button" class="btn btn-default"></button>').text('Save it without a pin anyway').on('click', function() { send('no_pin_ok'); }));
+        box.append(btns);
         f.prepend(box);
         return;
       }
       $(this).find('.home-warn').remove();
       if (data.success) {
         $('#addAddressDialog').modal('hide');
+        if (data.placed_on_street) {
+          show_alert(data.placed_on_street == "house"
+            ? "Placed on the map at the house. Save the rider to keep it."
+            : "Placed on the street: RidePilot found the street but not the house, so the pin may be some way along it. Check the pin on the map, move it to the house if you can, and save the rider.");
+        }
 
         //insert a new address row
         updateAddressRow(data.attributes, data.address_text);

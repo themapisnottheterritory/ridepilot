@@ -41,7 +41,7 @@ class Api::V1::Driver::ItinerariesController < Api::V1::Driver::BaseController
     @itin = Itinerary.find_by_id(params[:id])
     if @itin
       @itin.status_code = Itinerary::STATUS_IN_PROGRESS
-      @itin.departure_time = DateTime.current
+      @itin.departure_time = tapped_at
       @itin.save(validate: false)
     end
 
@@ -52,7 +52,7 @@ class Api::V1::Driver::ItinerariesController < Api::V1::Driver::BaseController
   def arrive
     @itin = Itinerary.find_by_id(params[:id])
     if @itin
-      @itin.arrival_time = DateTime.current
+      @itin.arrival_time = tapped_at
       @itin.save(validate: false)
     end
 
@@ -63,7 +63,7 @@ class Api::V1::Driver::ItinerariesController < Api::V1::Driver::BaseController
     @itin = Itinerary.find_by_id(params[:id])
     if @itin
       @itin.status_code = Itinerary::STATUS_COMPLETED
-      @itin.finish_time = DateTime.current
+      @itin.finish_time = tapped_at
       @itin.save(validate: false)
     end
 
@@ -74,7 +74,7 @@ class Api::V1::Driver::ItinerariesController < Api::V1::Driver::BaseController
     @itin = Itinerary.find_by_id(params[:id])
     if @itin
       @itin.status_code = Itinerary::STATUS_COMPLETED
-      @itin.finish_time = DateTime.current
+      @itin.finish_time = tapped_at
       @itin.save(validate: false)
 
       trip = @itin.trip
@@ -89,9 +89,11 @@ class Api::V1::Driver::ItinerariesController < Api::V1::Driver::BaseController
 
   def noshow
     @itin = Itinerary.find_by_id(params[:id])
-    if @itin
+    # a queued tap sent again (the first answer was lost): dispatch was told already
+    already = @itin && @itin.finish_time && @itin.trip&.trip_result&.code == 'NS'
+    if @itin && !already
       @itin.status_code = Itinerary::STATUS_OTHER
-      @itin.finish_time = DateTime.current
+      @itin.finish_time = tapped_at
       @itin.save(validate: false)
 
       trip = @itin.trip
@@ -104,6 +106,15 @@ class Api::V1::Driver::ItinerariesController < Api::V1::Driver::BaseController
 
     render success_response({})
   end
+
+  # When the driver tapped. The app (1.0.30+) sends `at` with every stop tap, and
+  # a tap made with no connection is saved on the tablet and sent later: record
+  # when it happened, not when it arrived. Only a plausible time is taken.
+  def tapped_at
+    t = params[:at].present? && (Time.zone.parse(params[:at].to_s) rescue nil)
+    t && t > 36.hours.ago && t < 2.minutes.from_now ? t : DateTime.current
+  end
+  private :tapped_at
 
   def undo
     @itin = Itinerary.find_by_id(params[:id])

@@ -4,7 +4,7 @@ class ItinerarySerializer
 
   belongs_to :address
 
-  attribute :id, :trip_id, :leg_flag, :status_code, :departure_time, :arrival_time, :finish_time, :eta, :time
+  attribute :id, :trip_id, :run_id, :leg_flag, :status_code, :departure_time, :arrival_time, :finish_time, :eta, :time   # run_id: the app keeps taps per run (1.0.30)
 
   # an older stop with no status is Pending to the tablet, which offers Depart only then
   attribute :status_code do |object|

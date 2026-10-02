@@ -116,25 +116,6 @@ module TypedAddressResolution
     # everywhere, the local OSM extract does not.) Returns a stringified attrs
     # hash (address/city/state/zip/lat/lon) or nil.
     def geocode_relaxed(text)
-      house_number = text[/\A\s*(\d+)\s+/, 1]
-      no_house     = text.sub(/\A\s*\d+\s+/, '')
-      drop_zip     = ->(s) { s.sub(/,?\s*\d{5}(?:-\d{4})?\s*\z/, '').strip.sub(/,\s*\z/, '') }
-      drop_st_zip  = ->(s) { s.sub(/,?\s*(?:tx|texas)\b.*\z/i, '').strip.sub(/,\s*\z/, '') }
-
-      variants = [text, no_house, drop_zip.call(no_house), drop_st_zip.call(no_house)]
-                   .map { |s| s.to_s.strip }.reject(&:blank?).uniq
-
-      variants.each do |q|
-        results = GeocodingService.new(q, current_provider).execute
-        next if results.blank?
-        r = results.first.stringify_keys
-        # Re-attach the dispatcher's house number when the matched street doesn't
-        # already carry it (street-level fallback, or Nominatim returned the road).
-        if house_number.present? && r['address'].present? && r['address'] !~ /\A#{Regexp.escape(house_number)}\b/
-          r['address'] = "#{house_number} #{r['address']}"
-        end
-        return r
-      end
-      nil
+      RelaxedGeocoder.call(text, current_provider)   # shared with the rider's address dialog
     end
 end

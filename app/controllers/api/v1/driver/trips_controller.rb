@@ -4,7 +4,9 @@ class Api::V1::Driver::TripsController < Api::V1::Driver::BaseController
     @trip = Trip.find_by_id(params[:id])
     fare = @trip.fare || @trip.provider.fare.try(:dup)
     if fare && !fare.is_free?
-      @trip.fare_collected_time = DateTime.now
+      # when the driver collected it: a fare entered with no connection is sent later (app 1.0.30+)
+      at = params[:at].present? && (Time.zone.parse(params[:at].to_s) rescue nil)
+      @trip.fare_collected_time = at && at > 36.hours.ago && at < 2.minutes.from_now ? at : DateTime.now
       if fare.is_payment?
         @trip.fare_amount = params[:fare_amount]
         @trip.save(validate: false)
