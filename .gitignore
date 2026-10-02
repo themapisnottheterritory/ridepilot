@@ -60,3 +60,6 @@ __pycache__/
 
 # Secret for the dispatch TV link (TvController); not in git
 /config/tv_wall_key
+
+# Fixed Route APK, copied here by gcrpc-fixedroute/ops/publish-apk.py (plain http for the install sheet)
+public/gcrpc-fixedroute.apk
