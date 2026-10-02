@@ -28,11 +28,11 @@ FactoryBot.define do
     end
 
     trait :last_week do
-      date { Date.today - 1.week }
+      date { Time.zone.today - 1.week }
     end
 
     trait :two_days_ago do
-      date { Date.today - 2.days }
+      date { Time.zone.today - 2.days }
     end
 
     trait :yesterday do
@@ -40,7 +40,7 @@ FactoryBot.define do
     end
 
     trait :today do
-      date { Date.today }
+      date { Time.zone.today }
     end
 
     trait :tomorrow do
@@ -48,7 +48,7 @@ FactoryBot.define do
     end
 
     trait :next_week do
-      date { Date.today + 1.week }
+      date { Time.zone.today + 1.week }
     end
 
   end

@@ -6,7 +6,7 @@ FactoryBot.define do
     provider
     
     # SCHEDULE ATTRS
-    start_date { Date.today } # Set the schedule start date to equal date field
+    start_date { Time.zone.today } # Set the schedule start date to equal date field
     repetition_interval { 1 }   # Setting this messes up the recurring_ride_coordinator shared examples 
     repeats_mondays { start_date.monday? }
     repeats_tuesdays { start_date.tuesday? }
@@ -49,11 +49,11 @@ FactoryBot.define do
     end
     
     trait :last_week do
-      start_date { Date.today - 1.week }
+      start_date { Time.zone.today - 1.week }
     end
 
     trait :two_days_ago do
-      start_date { Date.today - 2.days }
+      start_date { Time.zone.today - 2.days }
     end
 
     trait :yesterday do
@@ -61,7 +61,7 @@ FactoryBot.define do
     end
 
     trait :today do
-      start_date { Date.today }
+      start_date { Time.zone.today }
     end
 
     trait :tomorrow do
@@ -69,7 +69,7 @@ FactoryBot.define do
     end
 
     trait :next_week do
-      start_date { Date.today + 1.week }
+      start_date { Time.zone.today + 1.week }
     end
       
   end
