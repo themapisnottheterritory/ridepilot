@@ -16,7 +16,7 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
-- added: "2026-10-01 18:30"
+- added: "2026-10-01 20:20"
   title: "Garages: move a bus between yards from a list"
   body: |
     **Vehicles > Garages** lists the yards each agency's buses live at; add one with **Add a garage** (a name, and the address picked from the list so it's on the map). On a bus's page, the **Garage** list moves it: its upcoming runs that use its garage now start and end at the new one, and a run already on a driver's tablet today is updated there too.

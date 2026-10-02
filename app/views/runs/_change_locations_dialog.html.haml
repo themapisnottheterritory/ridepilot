@@ -17,11 +17,19 @@
           %p.col-sm-12
             %b
               Please confirm the start and end garage locations.
+          - garages = GarageAddress.named.usable.where(provider_id: @run.provider_id).order(:name)
           - ['from', 'to'].each do |address_flag|
             - address = address_flag == 'from' ? @run.from_garage_address : @run.to_garage_address
             - address_field = "#{address_flag}_garage_address"
             - prefix = "run_#{address_field}_attributes"
+            - linked = address.try(:persisted?) && address.try(:named?) ? address.id : (address.try(:named?) ? garages.find { |g| g.same_lat_lng?(address.latitude, address.longitude) }.try(:id) : nil)
             .garage_address
+              - if garages.any?
+                .form-group.col-sm-12
+                  .form-label
+                    = label_tag "#{address_flag}_garage_id", (address_flag == 'from' ? "Starts at" : "Ends at"), class: "col-md-2 control-label"
+                  .form-field
+                    = select_tag "#{address_flag}_garage_id", options_for_select(garages.map { |g| [g.label, g.id] } + [["Another address (below)", ""]], linked), class: "form-control pick-garage"
               = f.fields_for address_field, address do |address_form|
                 = address_form.hidden_field :provider_id
                 = address_form.hidden_field :address, class: 'address_text'
@@ -34,10 +42,16 @@
                   .form-label
                     = label_tag "#{prefix}_full_address", translate_helper("#{address_field}_label"), class: "col-md-2 control-label"
                   .form-field
-                    = text_field_tag "#{prefix}_full_address", address.try(:address_text), required: true, class: "address_search form-control"
+                    = text_field_tag "#{prefix}_full_address", address.try(:address_text), required: linked.nil?, class: "address_search form-control", style: (linked ? "display: none;" : "")
           = render 'addresses/google_place_autocomplete_js', container: '.garage_address'
 
 :javascript
+  // a garage from the list needs no typed address
+  $('#changeGarageDialog .pick-garage').on('change', function() {
+    var typed = $(this).closest('.garage_address').find('.address_search');
+    var other = $(this).val() === '';
+    typed.toggle(other).prop('required', other);
+  });
   $('#changeGarageDialog').on('hidden.bs.modal', function() {
     $('#changeGarageDialog').remove();
   });
