@@ -222,9 +222,12 @@ class Run < ApplicationRecord
     finished_itins = old_public_itins.finished
     non_finished_itins = old_public_itins.non_finished
 
-    last_finished_itin = finished_itins.last.try(:itinerary)
-    new_itins = self.sorted_itineraries
-    last_finished_itin_idx = new_itins.index(last_finished_itin) || -1
+    # Every stop the driver hasn't finished goes on the tablet, wherever it falls in
+    # the run. (Until 2026-10-02 only stops after the last finished one did: a driver
+    # who did the 11:00 and 12:45 trips early left anything dispatch then added for
+    # 9:00-12:00 off the tablet entirely, Rgol1. Andrew.) Finished stops are matched
+    # by their stop key, so a rebuilt itinerary doesn't publish a done stop twice.
+    finished_keys = finished_itins.map { |p| p.itinerary.try(:itin_id) }.compact
 
     first_non_finished_public_itin = non_finished_itins.first
     first_non_finished_itin = first_non_finished_public_itin.try(:itinerary)
@@ -236,8 +239,8 @@ class Run < ApplicationRecord
 
     # process non-finished ones
     first_non_finished_internal_itin = nil
-    self.sorted_itineraries[last_finished_itin_idx+1..-1].each do |itin|
-      next if itin.finish_time
+    self.sorted_itineraries.each do |itin|
+      next if itin.finish_time || finished_keys.include?(itin.itin_id)
       itin_eta = itin.eta 
 
       # check if active itin has changed, e.g., dispatcher moved a new trip before current active itin
@@ -358,8 +361,8 @@ class Run < ApplicationRecord
       manifest_order_array = self.manifest_order
       manifest_order_array.each_with_index do |leg_name, index|
         leg_name_parts = leg_name.split('_')
-        leg_trip_id = leg_name_parts[1]
-        leg_flag = leg_name_parts[3].to_i
+        leg_trip_id = leg_name_parts[1].to_i   # an integer, like the plucked trip_id below: as a string it never
+        leg_flag = leg_name_parts[3].to_i      # matched, so new trips were slotted in among finished stops (2026-10-02)
         is_pickup = leg_flag == 1
 
         # move to next if current itin is finished

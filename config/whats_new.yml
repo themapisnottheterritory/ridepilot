@@ -16,6 +16,10 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-02 15:23"
+  title: Added trips reach the tablet
+  body: |
+    Trips you add to a run now reach the driver's tablet when you **Publish**, even when the driver has already finished stops scheduled later in the day. Before, those trips were left off the tablet and had to be re-timed after the last finished stop.
 - added: "2026-10-02 15:01"
   title: Dispatch by area
   providers: [1]
