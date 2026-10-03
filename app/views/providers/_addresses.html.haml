@@ -16,6 +16,9 @@
       %b A rider's home goes on the rider's record
       (Customers, the rider, Addresses).
       = link_to "How addresses work (PDF)", "/address-guide.pdf", target: "_blank"
+      ·
+      = link_to "Pins to check", pin_checks_path
+      %span.text-muted (pins far from where drivers stop)
     .row.col-sm-12
       = render 'addresses_table'
     

@@ -16,6 +16,10 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-03 17:50"
+  title: Pins to check
+  body: |
+    RidePilot now notes where the van actually stops for each finished pickup and drop-off, from the bus GPS. When drivers have stopped at the same spot on three or more days and it's far from the address's map pin, the address shows on **Pins to check** (link on the **Addresses** page). Look at both points on the map and choose **Use where drivers stop** or **Keep the pin**. Nothing moves until you choose.
 - added: "2026-10-02 17:15"
   title: Driver tablet 1.0.30
   apps: [tablet]

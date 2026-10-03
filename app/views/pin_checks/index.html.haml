@@ -1,0 +1,120 @@
+- content_for :title, "Pins to check"
+:css
+  .pc { max-width: 1180px; font-family: 'Open Sans', sans-serif; color: #131313; }
+  .pc h2 { color: #12264F; font-size: 28px; font-weight: 700; margin: 6px 0 4px; }
+  .pc .lede { color: #5f6b7a; font-size: 13px; margin-bottom: 16px; max-width: 780px; }
+  .pc-strip { display: flex; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+  .pc-stat { background: #fff; border: 1px solid #cfd6e4; border-top: 4px solid #12264F; border-radius: 10px; padding: 10px 16px; min-width: 150px; }
+  .pc-stat .n { font-size: 38px; font-weight: 700; line-height: 1.1; color: #12264F; font-variant-numeric: tabular-nums; }
+  .pc-stat .l { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #5f6b7a; }
+  .pc-stat.warn { border-top-color: #CC9900; }
+  .pc-wrap { display: grid; grid-template-columns: 62fr 38fr; gap: 16px; align-items: start; }
+  @media (max-width: 900px) { .pc-wrap { grid-template-columns: 1fr; } }
+  .pc table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
+  .pc th { background: #12264F; color: #fff; font-weight: 600; padding: 7px 10px; text-align: left; white-space: nowrap; }
+  .pc td { padding: 8px 10px; border-bottom: 1px solid #cfd6e4; vertical-align: top; }
+  .pc tr:nth-child(even) td { background: #f4f6fa; }
+  .pc tr.on td { background: #fbf7ea; }
+  .pc td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .pc-name { font-weight: 700; color: #12264F; font-size: 14px; }
+  .pc-sub { color: #5f6b7a; font-size: 11px; }
+  .pc-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pc-btns form { margin: 0; }
+  .pc-go { background: #1f3864; color: #fff; border: 0; border-radius: 6px; padding: 5px 10px; font-weight: 600; font-size: 12px; }
+  .pc-keep { background: #fff; color: #1f3864; border: 1px solid #cfd6e4; border-radius: 6px; padding: 5px 10px; font-size: 12px; }
+  #pc-map { height: 460px; border: 1px solid #cfd6e4; border-radius: 10px; position: sticky; top: 10px; }
+  .pc-key { font-size: 11px; color: #5f6b7a; margin-top: 6px; }
+  .pc-key i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px -1px 10px; }
+  .pc-empty { color: #0ca30c; background: #fff; border: 1px solid #cfd6e4; border-radius: 10px; padding: 14px 18px; font-size: 13px; }
+  .pc-recent { margin-top: 22px; font-size: 13px; }
+  .pc-recent h3 { color: #12264F; font-size: 18px; margin: 0 0 6px; }
+.pc
+  %h2 Pins to check
+  .lede
+    Addresses whose map pin is far from where drivers actually stop for them. RidePilot learns the spot
+    from the bus GPS each night, after drivers have stopped there on at least three different days.
+    Look at both on the map, then move the pin to where drivers stop or keep it. Nothing moves until you choose.
+  .pc-strip
+    .pc-stat
+      .n= number_with_delimiter(@seen.count)
+      .l Stops seen by the bus GPS
+    .pc-stat
+      .n= number_with_delimiter(@learned_n)
+      .l Addresses with a learned spot
+    .pc-stat{class: ("warn" if @rows.any?)}
+      .n= @rows.size
+      .l Pins to check
+  - if @rows.empty?
+    .pc-empty
+      Nothing to check. Addresses show up here when drivers keep stopping well away from the pin.
+      - if @seen.minimum(:seen_at)
+        = "Stops seen since #{@seen.minimum(:seen_at).strftime('%b %-d')}."
+  - else
+    .pc-wrap
+      %table
+        %thead
+          %tr
+            %th Rider or place
+            %th.num Pin is off by
+            %th Drivers stopped
+            %th
+        %tbody
+          - @rows.each_with_index do |r, i|
+            - a = r[:address]
+            - l = r[:learned]
+            - rider = a.customer_id && @riders[a.customer_id]
+            %tr{data: {i: i, pin: [a.latitude, a.longitude].to_json, stop: [l[:lat], l[:lon]].to_json}}
+              %td
+                .pc-name= rider ? "#{rider.first_name} #{rider.last_name}" : (a.name.presence || a.address)
+                .pc-sub= [a.address, a.city].reject(&:blank?).join(", ") + (rider ? " · rider's home" : " · saved place")
+                %a.pc-sub{href: "#", class: "pc-show"} Show on map
+              %td.num= r[:distance_m] >= 1000 ? "#{(r[:distance_m] / 1609.0).round(1)} mi" : "#{r[:distance_m]} m"
+              %td
+                = "#{l[:days]} days, #{l[:visits]} stops"
+                .pc-sub= "last #{l[:last_seen].in_time_zone.strftime('%b %-d')} · within #{l[:spread_m]} m"
+              %td
+                .pc-btns
+                  = form_tag pin_check_path(a.id), method: :patch do
+                    = hidden_field_tag :decision, "moved"
+                    %button.pc-go{type: "submit", data: {confirm: "Move the pin for #{a.address} to where drivers stop?"}} Use where drivers stop
+                  = form_tag pin_check_path(a.id), method: :patch do
+                    = hidden_field_tag :decision, "kept"
+                    %button.pc-keep{type: "submit"} Keep the pin
+      %div
+        #pc-map
+        .pc-key
+          %i{style: "background:#9aa3b2"}
+          Pin now
+          %i{style: "background:#12264F"}
+          Where drivers stop
+  - if @recent.any?
+    .pc-recent
+      %h3 Decided this week
+      %table
+        %tbody
+          - @recent.each do |c|
+            %tr
+              %td= c.created_at.in_time_zone.strftime('%a %-l:%M %p')
+              %td= c.address&.address
+              %td= c.decision == "moved" ? "Moved to where drivers stop" : "Kept the pin"
+              %td
+                = form_tag pin_check_path(c.id), method: :delete do
+                  %button.pc-keep{type: "submit"} Undo
+- if @rows.any?
+  :javascript
+    (function () {
+      var map = L.map('pc-map');
+      L.tileLayer('/tiles/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+      var layer = L.layerGroup().addTo(map);
+      function show(tr) {
+        $('.pc tr.on').removeClass('on'); $(tr).addClass('on');
+        var pin = $(tr).data('pin'), stop = $(tr).data('stop');
+        layer.clearLayers();
+        L.circleMarker(pin, { radius: 8, color: '#5f6b7a', fillColor: '#9aa3b2', fillOpacity: .9 }).bindTooltip('Pin now').addTo(layer);
+        L.circleMarker(stop, { radius: 8, color: '#12264F', fillColor: '#12264F', fillOpacity: .9 }).bindTooltip('Where drivers stop').addTo(layer);
+        L.polyline([pin, stop], { color: '#CC9900', weight: 2, dashArray: '4 4' }).addTo(layer);
+        map.fitBounds(L.latLngBounds([pin, stop]).pad(0.4), { maxZoom: 18 });
+      }
+      $('.pc tbody tr[data-i]').on('click', function (e) { if (!$(e.target).is('button')) { e.preventDefault(); show(this); } });
+      show($('.pc tbody tr[data-i]').first());
+    })();

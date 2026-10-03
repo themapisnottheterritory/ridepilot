@@ -260,6 +260,8 @@ Rails.application.routes.draw do
       resources :driver_compliances
     end
     resources :monthlies, :except => [:show, :destroy]
+    # Addresses > Pins to check: pins far from where drivers stop (PinChecksController, DriverStops)
+    resources :pin_checks, only: [:index, :update, :destroy]
     # Vehicles > Tablets: driver tablets as their apps report them (TabletsController)
     resources :tablets, only: [:index, :show, :update, :destroy] do
       get :summary, on: :member
