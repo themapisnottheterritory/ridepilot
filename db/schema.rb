@@ -893,6 +893,20 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.index ["operatable_id"], name: "index_operating_hours_on_operatable_id"
   end
 
+  create_table "pin_checks", force: :cascade do |t|
+    t.integer "address_id", null: false
+    t.string "decision", null: false
+    t.float "from_latitude"
+    t.float "from_longitude"
+    t.float "to_latitude"
+    t.float "to_longitude"
+    t.integer "visits"
+    t.integer "user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["address_id"], name: "index_pin_checks_on_address_id"
+  end
+
   create_table "planned_leaves", id: :serial, force: :cascade do |t|
     t.date "start_date"
     t.date "end_date"
@@ -1396,6 +1410,23 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.index "stop_id, lower((name)::text)", name: "index_stop_landmarks_on_stop_and_name", unique: true
     t.index ["created_by_id"], name: "index_stop_landmarks_on_created_by_id"
     t.index ["stop_id"], name: "index_stop_landmarks_on_stop_id"
+  end
+
+  create_table "stop_sightings", force: :cascade do |t|
+    t.integer "address_id", null: false
+    t.integer "itinerary_id", null: false
+    t.integer "run_id"
+    t.integer "vehicle_id"
+    t.integer "provider_id"
+    t.datetime "seen_at", null: false
+    t.integer "dwell_secs"
+    t.float "latitude", null: false
+    t.float "longitude", null: false
+    t.string "source", default: "avl", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["address_id"], name: "index_stop_sightings_on_address_id"
+    t.index ["itinerary_id"], name: "index_stop_sightings_on_itinerary_id", unique: true
   end
 
   create_table "street_dictionary_entries", force: :cascade do |t|
