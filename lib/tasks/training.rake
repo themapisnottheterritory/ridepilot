@@ -69,6 +69,7 @@ namespace :training do
       sql "UPDATE emergency_contacts SET name = 'Emergency Contact', phone_number = '555-0100', relationship = NULL"
       sql "UPDATE trips SET notes = NULL, pickup_address_notes = NULL, dropoff_address_notes = NULL"
       sql "UPDATE users SET reset_password_token = NULL, reset_password_sent_at = NULL, current_sign_in_ip = NULL, last_sign_in_ip = NULL"
+      sql "DELETE FROM chat_read_receipts"   # point at messages (2026-09-29); go first
       sql "DELETE FROM messages"
       sql "DELETE FROM document_associations"
       sql "DELETE FROM documents"
