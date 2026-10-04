@@ -16,6 +16,11 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-03 21:31"
+  title: Driver tablet 1.0.31
+  apps: [tablet]
+  body: |
+    **GCRPC Demand Response 1.0.31**: each stop the driver taps now includes where the tablet was, so dispatch has a location for every stop, including on vans with no bus GPS. Runs also stay on the driver's **My Runs** list after 7 PM.
 - added: "2026-10-03 19:34"
   title: Evening runs stay on the tablet
   apps: [tablet]
