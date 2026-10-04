@@ -1,12 +1,17 @@
 namespace :tap_check do
   # Morning tap check for yesterday (TapCheck): cron on .16 at 11:15 UTC = 6:15 AM
-  # Central. DATE=YYYY-MM-DD for another day; DRY=1 prints instead of emailing.
+  # Central, only when a run is worth a look. DATE=YYYY-MM-DD for another day; DRY=1 prints instead of emailing.
   desc "Email dispatch's supervisor the runs whose stops weren't tapped as they happened"
   task report: :environment do
     date = ENV["DATE"].present? ? Date.parse(ENV["DATE"]) : Date.current - 1
     runs = TapCheck.day(date)
     if runs.empty?
       puts "#{Time.current.strftime('%F %T')} #{date}: no runs"
+      next
+    end
+    # Only when a run is worth a look (Philz 2026-10-04); a quiet day sends nothing.
+    if runs.none?(&:issues?) && ENV["DRY"].blank?
+      puts "#{Time.current.strftime('%F %T')} #{date}: nothing worth a look (#{runs.size} runs), no email"
       next
     end
     mail = TapCheckMailer.day(date, runs)
