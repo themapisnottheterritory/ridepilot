@@ -16,7 +16,8 @@
 #              were made, so a re-sync never makes a burst; a tablet clock that is
 #              off makes taps look offline, so it can only hide a burst.
 #   at depot   a pickup/drop-off tapped online while the tablet itself (1.0.31+,
-#              fix good to 50 m) was at the depot, for a stop more than 300 m away
+#              fix good to 50 m, taken within 60 s of the tap) was at the depot,
+#              for a stop more than 300 m away
 #   not tapped a stop still open after the run's day, only when that driver's
 #              tablet was on 1.0.30+ that day and has reported since with no taps
 #              waiting (cancelled and no-show trips excluded)
@@ -92,7 +93,7 @@ class TapCheck
   def self.at_depot?(itin, taps, depots)
     return false if depots.empty? || itin.address&.the_geom.nil?
     return false if depots.any? { |d| DriverStops.meters(*d, itin.address.latitude, itin.address.longitude) < 300 }
-    pos = (taps || []).select { |t| t.online? && t.latitude && t.accuracy_m.to_i.between?(1, 50) }.last
+    pos = (taps || []).select { |t| t.online? && t.position_within?(60) }.last   # a fresh fix only
     return false unless pos
     depots.any? { |d| DriverStops.meters(*d, pos.latitude, pos.longitude) < DEPOT_M }
   end

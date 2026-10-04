@@ -24,4 +24,17 @@ RSpec.describe StopTap do
   it "ignores actions it doesn't know" do
     expect(StopTap.record(itin, "undo", ActionController::Parameters.new)).to be_nil
   end
+
+  it "keeps when the GPS fix was taken, and only trusts a fix close enough to the tap" do
+    at = Time.current.change(usec: 0)
+    t = StopTap.record(itin, "pickup", ActionController::Parameters.new(at: at.iso8601, lat: "28.8", lon: "-97.0", accuracy: "9", fix_at: (at - 200).iso8601))
+    expect(t.fix_age).to eq 200
+    expect(t.position_within?(300)).to be true    # good enough to learn where drivers stop
+    expect(t.position_within?(60)).to be false    # too old to say the tablet was at the depot
+  end
+
+  it "doesn't trust a position with no fix time" do
+    t = StopTap.record(itin, "pickup", ActionController::Parameters.new(at: Time.current.iso8601, lat: "28.8", lon: "-97.0", accuracy: "9"))
+    expect(t.position_within?(300)).to be false
+  end
 end

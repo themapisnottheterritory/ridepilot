@@ -71,8 +71,9 @@ class DriverStops
   # No bus GPS on this van: the tablet's own position at the tap (1.0.31+), when the
   # tap was made online and the fix is good to 50 m.
   def self.record_from_tablet(itin)
+    # a van sitting at a stop gets no new fixes, so the one from pulling up (up to 5 min) counts
     tap = StopTap.where(itinerary_id: itin.id, action: %w[pickup dropoff noshow arrive]).where.not(latitude: nil)
-                 .where("accuracy_m IS NOT NULL AND accuracy_m <= 50").order(:id).detect(&:online?)
+                 .order(:id).detect { |t| t.online? && t.position_within?(300) }
     tap ? sight!(itin, tap.tapped_at, tap.latitude, tap.longitude, nil, "tablet") : false
   end
 
