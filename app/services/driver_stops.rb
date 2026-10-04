@@ -4,6 +4,10 @@
 # together, often a few seconds apart, so the tap alone isn't where the van was:
 # the stop is the van's last real halt (45 s or more) around the tap.
 #
+# Stops tapped in a burst (TapCheck) aren't matched by time; no-show pickups
+# count (the van went and waited); vans with no bus GPS use the tablet's own
+# position at an online tap (1.0.31+).
+#
 # One visit can be wrong (a tap made at the depot, a halt at a light). An address
 # gets a "drivers stop here" point only when visits on 3 or more days agree within
 # 30 m. If that point is far from the pin, the address goes on Pins to check and
@@ -29,22 +33,29 @@ class DriverStops
 
   # -> number of stops recorded for that day (Date, Central)
   def self.record_day!(date, provider: Provider.find(1))
-    stops = finished_stops(date)
+    stops = day_stops(date)
     return 0 if stops.empty?
-    halts = with_avl(provider) { |c| halts_for_day(c, date) }
-    return 0 if halts.nil?
+    halts = with_avl(provider) { |c| halts_for_day(c, date) } || []
     depot = depot_point(provider)
     by_unit = halts.reject { |h| depot && meters(h.lat, h.lon, *depot) < DEPOT_M }.group_by(&:unit)
-    stops.count { |itin| record_one(itin, by_unit) }
+    done = StopSighting.where(itinerary_id: stops.map(&:id)).pluck(:itinerary_id).to_set
+    # Taps made in a burst (TapCheck) don't say when or where the stop was: never
+    # matched by time; matched by order only when it is unambiguous.
+    by_run = stops.group_by(&:run)
+    burst = by_run.flat_map { |_, its| TapCheck.burst_ids(its) }.to_set
+    n = stops.count { |i| !done.include?(i.id) && !burst.include?(i.id) && (record_one(i, by_unit) || record_from_tablet(i)) }
+    n + by_run.sum { |run, its| sequence_match(run, its, by_unit, done) }
   end
 
-  # Finished pickups/drop-offs that day with a van on the run and no sighting yet.
-  def self.finished_stops(date)
+  # Finished pickups/drop-offs that day (and no-show pickups: the van went and
+  # waited) on runs with a van.
+  def self.day_stops(date)
     day = date.in_time_zone.all_day
-    Itinerary.joins(:run).includes(run: :vehicle)
-             .where(leg_flag: [1, 2], status_code: 2, finish_time: day)
-             .where.not(address_id: nil).where.not(runs: { vehicle_id: nil })
-             .where.not(id: StopSighting.select(:itinerary_id)).to_a
+    base = Itinerary.joins(:run).includes(:trip, run: :vehicle).where(finish_time: day)
+                    .where.not(address_id: nil).where.not(runs: { vehicle_id: nil })
+    done = base.where(leg_flag: [1, 2], status_code: Itinerary::STATUS_COMPLETED).to_a
+    no_shows = base.where(leg_flag: 1, status_code: Itinerary::STATUS_OTHER).to_a.select { |i| i.trip&.trip_result&.code == 'NS' }
+    done + no_shows
   end
 
   def self.record_one(itin, by_unit)
@@ -54,9 +65,42 @@ class DriverStops
              .select { |h| h.to >= tap - BEFORE_TAP && h.to <= tap + AFTER_TAP && h.from <= tap + AFTER_TAP }
              .min_by { |h| (h.to - tap).abs }
     return false unless halt
+    sight!(itin, halt.to, halt.lat, halt.lon, halt.secs, "avl")
+  end
+
+  # No bus GPS on this van: the tablet's own position at the tap (1.0.31+), when the
+  # tap was made online and the fix is good to 50 m.
+  def self.record_from_tablet(itin)
+    tap = StopTap.where(itinerary_id: itin.id, action: %w[pickup dropoff noshow arrive]).where.not(latitude: nil)
+                 .where("accuracy_m IS NOT NULL AND accuracy_m <= 50").order(:id).detect(&:online?)
+    tap ? sight!(itin, tap.tapped_at, tap.latitude, tap.longitude, nil, "tablet") : false
+  end
+
+  # Stops tapped in a burst: the van's halts between the last good tap before the
+  # burst and the burst itself, paired with the stops in manifest order, but only
+  # when there are exactly as many halts as stops. Anything less clear is skipped.
+  def self.sequence_match(run, its, by_unit, done)
+    unit = run.vehicle&.name.to_s.strip
+    halts = by_unit[unit] or return 0
+    order = Array(run.manifest_order)
+    tapped = its.sort_by(&:finish_time)
+    TapCheck.bursts(its).sum do |group|
+      next 0 if group.any? { |i| done.include?(i.id) }
+      first = group.map(&:finish_time).min
+      prev = tapped.select { |i| i.finish_time < first && !group.include?(i) }.last
+      from = prev&.finish_time || run.actual_start_time || run.scheduled_start_time
+      next 0 unless from
+      hs = halts.select { |h| h.from >= from && h.to <= first + AFTER_TAP }.sort_by(&:from)
+      next 0 unless hs.size == group.size
+      stops = group.sort_by { |i| order.index(i.itin_id) || 10_000 }
+      stops.zip(hs).count { |i, h| sight!(i, h.to, h.lat, h.lon, h.secs, "sequence") }
+    end
+  end
+
+  def self.sight!(itin, at, lat, lon, secs, source)
     StopSighting.create!(address_id: itin.address_id, itinerary_id: itin.id, run_id: itin.run_id,
                          vehicle_id: itin.run.vehicle_id, provider_id: itin.run.provider_id,
-                         seen_at: halt.to, dwell_secs: halt.secs, latitude: halt.lat, longitude: halt.lon)
+                         seen_at: at, dwell_secs: secs, latitude: lat, longitude: lon, source: source)
     true
   rescue ActiveRecord::RecordNotUnique
     false

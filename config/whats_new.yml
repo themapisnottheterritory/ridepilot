@@ -16,6 +16,11 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-03 19:16"
+  title: Tablet stop check
+  for: admins
+  body: |
+    Each morning dispatch's supervisor gets a short email listing runs where the tablet record doesn't line up with the day, for example several stops at different places recorded within a couple of minutes, so someone can check in. It only counts taps the tablet proves it made with a signal, so dead zones, re-syncs and wrong map pins never put a run on it. No-show pickups now also count toward **Pins to check**.
 - added: "2026-10-03 17:50"
   title: Pins to check
   body: |

@@ -43,6 +43,7 @@ class Api::V1::Driver::ItinerariesController < Api::V1::Driver::BaseController
       @itin.status_code = Itinerary::STATUS_IN_PROGRESS
       @itin.departure_time = tapped_at
       @itin.save(validate: false)
+      StopTap.record(@itin, 'depart', params)
     end
 
     render success_response({})
@@ -54,6 +55,7 @@ class Api::V1::Driver::ItinerariesController < Api::V1::Driver::BaseController
     if @itin
       @itin.arrival_time = tapped_at
       @itin.save(validate: false)
+      StopTap.record(@itin, 'arrive', params)
     end
 
     render success_response({})
@@ -65,6 +67,7 @@ class Api::V1::Driver::ItinerariesController < Api::V1::Driver::BaseController
       @itin.status_code = Itinerary::STATUS_COMPLETED
       @itin.finish_time = tapped_at
       @itin.save(validate: false)
+      StopTap.record(@itin, 'pickup', params)
     end
 
     render success_response({})
@@ -76,6 +79,7 @@ class Api::V1::Driver::ItinerariesController < Api::V1::Driver::BaseController
       @itin.status_code = Itinerary::STATUS_COMPLETED
       @itin.finish_time = tapped_at
       @itin.save(validate: false)
+      StopTap.record(@itin, 'dropoff', params)
 
       trip = @itin.trip
       if trip
@@ -95,6 +99,7 @@ class Api::V1::Driver::ItinerariesController < Api::V1::Driver::BaseController
       @itin.status_code = Itinerary::STATUS_OTHER
       @itin.finish_time = tapped_at
       @itin.save(validate: false)
+      StopTap.record(@itin, 'noshow', params)
 
       trip = @itin.trip
       if trip

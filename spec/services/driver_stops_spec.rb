@@ -65,4 +65,33 @@ RSpec.describe DriverStops do
       expect(DriverStops.pins_to_check([provider.id]).size).to eq 1
     end
   end
+  describe ".sequence_match (stops tapped in a burst)" do
+    let(:day) { Date.current - 1 }
+    let(:van) { create(:vehicle, provider: provider, name: "1780") }
+    let(:run) { create(:run, provider: provider, vehicle: van, date: day, scheduled_start_time: day.in_time_zone.change(hour: 7), scheduled_end_time: day.in_time_zone.change(hour: 17), actual_start_time: day.in_time_zone.change(hour: 7)) }
+    let(:t0) { day.in_time_zone.change(hour: 14) }
+    let!(:stops) do
+      [[28.80, -97.00], [28.81, -97.00], [28.82, -97.00]].each_with_index.map do |(la, lo), k|
+        a = create(:address, type: "CustomerCommonAddress", provider: provider, the_geom: Address.compute_geom(la, lo))
+        trip = create(:trip, provider: provider, run: run, pickup_time: t0, appointment_time: t0 + 30.minutes)
+        Itinerary.create!(run: run, trip: trip, leg_flag: 1, address_id: a.id, time: t0, finish_time: t0 + k * 20.seconds, status_code: 2)
+      end
+    end
+    before { run.update_column(:manifest_order, stops.map(&:itin_id)) }
+    def halt(min, lat) = DriverStops::Halt.new(unit: "1780", from: t0 - min.minutes, to: t0 - min.minutes + 90, lat: lat, lon: -97.0)
+
+    it "pairs the burst's stops with the van's halts in manifest order when the counts match" do
+      halts = { "1780" => [halt(50, 28.8001), halt(35, 28.8101), halt(20, 28.8201)] }
+      expect(DriverStops.sequence_match(run.reload, stops.map(&:reload), halts, Set.new)).to eq 3
+      got = StopSighting.where(itinerary_id: stops.map(&:id)).order(:seen_at).map { |x| x.latitude.round(3) }
+      expect(got).to eq [28.8, 28.81, 28.82]
+      expect(StopSighting.pluck(:source).uniq).to eq ["sequence"]
+    end
+
+    it "skips the burst when the van stopped more times than there are stops" do
+      halts = { "1780" => [halt(55, 28.79), halt(50, 28.8001), halt(35, 28.8101), halt(20, 28.8201)] }
+      expect(DriverStops.sequence_match(run.reload, stops.map(&:reload), halts, Set.new)).to eq 0
+      expect(StopSighting.count).to eq 0
+    end
+  end
 end

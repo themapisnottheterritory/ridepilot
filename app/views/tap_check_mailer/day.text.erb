@@ -1,0 +1,19 @@
+Tablet stop check for <%= @date.strftime('%A, %B %-d') %> (demand response).
+
+When each stop is tapped on the tablet as it happens, dispatch can see where a run is and the rider's trip gets the right times. This lists runs where the tablet record doesn't line up with how the day went, so someone can check in. It's about the record, not about anyone's driving: the usual reasons are a busy stretch caught up afterwards, or still learning the new tablet.
+<% if @look.any? %>
+Runs worth a look:
+<% @look.each do |r| %>
+  <%= r.run.name %> (<%= r.run.provider&.name %>) · <%= r.driver %><%= " · van #{r.van}" if r.van.present? %>
+<% r.bursts.each do |g| %>    <%= g.size %> stops at different places were recorded within <%= ((g.map(&:finish_time).max - g.map(&:finish_time).min) / 60.0).ceil %> min of each other, starting <%= g.map(&:finish_time).min.in_time_zone.strftime('%-l:%M %p') %>
+<% end %><% if r.at_depot.positive? %>    <%= r.at_depot %> stop<%= r.at_depot == 1 ? ' was' : 's were' %> recorded while the tablet was at the depot
+<% end %><% if r.not_tapped.positive? %>    <%= r.not_tapped %> stop<%= r.not_tapped == 1 ? " wasn't" : "s weren't" %> recorded on the tablet
+<% end %><% end %>
+<% else %>
+Nothing to look at.
+<% end %>
+<%= @look.size + @fine + @partly %> runs with stops: <%= @look.size %> worth a look, <%= @fine %> fine<% if @partly.positive? %>, <%= @partly %> not checked (older tablet app, or taps sent long after they were made) and left out rather than guessed at<% end %>.
+
+Only taps the tablet proves it made with a signal are counted. A tap made with no signal keeps the time it was made, so signal loss, a re-sync or a wrong map pin never puts a run on this list.
+
+-- RidePilot (questions: GCRPC I.T.)
