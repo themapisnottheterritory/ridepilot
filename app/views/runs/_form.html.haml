@@ -33,6 +33,7 @@
         = render 'runs/tracking_panel' if current_provider.run_tracking?
     .col-sm-12.col-md-6
       = render 'repeating_runs/repetition_panel', f: f if @is_repeating_run
+      = render 'runs/service_mode_panel', f: f, edit_mode: edit_mode
       = render 'runs/vehicle_panel', f: f , edit_mode: edit_mode
       = render 'runs/driver_panel', f: f, edit_mode: edit_mode 
       = render 'runs/run_completion_panel', f: f, edit_mode: edit_mode if !@is_repeating_run
@@ -42,8 +43,14 @@
 
     - unless @is_repeating_run
       .col-sm-12
-        - if edit_mode != :new 
+        - if edit_mode != :new && !@run.fixed_route?
           = render 'runs/trip_list', f: f, edit_mode: edit_mode 
+
+- if !@is_repeating_run && edit_mode != :new && @run.fixed_route?
+  -# Outside the run form on purpose: each walk-on row has its own form.
+  .row
+    .col-sm-12
+      = render 'runs/boardings_panel', run: @run, boardings: @boardings || @run.fixed_route_boardings.includes(:rider_category, :fare_type, :stop, :driver).chronological
 
 - if edit_mode != :show
   :javascript

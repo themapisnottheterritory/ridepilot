@@ -16,6 +16,14 @@ class RepeatingRun < ApplicationRecord
   validates :service_mode, inclusion: { in: Run::SERVICE_MODES }
   validates :fixed_route, presence: true, if: -> { service_mode == 'fixed_route' }
 
+  def fixed_route?
+    service_mode == 'fixed_route'
+  end
+
+  def demand_response?
+    !fixed_route?
+  end
+
   has_many :repeating_trips, through: :weekday_assignments
   has_many :weekday_assignments, dependent: :destroy
   has_many :repeating_itineraries, dependent: :destroy

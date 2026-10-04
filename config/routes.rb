@@ -269,6 +269,8 @@ Rails.application.routes.draw do
       end
     end
 
+    resources :fixed_route_boardings, only: [:update, :destroy]
+
     resources :dispatchers,only: [:index] do
       collection do
         post :schedule

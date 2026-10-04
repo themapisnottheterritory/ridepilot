@@ -31,6 +31,9 @@
         = f.label :driver_id, translate_helper(:driver)
         = f.select :driver_id, options_from_collection_for_select( @drivers, :id, :user_name, session[:runs_driver_id]), {:include_blank => translate_helper(:all) }, { :class => 'form-control' }
       .col-sm-12
+        = f.label :service_mode, "Service"
+        = f.select :service_mode, options_for_select([["Demand response", "demand_response"], ["Fixed route", "fixed_route"]], session[:runs_service_mode]), {:include_blank => translate_helper(:all) }, { :class => 'form-control' }
+      .col-sm-12
         = f.label :run_result_id, translate_helper(:run_result)
         = f.select :run_result_id, options_for_select( [[translate_helper(:complete), 1], [translate_helper(:incomplete), 2]], session[:runs_run_result_id]), {:include_blank => translate_helper(:all) }, { :class => 'form-control' }
 

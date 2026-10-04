@@ -114,6 +114,8 @@ whether that is the bus they are sitting in.
 - Dispatcher run page shows "Unit confirmed by driver at 06:58" or "Changed by driver from 1734 to 1737 at 06:58".
 
 ### WP4 — Dispatcher web UI (Rails)
+**Status: BUILT 2026-09-04** — branch `fixed-route-wp4` (stacked on WP1). Found and fixed on the way: paper trail never recorded the author of web edits (missing whodunnit before_action).
+
 - Run and repeating-run forms: a Service Mode radio; when Fixed Route, a Fixed Route select replaces the garage address fields and the trip list.
 - Run show page: for fixed runs, a **Boardings panel** in place of the trip list. Rows by time and stop, totals by rider category, day total. Editors can correct or void a row (paper-trailed).
 - Runs index: a mode filter and a small colour swatch on fixed runs.

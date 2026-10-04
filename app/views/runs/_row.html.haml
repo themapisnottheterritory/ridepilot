@@ -5,6 +5,8 @@
     -if can? :show, run
       = link_to translate_helper("view"), run_path(run)
   %td
+    - if run.fixed_route? && run.fixed_route
+      %span.fixed-route-swatch{style: "display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;background:#{run.fixed_route.css_color || '#777'};border:1px solid rgba(0,0,0,.2);", title: "Fixed route: #{run.fixed_route.display_name}"}
     = run.name
     .pull-right
       - if run.cancelled?
