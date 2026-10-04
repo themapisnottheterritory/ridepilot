@@ -456,9 +456,14 @@ Rails.application.routes.draw do
             put 'update_to_address'
             get 'manifest_published_at'
             put 'vehicle', action: :update_vehicle
+            # Fixed route: walk-ons
+            get  'fixed_route', to: 'boardings#route'
+            get  'boardings',   to: 'boardings#index'
+            post 'boardings',   to: 'boardings#create'
           end
         end
         resources :vehicles, only: [:index]
+        delete 'boardings/:id' => 'boardings#destroy'   # :id = client_uuid of the submission
 
         # DVIR (driver vehicle inspection reports) — step 2
         get 'inspection_template' => 'inspection_reports#template'

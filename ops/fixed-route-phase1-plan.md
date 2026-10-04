@@ -122,6 +122,8 @@ whether that is the bus they are sitting in.
 - Run completion: unchanged. Dispatch marks the run complete the way they do now; the NTD report only counts complete runs.
 
 ### WP5 — Driver API (Rails, `api/v1/driver`)
+**Status: BUILT 2026-09-04** — branch `fixed-route-wp5` (stacked on WP4). Undo is by submission `client_uuid` rather than row id, so one tap undoes one tap.
+
 - Run payload gains `service_mode` and `fixed_route {id, name, color}`.
 - `GET runs/:id/fixed_route` returns stops grouped by direction, rider categories, fare types. Cached on the tablet, refreshed on run open.
 - `POST runs/:id/boardings` takes one walk-on submission (client_uuid, stop, direction, entries by category, alighted_count, recorded_at, lat/lng). Idempotent on client_uuid.
@@ -129,6 +131,8 @@ whether that is the bus they are sitting in.
 - `GET runs/:id/boardings` returns today's rows and totals so the screen rehydrates after an app restart.
 
 ### WP6 — Driver tablet (rideavl-v2, Ionic/Angular)
+**Status: BUILT 2026-09-04** — rideavl-v2 branch `fixed-route-wp6` (stacked on training-flavour), app 1.0.7. Verified headless against the live server incl. offline queue + sync.
+
 - Runs list: fixed runs show the route colour and name. Tapping an un-started run goes to unit confirmation, then the DVIR pre-trip exactly as today; pre-trip submit starts the run.
 - New **Fixed Route page** replaces the manifest for fixed runs. Top: boarded / alighted today and totals by category. Middle: one large **Walk-on** button. Bottom: the last few walk-ons with an undo. Toolbar keeps chat, post-trip inspection, and End Run.
 - **Walk-on sheet** mirrors Shah's dialog so drivers recognise it: Stop (nearest stop pre-selected from GPS, list grouped by direction), a row per rider category with − / count / +, fare type, Dropped off count, Save. Saves in one tap; no confirmation screens.
