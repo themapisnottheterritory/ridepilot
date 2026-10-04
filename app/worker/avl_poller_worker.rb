@@ -115,7 +115,7 @@ class AvlPollerWorker
     #       This ensured GPS only flowed for driver-started, incomplete runs.
     active_run = Run.where(
       vehicle_id: vehicle.id,
-      date: Date.today,
+      date: Date.current,
       provider_id: provider.id
     ).where(end_odometer: nil).first
 

@@ -90,7 +90,7 @@ class Api::V1::Driver::BoardingsController < Api::V1::Driver::BaseController
     return render fail_response(status: 404, submission: "No such walk-on on your runs.") if rows.empty?
     run = rows.first.run
     return render fail_response(status: 422, run: "This run has ended.") if run.end_odometer.present?
-    return render fail_response(status: 422, run: "Only today's walk-ons can be undone from the tablet.") unless run.date == Date.today
+    return render fail_response(status: 422, run: "Only today's walk-ons can be undone from the tablet.") unless run.date == Date.current
 
     PaperTrail.request(whodunnit: @driver.user_id.to_s) do
       FixedRouteBoarding.transaction do

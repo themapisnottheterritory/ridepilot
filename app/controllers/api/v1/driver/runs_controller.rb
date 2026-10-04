@@ -170,7 +170,7 @@ class Api::V1::Driver::RunsController < Api::V1::Driver::BaseController
   private
 
   def get_runs
-    @runs = Run.where(date: Date.today, driver: @driver).default_order.joins(:public_itineraries).group('runs.id')
+    @runs = Run.where(date: Date.current, driver: @driver).default_order.joins(:public_itineraries).group('runs.id')
   end
 
   def parse_address

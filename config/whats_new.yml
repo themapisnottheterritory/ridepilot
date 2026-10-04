@@ -16,6 +16,11 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-03 19:34"
+  title: Evening runs stay on the tablet
+  apps: [tablet]
+  body: |
+    After 7 PM a driver's run could drop off the tablet's **My Runs** list, because the server counted the date from a clock that had already rolled over to tomorrow. Evening runs now stay listed until the day actually ends, and the bus GPS keeps recording for them.
 - added: "2026-10-03 19:16"
   title: Tablet stop check
   for: admins

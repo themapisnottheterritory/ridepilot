@@ -4,7 +4,7 @@ class Api::V1::Driver::ItinerariesController < Api::V1::Driver::BaseController
     unless params[:run_id].blank?
       @run = Run.find_by_id params[:run_id]
     else
-      @run = Run.where(date: Date.today, driver: @driver).incomplete.first
+      @run = Run.where(date: Date.current, driver: @driver).incomplete.first
     end
     # No run (none today, or a stale run id): an empty manifest, not a 500.
     return render success_response(Itinerary.none) unless @run
