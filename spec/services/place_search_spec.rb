@@ -138,4 +138,13 @@ RSpec.describe SavedPlaceProposal, "with Azure Maps" do
     expect(p.summary).to start_with("I couldn't find **Day N Night Medical Supply**, Victoria").or start_with("Here's **Day N Night Medical Supply**, Victoria")
     expect(p.summary).not_to include(", ,")
   end
+
+  it "finds a saved place by name when a find carries the name as the address" do
+    map_gives([])
+    create(:provider_common_address, provider: provider, name: "Diane's Hair Salon", address: "2010 State Highway 72 W",
+           city: "Cuero", state: "TX", the_geom: Address.compute_geom(29.0907, -97.3245))
+    expect(PlaceSearch).not_to receive(:find)   # already saved and on the map: no lookup
+    p = described_class.new(provider: provider, user: admin, name: "Diane's Hair Salon", address: "Diane's Hair Salon", city: "Cuero", mode: :find).check
+    expect(p.existing.map(&:name)).to include("Diane's Hair Salon")
+  end
 end

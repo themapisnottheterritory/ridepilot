@@ -121,7 +121,9 @@ class SavedPlaceProposal
     scope = ProviderCommonAddress.where(provider_id: @provider.id).where("inactive IS NULL OR inactive = false")
     street_word = @address.sub(/\A\d+\s*/, "")[/[A-Za-z]+/]
     matches = house_number && street_word ? scope.where("address ILIKE ?", "#{house_number} #{street_word}%").to_a : []
-    if @name != @address && @name.length >= 4
+    # a find by name carries the name as the address too ("where is Diane's
+    # Hair Salon?"); it still has to be checked against saved names
+    if @name.length >= 4 && (@name != @address || @mode == :find)
       matches += scope.where("name ILIKE ?", "%#{ActiveRecord::Base.sanitize_sql_like(@name)}%").to_a
     end
     matches.uniq.first(5)
