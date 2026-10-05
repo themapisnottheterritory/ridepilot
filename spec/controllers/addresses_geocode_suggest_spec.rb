@@ -95,6 +95,27 @@ RSpec.describe AddressesController, type: :controller do
       get :geocode_suggest, params: { q: "1219 West State Highway 72, Cuero" }
       expect(JSON.parse(response.body).map { |r| r["place_id"] }).to eq [2, 3]   # Kenedy is 40 miles off
     end
+
+    # Michelle, 2026-10-05: a place name in front and the direction after the
+    # route number. The "W" alone would have matched Kenedy.
+    it "searches from the house number and drops a direction after the route number" do
+      allow(controller).to receive(:nominatim_suggest).and_return([])
+      expect(controller).to receive(:nominatim_suggest).with(q: "1219 TX 72").and_return([kenedy, yorktown, cuero])
+      allow(controller).to receive(:nominatim_suggest).with(city: "Cuero", state: "TX").and_return([{ "lat" => "29.0938", "lon" => "-97.2890" }])
+      get :geocode_suggest, params: { q: "Diane's Hair Salon 1219 State Highway 72 W, Cuero, TX, 77954-5102" }
+      expect(JSON.parse(response.body).map { |r| r["place_id"] }.first).to eq 2
+    end
+
+    it "leaves a street with a number in its name alone" do
+      expect(controller.send(:route_spelling, "1219 W SH 72")).to eq "1219 TX 72"
+      expect(controller.send(:route_spelling, "1219 State Highway 72 West")).to eq "1219 TX 72"
+      strip = ->(t) { controller.send(:strip_leading_name, t) }
+      expect(strip.("Diane's Hair Salon 2010 State Highway 72 W")).to eq "2010 State Highway 72 W"
+      expect(strip.("Highway 59 Frontage 1200")).to eq "Highway 59 Frontage 1200"
+      expect(strip.("CR 181 Victoria")).to eq "CR 181 Victoria"
+      expect(strip.("PO Box 12 Victoria")).to eq "PO Box 12 Victoria"
+      expect(strip.("1404 E Virginia Ave")).to eq "1404 E Virginia Ave"
+    end
   end
 
   # Bobbie, 2026-09-30: "202 E Second St Bloomington" found nothing; the map

@@ -24,6 +24,15 @@ class AddressesController < ApplicationController
   # a genuine "1404 E Virginia (rear entrance)" would be searched as "rear
   # entrance" -- the note instead of the address.
   LABELLED_ADDRESS = /\A[^()]+\(\s*(?<addr>\d[^()]*?)\s*\)?\z/
+
+  # A place name typed or pasted in front of the address: "Diane's Hair Salon
+  # 2010 State Highway 72 W, Cuero" (Michelle, 2026-10-05) matched nothing at
+  # all. Search from the house number on. The name must hold no digit or comma,
+  # so the name never holds the street's own number. It must also not end in a
+  # road word: in "Highway 59 Frontage", "CR 181 Victoria" or "PO Box 12" the
+  # number is the road, not a house (ROAD_WORD_AT_END, strip_leading_name).
+  LEADING_NAME = /\A(?<name>[^\d,()]*[[:alpha:]][^\d,()]*?)\s+(?<addr>\d+\s+[[:alpha:]].*)\z/
+  ROAD_WORD_AT_END = /\b(?:highway|hwy|road|rd|cr|fm|farm\s+to\s+market|route|rte|sh|tx|us|loop|spur|interstate|ih|i|box|suite|ste|apt|unit|no|number)\.?\z/i
   SUGGEST_LIMIT = 5
 
   # provider & customer common addresses
@@ -168,6 +177,7 @@ class AddressesController < ApplicationController
   def geocode_suggest
     term = params[:q].to_s.strip
     term = Regexp.last_match[:addr] if term.match(LABELLED_ADDRESS)
+    term = strip_leading_name(term)
     return render(json: []) if term.length < MIN_SUGGEST_LENGTH
 
     # Free text and structured search answer differently, and neither is reliably
@@ -224,6 +234,12 @@ class AddressesController < ApplicationController
 
   private
 
+  # "Diane's Hair Salon 2010 TX 72" -> "2010 TX 72"; see LEADING_NAME.
+  def strip_leading_name(term)
+    m = term.match(LEADING_NAME)
+    m && m[:name] !~ ROAD_WORD_AT_END ? m[:addr] : term
+  end
+
   # Returns raw Nominatim JSON; the pickers already know how to parse that shape.
   # Everything from an apartment or unit marker onward, and a trailing scrap like
   # "6a" or "R170". A trailing token has to contain a digit to be dropped, which
@@ -241,7 +257,11 @@ class AddressesController < ApplicationController
   # "FM 953": the map names highways by route number, and a direction word is
   # part of the local name only where the town gave it one.
   def route_spelling(text)
-    text.gsub(/\b(?:(?:N|S|E|W|North|South|East|West)\.?\s+)?(?:State\s+)?(?:Highway|Hwy\.?|SH|TX)\s*-?\s*(\d+[A-Z]?)\b/i, 'TX \\1')
+    # A direction may come before the route number or after it ("State Highway
+    # 72 W"); the map has neither, and a "W" left behind turned "2010 TX 72 W"
+    # into 2010 West State Highway 72 in Kenedy, 30 miles from the Cuero address
+    # that was meant (Michelle, 2026-10-05).
+    text.gsub(/\b(?:(?:N|S|E|W|North|South|East|West)\.?\s+)?(?:State\s+)?(?:Highway|Hwy\.?|SH|TX)\s*-?\s*(\d+[A-Z]?)\b(?:\s+(?:N|S|E|W|North|South|East|West)\b\.?)?/i, 'TX \\1')
         .gsub(/\b(?:Farm\s+to\s+Market(?:\s+Road)?|F\.?M\.?)\s*-?\s*(\d+)\b/i, 'FM \\1')
         .squish
   end
