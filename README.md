@@ -5,7 +5,11 @@ The purpose of this project is to implement a Computer Aided Scheduling and Disp
 
 Status
 -------------
-work in progress
+This is **GCRPC's fork** (`themapisnottheterritory/ridepilot`, branch `master`), in production
+for Victoria Transit, Goliad County Rural Transit and Lavaca County Transit. It started from
+CamSys RidePilot 2.1.12 (2019) and has been developed in-house since; the footer shows the
+running build as commit date and hash (see `config/initializers/version.rb`). The CamSys links
+below are the original upstream, no longer tracked.
 
 - development: check [develop](https://github.com/camsys/ridepilot/tree/develop)
 
@@ -18,14 +22,14 @@ work in progress
 Dependencies
 -------------
 
-This application requires:
+This application requires (versions as run in production, October 2026):
 
-- Ruby 2.4.5
-- Rails 5.2
-- Postgresql 9.3+
-- PostGIS 2.1+
-- Imagemagick
-- Redis
+- Ruby 3.2.9
+- Rails 7.1.6
+- PostgreSQL 9.4 (production runs 9.4.21)
+- PostGIS 2.5
+- ImageMagick 6
+- Redis 7
 
 Set up development environment (native, see below for docker setup)
 -------------
