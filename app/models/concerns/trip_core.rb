@@ -121,11 +121,20 @@ module TripCore
 
   def return_trip_later_than_outbound_trip
     if is_linked?
-      if is_outbound? && appointment_time
-        errors.add(:base, TranslationEngine.translate_text(:outbound_trip_dropoff_time_no_later_than_return_trip_pickup_time)) if appointment_time > return_trip.pickup_time
-      elsif is_return? && pickup_time && outbound_trip.appointment_time
-        errors.add(:base, TranslationEngine.translate_text(:return_trip_pickup_time_no_earlier_than_outbound_trip_dropoff_time)) if pickup_time < outbound_trip.appointment_time
+      if is_outbound? && appointment_time && return_trip&.pickup_time
+        errors.add(:base, TranslationEngine.translate_text(:outbound_trip_dropoff_time_no_later_than_return_trip_pickup_time)) if comparable_time(appointment_time) > comparable_time(return_trip.pickup_time)
+      elsif is_return? && pickup_time && outbound_trip&.appointment_time
+        errors.add(:base, TranslationEngine.translate_text(:return_trip_pickup_time_no_earlier_than_outbound_trip_dropoff_time)) if comparable_time(pickup_time) < comparable_time(outbound_trip.appointment_time)
       end
     end
+  end
+
+  # A subscription's times are times of day; their date part is whenever the
+  # form last set them (editing the outbound puts today's date on its times,
+  # while the return keeps the date it was saved), so compare the clock only.
+  # 102 of 109 linked subscriptions couldn't be edited (2026-10-05). A single
+  # trip's dates are real and are compared whole.
+  def comparable_time(time)
+    is_a?(RepeatingTrip) ? time.in_time_zone.seconds_since_midnight : time
   end
 end
