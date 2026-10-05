@@ -16,6 +16,10 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-05 17:50"
+  title: Ask RidePilot finds local businesses by name
+  body: |
+    When our map doesn't know a place by its name, for example "add Diane's Hair Salon, 2010 State Highway 72 W, Cuero", **Ask RidePilot** now looks it up on Azure Maps and the card says **Found on Azure Maps**. Check the pin is on the right building before you click **Add it**. Only the place's name and town are looked up.
 - added: "2026-10-05 17:45"
   title: Trips page after deleting a customer
   body: |
