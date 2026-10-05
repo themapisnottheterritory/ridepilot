@@ -167,7 +167,8 @@ class ReportsController < ApplicationController
       month_runs = Run.for_vehicle(vehicle.id).for_date_range(@start_date, @end_date)
       month_trips = Trip.for_vehicle(vehicle.id).for_date_range(@start_date, @end_date).completed
 
-      @total_hours[vehicle] = month_runs.sum("actual_end_time - actual_start_time").to_i
+      # whole hours, as before: "68:49:56".to_i was 68, but a Duration's to_i is seconds
+      @total_hours[vehicle] = hms_to_hours(month_runs.sum("actual_end_time - actual_start_time")).to_i
       @total_rides[vehicle] = month_trips.reduce(0){|total,trip| total + trip.trip_count}
 
       @beginning_odometer[vehicle] = month_runs.minimum(:start_odometer) || -1
@@ -1683,6 +1684,10 @@ class ReportsController < ApplicationController
     #argument is a string of the form hours:minutes:seconds.  We would like
     #a float of hours
     return 0 if hms == 0 || hms.blank?
+    # Rails 7 returns a summed PostgreSQL interval as an ActiveSupport::Duration,
+    # not the "hh:mm:ss" string older Rails gave; a Duration passes #split on to
+    # its Float of seconds (NoMethodError in Service Summary, 2026-10-05)
+    return hms.to_f / 3600.0 if hms.is_a?(ActiveSupport::Duration) || hms.is_a?(Numeric)
 
     hours, minutes, seconds = hms.split(":").map &:to_i
     hours ||= 0
