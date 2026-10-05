@@ -16,6 +16,7 @@
   <%= yield :head %>
 </head>
 <body class="<%= bodytag_class %>">
+<%= render "layouts/restart_notice" if current_user %>
 <% if ENV["TRAINING_MODE"].to_s == "true" %>
   <div id="training-banner" style="background:#e8710a;color:#fff;font-weight:700;text-align:center;padding:6px 12px;letter-spacing:.04em;font-size:14px;">
     TRAINING SERVER &mdash; fictitious riders, resets every night. Nothing done here affects real service.

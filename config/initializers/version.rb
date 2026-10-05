@@ -17,3 +17,8 @@ rescue SystemCallError
   nil
 end
 Ridepilot::Application.config.version = version || "2.1.12"
+
+# When this process started: the restart banner (layouts/_restart_notice) knows
+# RidePilot is back when /footer/today comes from a process booted after the
+# restart time. Each Puma worker runs the initializers, so each has its own.
+Ridepilot::Application.config.booted_at = Time.current

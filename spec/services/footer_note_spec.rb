@@ -36,6 +36,9 @@ RSpec.describe FooterController, type: :controller do
   it "reports today's rides for the signed-in provider" do
     allow(FooterNote).to receive(:rides_completed).and_return(3)
     get :today
-    expect(JSON.parse(response.body)).to eq("count" => 3, "text" => "Today so far: 3 rides got neighbors where they chose to go.")
+    body = JSON.parse(response.body)
+    expect(body).to include("count" => 3, "text" => "Today so far: 3 rides got neighbors where they chose to go.")
+    # when this process started, for the restart banner (layouts/_restart_notice)
+    expect(body["booted"]).to eq(Rails.application.config.booted_at.to_i)
   end
 end

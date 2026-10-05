@@ -16,6 +16,10 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-05 18:02"
+  title: Restart notices
+  body: |
+    When RidePilot has to restart for updates, a bar across the top of the page now counts down to the time, turns red in the last minute, and says when RidePilot is back. Save what you are working on before the countdown ends; when the bar turns green, click **Reload**. Most updates will not need a restart at all.
 - added: "2026-10-05 18:01"
   title: Clearer messages when a trip will not go on a run
   body: |

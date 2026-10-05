@@ -1,0 +1,96 @@
+<%# Restart notice for signed-in staff (ops/restart/ridepilot-restart.sh posts it).
+    nginx serves /restart-notice.json itself, so this keeps working while Rails is
+    down: count down to the restart, say when it is happening, then say when
+    RidePilot answers again. It never reloads the page by itself: someone may be
+    halfway through a trip form. %>
+<div id="rp-restart-notice" role="status" aria-live="polite" hidden></div>
+<style>
+  #rp-restart-notice { position: sticky; top: 0; z-index: 3000; padding: 8px 16px; text-align: center;
+    font: 600 15px/1.4 "Open Sans", Arial, sans-serif; color: #131313; background: #fff4d6;
+    border-bottom: 3px solid #CC9900; }
+  #rp-restart-notice.rp-soon { color: #fff; background: #d03b3b; border-bottom-color: #a32424; }
+  #rp-restart-notice.rp-down { color: #fff; background: #1f3864; border-bottom-color: #12264F; }
+  #rp-restart-notice.rp-back { color: #fff; background: #0ca30c; border-bottom-color: #087a08; }
+  #rp-restart-notice button { margin-left: 12px; padding: 2px 12px; font: inherit; color: #131313;
+    background: #fff; border: 0; border-radius: 4px; cursor: pointer; }
+</style>
+<script>
+(function () {
+  var NOTICE_URL = "/restart-notice.json";
+  var ALIVE_URL = <%= raw footer_today_path.to_json %>;
+  var loadedAt = Date.now();
+  var bar = document.getElementById("rp-restart-notice");
+  var notice = null;      // {at: ISO time, label: "6:00 PM", message: "..."}
+  var back = false;
+  var aliveTimer = null;
+
+  function show(text, cls, withReload) {
+    bar.className = cls || "";
+    bar.textContent = text;
+    if (withReload) {
+      var b = document.createElement("button");
+      b.type = "button"; b.textContent = "Reload";
+      b.onclick = function () { location.reload(); };
+      bar.appendChild(b);
+    }
+    bar.hidden = false;
+  }
+  function hide() { bar.hidden = true; }
+  function clock(ms) {
+    var s = Math.max(0, Math.round(ms / 1000));
+    return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2);
+  }
+
+  function render() {
+    if (back) { show("RidePilot is back. Reload the page when you are ready.", "rp-back", true); return; }
+    if (!notice) { hide(); return; }
+    var at = Date.parse(notice.at);
+    if (loadedAt >= at) { hide(); return; }   // this page already came from the restarted RidePilot
+    var left = at - Date.now();
+    if (left > 0) {
+      show((notice.message || "RidePilot will restart for updates") + " at " + notice.label +
+           " (in " + clock(left) + "). Please save what you are working on.", left <= 60000 ? "rp-soon" : "");
+    } else {
+      show(notice.late ? notice.message + "." :
+           "RidePilot is restarting now. This message will change when it is back (usually under a minute).", "rp-down");
+      watchAlive();
+    }
+  }
+
+  function checkNotice() {
+    fetch(NOTICE_URL + "?t=" + Date.now(), { cache: "no-store", credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (n) {
+        // a notice taken down before its time means the restart was called off
+        if (!n && notice && Date.now() < Date.parse(notice.at)) notice = null;
+        if (n && n.at) notice = n;
+        render();
+      })
+      .catch(function () {});
+  }
+
+  // Back when the answer comes from a process that started after the restart time.
+  // (While RidePilot restarts, nginx holds requests rather than failing them, so
+  // "it stopped answering" can't be seen reliably; the start time can.) If the
+  // answer has no start time, fall back to two minutes after the restart time.
+  function watchAlive() {
+    if (aliveTimer) return;
+    aliveTimer = setInterval(function () {
+      fetch(ALIVE_URL, { cache: "no-store", credentials: "same-origin", headers: { "Accept": "application/json" } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (!d || !notice) return;
+          var at = Date.parse(notice.at);
+          if ((d.booted && d.booted * 1000 >= at - 5000) || (!d.booted && Date.now() > at + 120000)) {
+            back = true; clearInterval(aliveTimer); aliveTimer = null; render();
+          }
+        })
+        .catch(function () {});
+    }, 3000);
+  }
+
+  checkNotice();
+  setInterval(checkNotice, 30000);
+  setInterval(function () { if (notice && !back) render(); }, 1000);
+})();
+</script>
