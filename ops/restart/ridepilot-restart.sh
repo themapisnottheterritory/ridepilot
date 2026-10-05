@@ -79,7 +79,8 @@ docker ps --format '{{.Names}}' | grep -qx "$APP" || die "$APP is not running"
 if [ "$FORCE" = 0 ] && [ -n "$(git status --porcelain --untracked-files=no)" ]; then
   die "uncommitted changes in $APPDIR: commit first so the footer version names the live code (or --force)"
 fi
-running=$(curl -s -m 10 "$URL" -L | grep -o 'Version [^<(]*([0-9a-f]*)' | grep -o '([0-9a-f]*)' | tr -d '()')
+# 60 s: the first page after a JS/CSS change recompiles the asset bundle (development mode)
+running=$(curl -s -m 60 "$URL" -L | grep -o 'Version [^<(]*([0-9a-f]*)' | grep -o '([0-9a-f]*)' | tr -d '()')
 head=$(git rev-parse --short=8 HEAD)
 log "running build ${running:-unknown}, HEAD $head"
 
@@ -120,7 +121,7 @@ if [ "$PHASED" = 1 ]; then
   done
   [ "$booted" -ge "$workers" ] || { echo "$(date -u '+%F %T UTC') ridepilot-restart: only $booted of $workers workers rebooted after phased restart" >> "$ALERTS"; die "only $booted of $workers workers came back within 10 minutes: check docker logs $APP"; }
   wait_back || { echo "$(date -u '+%F %T UTC') ridepilot-restart: app not answering after phased restart" >> "$ALERTS"; die "app not answering after phased restart"; }
-  v=$(curl -s -m 10 "$URL" -L | grep -o 'Version [^<]*' | head -1)
+  v=$(curl -s -m 60 "$URL" -L | grep -o 'Version [^<]*' | head -1)
   log "all $workers workers replaced; serving: $v"
   exit 0
 fi
@@ -148,7 +149,7 @@ done
 log "restarting $APP and $SIDEKIQ (30 s for requests and jobs to finish)"
 docker restart -t 30 "$APP" ${SIDEKIQ:+"$SIDEKIQ"} >/dev/null || log "docker restart reported an error; waiting to see if the app answers"
 if wait_back; then
-  v=$(curl -s -m 10 "$URL" -L | grep -o 'Version [^<]*' | head -1)
+  v=$(curl -s -m 60 "$URL" -L | grep -o 'Version [^<]*' | head -1)
   log "back after $(( $(date +%s) - target )) s: $v"
   # leave the notice up 3 minutes so every open page notices RidePilot is back
   sleep 180; take_down_notice; log "notice taken down"
