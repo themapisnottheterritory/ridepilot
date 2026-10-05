@@ -16,6 +16,10 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-05 18:05"
+  title: Ask RidePilot labels its map pin
+  body: |
+    On an **Ask RidePilot** place card, the pin now shows what it is: the place's name, its address, and where the spot came from (our map, or Azure Maps). If you drag the pin, the label says **Moved by you**, and **Add it** saves the spot you chose. A place found by name on Azure Maps now fills in its address too.
 - added: "2026-10-05 17:50"
   title: Ask RidePilot finds local businesses by name
   body: |
