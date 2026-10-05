@@ -62,6 +62,11 @@ RSpec.describe PlaceNaming do
     expect(typed("2401 Patterson Drive, Suite 100", lat: 28.81335, lon: -96.98645).name).to eq "Victoria Heart & Vascular"   # 6 m, same number
     expect(typed("2104 Patterson Drive", lat: 28.8134, lon: -96.9865).name).to be_nil                                        # another number
     expect(typed("2401 Patterson Drive", name: "Typed name").name).to eq "Typed name"                                       # a typed name wins
+    create(:provider_common_address, provider: provider, name: "332 Independence Drive Apt 315", address: "332 Independence Drive Apt 315",
+           city: "Victoria", state: "TX")
+    expect(typed("332 Independence Drive Apt 315").name).to be_nil                                                         # an address saved as a name
+    create(:provider_common_address, provider: provider, name: "Thomas Ninke", address: "1907 Lova Drive Apt # 1111", city: "Victoria", state: "TX")
+    expect(typed("1907 Lova Drive Apt # 1111").name).to be_nil                                                            # a person, at an apartment
   end
 end
 

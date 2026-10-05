@@ -111,7 +111,7 @@ module PlaceNaming
   def saved_place_at(provider, place_key_value)
     number = place_key_value[/\A(\d+)/, 1] or return nil
     ProviderCommonAddress.where(provider_id: provider.id).where("inactive IS NULL OR inactive = false")
-                         .where("address ILIKE ?", "#{number}%").find { |s| place_key(s) == place_key_value && s.name.present? }
+                         .where("address ILIKE ?", "#{number}%").find { |s| place_key(s) == place_key_value && real_name?(s) }
   end
 
   # Once, at deploy and whenever saved places were added in bulk: unnamed trip
@@ -139,13 +139,22 @@ module PlaceNaming
     k = place_key(address)
     scope = ProviderCommonAddress.where("inactive IS NULL OR inactive = false").where("address ILIKE ?", "#{number}%")
     scope = scope.where(provider_id: address.provider_id) if address.provider_id
-    match = scope.find { |s| place_key(s) == k }
+    match = scope.find { |s| place_key(s) == k && real_name?(s) }
     if !match && address.the_geom.present?
       match = scope.where.not(the_geom: nil).find do |s|
+        next false unless real_name?(s)
         metres(address.latitude.to_f, address.longitude.to_f, s.latitude.to_f, s.longitude.to_f) <= NEAR_METRES
       end
     end
-    match&.name.presence
+    match && real_name?(match) ? match.name : nil
+  end
+
+  # A saved place's name worth copying onto trips: not a street address saved
+  # as a name ("332 Independence Drive Apt 315", "103 N Star": riders' homes
+  # saved as places by mistake, found in the first backfill preview, 2026-10-05).
+  def real_name?(saved)
+    n = saved.name.to_s.strip
+    n.present? && n !~ /\A\d/ && key(n) != key(saved.address) && n !~ RESIDENCE && saved.address.to_s !~ RESIDENCE   # not an apartment
   end
 
   def metres(lat1, lon1, lat2, lon2)
