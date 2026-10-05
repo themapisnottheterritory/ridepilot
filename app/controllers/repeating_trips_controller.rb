@@ -95,11 +95,16 @@ class RepeatingTripsController < ApplicationController
       if @trip.is_all_valid?(current_provider_id) && @trip.save
         TrackerActionLog.update_subscription_trip(@trip, current_user, changes, prev_schedule)
         @trip.unschedule! if is_run_disrupted
+        notice = 'Trip was successfully updated.'
+        if (gone = @trip.withdrawn_trips).any?
+          days = gone.map { |t| t.in_time_zone.strftime('%a %b %-d') }
+          notice += " Removed #{gone.size} trip#{'s' if gone.size != 1} on days no longer in this subscription: #{days.join(', ')}."
+        end
         format.html { 
           if params[:from_dispatch] == 'true'
-            redirect_to recurring_dispatchers_path(run_id: params[:run_id]), :notice => 'Trip was successfully updated.'  
+            redirect_to recurring_dispatchers_path(run_id: params[:run_id]), :notice => notice
           else
-            redirect_to @trip, :notice => 'Trip was successfully updated.'  
+            redirect_to @trip, :notice => notice
           end
         }
       else

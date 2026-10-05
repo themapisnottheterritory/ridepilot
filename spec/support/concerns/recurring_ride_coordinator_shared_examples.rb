@@ -174,12 +174,15 @@ RSpec.shared_examples "a recurring ride coordinator" do
         end
 
         it "should still have child coordinators on the old day" do
-          # We should see only the original (which was created on a Monday)
+          # We should see only the original (which was created on a Monday).
+          # Subscription trips withdraw the future trips on a day that is
+          # unticked (RepeatingTrip#withdraw_future_trips_on!, 2026-10-05);
+          # subscription runs keep theirs.
           expect(
             @scheduled_instance_class.where(
               @occurrence_scheduler_association_id => @coordinator.id
             ).select{ |c| c.send(@occurrence_date_attribute).strftime("%u") == "1" }.size
-          ).to eq 3
+          ).to eq(@withdraws_removed_days ? 0 : 3)
         end
 
         it "should tell me the correct repetition data when reloading the coordinator" do
@@ -254,7 +257,7 @@ RSpec.shared_examples "a recurring ride coordinator" do
             @scheduled_instance_class.after_today.where(
               @occurrence_scheduler_association_id => @coordinator.id
             ).select{ |c| c.send(@occurrence_date_attribute).strftime("%u") == "1" }.size
-          ).to eq 1
+          ).to eq(@withdraws_removed_days ? 0 : 1)   # see above: subscription trips withdraw them
         end
 
         it "should retain child coordinators on the old day on or before Sun, 13 Sep 2015" do

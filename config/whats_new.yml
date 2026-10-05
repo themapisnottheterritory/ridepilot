@@ -16,6 +16,12 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-05 18:04"
+  title: Removing days from a subscription removes their trips
+  body: |
+    When you untick a day on a **Subscription Trip** and save, RidePilot now removes the trips it had already made for that day in the coming weeks, and the message at the top of the page lists them. You no longer have to cancel them one by one. Trips that already have a result are kept.
+
+    Changing a subscription's time or addresses still only affects trips it makes from then on, so change any trips already made for the coming weeks one by one.
 - added: "2026-10-05 18:03"
   title: Rural runs start at 7:00
   body: |

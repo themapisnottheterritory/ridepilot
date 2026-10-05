@@ -259,6 +259,25 @@ class RepeatingTrip < ApplicationRecord
   def process_days_of_week_removed
     if @days_of_week_removed && @days_of_week_removed.length > 0
       self.unschedule!(@days_of_week_removed)
+      @withdrawn_trips = withdraw_future_trips_on!(@days_of_week_removed)
     end
+  end
+
+  # Pickup times of the trips the last save withdrew (days unticked), for the notice.
+  def withdrawn_trips
+    @withdrawn_trips || []
+  end
+
+  # Daily trips this subscription already made on weekdays it no longer runs.
+  # Unticking Tuesday used to leave every Tuesday trip already generated on the
+  # books (Kelly, 2026-10-05: a rider's Tue/Thu trips stayed for three weeks and
+  # had to be cancelled one by one). Same rule as withdraw_future_trips!: only
+  # future trips with no recorded result; destroying one also takes it off its
+  # run's manifest and the driver's tablet (Trip#withdraw_from_tablet).
+  def withdraw_future_trips_on!(wdays)
+    gone = trips.where(trip_result_id: nil).where("pickup_time > ?", Time.current).order(:pickup_time)
+                .select { |t| wdays.include?(t.pickup_time.in_time_zone.wday) }
+    gone.each(&:destroy)
+    gone.map(&:pickup_time)
   end
 end

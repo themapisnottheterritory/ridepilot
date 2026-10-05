@@ -16,6 +16,7 @@ RSpec.describe RepeatingTrip do
       # To help us know what attribute to check occurrence dates against
       @occurrence_date_attribute = :pickup_time
       @scheduler_date_attribute = :pickup_time
+      @withdraws_removed_days = true   # unticked days' future trips are withdrawn
     end
   end
 
