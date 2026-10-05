@@ -1,0 +1,92 @@
+- content_for :title, "Name busy places"
+:css
+  .pn-wrap { max-width: 1100px; margin: 0 auto; font-family: "Open Sans", Arial, sans-serif; color: #131313; }
+  .pn-wrap h1 { color: #12264F; font-size: 26px; margin: 18px 0 4px; }
+  .pn-wrap .lede { color: #5f6b7a; margin: 0 0 14px; max-width: 760px; }
+  .pn-done { background: #e6f6e6; border-left: 4px solid #0ca30c; padding: 8px 12px; margin: 0 0 12px; }
+  .pn-table { width: 100%; border-collapse: collapse; }
+  .pn-table th { background: #12264F; color: #fff; text-align: left; padding: 7px 8px; font-size: 13px; }
+  .pn-table td { border-bottom: 1px solid #cfd6e4; padding: 7px 8px; vertical-align: top; font-size: 13px; }
+  .pn-table tr:nth-child(even) td { background: #f4f6fa; }
+  .pn-trips { font-size: 20px; font-weight: 700; color: #12264F; text-align: right; width: 54px; }
+  .pn-addr b { display: block; }
+  .pn-addr a { font-size: 12px; }
+  .pn-sugg { margin-top: 5px; }
+  .pn-sugg button.chip { border: 1px solid #CC9900; background: #fff7e0; color: #12264F; border-radius: 12px; padding: 1px 9px; margin: 2px 3px 0 0; font-size: 12px; }
+  .pn-sugg .none { color: #5f6b7a; font-style: italic; }
+  .pn-form { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .pn-form input[name="name"] { flex: 1 1 220px; min-width: 180px; padding: 4px 7px; border: 1px solid #c9d2df; border-radius: 4px; }
+  .pn-form select { padding: 4px; border: 1px solid #c9d2df; border-radius: 4px; }
+  .pn-form .save { background: #12264F; color: #fff; border: 0; border-radius: 4px; padding: 5px 14px; font-weight: 600; }
+  .pn-actions button { border: 0; background: none; color: #5f6b7a; text-decoration: underline; padding: 0; font-size: 12px; margin-right: 10px; }
+.pn-wrap
+  %h1 Name busy places
+  %p.lede
+    Trip destinations booked as a bare street address, busiest first (trips 30 days back and 30 ahead).
+    Give one a name and every trip to it shows the name: on Dispatch, manifests and the rider's page, so
+    "my trip to Victoria Heart and Vascular" is easy to find. Use <b>Suggest</b> for the businesses
+    Azure Maps lists there, or check on Google Maps. <b>Not a facility</b> hides an apartment or a
+    rider's second address for good.
+  - if @named
+    .pn-done= sanitize(@named.gsub(/\*\*(.+?)\*\*/, '<b>\1</b>'), tags: %w[b])
+  - if @places.empty?
+    %p Every busy destination has a name.
+  - else
+    %table.pn-table
+      %thead
+        %tr
+          %th Trips
+          %th Address
+          %th Name it
+      %tbody
+        - @places.each do |p|
+          %tr{data: { key: p[:key], lat: p[:lat], lon: p[:lon] }}
+            %td.pn-trips= p[:trips]
+            %td.pn-addr
+              %b= p[:address]
+              = [p[:city], p[:zip]].compact.join(" ")
+              %br
+              - if p[:lat]
+                = link_to "Look on Google Maps", "https://www.google.com/maps/search/?api=1&query=#{p[:lat]},#{p[:lon]}", target: "_blank", rel: "noopener"
+              .pn-sugg
+            %td
+              = form_tag place_names_path, class: "pn-form" do
+                = hidden_field_tag :address_ids, p[:address_ids].join(",")
+                = text_field_tag :name, nil, placeholder: "Facility name, e.g. Victoria Heart & Vascular", required: true
+                = select_tag :address_group_id, options_for_select(@groups), required: true, prompt: "Category"
+                %button.save{type: "submit"} Save
+              .pn-actions
+                - if p[:lat]
+                  %button.suggest{type: "button"} Suggest
+                %button.skip{type: "button"} Not a facility
+:javascript
+  (function () {
+    var token = (document.querySelector('meta[name="csrf-token"]') || {}).content;
+    document.querySelectorAll('.pn-table tr[data-key]').forEach(function (row) {
+      var box = row.querySelector('.pn-sugg'), name = row.querySelector('input[name="name"]');
+      var s = row.querySelector('.suggest');
+      if (s) s.addEventListener('click', function () {
+        s.disabled = true; s.textContent = 'Looking...';
+        fetch(#{raw suggest_place_names_path.to_json} + '?lat=' + row.dataset.lat + '&lon=' + row.dataset.lon, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+          .then(function (r) { return r.ok ? r.json() : []; })
+          .then(function (list) {
+            s.textContent = 'Suggest';
+            box.innerHTML = '';
+            if (!list.length) { box.innerHTML = '<span class="none">Azure Maps lists no business here.</span>'; return; }
+            list.forEach(function (p) {
+              var b = document.createElement('button'); b.type = 'button'; b.className = 'chip';
+              b.textContent = p.name + ' (' + p.metres + ' m)';
+              b.addEventListener('click', function () { name.value = p.name; name.focus(); });
+              box.appendChild(b);
+            });
+          })
+          .catch(function () { s.disabled = false; s.textContent = 'Suggest'; });
+      });
+      row.querySelector('.skip').addEventListener('click', function () {
+        fetch(#{raw skip_place_names_path.to_json}, { method: 'POST', credentials: 'same-origin',
+          headers: { 'X-CSRF-Token': token, 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'key=' + encodeURIComponent(row.dataset.key) })
+          .then(function (r) { if (r.ok) row.remove(); });
+      });
+    });
+  })();

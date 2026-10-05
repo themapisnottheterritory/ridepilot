@@ -100,6 +100,26 @@ class PlaceSearch
     { address: a["freeformAddress"], street: street, city: a["municipality"].presence, zip: a["postalCode"].to_s[/\d{5}/] }
   end
 
+  # Businesses Azure Maps lists within `metres` of a spot, nearest first, for
+  # "Name busy places" (PlaceNamesController#suggest): [{ name:, metres: }].
+  # Only offered to a person to choose from; never saved by itself. Each call
+  # counts against the monthly cap like a search.
+  def self.nearby(lat:, lon:, metres: 60)
+    return [] unless enabled? && lat.to_f.nonzero? && lon.to_f.nonzero?
+    return [] unless count_one!
+    uri = URI("#{BASE}/search/nearby/json")
+    uri.query = { "api-version" => "1.0", lat: lat, lon: lon, radius: metres, limit: 6 }.to_query
+    req = Net::HTTP::Get.new(uri)
+    req["subscription-key"] = key
+    res = Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: 3, read_timeout: 5) { |h| h.request(req) }
+    raise "Azure Maps answered #{res.code}" unless res.code == "200"
+    (JSON.parse(res.body)["results"] || []).filter_map { |r| r.dig("poi", "name").presence && { name: r.dig("poi", "name"), metres: r["dist"].to_f.round } }
+                                          .uniq { |h| h[:name].downcase }.sort_by { |h| h[:metres] }
+  rescue StandardError => e
+    report("#{e.class}: #{e.message}")
+    []
+  end
+
   # Most of the shorter name's words appear in the other; a word may be the
   # start of the other's ("Derm" / "Dermatology", "Supply" / "Supplies").
   def self.same_name?(a, b)

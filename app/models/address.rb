@@ -28,6 +28,20 @@ class Address < ApplicationRecord
   before_validation :compute_in_district
 
   has_paper_trail
+
+  # A trip address typed in full ("2401 Patterson Drive") that is a saved place
+  # takes the saved place's name, so the trip shows "Victoria Heart & Vascular"
+  # instead of a street only callers can't place (PlaceNaming, 2026-10-05).
+  # Never stops an address from saving.
+  before_create :take_saved_place_name, if: -> { name.blank? && %w[TempAddress CustomerCommonAddress].include?(type) }
+
+  def take_saved_place_name
+    self.name = PlaceNaming.saved_name_for(self) || name
+  rescue StandardError => e
+    Rails.logger.warn "take_saved_place_name: #{e.class}: #{e.message}"
+  ensure
+    return true
+  end
   
   NewAddressOption = { :label => "New Address", :id => 0 }
 

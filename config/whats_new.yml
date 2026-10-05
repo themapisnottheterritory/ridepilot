@@ -16,6 +16,13 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-05 19:00"
+  title: Name busy places
+  for: admins
+  body: |
+    Trips booked to a typed address (for example **2401 Patterson Drive**) showed only the street, so "my trip to the heart clinic" was hard to find. Admins and editors can now open **Saved places**, then **Name busy places**: the busiest unnamed destinations, with **Suggest** (businesses Azure Maps lists there) and a Google Maps link. Saving a name makes it a saved place and puts the name on every trip already booked there.
+
+    A trip address typed later that is already a saved place shows its name by itself, including on the **Trips** list. Names that are already there are never changed.
 - added: "2026-10-05 18:05"
   title: Ask RidePilot labels its map pin
   body: |

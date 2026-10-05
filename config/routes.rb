@@ -190,6 +190,14 @@ Rails.application.routes.draw do
       end
     end
 
+    # Saved places -> "Name busy places" (PlaceNaming)
+    resources :place_names, :only => [:index, :create] do
+      collection do
+        post :skip
+        get :suggest
+      end
+    end
+
     resources :provider_common_addresses, :only => [:create, :edit, :update, :destroy] do
       collection do
         get :search
