@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - With Docker: `docker-compose build && docker-compose up`
 
 ## Code Style Guidelines
-- Ruby/Rails: Ruby 2.7.8, Rails 5.2.1
+- Ruby/Rails: Ruby 3.2.9, Rails 7.1.6 (forked from CamSys RidePilot 2.1.12, 2019; GCRPC commits since)
 - Indentation: 2 spaces
 - Classes: CamelCase, methods/variables: snake_case
 - Models: associations → validations → callbacks → scopes → methods
@@ -37,6 +37,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Deploying a change on the live server (.16)
 - Code reloading is OFF (config/environments/development.rb, 2026-09-29): editing a file changes nothing until `docker restart ridepilot_app_1` (about 12 s of downtime). Restart when staff aren't mid-task, and say so.
 - Reason: with reloading on, an edit during an Ask RidePilot streaming answer deadlocked the whole app for 6 minutes.
+- The footer shows the running build as commit date (Central) and hash, e.g. "Version 2026.10.04 (6f8a1145)", read from git at boot (config/initializers/version.rb). Commit before restarting so the footer names the code that is live.
 
 ## Design
 - Anything staff, drivers or a manager will look at follows `docs/design-language.md` (GCRPC navy/gold, Open Sans, a golden-ratio type ladder, one row per thing, plain words). Read it before building or restyling a screen, printout or board.
