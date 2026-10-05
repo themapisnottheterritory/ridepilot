@@ -49,11 +49,13 @@ class SavedPlaceProposal
   # pin_kind: "exact" (the map has that building), "estimate" (it places the
   # number along the street's address range), "street" (it knows the
   # street, not the number: the pin is somewhere on it), "landmark" (a find by
-  # name), or nil (not on our map: the map opens on the town).
+  # name), "business" (our map didn't have it; Azure Maps found the place by
+  # its name, see PlaceSearch), or nil (not on our map: the map opens on the town).
   def check
     @existing = find_existing
     @pin, @pin_kind = locate
     @town     = town_centre
+    ask_azure_for_business
     paste = "find the building in Google Maps, right-click it, click the numbers at the top of the menu to copy them, and paste them in the box above the map"
     if @pin.nil?
       @warnings << "#{street.presence || @address} isn't on our map yet (it may be a new street). To place the pin, #{paste}. Or search for something nearby."
@@ -61,6 +63,8 @@ class SavedPlaceProposal
       @warnings << "The map estimates where number #{house_number} falls on #{street}; it can be off by a block or more. Check the pin is on the building, or #{paste}."
     elsif @pin_kind == "street"
       @warnings << "The map knows #{street} but not number #{house_number}, so the pin is somewhere on the street. Slide it to the building, or #{paste}."
+    elsif @pin_kind == "business"
+      @warnings << "Our map didn't have this; Azure Maps lists #{@found.name} at #{@found.address}. Check the pin is on the right building before adding it."
     elsif @town && (d = miles(@pin, @town)) >= FAR_MILES
       @warnings << "The map puts this #{d.round} miles from #{@city}. Check the pin before adding it."
     end
@@ -76,7 +80,7 @@ class SavedPlaceProposal
       name: @name, address: @address, city: @city, state: @state, zip: @zip,
       address_group_id: @category&.id,
       groups: AddressGroup.order(:id).pluck(:id, :name).reject { |_, n| n == AddressGroup::UNKNOWN_TYPE },
-      pin: @pin, map_center: @pin || @town || default_center, on_map: %w[exact estimate landmark].include?(@pin_kind),
+      pin: @pin, map_center: @pin || @town || default_center, on_map: %w[exact estimate landmark business].include?(@pin_kind),
       existing: @existing.map { |a| { id: a.id, name: a.name, address: a.address, city: a.city, on_map: a.the_geom.present? } },
       warnings: @warnings, can_add: can_add?
     }
@@ -90,6 +94,7 @@ class SavedPlaceProposal
     lines = if @mode == :find
       [case @pin_kind
        when "exact", "landmark" then "Here's #{where} on the map."
+       when "business" then "Here's #{where} on the map (found on Azure Maps)."
        when "estimate" then "Here's about where #{where} is on the map."
        when "street" then "I found #{street} on the map, but not number #{house_number}."
        else "I couldn't find #{where} on our map."
@@ -184,6 +189,25 @@ class SavedPlaceProposal
     pt = ->(h) { { lat: h["lat"].to_f, lon: h["lon"].to_f } }
     best = hits.min_by { |h| miles(centre, pt.(h)) }
     miles(centre, pt.(best)) <= FAR_MILES ? best : nil
+  end
+
+  # Our map has no exact pin for a place given by name (or a name search landed
+  # far from the town): look the business up by its name on Azure Maps, which
+  # knows the small local places our map doesn't (Diane's Hair Salon, Cuero,
+  # 2026-10-05). An exact pin from our map is never second-guessed.
+  def ask_azure_for_business
+    return unless @town && business_name?
+    weak = @pin.nil? || %w[estimate street].include?(@pin_kind) ||
+           (@pin_kind == "landmark" && miles(@pin, @town) >= FAR_MILES)
+    return unless weak
+    hit = PlaceSearch.find(name: @name, city: @city, state: @state || STATE, house_number: house_number, near: @town)
+    return unless hit
+    @pin, @pin_kind, @found = { lat: hit.lat, lon: hit.lon }, "business", hit
+  end
+
+  # a real name, not the address repeated or a bare number
+  def business_name?
+    @name.present? && @name != @address && @name !~ /\A\s*\d/
   end
 
   def town_centre
