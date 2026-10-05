@@ -16,6 +16,10 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-05 18:01"
+  title: Clearer messages when a trip will not go on a run
+  body: |
+    When **Dispatch** refuses to put a trip on a run, the message now names the run and its day, with the run's hours and the pickup time, for example "No vehicle is assigned (RVIC1, Tue Oct 6)". Check it is the day you meant: tomorrow's runs may not have a vehicle or driver yet.
 - added: "2026-10-05 18:00"
   title: Faster Trips, Runs and Dispatch at busy times
   body: |

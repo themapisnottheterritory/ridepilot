@@ -62,21 +62,26 @@ class TripScheduler
   end
 
   def schedule_to_run
-    if !validate_time_availability
-      errors << TranslationEngine.translate_text(:not_fit_in_run_schedule)
-    end
+    # Each refusal names the run, its day and (for times) its hours, so dispatch can
+    # see it checked e.g. tomorrow's RVIC1, which nobody has staffed yet, and not
+    # today's (Jacqueline Gonzalez's 7:00 trip, 2026-10-05). The trouble board keeps
+    # only the plain message, so its counts still group by kind of refusal.
+    reasons = []
+    reasons << [:not_fit_in_run_schedule, time_detail] if !validate_time_availability
 
     if !@run.vehicle
-      errors << TranslationEngine.translate_text(:no_vehicle_assigned)
+      reasons << [:no_vehicle_assigned, run_label]
     elsif !validate_vehicle_availability 
-      errors << TranslationEngine.translate_text(:vehicle_unavailable)
+      reasons << [:vehicle_unavailable, "#{run_label}: #{@run.vehicle.name}"]
     end
 
     if !@run.driver
-      errors << TranslationEngine.translate_text(:no_driver_assigned)
+      reasons << [:no_driver_assigned, run_label]
     elsif !validate_driver_availability 
-      errors << TranslationEngine.translate_text(:driver_unavailable)
+      reasons << [:driver_unavailable, "#{run_label}: #{@run.driver.name}"]
     end
+
+    reasons.each { |key, detail| errors << "#{TranslationEngine.translate_text(key)} (#{detail})" }
 
     if errors.empty?
       prev_run = @trip.run
@@ -90,7 +95,7 @@ class TripScheduler
         @errors = @trip.errors.full_messages 
       end
     end
-    TroubleWatch.messages(errors)   # the reasons dispatch was shown (trouble board)
+    TroubleWatch.messages(reasons.map { |key, _| TranslationEngine.translate_text(key) })   # trouble board: plain reasons
 
   end
 
@@ -133,6 +138,23 @@ class TripScheduler
   end
 
   private
+
+  # "RVIC1, Tue Oct 6"
+  def run_label
+    [@run.name, @run.date&.strftime("%a %b %-d")].compact.join(", ")
+  end
+
+  # "RVIC1, Tue Oct 6, runs 8:00 AM - 5:00 PM; pickup is 7:00 AM"
+  def time_detail
+    hours = [@run.scheduled_start_time, @run.scheduled_end_time].map { |t| clock(t) }.join(" - ")
+    detail = "#{run_label}, runs #{hours}; pickup is #{clock(@trip.pickup_time)}"
+    detail += ", appointment #{clock(@trip.appointment_time)}" if @trip.appointment_time
+    detail
+  end
+
+  def clock(time)
+    time&.in_time_zone&.strftime("%-l:%M %p")
+  end
 
   def time_portion(time)
     (time - time.beginning_of_day) if time
