@@ -16,6 +16,12 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-05 18:03"
+  title: Rural runs start at 7:00
+  body: |
+    Rural demand-response runs (**RVIC**, **RGON**, **DeWitt**, **RCAL**, **MATA**, **JACK** and Goliad's **Rgol** runs) now run **7:00 AM - 4:00 PM**, like Lavaca's, so 7:00 pickups fit without changing the run by hand first. Runs you already changed by hand are left as you set them.
+
+    **UDR** runs stay **8:00 AM - 5:00 PM**. They can be made longer for a day, but never shorter than the fixed-route day.
 - added: "2026-10-05 18:02"
   title: Restart notices
   body: |

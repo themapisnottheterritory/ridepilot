@@ -4,7 +4,7 @@
 
 **Subscription runs**: the weekday runs are created automatically from **Subscription Run** templates (**View Subscription Run Templates** on the Runs page). Changing a template affects runs RidePilot creates from then on; runs already created for the coming weeks keep their old settings, so change those days one by one or ask GCRPC I.T. to update them all.
 
-**Demand-response runs**: Monday-Friday, 8:00 AM - 5:00 PM.
+**Demand-response runs**: Monday-Friday. Rural runs (RVIC, RGON, DeWitt, RCAL, MATA, JACK, Goliad's Rgol and Lavaca's runs) are 7:00 AM - 4:00 PM. UDR runs (urban demand response, inside Victoria) are 8:00 AM - 5:00 PM: they must cover at least the fixed-route day, because the ADA requires it, so a day's UDR run may be made longer but never shorter.
 - Victoria Transit: UDR1-10, RVIC1-3, RGON1-3, DeWitt1-3, RCAL1-3, MATA1-3, JACK1-3.
 - Goliad County Rural Transit: Rgol1 (bus R8), Rgol2 (GOL 14), Rgol3 (GOL 15), Rgol4 (GOL 16), Rgol5 (GOL 18).
 - Lavaca County Transit: Hville1 (LAV 38), Hville2 (LAV 45), Hville3 (LAV 47), Hville4 (LAV 49), Yoakum1 (LAV 52), Yoakum2 (LAV 53), Gonzales1 (LAV 54).
