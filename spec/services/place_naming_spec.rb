@@ -26,6 +26,10 @@ RSpec.describe PlaceNaming do
     trip_to(typed("2550 North Esplanade Street", city: "Cuero"))
     trip_to(typed("909 E Broadway", city: "Cuero", name: "Cuero H-E-B"))
     trip_to(typed("1 Far Away St"), days_from_now: 60)                      # outside the window
+    trip_to(typed("702 Salem Rd APT 513"))                                  # an apartment: someone's home
+    rider = create(:customer, provider: provider)
+    CustomerCommonAddress.create!(customer: rider, name: "Home", address: "222 Sirocco", city: "Victoria", state: "TX")
+    2.times { trip_to(typed("222 Sirocco")) }                               # a rider's saved home, typed again
     rows = described_class.unnamed_destinations(provider)
     expect(rows.map { |r| [r[:address], r[:trips]] }).to eq [["2401 Patterson Drive", 4], ["2550 North Esplanade Street", 1]]
     expect(rows.first[:address_ids]).to contain_exactly(a1.id, a2.id)
@@ -58,6 +62,36 @@ RSpec.describe PlaceNaming do
     expect(typed("2401 Patterson Drive, Suite 100", lat: 28.81335, lon: -96.98645).name).to eq "Victoria Heart & Vascular"   # 6 m, same number
     expect(typed("2104 Patterson Drive", lat: 28.8134, lon: -96.9865).name).to be_nil                                        # another number
     expect(typed("2401 Patterson Drive", name: "Typed name").name).to eq "Typed name"                                       # a typed name wins
+  end
+end
+
+RSpec.describe PlaceNaming, "with a saved place already at the address" do
+  let(:provider) { create(:provider) }
+  let(:admin)    { create(:admin, current_provider: provider) }
+  let!(:saved)   { create(:provider_common_address, provider: provider, name: "Warm Springs", address: "102 Medical Dr", city: "Victoria", state: "TX") }
+
+  def typed_copy(name: nil)
+    a = TempAddress.new(address: "102 Medical Drive", city: "Victoria", state: "TX", provider: provider, name: name)
+    a.save!(validate: false)
+    a.update_columns(name: name)   # as booked before saved names were applied
+    a
+  end
+
+  it "names the trips without making a second saved place" do
+    a = typed_copy
+    expect { described_class.name_place!(provider: provider, user: admin, address_ids: [a.id], name: "Warm Springs", address_group_id: saved.address_group_id) }
+      .not_to change { ProviderCommonAddress.count }
+    expect(a.reload.name).to eq "Warm Springs"
+  end
+
+  it "backfills unnamed trip addresses that are a saved place, and only blank ones" do
+    a = typed_copy; b = typed_copy(name: "Typed by an agent")
+    [a, b].each do |x|
+      create(:trip, provider: provider, customer: create(:customer, provider: provider), dropoff_address: x,
+                    pickup_time: Time.zone.now + 1.day, appointment_time: nil)
+    end
+    expect(described_class.backfill!(provider)).to eq 1
+    expect([a.reload.name, b.reload.name]).to eq ["Warm Springs", "Typed by an agent"]
   end
 end
 

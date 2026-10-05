@@ -34,17 +34,25 @@ module PlaceNaming
     [key(address.address), address.city.to_s.downcase.strip].join("|")
   end
 
+  # An apartment, unit, lot or trailer number: somebody's home, not a facility
+  # (a clinic's "Suite 100" stays in).
+  RESIDENCE = /\b(?:apt|apartment|unit|lot|trlr|trailer|space|spc)\b\.?\s*\S|#\s*\w/i
+
   # Unnamed places this provider's trips go to or from in the window, busiest
   # first: { key:, address:, city:, state:, zip:, lat:, lon:, trips:, address_ids: }.
-  # A rider's own "Home" is not a destination to name.
+  # Riders' homes are not destinations to name: an address with an apartment
+  # or unit number, or one that is any rider's saved "Home", is left out (busy
+  # riders made their homes the top of the list on the first try, 2026-10-05).
   def unnamed_destinations(provider, now: Time.zone.now, limit: 100)
+    homes = home_keys
     places = {}
     Trip.where(deleted_at: nil, provider_id: provider.id)
         .where(pickup_time: (now.beginning_of_day - WINDOW_BACK)..(now + WINDOW_AHEAD))
         .includes(:pickup_address, :dropoff_address).find_each do |t|
       [t.pickup_address, t.dropoff_address].each do |a|
-        next if a.nil? || a.name.present? || a.address.blank?
+        next if a.nil? || a.name.present? || a.address.blank? || a.address.match?(RESIDENCE)
         k = place_key(a)
+        next if homes.include?(k)
         p = places[k] ||= { key: k, address: a.address, city: a.city, state: a.state, zip: a.zip,
                             lat: a.latitude&.to_f, lon: a.longitude&.to_f, trips: 0, address_ids: [] }
         p[:trips] += 1
@@ -53,8 +61,19 @@ module PlaceNaming
         p[:lon] ||= a.longitude&.to_f
       end
     end
+    # already a saved place at that address (booked as a typed copy): offer its name
+    places.each_value do |p|
+      s = saved_place_at(provider, p[:key])
+      p[:saved_name] = s&.name
+    end
     skipped = skipped_keys(provider)
     places.values.reject { |p| skipped.include?(p[:key]) }.sort_by { |p| -p[:trips] }.first(limit)
+  end
+
+  # Every rider's saved home, as place keys ("Home", "Home Rural", "Home-DeWitt"...)
+  def home_keys
+    CustomerCommonAddress.where("name ILIKE ?", "home%").pluck(:address, :city)
+                         .map { |addr, city| [key(addr), city.to_s.downcase.strip].join("|") }.to_set
   end
 
   # Give a place a name: a saved place for the provider, and the name on every
@@ -70,7 +89,8 @@ module PlaceNaming
     saved = nil
     PaperTrail.request(whodunnit: user&.id&.to_s) do
       Address.transaction do
-        saved = ProviderCommonAddress.create!(
+        # a saved place already at this address is used, not duplicated
+        saved = saved_place_at(provider, k) || ProviderCommonAddress.create!(
           provider: provider, name: name, address_group_id: address_group_id,
           address: base.address, city: base.city, state: base.state, zip: base.zip, county: base.try(:county),
           the_geom: base.the_geom, in_district: base.in_district
@@ -86,6 +106,29 @@ module PlaceNaming
       end
     end
     { saved_place: saved, renamed: renamed }
+  end
+
+  def saved_place_at(provider, place_key_value)
+    number = place_key_value[/\A(\d+)/, 1] or return nil
+    ProviderCommonAddress.where(provider_id: provider.id).where("inactive IS NULL OR inactive = false")
+                         .where("address ILIKE ?", "#{number}%").find { |s| place_key(s) == place_key_value && s.name.present? }
+  end
+
+  # Once, at deploy and whenever saved places were added in bulk: unnamed trip
+  # addresses that ARE a saved place take its name (same rule as a new typed
+  # address). Only blank names are filled. Returns how many.
+  def backfill!(provider, now: Time.zone.now)
+    count = 0
+    ids = Trip.where(deleted_at: nil, provider_id: provider.id).where("pickup_time >= ?", now.beginning_of_day - WINDOW_BACK)
+              .pluck(:pickup_address_id, :dropoff_address_id).flatten.compact.uniq
+    PaperTrail.request(whodunnit: "place-naming-backfill") do
+      Address.where(id: ids, name: [nil, ""]).find_each do |a|
+        next unless (n = saved_name_for(a))
+        a.update_columns(name: n, updated_at: Time.current)
+        count += 1
+      end
+    end
+    count
   end
 
   # The saved place a new address is: same street address and town, or within
