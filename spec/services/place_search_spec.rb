@@ -127,4 +127,15 @@ RSpec.describe SavedPlaceProposal, "with Azure Maps" do
     described_class.new(provider: provider, user: admin, name: "Hallettsville Rehab & Nursing", address: "Hallettsville Rehab & Nursing",
                         city: "Hallettsville", state: "TX", mode: :find).check
   end
+
+  it "doesn't spend a lookup on a place already saved under that name" do
+    map_gives([])
+    saved = instance_double(ProviderCommonAddress, name: "Day N Night Medical Supply", the_geom: "POINT(-96.98 28.81)",
+                            id: 1, address: "2007 E Red River St", city: "Victoria")
+    allow_any_instance_of(described_class).to receive(:find_existing).and_return([saved])
+    expect(PlaceSearch).not_to receive(:find)
+    p = described_class.new(provider: provider, user: admin, name: "Day N Night Medical Supply", address: nil, city: "Victoria", mode: :find).check
+    expect(p.summary).to start_with("I couldn't find **Day N Night Medical Supply**, Victoria").or start_with("Here's **Day N Night Medical Supply**, Victoria")
+    expect(p.summary).not_to include(", ,")
+  end
 end

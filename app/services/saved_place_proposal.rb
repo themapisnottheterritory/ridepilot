@@ -88,7 +88,10 @@ class SavedPlaceProposal
 
   # One line for the chat, above the card.
   def summary
-    place = @name == @address ? @address : "**#{@name}**, #{@address}"
+    place = if @address.blank? then "**#{@name}**"
+            elsif @name == @address then @address
+            else "**#{@name}**, #{@address}"
+            end
     town  = [@city, @zip].compact.join(" ")
     where = "#{place}#{", #{town}" if town.present?}"
     lines = if @mode == :find
@@ -197,6 +200,8 @@ class SavedPlaceProposal
   # 2026-10-05). An exact pin from our map is never second-guessed.
   def ask_azure_for_business
     return unless @town && business_name?
+    # already saved under that name and on the map: the card shows it, no lookup needed
+    return if @existing.any? { |a| a.the_geom.present? && PlaceSearch.same_name?(a.name, @name) }
     weak = @pin.nil? || %w[estimate street].include?(@pin_kind) ||
            (@pin_kind == "landmark" && miles(@pin, @town) >= FAR_MILES)
     return unless weak
