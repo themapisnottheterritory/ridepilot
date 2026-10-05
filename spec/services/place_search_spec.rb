@@ -106,7 +106,7 @@ RSpec.describe SavedPlaceProposal, "with Azure Maps" do
     expect(PlaceSearch).to receive(:find).with(hash_including(name: "Diane's Hair Salon", city: "Cuero", house_number: "2010")).and_return(hit)
     p = proposal.check
     expect(p.to_h).to include(pin: { lat: 29.09069, lon: -97.32402 }, pin_kind: "business", on_map: true)
-    expect(p.warnings.first).to include("Found on Azure Maps", "check the pin")
+    expect(p.warnings.join).not_to include("Azure")   # the pin label says it
     expect(p.to_h[:pin_label]).to eq(title: "Diane's Hair Salon", address: "2010 State Highway 72 West, Cuero, TX 77954",
                                      source: "Azure Maps · check it's the right building")
   end
@@ -158,7 +158,7 @@ RSpec.describe SavedPlaceProposal, "with Azure Maps" do
                                     address: "250 Farm-to-Market 766, Cuero, TX 77954", street: "250 Farm-to-Market 766", city: "Cuero", zip: "77954")
     allow(PlaceSearch).to receive(:find).and_return(found)
     p = described_class.new(provider: provider, user: admin, name: "Kuecker service center", address: nil, city: "Cuero", mode: :find).check
-    expect(p.to_h).to include(address: "250 Farm-to-Market 766", city: "Cuero", zip: "77954", pin_kind: "business")
+    expect(p.to_h).to include(name: "Kuecker Service Center", address: "250 Farm-to-Market 766", city: "Cuero", zip: "77954", pin_kind: "business")
     expect(p.to_h[:pin_label]).to include(title: "Kuecker Service Center", address: "250 Farm-to-Market 766, Cuero, TX 77954")
   end
 

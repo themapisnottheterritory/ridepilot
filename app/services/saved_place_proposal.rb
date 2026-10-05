@@ -64,7 +64,7 @@ class SavedPlaceProposal
     elsif @pin_kind == "street"
       @warnings << "The map knows #{street} but not number #{house_number}, so the pin is somewhere on the street. Slide it to the building, or #{paste}."
     elsif @pin_kind == "business"
-      @warnings << "Found on Azure Maps, not on our map: check the pin is on the right building before adding it."
+      # nothing to add: the pins label and the cards hint say where it came from
     elsif @town && (d = miles(@pin, @town)) >= FAR_MILES
       @warnings << "The map puts this #{d.round} miles from #{@city}. Check the pin before adding it."
     end
@@ -210,6 +210,7 @@ class SavedPlaceProposal
     hit = PlaceSearch.find(name: @name, city: @city, state: @state || STATE, house_number: house_number, near: @town)
     return unless hit
     @pin, @pin_kind, @found = { lat: hit.lat, lon: hit.lon }, "business", hit
+    @name = hit.name if hit.name.present? && PlaceSearch.same_name?(hit.name, @name)   # "Kuecker Service Center", not as typed
     # a find by name had no address: take Azure's, so a saved place gets one
     # (the person can still change it on the card)
     if hit.street.present? && (@address.blank? || @address == @name)
