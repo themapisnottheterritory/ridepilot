@@ -1,9 +1,14 @@
 // AM/PM guard for the trip and subscription forms (form.trip_form).
 // Times like 12:00 AM or 3:45 AM were being saved where PM was meant: on
 // 2026-10-05 four subscriptions had 30 upcoming trips at midnight or 3:45 AM.
-// Before the form's own save handlers run (capture phase), ask about any pickup
-// or appointment time between 12:00 AM and 4:59 AM. "Keep" saves as entered;
-// "Change it" goes back to the field. One question per save.
+// Before the form's own save handlers run, ask about any pickup or appointment
+// time between 12:00 AM and 4:59 AM. "Keep" saves as entered; "Change it" goes
+// back to the form. One question per save.
+//
+// It listens for the CLICK on the form's submit button (capture phase), not the
+// submit event: these forms catch the click and save through jQuery, which never
+// fires a native submit event. The time fields are hidden inputs filled by the
+// time widget (hour, minute, AM/PM buttons).
 (function () {
   function early(value) {
     var m = /^\s*(\d{1,2}):(\d{2})\s*([AaPp])[Mm]\s*$/.exec(value || "");
@@ -13,10 +18,11 @@
     return null;
   }
 
-  document.addEventListener("submit", function (e) {
-    var form = e.target;
-    if (!form.classList || !form.classList.contains("trip_form")) return;
-    if (form.dataset.ampmOk === "1") { delete form.dataset.ampmOk; return; }
+  document.addEventListener("click", function (e) {
+    var button = e.target.closest && e.target.closest('[type="submit"]');
+    var form = button && button.form;
+    if (!form || !form.classList.contains("trip_form")) return;
+    if (button.dataset.ampmOk === "1") { delete button.dataset.ampmOk; return; }
     if (typeof bootbox === "undefined") return;
 
     var fields = form.querySelectorAll('input[id$="_pickup_time"], input[id$="_appointment_time"]');
@@ -39,10 +45,8 @@
       },
       callback: function (keep) {
         if (keep) {
-          form.dataset.ampmOk = "1";
-          if (form.requestSubmit) { form.requestSubmit(); } else { $(form).trigger("submit"); }
-        } else {
-          setTimeout(function () { hit.field.focus(); hit.field.select && hit.field.select(); }, 300);
+          button.dataset.ampmOk = "1";
+          setTimeout(function () { button.click(); }, 0);   // carry on with the normal save
         }
       }
     });
