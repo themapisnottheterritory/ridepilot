@@ -120,4 +120,11 @@ RSpec.describe SavedPlaceProposal, "with Azure Maps" do
     expect(PlaceSearch).not_to receive(:find)
     proposal(name: nil).check
   end
+
+  it "asks about a find by name with no address" do
+    map_gives([])
+    expect(PlaceSearch).to receive(:find).with(hash_including(name: "Hallettsville Rehab & Nursing", city: "Hallettsville")).and_return(nil)
+    described_class.new(provider: provider, user: admin, name: "Hallettsville Rehab & Nursing", address: "Hallettsville Rehab & Nursing",
+                        city: "Hallettsville", state: "TX", mode: :find).check
+  end
 end

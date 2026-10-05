@@ -205,9 +205,11 @@ class SavedPlaceProposal
     @pin, @pin_kind, @found = { lat: hit.lat, lon: hit.lon }, "business", hit
   end
 
-  # a real name, not the address repeated or a bare number
+  # a real name, not an address: on an add, the name must differ from the
+  # address; on a find by name ("where is Hallettsville Rehab & Nursing?") the
+  # name is all there is, so it is also the address
   def business_name?
-    @name.present? && @name != @address && @name !~ /\A\s*\d/
+    @name.present? && @name !~ /\A\s*\d/ && (@name != @address || @mode == :find)
   end
 
   def town_centre
