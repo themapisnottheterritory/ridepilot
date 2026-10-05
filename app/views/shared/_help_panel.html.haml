@@ -50,6 +50,11 @@
   #askrp-log .askrp-card .row input, #askrp-log .askrp-card .row select { flex: 1; min-width: 0; font-size: 13px; padding: 3px 6px; border: 1px solid #c9d2df; border-radius: 4px; height: auto; }
   #askrp-log .askrp-card .row input.short { flex: 0 0 64px; }
   #askrp-log .askrp-card .map { height: var(--askrp-map); }
+  /* the pin's label: what this spot is and where it came from */
+  .leaflet-tooltip.askrp-pin-label { white-space: normal; width: 210px; padding: 5px 8px; border: 1px solid #12264F; border-top: 3px solid #CC9900; border-radius: 4px; color: #131313; font: 12px/1.35 "Open Sans", Arial, sans-serif; text-align: left; box-shadow: 0 2px 6px rgba(18,38,79,.25); }
+  .leaflet-tooltip.askrp-pin-label b { display: block; font-size: 13px; color: #12264F; }
+  .leaflet-tooltip.askrp-pin-label .src { display: block; margin-top: 2px; color: #5f6b7a; font-style: italic; font-size: 11px; }
+  .leaflet-tooltip.askrp-pin-label.moved { border-top-color: #0ca30c; }
   #askrp-log .askrp-card .row.where { background: #f4f6fa; }
   #askrp-log .askrp-card .row.where button { border: 1px solid #12264F; background: #12264F; color: #fff; border-radius: 4px; padding: 3px 12px; font-size: 12px; }
   #askrp-log .askrp-card .results { border-bottom: 1px solid #eef1f6; }
@@ -261,15 +266,25 @@
         (a.can_add ? '<div class="actions"><button type="button" class="go">Add it</button><button type="button" class="no">Not now</button></div>' : '');
       log.appendChild(card);
       var pin = a.pin ? [a.pin.lat, a.pin.lon] : [a.map_center.lat, a.map_center.lon], moved = !!a.on_map, map = null, marker = null;
+      function pinLabel(html, cls) {   // always shown above the pin, not on hover
+        if (!marker) return;
+        marker.unbindTooltip();
+        marker.bindTooltip(html, { permanent: true, direction: 'top', offset: [0, -40], opacity: 1, className: 'askrp-pin-label' + (cls ? ' ' + cls : '') }).openTooltip();
+      }
       function placed() {
         moved = true; var b = card.querySelector('.go'); if (b) b.disabled = false;
         card.querySelector('.head .badge').textContent = 'Pin placed';
+        pinLabel('<b>Moved by you</b><span class="src">' + (a.can_add ? 'Add it saves this spot' : 'This is the spot you chose') + '</span>', 'moved');
       }
       if (window.L) {
         map = L.map(card.querySelector('.map'), { center: pin, zoom: a.on_map ? 17 : 14, attributionControl: false });
         L.tileLayer('/tiles/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
         marker = L.marker(pin, { draggable: true }).addTo(map);
         marker.on('dragend', placed);
+        if (a.pin_label) {
+          pinLabel('<b>' + esc(a.pin_label.title || '') + '</b>' + (a.pin_label.address ? esc(a.pin_label.address) : '') +
+                   '<span class="src">' + esc(a.pin_label.source || '') + '</span>');
+        }
         liveMaps.push(map);
         setTimeout(function() { map.invalidateSize(); }, 50);
       }

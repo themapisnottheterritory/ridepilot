@@ -64,7 +64,7 @@ class SavedPlaceProposal
     elsif @pin_kind == "street"
       @warnings << "The map knows #{street} but not number #{house_number}, so the pin is somewhere on the street. Slide it to the building, or #{paste}."
     elsif @pin_kind == "business"
-      @warnings << "Our map didn't have this; Azure Maps lists #{@found.name} at #{@found.address}. Check the pin is on the right building before adding it."
+      @warnings << "Found on Azure Maps, not on our map: check the pin is on the right building before adding it."
     elsif @town && (d = miles(@pin, @town)) >= FAR_MILES
       @warnings << "The map puts this #{d.round} miles from #{@city}. Check the pin before adding it."
     end
@@ -82,7 +82,7 @@ class SavedPlaceProposal
       groups: AddressGroup.order(:id).pluck(:id, :name).reject { |_, n| n == AddressGroup::UNKNOWN_TYPE },
       pin: @pin, map_center: @pin || @town || default_center, on_map: %w[exact estimate landmark business].include?(@pin_kind),
       existing: @existing.map { |a| { id: a.id, name: a.name, address: a.address, city: a.city, on_map: a.the_geom.present? } },
-      warnings: @warnings, can_add: can_add?
+      warnings: @warnings, can_add: can_add?, pin_label: pin_label
     }
   end
 
@@ -210,6 +210,13 @@ class SavedPlaceProposal
     hit = PlaceSearch.find(name: @name, city: @city, state: @state || STATE, house_number: house_number, near: @town)
     return unless hit
     @pin, @pin_kind, @found = { lat: hit.lat, lon: hit.lon }, "business", hit
+    # a find by name had no address: take Azure's, so a saved place gets one
+    # (the person can still change it on the card)
+    if hit.street.present? && (@address.blank? || @address == @name)
+      @address = hit.street
+      @city  ||= hit.city
+      @zip   ||= hit.zip
+    end
   end
 
   # a real name, not an address: on an add, the name must differ from the
@@ -217,6 +224,25 @@ class SavedPlaceProposal
   # name is all there is, so it is also the address
   def business_name?
     @name.present? && @name !~ /\A\s*\d/ && (@name != @address || @mode == :find)
+  end
+
+  # What the pin says on the card's map, always shown (a bare pin gave nobody
+  # anything to check, Phil, 2026-10-05): the place, its address, and where the
+  # spot came from. nil when there is no pin yet.
+  PIN_SOURCES = {
+    "exact"    => "Our map · this building",
+    "estimate" => "Our map · estimated along the street",
+    "street"   => "Our map · somewhere on this street",
+    "landmark" => "Our map · found by name",
+    "business" => "Azure Maps · check it's the right building"
+  }.freeze
+
+  def pin_label
+    return nil unless @pin && PIN_SOURCES[@pin_kind]
+    title = @found&.name.presence || (@name if @name.present? && @name != @address) || @address
+    line  = @found&.address.presence ||
+            [(@address == title ? nil : @address.presence), [@city, @zip].compact.join(" ").presence].compact.join(", ")
+    { title: title, address: line.presence, source: PIN_SOURCES[@pin_kind] }
   end
 
   def town_centre

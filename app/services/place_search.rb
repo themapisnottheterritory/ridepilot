@@ -32,7 +32,8 @@ class PlaceSearch
   BASE        = ENV.fetch("AZURE_MAPS_URL", "https://us.atlas.microsoft.com")   # US endpoint: processed in the US
   NEAR_MILES  = 12
   STOP_WORDS  = %w[the of and at inc llc co company ctr].freeze
-  Result = Struct.new(:lat, :lon, :name, :address, :kind, keyword_init: true)
+  # address: the whole line; street / city / zip: its parts, to fill the card
+  Result = Struct.new(:lat, :lon, :name, :address, :street, :city, :zip, :kind, keyword_init: true)
 
   def self.key
     ENV["AZURE_MAPS_KEY"].presence
@@ -80,15 +81,23 @@ class PlaceSearch
       when "POI"
         found = r.dig("poi", "name").to_s
         next unless same_name?(found, name)
-        return Result.new(lat: at[:lat].round(6), lon: at[:lon].round(6), name: found,
-                          address: r.dig("address", "freeformAddress"), kind: "business")
+        return Result.new(lat: at[:lat].round(6), lon: at[:lon].round(6), name: found, kind: "business", **address_parts(r))
       when "Point Address"
         next unless house_number.present? && r.dig("address", "streetNumber").to_s == house_number.to_s
-        return Result.new(lat: at[:lat].round(6), lon: at[:lon].round(6), name: name,
-                          address: r.dig("address", "freeformAddress"), kind: "address")
+        return Result.new(lat: at[:lat].round(6), lon: at[:lon].round(6), name: name, kind: "address", **address_parts(r))
       end
     end
     nil
+  end
+
+  # "250 Farm-to-Market 766, Cuero, TX 77954" -> street "250 Farm-to-Market 766",
+  # city "Cuero", zip "77954"; a business without a house number keeps the part
+  # of the line before the first comma as its street.
+  def self.address_parts(r)
+    a = r["address"] || {}
+    street = [a["streetNumber"], a["streetName"]].compact.join(" ").presence ||
+             a["freeformAddress"].to_s.split(",").first.to_s.strip.presence
+    { address: a["freeformAddress"], street: street, city: a["municipality"].presence, zip: a["postalCode"].to_s[/\d{5}/] }
   end
 
   # Most of the shorter name's words appear in the other; a word may be the

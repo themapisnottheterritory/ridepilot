@@ -106,7 +106,9 @@ RSpec.describe SavedPlaceProposal, "with Azure Maps" do
     expect(PlaceSearch).to receive(:find).with(hash_including(name: "Diane's Hair Salon", city: "Cuero", house_number: "2010")).and_return(hit)
     p = proposal.check
     expect(p.to_h).to include(pin: { lat: 29.09069, lon: -97.32402 }, pin_kind: "business", on_map: true)
-    expect(p.warnings.first).to include("Azure Maps lists Diane's Hair Salon at 2010 State Highway 72 West")
+    expect(p.warnings.first).to include("Found on Azure Maps", "check the pin")
+    expect(p.to_h[:pin_label]).to eq(title: "Diane's Hair Salon", address: "2010 State Highway 72 West, Cuero, TX 77954",
+                                     source: "Azure Maps · check it's the right building")
   end
 
   it "never second-guesses an exact pin from our map" do
@@ -146,5 +148,23 @@ RSpec.describe SavedPlaceProposal, "with Azure Maps" do
     expect(PlaceSearch).not_to receive(:find)   # already saved and on the map: no lookup
     p = described_class.new(provider: provider, user: admin, name: "Diane's Hair Salon", address: "Diane's Hair Salon", city: "Cuero", mode: :find).check
     expect(p.existing.map(&:name)).to include("Diane's Hair Salon")
+  end
+
+  # Phil, 2026-10-05: a bare blue pin gave nobody anything to check, and a find
+  # by name saved a place with no address.
+  it "fills the address from Azure Maps on a find by name, and labels the pin" do
+    map_gives([])
+    found = PlaceSearch::Result.new(lat: 29.1149, lon: -97.2942, name: "Kuecker Service Center", kind: "business",
+                                    address: "250 Farm-to-Market 766, Cuero, TX 77954", street: "250 Farm-to-Market 766", city: "Cuero", zip: "77954")
+    allow(PlaceSearch).to receive(:find).and_return(found)
+    p = described_class.new(provider: provider, user: admin, name: "Kuecker service center", address: nil, city: "Cuero", mode: :find).check
+    expect(p.to_h).to include(address: "250 Farm-to-Market 766", city: "Cuero", zip: "77954", pin_kind: "business")
+    expect(p.to_h[:pin_label]).to include(title: "Kuecker Service Center", address: "250 Farm-to-Market 766, Cuero, TX 77954")
+  end
+
+  it "labels a pin from our own map with where it came from" do
+    map_gives([{ "lat" => "29.0907", "lon" => "-97.3245", "osm_type" => "node", "address" => { "house_number" => "2010" } }])
+    p = described_class.new(provider: provider, user: admin, name: "Diane's Hair Salon", address: "2010 TX 72", city: "Cuero", state: "TX", zip: "77954").check
+    expect(p.to_h[:pin_label]).to eq(title: "Diane's Hair Salon", address: "2010 TX 72, Cuero 77954", source: "Our map · this building")
   end
 end
