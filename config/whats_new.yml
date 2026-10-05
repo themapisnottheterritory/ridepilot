@@ -16,6 +16,10 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-04 20:30"
+  title: Faster Ask RidePilot answers
+  body: |
+    **Ask RidePilot** now starts answering in a second or two instead of about 20 seconds, and runs on a newer model that sticks more closely to the RidePilot guide. If an answer is wrong, click **No** under **Was this helpful?** so I.T. can fix it.
 - added: "2026-10-03 21:31"
   title: Driver tablet 1.0.31
   apps: [tablet]

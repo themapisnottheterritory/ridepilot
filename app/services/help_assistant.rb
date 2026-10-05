@@ -9,10 +9,12 @@ require "net/http"
 #
 # The whole guide goes in every request (a few thousand tokens; the model keeps
 # the unchanged prefix cached), so answers can only come from what is written
-# there. Model and server: HELP_LLM_URL, HELP_LLM_MODEL.
+# there. Keep everything that changes per request (date, agency, page) AFTER
+# the guide: anything before it makes the model re-read the whole guide, about
+# 20 s on the GX-10 instead of about 1 s. Model and server: HELP_LLM_URL, HELP_LLM_MODEL.
 class HelpAssistant
   LLM_URL   = ENV.fetch("HELP_LLM_URL", "http://10.0.0.23:11434/v1")
-  LLM_MODEL = ENV.fetch("HELP_LLM_MODEL", "qwen3.6:27b-64k")
+  LLM_MODEL = ENV.fetch("HELP_LLM_MODEL", "qwen3.8:27b-64k")
   GUIDE_GLOB = Rails.root.join("docs/help/*.md")
   MAX_HISTORY = 6    # earlier turns sent back, so follow-ups make sense
 
@@ -86,11 +88,13 @@ class HelpAssistant
       - Reply in Spanish if the person writes in Spanish.
       - Plain text with **bold** and numbered or bulleted lists only; no tables, no headings.
 
-      Context: today is #{Time.zone.today.strftime('%A, %B %-d, %Y')}. The person works for #{@provider&.name || 'GCRPC'} and is on the RidePilot page "#{@page_title.to_s.strip.first(120)}" (#{@page_path.to_s.first(200)}).
-
       GCRPC RidePilot guide:
 
       #{self.class.guide}
+
+      ---
+
+      Context: today is #{Time.zone.today.strftime('%A, %B %-d, %Y')}. The person works for #{@provider&.name || 'GCRPC'} and is on the RidePilot page "#{@page_title.to_s.strip.first(120)}" (#{@page_path.to_s.first(200)}).
     PROMPT
   end
 end
