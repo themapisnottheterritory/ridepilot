@@ -134,17 +134,56 @@ class SavedPlaceProposal
     queries = [{ street: @address, city: @city, state: @state }.compact, { q: [@address, @city, @state].compact.join(", ") }]
     queries.each do |q|
       nominatim("/search", q.merge(limit: 5)).each do |hit|
-        number = hit.dig("address", "house_number").to_s.split("-").first
-        next unless number == house_number
-        # a real address point is a node or a building; a place/house *way* is
-        # Nominatim estimating along an address range, and a number past the
-        # end of the range lands on the end of the road ("9999 N Navarro St")
-        estimated = hit["class"] == "place" && hit["type"] == "house" && hit["osm_type"] == "way"
-        return [at.(hit), estimated ? "estimate" : "exact"]
+        next unless number_of(hit) == house_number
+        return [at.(hit), estimated?(hit) ? "estimate" : "exact"]
       end
     end
-    road = nominatim("/search", { street: street, city: @city, state: @state, limit: 1 }.compact).first
+    # A numbered road (TX 72, FM 953, CR 105): the map spells it by route number
+    # and gives an address just outside the town limit no town at all, so
+    # "2010 State Highway 72 W, Cuero" found nothing in Cuero (Michelle,
+    # 2026-10-05). Ask again in the map's spelling without the town, keep only
+    # that house number, and take the one with the ZIP typed, else the one
+    # nearest the town.
+    if AddressSpelling.numbered_road?(@address)
+      spelled = AddressSpelling.route(@address)
+      hits = [{ street: spelled, state: @state }.compact, { q: [spelled, @state].compact.join(", ") }]
+               .flat_map { |q| nominatim("/search", q.merge(limit: 10)) }
+               .select { |hit| number_of(hit) == house_number }
+               .uniq { |hit| [hit["lat"], hit["lon"]] }
+      if (best = nearest_to_town(hits))
+        return [at.(best), estimated?(best) ? "estimate" : "exact"]
+      end
+    end
+    road_name = AddressSpelling.numbered_road?(street) ? AddressSpelling.route(street) : street
+    road = nominatim("/search", { street: road_name, city: @city, state: @state, limit: 1 }.compact).first
     road && road["class"] == "highway" ? [at.(road), "street"] : [nil, nil]
+  end
+
+  def number_of(hit)
+    hit.dig("address", "house_number").to_s.split("-").first
+  end
+
+  # a real address point is a node or a building; a place/house *way* is
+  # Nominatim estimating along an address range, and a number past the end of
+  # the range lands on the end of the road ("9999 N Navarro St")
+  def estimated?(hit)
+    hit["class"] == "place" && hit["type"] == "house" && hit["osm_type"] == "way"
+  end
+
+  # Of several places with the right number on a numbered road (TX 72 runs
+  # through Yorktown, Cuero and Kenedy): the one in the ZIP typed, else the one
+  # nearest the town typed, if it is within FAR_MILES; with no town, only an
+  # unambiguous single answer.
+  def nearest_to_town(hits)
+    return nil if hits.empty?
+    if @zip.present? && (z = hits.find { |h| h.dig("address", "postcode").to_s.start_with?(@zip.to_s[0, 5]) })
+      return z
+    end
+    centre = town_centre
+    return (hits.one? ? hits.first : nil) unless centre
+    pt = ->(h) { { lat: h["lat"].to_f, lon: h["lon"].to_f } }
+    best = hits.min_by { |h| miles(centre, pt.(h)) }
+    miles(centre, pt.(best)) <= FAR_MILES ? best : nil
   end
 
   def town_centre

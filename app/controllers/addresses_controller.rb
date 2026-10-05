@@ -257,13 +257,7 @@ class AddressesController < ApplicationController
   # "FM 953": the map names highways by route number, and a direction word is
   # part of the local name only where the town gave it one.
   def route_spelling(text)
-    # A direction may come before the route number or after it ("State Highway
-    # 72 W"); the map has neither, and a "W" left behind turned "2010 TX 72 W"
-    # into 2010 West State Highway 72 in Kenedy, 30 miles from the Cuero address
-    # that was meant (Michelle, 2026-10-05).
-    text.gsub(/\b(?:(?:N|S|E|W|North|South|East|West)\.?\s+)?(?:State\s+)?(?:Highway|Hwy\.?|SH|TX)\s*-?\s*(\d+[A-Z]?)\b(?:\s+(?:N|S|E|W|North|South|East|West)\b\.?)?/i, 'TX \\1')
-        .gsub(/\b(?:Farm\s+to\s+Market(?:\s+Road)?|F\.?M\.?)\s*-?\s*(\d+)\b/i, 'FM \\1')
-        .squish
+    AddressSpelling.route(text)   # shared with Ask RidePilot's add-a-place card
   end
 
   ORDINALS = %w[first second third fourth fifth sixth seventh eighth ninth tenth eleventh twelfth thirteenth

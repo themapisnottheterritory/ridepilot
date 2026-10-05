@@ -86,4 +86,36 @@ RSpec.describe SavedPlaceProposal do
     expect(p.warnings.last).to include "Only admins and editors"
     expect(p.summary).not_to include "**Add it**"
   end
+
+  # Michelle, 2026-10-05: "2010 State Highway 72 W, Cuero" is just outside the
+  # town limit, so the map gives it no town, and spells the road "TX 72".
+  describe "an address on a numbered road outside the town" do
+    let(:yorktown) { { "lat" => "28.9973", "lon" => "-97.4794", "address" => { "house_number" => "2010", "postcode" => "78164", "city" => "Yorktown" } } }
+    let(:cuero)    { { "lat" => "29.0902", "lon" => "-97.3239", "address" => { "house_number" => "2010", "postcode" => "77954" } } }
+    let(:kenedy)   { { "lat" => "28.7987", "lon" => "-97.8766", "address" => { "house_number" => "2010", "postcode" => "78119", "city" => "Kenedy" } } }
+
+    def map_by_query
+      allow_any_instance_of(described_class).to receive(:nominatim) do |_proposal, _path, params|
+        if params[:city] && !params[:street] && !params[:q] then [{ "lat" => "29.0938", "lon" => "-97.2890", "address" => {} }]   # the town
+        elsif params[:city] || params[:q].to_s.include?("Cuero") then []          # nothing inside the town
+        elsif params[:street] == "2010 TX 72" || params[:q] == "2010 TX 72, TX" then [kenedy, yorktown, cuero]
+        else []
+        end
+      end
+    end
+
+    it "asks in the map's spelling without the town and takes the one in the ZIP typed" do
+      map_by_query
+      p = described_class.new(provider: provider, user: admin, name: "Diane's Hair Salon", address: "2010 State Highway 72 W",
+                              city: "Cuero", state: "TX", zip: "77954").check
+      expect(p.to_h).to include(pin: { lat: 29.0902, lon: -97.3239 }, pin_kind: "exact", on_map: true)
+    end
+
+    it "takes the one nearest the town when no ZIP was typed" do
+      map_by_query
+      p = described_class.new(provider: provider, user: admin, name: "Diane's Hair Salon", address: "2010 State Highway 72 W",
+                              city: "Cuero", state: "TX").check
+      expect(p.to_h[:pin]).to eq(lat: 29.0902, lon: -97.3239)
+    end
+  end
 end
