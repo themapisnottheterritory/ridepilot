@@ -16,6 +16,10 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-05 18:00"
+  title: Faster Trips, Runs and Dispatch at busy times
+  body: |
+    The **Trips**, **Runs** and **Dispatch** pages no longer slow to a crawl when everyone is working at once; most should open in a few seconds. The **Trips** list can still take a few seconds on a busy day, and we are working on that next.
 - added: "2026-10-04 20:30"
   title: Faster Ask RidePilot answers
   body: |

@@ -65,7 +65,10 @@ Rails.application.configure do
   config.active_record.migration_error = :page_load
 
   # Highlight code that triggered database queries in logs.
-  config.active_record.verbose_query_logs = true
+  # Live server runs in development mode: log like production. Debug-level SQL with
+  # source lines doubled the Trips list's load time (7.6 s -> 3.9 s, 2026-10-05).
+  config.log_level = :info
+  config.active_record.verbose_query_logs = false
 
   # Highlight code that enqueued background job in logs.
   config.active_job.verbose_enqueue_logs = true

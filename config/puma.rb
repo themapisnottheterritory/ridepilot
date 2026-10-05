@@ -41,3 +41,8 @@ pidfile ENV.fetch("PIDFILE") { "tmp/pids/server.pid" }
 
 # Allow puma to be restarted by `rails restart` command.
 plugin :tmp_restart
+
+# 8 worker processes: one Puma process runs one Ruby thread at a time, so with
+# everyone working at once pages queued for 13-35 s (load test on .15, 2026-10-05).
+# Sessions are cookies and Action Cable uses Redis, so workers share nothing else.
+workers Integer(ENV.fetch("WEB_CONCURRENCY") { 8 })
