@@ -244,6 +244,7 @@
       var kinds = { exact: ['On the map', 'The map placed it here. Drag the pin if the building is somewhere else.'],
                     estimate: ['Estimated', 'The map estimated this spot from the street. Check the pin is on the building.'],
                     landmark: ['Found', 'The map found this. Drag the pin if the building is somewhere else.'],
+                    business: ['Found on Azure Maps', 'Our map did not have this place; Azure Maps found it by name. Drag the pin if it is not on the building.'],
                     street: ['Street only', 'The pin is on the right street. Slide it to the building.'] };
       var kind = kinds[a.pin_kind] || ['Needs a pin', 'Search for something nearby, or paste a spot from Google Maps, then drag the pin onto the building.'];
       card.innerHTML = '<div class="head">' + (a.mode === 'find' ? 'Find a place' : 'Add a saved place') + '<span class="badge">' + kind[0] + '</span></div>' +
