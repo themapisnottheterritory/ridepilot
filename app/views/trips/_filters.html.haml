@@ -30,7 +30,7 @@
           = f.select :status_id, options_for_select( @run_listings, session[:trips_status_id]), {:include_blank => translate_helper(:all) }, { :class => 'form-control' }
         .col-sm-12
           = f.label :customer_id, translate_helper(:customer)
-          - customer_name = Customer.find_by_id(session[:trips_customer_id]).name unless session[:trips_customer_id].blank?
+          - customer_name = Customer.find_by_id(session[:trips_customer_id])&.name unless session[:trips_customer_id].blank?
           = autocomplete_field_tag 'customer_name', customer_name, autocomplete_customers_path(active_only: true), :delay => 200, :id_element => "#customer_id", :class => 'form-control', :placeholder => 'type first or last name (2 chars min.)'
           = hidden_field_tag 'trip_filters[customer_id]', session[:trips_customer_id], id: 'customer_id'
       .col-sm-12

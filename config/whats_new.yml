@@ -16,6 +16,10 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-05 17:45"
+  title: Trips page after deleting a customer
+  body: |
+    If you had filtered the **Trips** list by a customer and that customer was then deleted, the Trips page stopped opening. It now opens normally and simply drops that customer from the filter.
 - added: "2026-10-05 18:05"
   title: Early-morning times are double-checked
   body: |

@@ -608,6 +608,14 @@ class TripsController < ApplicationController
 
     update_sessions(filters_hash)
 
+    # The customer filter is remembered between visits. A customer deleted (or
+    # merged into another) since then made the filter box crash on every load
+    # of the Trips page, and would have filtered the list down to nothing
+    # (Michelle, 2026-10-05: filtered by a duplicate, then deleted it). Forget it.
+    if session[:trips_customer_id].present? && !Customer.where(id: session[:trips_customer_id]).exists?
+      session.delete(:trips_customer_id)
+    end
+
     trip_filter = TripFilter.new(@trips, trip_sessions)
     @trips = trip_filter.filter!
     # need to re-update start&end pickup filters
