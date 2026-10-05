@@ -30,4 +30,15 @@ RSpec.describe HelpIntent do
     allow(Net::HTTP).to receive(:start).and_return(double(code: "200", body: { choices: [{ message: { content: "not json" } }] }.to_json))
     expect(described_class.detect("add 1 Main St")).to be_nil
   end
+
+  # 2026-10-05: "where is Kuecker service center in Cuero?" skipped the model.
+  it "asks the model about where a place is in a town, but not about where something is shown" do
+    reply = { intent: "find_place", name: "Kuecker Service Center", address: nil, city: "Cuero" }.to_json
+    allow(Net::HTTP).to receive(:start).and_return(double(code: "200", body: { choices: [{ message: { content: reply } }] }.to_json))
+    expect(described_class.detect("where is Kuecker service center in Cuero?")).to include("intent" => "find_place", "name" => "Kuecker Service Center", "city" => "Cuero")
+    expect(described_class::TRIGGER).to match("Where's the HEB on Navarro")
+    expect(described_class::TRIGGER).to match("¿Dónde está la clínica en Yoakum?")
+    expect(described_class::TRIGGER).not_to match("Where is the fare shown?")
+    expect(described_class::TRIGGER).not_to match("Where do I see a rider's trips?")
+  end
 end

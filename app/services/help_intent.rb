@@ -19,8 +19,13 @@ class HelpIntent
   INTENTS   = %w[add_saved_place find_place].freeze
 
   # a house number and street, or a word that asks for something to be added
-  # or found on the map
-  TRIGGER = /\b\d{1,6}\s+[A-Za-z]|\b(add|save|new|create|put in|find|locate|look up|on the map|agreg|añad|anad|guard|crea|busca|encuentra)/i
+  # or found on the map; or "where is <a place> in/on/at/near <somewhere>".
+  # "where is Kuecker service center in Cuero?" used to skip the model and got
+  # a help answer telling the person to ask Ask RidePilot (2026-10-05); a plain
+  # "Where is the fare shown?" (a question about RidePilot's screens) still
+  # skips it.
+  WHERE_PLACE = /\bwhere(?:'?s|\s+is|\s+are)\b.*\b(?:in|on|at|near|by)\s+\w|\bd[oó]nde\s+(?:est[aá]n?|queda)\b/i
+  TRIGGER = /\b\d{1,6}\s+[A-Za-z]|\b(add|save|new|create|put in|find|locate|look up|on the map|agreg|añad|anad|guard|crea|busca|encuentra)|#{WHERE_PLACE}/i
 
   def self.detect(question)
     text = question.to_s.strip.first(1000)
@@ -58,7 +63,7 @@ class HelpIntent
     <<~PROMPT
       You read one message from transit staff and decide whether it asks RidePilot to ADD A SAVED PLACE (a named destination with a street address) or to FIND a place on the map. Reply with JSON only.
       If it does: {"intent":"add_saved_place","name":"<place name, or null>","address":"<house number and street>","city":"<city or null>","state":"<2-letter state or null>","zip":"<5-digit zip or null>","category":"<one of: #{AddressGroup.where.not(name: AddressGroup::UNKNOWN_TYPE).order(:id).pluck(:name).join(', ')}, or null>"}
-      If it asks to FIND, LOCATE or SHOW a place or address on the map (not to add it): the same fields with "intent":"find_place" (address may be a street or a landmark without a number).
+      If it asks to FIND, LOCATE or SHOW a place or address on the map, or asks WHERE a place is ("where is the HEB in Cuero?"), not to add it: the same fields with "intent":"find_place" (address may be a street or a landmark without a number, or null).
       Otherwise, including questions about HOW to add or find one: {"intent":"none"}
       Copy the address as typed; fix only obvious capitalisation. Do not invent a city, state or zip that was not typed.
     PROMPT
