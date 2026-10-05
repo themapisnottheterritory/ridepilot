@@ -16,6 +16,10 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-05 18:05"
+  title: Early-morning times are double-checked
+  body: |
+    When a trip or subscription has a pickup or appointment time between **12:00 AM** and **4:59 AM**, saving now asks "Did you mean PM?" first. Several subscriptions had been saved for 12:00 AM (midnight) or 3:45 AM instead of PM; those have been corrected.
 - added: "2026-10-05 18:04"
   title: Removing days from a subscription removes their trips
   body: |

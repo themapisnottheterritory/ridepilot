@@ -40,6 +40,7 @@
 //= require bootstrap-table
 //= require selectize
 //= require verify_client_code
+//= require ampm_guard
 //= require jquery.sumoselect
 //= require bootstrap-editable
 //= require bootstrap-editable-rails

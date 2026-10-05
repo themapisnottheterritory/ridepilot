@@ -10,6 +10,8 @@
 
 **Copy a trip**: open an existing trip and click **Clone** to book the same ride on another day.
 
+**AM or PM**: times are entered with AM/PM; 12:00 AM is midnight and 12:00 PM is noon. If a pickup or appointment time is between 12:00 AM and 4:59 AM, RidePilot asks "Did you mean PM?" before saving: choose **Change it** to fix the time, or keep it if the early time is right.
+
 **Standing trips** (same ride on set days, e.g. dialysis): use **Create New Subscription Trip** (Trips page, or **View Subscription Trip Templates** to see existing ones). Fill in the customer and **Trip Essentials** as for a normal trip, then in the **Repetitions** panel set the **Start Date**, an optional **Stop Date**, tick the **Days of Week** (e.g. Tuesday and Thursday), and set **Repeat every** 1 **Weeks** (2 for every other week). Save. RidePilot generates the daily trips ahead of time. A single trip can't be turned into a subscription; create the Subscription Trip, and cancel any one-off trips it duplicates. **Changing a subscription's days**: untick a day and save, and RidePilot removes the trips it had already made for that day (only future ones that have no result yet) and lists them in the message at the top of the page. Ticking a new day adds its trips. Changing the subscription's time or addresses only affects trips it makes from then on: trips already made for the coming weeks keep the old details, so change those one by one.
 
 **Changing a trip after it happened**: use the trip's Result (for example **Mark as no-show**, cancelled, turned down). RidePilot may ask for a comment explaining the change.
