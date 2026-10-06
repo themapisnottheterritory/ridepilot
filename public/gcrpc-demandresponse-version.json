@@ -1,9 +1,9 @@
 {
-  "version": "1.0.31",
-  "version_code": 32,
+  "version": "1.0.32",
+  "version_code": 33,
   "url": "/rideavl-pilot.apk",
   "required": false,
-  "notes": "Each stop tap now includes where the tablet was, so dispatch has a location for every stop, including on vans without a bus GPS. Evening runs stay on My Runs after 7 PM.",
-  "published_at": "2026-10-04T02:31:14Z",
-  "sha256": "57a556dd582dee18a12257698281a8b418465a7ac0235d66a07460ee544f47df"
+  "notes": "No Show waits until the rider's pick-up window has opened and you have waited, and says when (FTA rules). If RidePilot doesn't accept a tap, the tablet now says why. Drop-off times no longer show before their pick-up.",
+  "published_at": "2026-10-06T18:19:03Z",
+  "sha256": "12ab5710351540de476eaff9d4087523164151e57fe579960c51e49fd5579b5d"
 }
