@@ -4,7 +4,9 @@ require "net/http"
 # ask Azure Maps, the way a dispatcher would search the web, and keep the
 # answer only if it plainly is the place asked for. Used by Ask RidePilot's
 # add/find-a-place card (SavedPlaceProposal) after the saved places and our map
-# have had their turn; never per keystroke.
+# have had their turn; never per keystroke. PlaceSearch.address is the address
+# pickers' last resort for a house our map lacks (AddressesController
+# #geocode_suggest), asked only for a finished address and remembered.
 #
 #   PlaceSearch.find(name: "Diane's Hair Salon", city: "Cuero", near: { lat: 29.09, lon: -97.29 })
 #   # => #<struct lat: 29.090.., lon: -97.324.., name: "Diane's Hair Salon", address: "2010 State Highway 72 West, ...", kind: "business">
@@ -43,8 +45,9 @@ class PlaceSearch
     key.present?
   end
 
-  # A month's calls stop here (well inside Azure's free 5,000). Real use is
-  # ~25-50 a month: each place is looked up once, then it is a saved place.
+  # A month's calls stop here (well inside Azure's free 5,000). Places: ~25-50
+  # a month, each looked up once. Addresses (from 2026-10-06): a finished
+  # address our map lacks, about 1 search in 20, each remembered 90 days.
   def self.monthly_cap
     Integer(ENV.fetch("AZURE_MAPS_MONTHLY_CAP", 3000))
   end
@@ -142,6 +145,53 @@ class PlaceSearch
 
   # One file per month in tmp/ (shared by every Puma worker), counted under a
   # lock. false once the month's cap is reached; the trouble board hears once.
+  # A house our own map doesn't have, for the address pickers: "26 Lucas Lane,
+  # Gonzales" and "85 Cortinas Rd, Goliad" are on no map we run, and Azure has
+  # both to the door (2026-10-06). Only a "Point Address" or "Address Range"
+  # carrying the house number typed is kept. Returned in Nominatim's shape, so
+  # the pickers take it as they are; marked "(Azure Maps)" for the person
+  # choosing. Each answer is remembered 90 days (a failed call is not), so a
+  # repeat search costs nothing.
+  ADDRESS_MEMORY = ActiveSupport::Cache::FileStore.new(Rails.root.join("tmp", "cache", "azure-addresses"))
+
+  def self.address(text:, house_number:, near: nil)
+    return [] unless enabled? && house_number.present? && text.to_s.strip.size >= 8
+    hits = ADDRESS_MEMORY.fetch(address_memory_key(text), expires_in: 90.days, skip_nil: true) do
+      next nil unless count_one!
+      uri = URI("#{BASE}/search/address/json")
+      uri.query = { "api-version" => "1.0", query: text, countrySet: "US", limit: 3,
+                    lat: near ? near[:lat] : 28.81, lon: near ? near[:lon] : -96.99 }.to_query
+      req = Net::HTTP::Get.new(uri)
+      req["subscription-key"] = key
+      res = Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: 3, read_timeout: 5) { |h| h.request(req) }
+      raise "Azure Maps answered #{res.code}" unless res.code == "200"
+      JSON.parse(res.body)["results"] || []
+    end
+    # in Texas only: "1402 US Highway 5" (59 mistyped) answered North Dakota
+    Array(hits).select { |r| ["Point Address", "Address Range"].include?(r["type"]) && r.dig("address", "streetNumber").to_s == house_number.to_s &&
+                             r.dig("address", "countrySubdivision") == "TX" }
+               .map { |r| nominatim_shape(r) }
+  rescue StandardError => e
+    report("address #{e.class}: #{e.message}")
+    []
+  end
+
+  # "1803 N Goldman St, Victoria, TX 77901" and the same while ", TX 779" is
+  # still being typed are one question: "1803 n goldman st victoria"
+  def self.address_memory_key(text)
+    text.to_s.downcase.gsub(/[^a-z0-9 ]/, ' ').squish.sub(/\s+(?:tx|texas)\b.*\z/, '').sub(/\s+\d{1,5}\z/, '').sub(/\s+[a-z]\z/, '')
+  end
+
+  def self.nominatim_shape(r)
+    a = r["address"] || {}
+    { "place_id" => "azure-#{r['id']}", "source" => "azure",
+      "lat" => r.dig("position", "lat").to_s, "lon" => r.dig("position", "lon").to_s,
+      "display_name" => "#{a['freeformAddress']} (Azure Maps)",
+      "address" => { "house_number" => a["streetNumber"], "road" => a["streetName"], "town" => a["municipality"],
+                     "county" => a["countrySecondarySubdivision"], "postcode" => a["postalCode"],
+                     "state" => a["countrySubdivisionName"].presence || "Texas" } }
+  end
+
   def self.count_one!
     File.open(counter_path, File::RDWR | File::CREAT, 0o644) do |f|
       f.flock(File::LOCK_EX)

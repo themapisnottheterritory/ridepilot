@@ -178,8 +178,15 @@ class AddressesController < ApplicationController
   def geocode_suggest
     term = params[:q].to_s.strip
     term = Regexp.last_match[:addr] if term.match(LABELLED_ADDRESS)
-    term = strip_leading_name(term)
+    term = strip_leading_name(tidy_typed_address(term))
     return render(json: []) if term.length < MIN_SUGGEST_LENGTH
+
+    # The town typed anywhere in the text, even misspelled: every map answer
+    # below is kept near it, or near a town we serve when none was typed
+    # (keep_local, TownCentres).
+    @keep_local = true
+    @town_hint = TownCentres.find_in(term) || TownCentres.find_in(params[:q])
+    @town_hint = nil if @town_hint && term !~ /\A\s*\d/ && term.downcase.start_with?(@town_hint[:typed])
 
     # Free text and structured search answer differently, and neither is reliably
     # the better one. "2001 Palm Village" free-text returns a Palm Court in
@@ -188,6 +195,9 @@ class AddressesController < ApplicationController
     # only when free text came back empty -- meant a poor first answer hid the
     # right second one, and the dispatcher saw only the poor one.
     typed_number = term[/\A\s*(\d+)/, 1]
+    # with a house number typed, an answer's road has to be the street typed
+    # ("11840 FM957" answered "11840 James Avenue"; road_matches?)
+    @street_words = street_words(without_town(strip_unit(split_town(term).first).sub(/\A\s*\d+[a-z]?\s+/i, ''))) if typed_number
     results = nominatim_suggest(q: term)
 
     # The second pass costs another round trip, so it is only spent when the
@@ -221,7 +231,7 @@ class AddressesController < ApplicationController
       results += nominatim_suggest(q: route)
       results += nominatim_suggest(street: route, state: NOMINATIM_FALLBACK_STATE) unless convincing_suggestions?(results, typed_number)
     end
-    results = near_town(results, town) if town
+    results = @town_hint ? nearest_first(results) : near_town(results, town) if @town_hint || town
 
     results = rank_suggestions(results, typed_number)
     results = carry_typed_house_number(results, typed_number)
@@ -229,6 +239,43 @@ class AddressesController < ApplicationController
     # Last resort: a partial street ("1404 E Vir") that Nominatim cannot match
     # in any form, completed from the local dictionary.
     results = street_dictionary_suggest(term) if results.empty?
+
+    # Last of all: the street alone. A house number the map doesn't hold can
+    # sink the whole search: Nominatim read the "33" of "33 Seakist Rd" as
+    # Highway 33 (Arlington, Houston: outside our area, so nothing came back).
+    # And a town typed without a comma ("33 Seakist Rd Port Lavaca, TX 77979")
+    # stays glued to the street, which the map files under Calhoun County, not
+    # Port Lavaca (Michelle, 2026-10-06). Ask for the street name only, keep
+    # answers near the town typed, give them the town and zip typed when the
+    # map has none, and put the typed house number back on when the map has
+    # only the street.
+    if results.empty? && typed_number
+      street_only = without_town(strip_unit(street_part).sub(/\A\s*\d+[a-z]?\s+/i, ''))
+      town_typed = @town_hint ? @town_hint[:name] : town
+      if street_only.length >= MIN_SUGGEST_LENGTH
+        spelled = ordinal_spelling(route_spelling(street_only))
+        # with the number first: the map does hold some (33 Seakist Road)
+        found = nominatim_suggest(street: "#{typed_number} #{spelled}", state: NOMINATIM_FALLBACK_STATE)
+        found = [] unless convincing_suggestions?(found, typed_number)
+        found = nominatim_suggest(street: spelled, state: NOMINATIM_FALLBACK_STATE) if found.empty?
+        found = nominatim_suggest(q: spelled) if found.empty?
+        found = @town_hint ? nearest_first(found) : (town_typed && found.any? ? near_town(found, town_typed) : found)
+        found = fill_typed_town(found, town_typed, term[/\b(\d{5})(?:-\d{4})?\s*\z/, 1])
+        results = carry_typed_house_number(rank_suggestions(found, typed_number), typed_number)
+      end
+    end
+
+    # Our map lacks some houses altogether (26 Lucas Lane, Gonzales; 85
+    # Cortinas Rd, Goliad; 825 W Fairwinds St, Hallettsville). When nothing
+    # found is the house typed and the text looks finished (a house number and
+    # the town or a zip), ask Azure Maps for that house (PlaceSearch.address:
+    # counted against the monthly cap, each answer remembered). An exact house
+    # goes first.
+    if typed_number && results.none? { |r| exact_house?(r, typed_number) } &&
+       (@town_hint || term =~ /\b\d{5}(?:-\d{4})?\s*\z/)
+      azure = keep_local(PlaceSearch.address(text: term, house_number: typed_number, near: @town_hint))
+      results = (azure + results).uniq { |r| r['place_id'] } if azure.any?
+    end
 
     render json: results.first(SUGGEST_LIMIT)
   end
@@ -270,6 +317,133 @@ class AddressesController < ApplicationController
   # so "First Baptist Church" and "Second Chance" are left as they are.
   def ordinal_spelling(text)
     text.gsub(ORDINAL_STREET) { ORDINALS[Regexp.last_match(1).downcase] }
+  end
+
+  # Ways staff type addresses that the map can't read, from replaying every
+  # search since Sep 21 (2026-10-06):
+  #   "Day N Night Medical Supply, 2007 E Red River St"  -> from the house number on
+  #   "1300Captain Albert Martin", "Mockingbird LaneVictoria", "Rio GrandeAPT 1"
+  #                                                       -> the words apart
+  #   "803-A Indianola", "803 A Indianola", "908 C South" -> "803 Indianola" (not N/S/E/W)
+  #   "11840 FM957", "8289 FMn 466"                       -> "FM 957", "FM 466"
+  GLUED_WORDS = %w[Street St Avenue Ave Road Rd Drive Dr Lane Ln Boulevard Blvd Court Ct Circle Cir Highway Hwy
+                   Trail Trl Parkway Pkwy Place Pl Way Loop APT Apt Unit UNIT Lot LOT Ste STE Suite].freeze
+
+  def tidy_typed_address(term)
+    t = term.dup
+    # the map's own label, picked and then edited ("1020, Henry Street, Apt 3,
+    # Gonzales, Gonzales County, Texas, 78629, United States")
+    if t =~ /\A\d+,\s/ || t =~ /,\s*united states\s*\z/i
+      t = t.sub(/\A(\d+),\s*/, '\\1 ').sub(/,\s*united states\s*\z/i, '')
+      t = t.gsub(/,\s*[[:alpha:] ]+ county\b/i, '').gsub(/,\s*texas\b/i, '')
+    end
+    t = Regexp.last_match[:addr] if t =~ /\A[^\d,]{3,}?,\s*(?<addr>\d+\s*[[:alpha:]].*)\z/
+    t = t.sub(/\A(\d+)([[:alpha:]]{3,})/, '\\1 \\2')
+    town_names = TownCentres.all.values.map { |v| Regexp.escape(v[:name]) }
+    t = t.gsub(/([a-z])(?=(?:#{(GLUED_WORDS.map { |w| Regexp.escape(w) } + town_names).join('|')})\b)/, '\\1 ')
+    t = t.gsub(/(\d)(?=(?:#{town_names.join('|')})\b)/, '\\1 ') if town_names.any?
+    t = t.sub(/\A(\d+)\s*-?\s*[A-DF-MO-RT-VX-Z]\b(?=\s+[[:alpha:]]{2,})(?!\s+(?:st|street|ave|avenue|rd|road)\b)/i, '\\1')
+    t = t.gsub(/\b(FM|CR|RR|PR|SH)n?\s*-?\s*(\d+)\b/i) { "#{Regexp.last_match(1).upcase} #{Regexp.last_match(2)}" }
+    t = t.gsub(/\b(TX|US|IH)-(\d+)/i) { "#{Regexp.last_match(1).upcase} #{Regexp.last_match(2)}" }
+    # "Private Rd 1032", "Pvt RD 1192", "PR 1032": spelled out, the way the maps
+    # name them (Azure answered other private roads for "Private Rd 1032")
+    t = t.gsub(/\b(?:pvt|private|pr)\.?\s*(?:rd|road)?\.?\s*(\d+)\b/i) { "Private Road #{Regexp.last_match(1)}" }
+    t.squeeze(' ').strip
+  end
+
+  # The street with the town typed after it taken off: "Seakist Rd Port Lavaca"
+  # -> "Seakist Rd" (the town is @town_hint).
+  def without_town(text)
+    return text unless @town_hint
+    text.sub(/\s+#{Regexp.escape(@town_hint[:typed]).gsub('\\ ', '\\s+')}\b.*\z/i, '').presence || text
+  end
+
+  # Map answers near the town typed, or near a town we serve when none was
+  # typed (TownCentres). An answer that names another of our towns is that
+  # town, however close ("800 Ave F, Bay City" answered El Campo, 23 miles off;
+  # "1219 St Hwy 72 W, Cuero" answered Yorktown); one with no town of its own
+  # (a county road) has to be within TOWN_RADIUS_MILES. With a house number
+  # typed, the answer's road has to be the street typed. An answer without
+  # coordinates can't be placed and stays.
+  TOWN_RADIUS_MILES = 25
+
+  def keep_local(results)
+    results = results.select { |r| road_matches?(r) } if @street_words
+    unless @town_hint
+      local = results.select { |r| r['lat'].blank? || TownCentres.served?(r['lat'].to_f, r['lon'].to_f) }
+      return local if local.any?
+      # nothing near: a far answer in Texas may still be the trip (the VA hospital in Houston)
+      return results.select { |r| in_texas?(r['lat'].to_f, r['lon'].to_f) }
+    end
+    results.select do |r|
+      next true if r['lat'].blank? || r['lon'].blank?
+      next true if r.dig('address', 'road').to_s.downcase.include?(@town_hint[:typed])
+      place = (r.dig('address', 'city') || r.dig('address', 'town') || r.dig('address', 'village')).to_s.strip.downcase
+      next false if place.present? && place != @town_hint[:name].downcase && TownCentres.all.key?(place)
+      TownCentres.miles(@town_hint, r['lat'].to_f, r['lon'].to_f) <= TOWN_RADIUS_MILES
+    end
+  end
+
+  # The words that name a street, without directions, street types, route
+  # prefixes or units: "1219 St Hwy 72 W" -> ["72"], "N Goldman St" -> ["goldman"],
+  # "Farm-to-Market 957" -> ["957"]. nil when nothing is left.
+  ROAD_NOISE = %w[n s e w ne nw se sw north south east west st street ave avenue rd road dr drive ln lane blvd boulevard
+                  ct court cir circle hwy highway trl trail pkwy parkway pl place way loop tx us sh fm cr rr pr farm market
+                  to state county private apt unit lot ste suite the of].to_set.freeze
+
+  def street_words(text)
+    ordinal_spelling(route_spelling(text.to_s)).downcase.gsub(/[^a-z0-9 ]/, ' ').split.reject { |w| ROAD_NOISE.include?(w) }.presence
+  end
+
+  # The answer's road shares a word with the street typed: the same word, the
+  # start of one while it's being typed ("vir" for Virginia, "cour" for Court
+  # House, "c arl" for Carl), or one letter off ("esplande"). With a house
+  # number typed, an answer with no road at all (a pipeline, a lake) is not
+  # the address.
+  def road_matches?(r)
+    road = r.dig('address', 'road')
+    return false if road.blank?
+    have = "#{road} #{route_spelling(road)}".downcase.gsub(/[^a-z0-9 ]/, ' ').split
+    have = (have + have.each_cons(2).map(&:join)).uniq
+    typed = @street_words + @street_words.each_cons(2).map(&:join)
+    typed.any? do |w|
+      have.any? { |h| h == w || (w.size >= 2 && h.start_with?(w)) || (w.size >= 5 && h.size >= 5 && DidYouMean::Levenshtein.distance(w, h) <= 1) }
+    end
+  end
+
+  def in_texas?(lat, lon)
+    lat.between?(25.8, 36.6) && lon.between?(-106.7, -93.5)
+  end
+
+  def nearest_first(results)
+    results.sort_by { |r| r['lat'].present? ? TownCentres.miles(@town_hint, r['lat'].to_f, r['lon'].to_f) : 999 }
+  end
+
+  # The house typed, found as such (not a street with the typed number put on it)
+  def exact_house?(r, typed_number)
+    r.dig('address', 'house_number') == typed_number && !r['number_from_typing']
+  end
+
+  # A street the map holds without a town (outside city limits) takes the town
+  # and zip that were typed, so the trip saves "33 Seakist Road, Port Lavaca,
+  # TX 77979" instead of a street with no town.
+  def fill_typed_town(results, town, zip)
+    return results unless town || zip
+    results.map do |r|
+      a = r['address'] || {}
+      next r if a['city'] || a['town'] || a['village'] || a['hamlet']
+      r = r.deep_dup
+      r['address'] ||= {}
+      r['address']['town'] = town if town
+      r['address']['postcode'] ||= zip if zip
+      if town
+        name = r['display_name'].to_s
+        road = r['address']['road'].to_s
+        # after the road ("33, Seakist Road, Port Lavaca, Calhoun County"), else after the first part
+        r['display_name'] = road.present? && name.include?(road) ? name.sub(road, "#{road}, #{town}") : name.sub(',', ", #{town},")
+      end
+      r
+    end
   end
 
   # "1219 W SH 72, Cuero, TX 77954" -> ["1219 W SH 72", "Cuero"]; no comma -> [term, nil]
@@ -339,6 +513,7 @@ class AddressesController < ApplicationController
       r = r.deep_dup
       r['address']['house_number'] = typed_number
       r['display_name'] = "#{typed_number} #{r['display_name']}"
+      r['number_from_typing'] = true
       r
     end
   end
@@ -368,7 +543,15 @@ class AddressesController < ApplicationController
     }.map(&:first)
   end
 
+  # While an address search runs (@keep_local), map answers far from the town
+  # typed are dropped as they arrive, so a wrong-town hit can't end the search
+  # early. A town's own lookup (near_town) is never filtered.
   def nominatim_suggest(search_params)
+    results = nominatim_fetch(search_params)
+    @keep_local && (search_params.key?(:q) || search_params.key?(:street)) ? keep_local(results) : results
+  end
+
+  def nominatim_fetch(search_params)
     base  = ENV['NOMINATIM_URL'] || 'http://10.0.0.18:8088'
     query = { format: 'json', addressdetails: 1, countrycodes: 'us', limit: 5 }.merge(search_params)
 
