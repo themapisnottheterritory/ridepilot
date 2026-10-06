@@ -95,6 +95,14 @@ class Api::V1::Driver::ItinerariesController < Api::V1::Driver::BaseController
     @itin = Itinerary.find_by_id(params[:id])
     # a queued tap sent again (the first answer was lost): dispatch was told already
     already = @itin && @itin.finish_time && @itin.trip&.trip_result&.code == 'NS'
+    # Not before the pick-up window opens plus the wait, and not when the bus came
+    # after the window (a missed trip): PickupWindow, FTA C 4710.1 §8.5.3, §8.5.4.
+    # Judged at the time of the tap, so a tap saved offline is judged fairly.
+    if @itin && !already && @itin.trip && (reason = PickupWindow.for(@itin.trip)&.no_show_refusal(at: tapped_at, arrived_at: @itin.arrival_time))
+      TroubleEvent.create(kind: "message", screen: "Driver tablet", action: "itineraries#noshow", provider_id: @itin.trip.provider_id,
+                          detail: "No-show refused: #{reason}") rescue nil
+      return render json: { error: { message: reason, code: "no_show_refused" } }, status: :unprocessable_entity
+    end
     if @itin && !already
       @itin.status_code = Itinerary::STATUS_OTHER
       @itin.finish_time = tapped_at

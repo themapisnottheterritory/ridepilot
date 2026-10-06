@@ -105,8 +105,13 @@ module TripCore
       end
     end
 
+    # Only a rider who has agreed to an early pick-up gets one (2026-10-06):
+    # until then every outbound trip was marked early-OK by default, and the
+    # tablet estimated riders boarding the moment the bus arrived, however
+    # early. FTA Circular C 4710.1 §8.5.3: a rider doesn't have to board before
+    # the pick-up window opens.
     if self.respond_to?(:early_pickup_allowed) && self.early_pickup_allowed.nil?
-      self.early_pickup_allowed = self.is_outbound? 
+      self.early_pickup_allowed = false
     end
   end
 

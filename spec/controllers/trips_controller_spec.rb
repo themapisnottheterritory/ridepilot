@@ -572,7 +572,10 @@ RSpec.describe TripsController, type: :controller do
     it "assigns future trips without a trip result to @trips" do
       ns_result = create(:trip_result, code:"NS", name: 'No-show')
       trip_1 = create(:trip, :provider => @current_user.current_provider, :trip_result => nil,   :pickup_time => Date.tomorrow.in_time_zone)
-      trip_2 = create(:trip, :provider => @current_user.current_provider, :trip_result => ns_result, :pickup_time => Date.tomorrow.in_time_zone)
+      # a result set directly: a trip can't be recorded a no-show before its
+      # pick-up window (Trip#no_show_within_pickup_window)
+      trip_2 = create(:trip, :provider => @current_user.current_provider, :trip_result => nil, :pickup_time => Date.tomorrow.in_time_zone)
+      trip_2.update_column(:trip_result_id, ns_result.id)
       trip_3 = create(:trip, :provider => @current_user.current_provider, :trip_result => nil,   :pickup_time => Date.yesterday.in_time_zone)
       get :unscheduled, params: {}
       expect(assigns(:trips)).to include(trip_1)

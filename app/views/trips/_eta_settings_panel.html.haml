@@ -15,8 +15,12 @@
         = f.number_field :passenger_unload_min, min: 0, required: true, size: 3, class: 'form-control'
     .form-group
       .form-label
-        = f.label :early_pickup_allowed, translate_helper("early_pickup_allowed")
+        = f.label :early_pickup_allowed, "Rider agrees to an early pick-up"
       .form-field
         = f.check_box :early_pickup_allowed
+        %span.text-muted{style: 'display: block; font-size: 12px; max-width: 340px;'}
+          Tick only if the rider has said they can be picked up before the window
+          (up to #{current_provider.early_boarding_min} minutes). A rider never has to board before the window opens
+          (FTA Circular C 4710.1 §8.5.3).
 
     

@@ -32,6 +32,16 @@ class Trip < ApplicationRecord
   validate :within_advance_day_scheduling
   validate :customer_active
   validate :fit_run_schedule
+  validate :no_show_within_pickup_window, if: -> { trip_result_id_changed? && trip_result&.code == 'NS' }
+
+  # A no-show only once the pick-up window has opened and the driver has waited,
+  # and never when the bus came after the window (PickupWindow; FTA C 4710.1
+  # §8.5.3, §8.5.4). The tablet checks the same at the time of its tap.
+  def no_show_within_pickup_window
+    arrived = Itinerary.where(trip_id: id, leg_flag: 1).pick(:arrival_time)
+    reason = PickupWindow.for(self)&.no_show_refusal(at: Time.current, arrived_at: arrived)
+    errors.add(:base, reason) if reason
+  end
 
   before_update :check_eta_settings_change
   after_update :apply_eta_settings_change

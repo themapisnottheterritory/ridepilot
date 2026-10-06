@@ -1008,6 +1008,10 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.integer "fare_pass_20_discount_pct", default: 0, null: false
     t.decimal "fare_monthly_pass_price_reduced", precision: 6, scale: 2, default: "0.0", null: false
     t.boolean "fare_transfer_different_route_only", default: true, null: false
+    t.integer "pickup_window_early_min", default: 0, null: false
+    t.integer "pickup_window_late_min", default: 30, null: false
+    t.integer "no_show_wait_min", default: 5, null: false
+    t.integer "early_boarding_min", default: 15, null: false
     t.index ["business_address_id"], name: "index_providers_on_business_address_id"
     t.index ["deleted_at"], name: "index_providers_on_deleted_at"
     t.index ["fare_id"], name: "index_providers_on_fare_id"
@@ -1427,6 +1431,21 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.datetime "updated_at", null: false
     t.index ["address_id"], name: "index_stop_sightings_on_address_id"
     t.index ["itinerary_id"], name: "index_stop_sightings_on_itinerary_id", unique: true
+  end
+
+  create_table "stop_taps", force: :cascade do |t|
+    t.integer "itinerary_id", null: false
+    t.string "action", null: false
+    t.datetime "tapped_at"
+    t.datetime "received_at", null: false
+    t.float "latitude"
+    t.float "longitude"
+    t.integer "accuracy_m"
+    t.string "app_version"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "fix_at"
+    t.index ["itinerary_id", "action"], name: "index_stop_taps_on_itinerary_id_and_action"
   end
 
   create_table "street_dictionary_entries", force: :cascade do |t|

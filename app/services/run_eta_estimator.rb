@@ -40,9 +40,16 @@ class RunEtaEstimator
     cursor = Time.current
     legs.each_with_index do |leg, i|
       cursor += durations[i].to_i            # drive time to this stop
-      leg.public_itinerary&.update_columns(eta: cursor)
+      leg.public_itinerary&.update_columns(eta: cursor)   # when the bus gets there
       if leg.is_pickup? && leg.trip
-        leg.trip.update_columns(estimated_pickup_time: cursor)
+        # The rider boards no earlier than the pick-up window allows: a bus that
+        # gets there early waits (FTA Circular C 4710.1 §8.5.3). Every stop after
+        # is estimated from then -- Robert Gardner's tablet (DeWitt3, 2026-10-06)
+        # showed a drop-off 30 minutes before its own pick-up because it assumed
+        # the rider boarded 39 minutes early.
+        ready = PickupWindow.for(leg.trip)&.earliest_boarding
+        cursor = ready if ready && ready > cursor
+        leg.trip.update_columns(estimated_pickup_time: cursor)   # what the rider is told
         written += 1
       end
       cursor += dwell_seconds(leg)           # time spent at this stop

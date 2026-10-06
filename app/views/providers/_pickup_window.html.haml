@@ -1,0 +1,67 @@
+-# Pick-up window and no-show rules (PickupWindow). The FTA and ADA references
+-# are shown with each setting so whoever changes them sees the limits.
+:css
+  .pw-panel { max-width: 860px; }
+  .pw-panel ol.section li { overflow: hidden; margin-bottom: 8px; }
+  .pw-rule { clear: both; background: #f4f6fa; border-left: 4px solid #12264F; padding: 8px 12px; margin: 6px 0 14px; font-size: 13px; color: #33415c; }
+  .pw-rule b { color: #12264F; }
+  .pw-panel li .help { display: block; font-size: 12px; font-weight: normal; color: #5f6b7a; margin: 3px 0 0; }
+  .pw-example { font-size: 13px; margin: 4px 0 12px; }
+%h2.section-header#pickup_window_settings Pick-up window and no-shows (ADA / FTA)
+.pw-panel
+  %p
+    These set when a rider must be ready, when the driver may record a no-show, and how RidePilot estimates pick-up
+    and drop-off times on the tablet and the rider portal. They follow the ADA rules for complementary paratransit as
+    FTA explains them in
+    = succeed "." do
+      = link_to "Circular C 4710.1 (ADA Guidance)", "https://www.transit.dot.gov/regulations-and-guidance/civil-rights-ada/ada-regulations-and-guidance", target: "_blank", rel: "noopener"
+  - w = @provider
+  %p.pw-example
+    %b Now:
+    = "a trip booked for 9:00 AM has the window #{(Time.zone.parse('09:00') - w.pickup_window_early_min.to_i.minutes).strftime('%-l:%M')}–#{(Time.zone.parse('09:00') + w.pickup_window_late_min.to_i.minutes).strftime('%-l:%M %p')};"
+    = "the driver can record a no-show from #{(Time.zone.parse('09:00') - w.pickup_window_early_min.to_i.minutes + w.no_show_wait_min.to_i.minutes).strftime('%-l:%M %p')};"
+    = "a rider who agreed to an early pick-up may be picked up from #{(Time.zone.parse('09:00') - w.pickup_window_early_min.to_i.minutes - w.early_boarding_min.to_i.minutes).strftime('%-l:%M %p')}."
+  - if can? :edit, @provider
+    = form_tag change_pickup_window_settings_provider_path(@provider) do
+      %fieldset
+        %ol.section.one
+          %li
+            %label{for: "provider_pickup_window_early_min"}
+              Window opens (minutes before the booked time)
+              %span.help
+                0 for a window that starts at the booked time (0/+30); 15 for one around it (-15/+15).
+            = number_field_tag "provider[pickup_window_early_min]", w.pickup_window_early_min, min: 0, max: 30, required: true, style: 'width: 6em;'
+          %li
+            %label{for: "provider_pickup_window_late_min"}
+              Window closes (minutes after the booked time)
+              %span.help
+                A bus that arrives after this is late; if the rider doesn't board then, it is a missed trip, not a no-show.
+            = number_field_tag "provider[pickup_window_late_min]", w.pickup_window_late_min, min: 0, max: 30, required: true, style: 'width: 6em;'
+          %li
+            %label{for: "provider_no_show_wait_min"}
+              Driver waits (minutes, counted from when the window opens)
+              %span.help
+                The tablet and Dispatch refuse a no-show before the window opens plus this wait.
+            = number_field_tag "provider[no_show_wait_min]", w.no_show_wait_min, min: 1, max: 15, required: true, style: 'width: 6em;'
+          %li
+            %label{for: "provider_early_boarding_min"}
+              Early pick-up allowance (minutes before the window, riders who agreed)
+              %span.help
+                Only for trips with
+                %b Rider agrees to an early pick-up
+                ticked. Used for estimates; a rider may still say no at the door.
+            = number_field_tag "provider[early_boarding_min]", w.early_boarding_min, min: 0, max: 30, required: true, style: 'width: 6em;'
+        .pw-rule
+          %b The rules these follow
+          %br
+          = PickupWindow::RULES[:window]
+          %br
+          = PickupWindow::RULES[:early]
+          %br
+          = PickupWindow::RULES[:wait]
+          %br
+          = PickupWindow::RULES[:missed]
+          %br
+          = PickupWindow::RULES[:suspension]
+        .actions
+          = submit_tag "Save pick-up window", class: 'btn action-button'

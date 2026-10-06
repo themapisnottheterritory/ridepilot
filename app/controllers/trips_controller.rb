@@ -229,12 +229,20 @@ class TripsController < ApplicationController
 
     if can? :edit, @trip
       @trip.attributes = change_result_params
-      @trip.save(validate: false)
+      # a no-show is checked against the pick-up window even here (Trip
+      # #no_show_within_pickup_window): the reason shows in the alert
+      if @trip.trip_result&.code == 'NS' && @trip.trip_result_id_changed?
+        @trip.no_show_within_pickup_window
+        @message = @trip.errors[:base].first
+      end
+      @trip.save(validate: false) if @message.blank?
 
-      @trip_result_filters = trip_sessions[:trip_result_id]
-      @clear_trip_status = true if @trip.scheduled? && @trip.is_cancelled_or_turned_down?
+      if @message.blank?
+        @trip_result_filters = trip_sessions[:trip_result_id]
+        @clear_trip_status = true if @trip.scheduled? && @trip.is_cancelled_or_turned_down?
 
-      @trip.post_process_trip_result_changed!(current_user)
+        @trip.post_process_trip_result_changed!(current_user)
+      end
     else
       @message = TranslationEngine.translate_text(:operation_not_authorized)
     end

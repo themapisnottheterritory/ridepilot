@@ -69,6 +69,19 @@ class Provider < ApplicationRecord
   DEFAULT_PASSENGER_UNLOAD_MIN = 5
   
   validates :name, :uniqueness => { :case_sensitive => false, conditions: -> { where(deleted_at: nil)} }, :length => { :minimum => 2 }
+
+  # Pick-up window and no-show rules (PickupWindow), with FTA's limits as the
+  # reason a setting is refused.
+  validates :pickup_window_early_min, :pickup_window_late_min, :early_boarding_min,
+            numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 30 }
+  validates :no_show_wait_min, numericality: { only_integer: true, greater_than_or_equal_to: 1, less_than_or_equal_to: 15 }
+  validate :pickup_window_within_fta_limit
+
+  def pickup_window_within_fta_limit
+    total = pickup_window_early_min.to_i + pickup_window_late_min.to_i
+    return if total <= 30
+    errors.add(:base, "A #{total}-minute pick-up window is too long. #{PickupWindow::RULES[:window]}")
+  end
   normalize_attribute :name, :with => [ :strip ]
   
   validates_numericality_of :oaa3b_per_ride_reimbursement_rate,               :greater_than => 0, :allow_blank => true

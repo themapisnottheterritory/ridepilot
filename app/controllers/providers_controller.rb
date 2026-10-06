@@ -260,6 +260,16 @@ class ProvidersController < ApplicationController
     redirect_to general_provider_path(@provider, anchor: "fare_schedule"), alert: "Not saved: #{e.record.errors.full_messages.to_sentence}"
   end
 
+  # Admin > General > Pick-up window and no-shows (PickupWindow). A setting
+  # FTA doesn't allow is refused with the reason.
+  def change_pickup_window_settings
+    if @provider.update(params.require(:provider).permit(:pickup_window_early_min, :pickup_window_late_min, :no_show_wait_min, :early_boarding_min))
+      redirect_to general_provider_path(@provider, anchor: "pickup_window_settings"), notice: "Pick-up window saved."
+    else
+      redirect_to general_provider_path(@provider, anchor: "pickup_window_settings"), alert: "Not saved: #{@provider.errors.full_messages.to_sentence}"
+    end
+  end
+
   def change_fare_related_settings
     if params[:provider].present?
       @provider.update(params.require(:provider).permit(:fare_udr_default, :fare_negative_floor, :fare_transfer_window_minutes, :fare_transfer_different_route_only, :fare_paratransit, :fare_urban_cities, :fare_monthly_pass_price, :fare_monthly_pass_price_reduced, :fare_pass_10_discount_pct, :fare_pass_20_discount_pct))

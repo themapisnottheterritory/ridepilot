@@ -20,6 +20,13 @@
   title: "New report: Vehicle Summary"
   body: |
     **Reports > Vehicle Summary** shows each bus's revenue and non-revenue hours and miles for a date range: revenue from the first pick-up to the last drop-off, non-revenue for the trips from the garage and back. It uses the odometer readings and the run's start and end on the tablet, so a run counts only once the driver closes it out; runs that aren't closed out are listed with what's missing. Choose Excel, CSV or PDF to download it.
+- added: "NOW_CT"
+  title: Pick-up windows and no-shows follow the ADA rules
+  apps: [web, tablet]
+  body: |
+    A no-show can now be recorded only once the rider's pick-up window has opened and the driver has waited (5 minutes by default), and never when the bus got there after the window closed: FTA counts that as a **missed trip**, the agency's, not the rider's. The tablet holds **No Show** until then and says when it opens; Dispatch and the tablet both explain why if it's too early.
+
+    Tablet and rider-portal times no longer assume a rider boards the moment the bus arrives early, so a drop-off no longer shows before its pick-up. On a trip, tick **Rider agrees to an early pick-up** only if the rider has said so. Admins set the window under **Admin > General > Pick-up window and no-shows**, with the FTA rules shown beside each setting.
 - added: "2026-10-06 11:08"
   title: Fewer "address not recognized" moments
   body: |

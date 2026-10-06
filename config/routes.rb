@@ -128,6 +128,7 @@ Rails.application.routes.draw do
         post :change_fields_required_for_run_completion
         post :change_driver_availability_settings
         post :change_eta_related_settings
+        post :change_pickup_window_settings
         post :change_fare_related_settings
         post :update_fare_schedule          # distance-band fare table (fare cards)
         post :save_region

@@ -43,6 +43,12 @@ class ItinerarySerializer
     true if object.trip && object.is_pickup? && !object.trip.early_pickup_allowed
   end
 
+  # A pick-up's window and when a no-show may be recorded (PickupWindow), so the
+  # tablet (1.0.32+) can hold the No Show button until then and say why.
+  attribute :pickup_window do |object|
+    PickupWindow.for(object.trip)&.to_h if object.is_pickup?
+  end
+
   WILL_CALL_NOTE = "WILL CALL: the rider calls when ready. The time is an estimate; check with dispatch before heading there.".freeze
 
   # a will-call pickup says so first, and a pickup whose funding source pays

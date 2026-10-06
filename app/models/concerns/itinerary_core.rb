@@ -145,22 +145,32 @@ module ItineraryCore
 
     def update_depart_time
       new_time = (self.eta + process_time.to_i.minutes) if self.eta
-      self.depart_time = if trip && !trip.early_pickup_allowed && time
-        new_time > time ? new_time : time
+      ready = ready_time
+      self.depart_time = if ready && new_time
+        new_time > ready ? new_time : ready
       else
         new_time
       end
     end
 
+    # When the bus can leave this stop at the earliest: a pick-up waits for its
+    # rider, who boards no earlier than the pick-up window allows (PickupWindow:
+    # the window's start, or the early allowance for a rider who agreed). FTA
+    # Circular C 4710.1 §8.5.3. Other stops keep their scheduled time when
+    # early isn't allowed, as before.
+    def ready_time
+      if is_pickup? && trip && (window = PickupWindow.for(trip))
+        window.earliest_boarding
+      elsif trip && !trip.early_pickup_allowed && time
+        time
+      end
+    end
+
     # in minutes
     def wait_time
-      if trip && !trip.early_pickup_allowed && time
-        eta_time = eta 
-        if time > eta_time
-          ((time.to_i - eta.to_i) / 60.to_f).to_i 
-        else
-          0
-        end
+      ready = ready_time
+      if ready && eta && ready > eta
+        ((ready.to_i - eta.to_i) / 60.to_f).to_i
       else
         0
       end
