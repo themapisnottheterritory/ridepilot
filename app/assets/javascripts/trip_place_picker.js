@@ -48,9 +48,7 @@ function init_place_picker(dom_selector, query_bounds, query_restrictions) {
       source: saved_places.ttAdapter(),
       templates: {
         header: '<h4>Saved Addresses</h4>',
-        suggestion: Handlebars.compile([
-          '<a>{{label}}</a>'
-        ].join(''))
+        suggestion: saved_place_suggestion
       }
     },
     {
@@ -64,6 +62,32 @@ function init_place_picker(dom_selector, query_bounds, query_restrictions) {
         ].join(''))
       }
     });
+}
+
+// One saved place in the picker: its name, the street under it, and its town
+// as a badge on the right (AddressesController#in_riders_town_first): green
+// for the rider's own town, amber for another town with the miles from home.
+// Several places share a name across towns (Walmart, Dialysis, the senior
+// center), and the town at the end of a long line was easy to miss.
+function saved_place_suggestion(place) {
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  var name = place.name || place.address || place.label;
+  var street = place.name ? place.address : '';
+  var badge = '';
+  if (place.town) {
+    var kind = place.home_town === true ? ' pp-home' : (place.home_town === false ? ' pp-away' : '');
+    badge = '<span class="pp-town' + kind + '">' + esc(place.town) + '</span>';
+    if (place.home_town === false && place.miles_from_home != null) {
+      badge += '<span class="pp-dist">about ' + esc(place.miles_from_home) + ' mi from home</span>';
+    }
+  }
+  return '<div class="pp-row"><div class="pp-main"><span class="pp-name">' + esc(name) + '</span>' +
+    (street ? '<span class="pp-street">' + esc(street) + '</span>' : '') + '</div>' +
+    (badge ? '<div class="pp-side">' + badge + '</div>' : '') + '</div>';
 }
 
 function process_nominatim_address(addr, type) {

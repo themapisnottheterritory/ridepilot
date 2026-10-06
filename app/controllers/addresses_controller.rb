@@ -54,6 +54,7 @@ class AddressesController < ApplicationController
     end
 
     arel_table = Address.arel_table
+    customer = nil
 
     if params[:customer_id].present? 
       customer = Customer.find_by_id(params[:customer_id])
@@ -76,7 +77,7 @@ class AddressesController < ApplicationController
 
     if addresses.size > 0
       #there are some existing addresses
-      address_json = addresses.map { |address| address.json }
+      address_json = in_riders_town_first(addresses.to_a, customer.try(:address))
     end
 
     respond_to do |format|
@@ -289,6 +290,26 @@ class AddressesController < ApplicationController
     lat, lon = centre['lat'].to_f, centre['lon'].to_f
     results.map { |r| [r, miles_between(lat, lon, r['lat'].to_f, r['lon'].to_f)] }
            .select { |_, d| d <= 30 }.sort_by(&:last).map(&:first)
+  end
+
+  # Saved places for the trip form's address picker, each with its town: the
+  # rider's own town (their mailing address) first, then other towns nearest
+  # first with the miles from home, so a call taker sees which Walmart they
+  # are picking. 30 saved-place names are used in more than one town
+  # (Victoria, Cuero, Edna...; Phil, 2026-10-06). Without a rider, towns only.
+  def in_riders_town_first(addresses, home)
+    home_town = home.try(:city).to_s.strip.downcase.presence
+    rows = addresses.each_with_index.map do |a, i|
+      json = a.json.merge(town: a.city.to_s.strip.presence)
+      if home_town
+        json[:home_town] = a.city.to_s.strip.downcase == home_town
+        if !json[:home_town] && home.latitude && a.latitude
+          json[:miles_from_home] = miles_between(home.latitude, home.longitude, a.latitude, a.longitude).round
+        end
+      end
+      [json, i]
+    end
+    rows.sort_by { |json, i| [json[:home_town] == false ? 1 : 0, json[:miles_from_home] || 0, i] }.map(&:first)
   end
 
   def miles_between(lat1, lon1, lat2, lon2)
