@@ -7,7 +7,8 @@
 #   hours: the run's start and end on the tablet (actual_start_time and
 #          actual_end_time); revenue = first stop reached to last stop done
 #   miles: end odometer - start odometer; non-revenue = road distance (our
-#          OSRM) from the garage to the first stop and from the last stop back;
+#          OSRM, kept a month on disk) from the garage to the first stop and
+#          from the last stop back;
 #          revenue = the rest
 #
 # A run counts only when it has both odometer readings, a start and an end on
@@ -165,13 +166,16 @@ class VehicleSummaryReport
   end
 
   # Driving miles by road on our OSRM server, remembered for the request and
-  # cached a month (garage-to-stop pairs repeat run after run).
+  # kept a month on disk (garage-to-stop pairs repeat run after run). The app's
+  # own Rails.cache is a NullStore here, so it has its own small file store.
+  ROAD_MEMORY = ActiveSupport::Cache::FileStore.new(Rails.root.join("tmp", "cache", "vehicle-summary-road-miles"))
+
   def road_miles(from, to)
     return nil unless from&.latitude && from&.longitude && to&.latitude && to&.longitude
     key = [from.latitude, from.longitude, to.latitude, to.longitude].map { |c| c.to_f.round(5) }
     @road ||= {}
     return @road[key] if @road.key?(key)
-    @road[key] = Rails.cache.fetch(["vehicle-summary-road-miles", *key], expires_in: 30.days, skip_nil: true) do
+    @road[key] = ROAD_MEMORY.fetch(key.join(","), expires_in: 30.days, skip_nil: true) do
       TripDistanceDurationProxy.new("OSRM", from_lat: key[0], from_lon: key[1], to_lat: key[2], to_lon: key[3],
                                             trip_datetime: Time.current).get_drive_distance
     end
