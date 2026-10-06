@@ -26,10 +26,17 @@
 
 :javascript
   $(document).ready(function() {
+    // DataTables hands back each cell's HTML, where "&" is "&amp;": put the
+    // plain text in the boxes, or saving writes "&amp;" into the name
+    // (Hallettsville Rehab &amp; Nursing, 2026-10-06). A textarea decodes
+    // entities without building any elements.
+    var cellText = function(html) {
+      return $('<textarea/>').html(html == null ? '' : String(html)).text().trim();
+    };
     $('#editLookupTableValueDialog').on('show.bs.modal', function (e) {
       var form = $(this).find('form');
       var baseUrl = "#{url}";
-      var currentValue = $('#lookupTable').DataTable().row($('#lookupTable .selected')).data();
+      var currentValue = $('#lookupTable').DataTable().row($('#lookupTable .selected')).data().map(cellText);
       var newUrl = baseUrl + "?model_id=" + $('#lookupTable .selected').data('model-id');
       form.prop('action', newUrl);
       var value = '';
