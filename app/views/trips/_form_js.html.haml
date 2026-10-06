@@ -128,8 +128,9 @@
             if(data.trips.length > 0) {
               dbh.populateTable(data.trips);
               dbh.showModal();
-              // If modal submit button is clicked, submit form.
-              dbh.modal.find('.submit-double-book-modal').click(function() {
+              // If modal submit button is clicked, submit form. (Bound
+              // fresh each time: the dialog stays in the page between saves.)
+              dbh.modal.find('.submit-double-book-modal').off('click.save').on('click.save', function() {
                 handle_client_code_verification($('#trip_customer_id').val(), form);
               });
             // Else, submit form

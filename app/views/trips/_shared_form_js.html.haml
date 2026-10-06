@@ -1,13 +1,49 @@
 :javascript
+  // Send the trip form once. A double-click on Save (or Enter and a click) ran
+  // the whole save twice: the second copy reached the server just after the
+  // first had saved and showed staff a conflict error (Michelle, 2026-10-06,
+  // trip 5153; about 1 save in 100 since Sep 29). The lock clears if the page comes
+  // back from the Back button, or if the save has not left the page after 15 s.
+  function submit_trip_form_once(form) {
+    if (form.dataset.submitting === '1') return;
+    form.dataset.submitting = '1';
+    setTimeout(function() { delete form.dataset.submitting; }, 15000);
+    form.submit();
+  }
+  window.addEventListener('pageshow', function(e) {
+    if (e.persisted) $('form.trip_form').each(function() { delete this.dataset.submitting; });
+  });
+
+  // A second Save click within 1.5 s of the first is the same click: ignore it
+  // before the form's own handlers run, so the checks and the customer-code
+  // dialog happen once (a double-click stacked two code dialogs; confirming
+  // both sent two saves). It listens for the click, not submit: these forms
+  // save through jQuery, which raises no submit event (see ampm_guard.js).
+  // Only a person's clicks count; the AM/PM guard's own re-click passes.
+  (function() {
+    var lastSave = 0;
+    document.addEventListener('click', function(e) {
+      var button = e.target.closest && e.target.closest('[type="submit"]');
+      if (!button || !button.form || !button.form.classList.contains('trip_form') || !e.isTrusted) return;
+      var now = Date.now();
+      if (now - lastSave < 1500) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      lastSave = now;
+    }, true);
+  })();
+
   // if customer has code, then need to verify the code first
   function handle_client_code_verification(customer_id, form) {
     var callback_fn = function(data) {
       if (data.show_prompt) {
         verify_client_code(data.code, "#{verify_code_customer_path('xxx')}".replace('xxx', customer_id), function() {
-          form.submit();
+          submit_trip_form_once(form);
         });
       } else {
-        form.submit();
+        submit_trip_form_once(form);
       }
     }
 
