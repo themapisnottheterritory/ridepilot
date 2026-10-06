@@ -16,11 +16,11 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
-- added: "2026-10-06 12:00"
+- added: "2026-10-06 09:45"
   title: "New report: Vehicle Summary"
   body: |
     **Reports > Vehicle Summary** shows each bus's revenue and non-revenue hours and miles for a date range: revenue from the first pick-up to the last drop-off, non-revenue for the trips from the garage and back. It uses the odometer readings and the run's start and end on the tablet, so a run counts only once the driver closes it out; runs that aren't closed out are listed with what's missing. Choose Excel, CSV or PDF to download it.
-- added: "2026-10-06 15:30"
+- added: "2026-10-06 10:00"
   title: The town shows when you pick a saved place
   body: |
     When you type a place on a trip (for example **walmart**), each saved place now shows its name, its street, and its **town** as a badge, so the Cuero Walmart and the Victoria ones are easy to tell apart. Places in the rider's own town (from their mailing address) come first with a green badge; places in other towns follow in amber with about how far they are from the rider's home.
