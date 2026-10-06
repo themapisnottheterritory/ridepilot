@@ -58,6 +58,9 @@ class Address < ApplicationRecord
     lat = coordinate(lat, :lat)
     lon = coordinate(lon, :lon)
     return nil unless lat && lon
+    # Nothing we serve is outside Texas: a pin there is a typing slip, and the
+    # save says the address isn't on the map instead of drawing it abroad.
+    return nil unless lat.between?(25.8, 36.6) && lon.between?(-106.7, -93.5)
     RGeo::Geographic.spherical_factory(srid: 4326).point(lon, lat)
   end
 
@@ -80,6 +83,13 @@ class Address < ApplicationRecord
     end
     number = Float(text, exception: false)
     return nil unless number
+    # Every place we serve is west of Greenwich. A longitude typed without its
+    # minus sign ("95.9654" for -95.9654) put Elvira Smith's drop-off in Asia,
+    # and the CAD map drew MATA1's line across Louisiana (2026-10-06).
+    if axis == :lon && number.between?(93.5, 106.7)
+      Rails.logger.warn("[address] longitude #{number} had no minus sign; using #{-number}")
+      number = -number
+    end
     limit = axis == :lon ? 180 : 90
     number.abs <= limit ? number : nil
   end
