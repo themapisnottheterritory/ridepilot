@@ -10,6 +10,10 @@
 #   no_pin       saved places, customer homes and garages with no map pin
 #                (never offered by the trip form's search, so saved again)
 #   trip_far     upcoming trips measured over TRIP_MILES
+#   trip_pin_far addresses on trips from a week ago on, of any kind (typed,
+#                coordinates only), pinned far from home: outside Texas, more
+#                than FAR_MILES from their own town, or -- with no town of
+#                ours -- more than HOME_MILES from every town we serve
 #   duplicate    the same saved place (same name and address) more than once
 #
 # AddressScan.new.findings -> [Finding]; each has a stable key, so the nightly
@@ -20,12 +24,14 @@ class AddressScan
   # the wrong-town matches this is for are 25 miles off or hundreds.
   FAR_MILES = 25
   TRIP_MILES = 100
+  HOME_MILES = 60
   KEPT = %w[CustomerCommonAddress ProviderCommonAddress GarageAddress].freeze
   KINDS = {
     "out_of_area" => "Pinned outside the service area",
     "far_from_town" => "Pinned far from its own town",
     "no_pin" => "No map pin",
     "trip_far" => "Upcoming trip over #{TRIP_MILES} miles",
+    "trip_pin_far" => "Trip address pinned far from home",
     "duplicate" => "Saved more than once"
   }.freeze
 
@@ -54,7 +60,7 @@ class AddressScan
   end
 
   def findings
-    @findings ||= out_of_area + far_from_town + no_pin + trips_far + duplicates
+    @findings ||= out_of_area + far_from_town + no_pin + trips_far + trip_pins_far + duplicates
   end
 
   def by_kind
@@ -119,6 +125,68 @@ class AddressScan
                   label: "Trip #{t.id}, #{t.customer.try(:name)}, #{t.pickup_time.in_time_zone.strftime('%a %-m/%-d %-l:%M %p')}",
                   detail: "#{t.drive_distance.round} miles", record_type: "Trip", record_id: t.id)
     end
+  end
+
+  # Trip addresses the checks above don't cover (typed in a trip, or given as
+  # coordinates), pinned far from home. Elvira Smith's drop-off (MATA1,
+  # 2026-10-06) was typed as coordinates with the longitude's minus sign
+  # missing -- a point in Asia, and a line across Louisiana on the CAD map --
+  # and nothing flagged it, because only saved addresses were checked.
+  def trip_pins_far
+    from = 7.days.ago.beginning_of_day
+    trips = Trip.where(deleted_at: nil).where("pickup_time >= ?", from)
+    ids = trips.pluck(:pickup_address_id, :dropoff_address_id).flatten.compact.uniq - kept.pluck(:id)
+    Address.where(id: ids).where.not(the_geom: nil).filter_map do |a|
+      why = far_from_home(a) or next
+      trip = trips.where("pickup_address_id = :i OR dropoff_address_id = :i", i: a.id).includes(:customer).order(:pickup_time).first
+      where = a.address.present? ? a.address_text : "coordinates #{a.latitude.round(4)}, #{a.longitude.round(4)}"
+      Finding.new(kind: "trip_pin_far", key: "trip_pin_far:#{a.id}", provider_id: trip&.provider_id || a.provider_id,
+                  label: "#{trip&.customer&.name || 'Trip'} #{trip&.pickup_time&.in_time_zone&.strftime('%a %-m/%-d')}: #{where}",
+                  detail: why, record_type: "Trip", record_id: trip&.id)
+    end
+  end
+
+  # Why a pin is far from home, or nil (TownCentres: our towns' own centres)
+  def far_from_home(a)
+    lat, lon = a.latitude, a.longitude
+    town, miles = AddressScan.nearest_served(lat, lon)
+    unless lat.between?(25.8, 36.6) && lon.between?(-106.7, -93.5)
+      return "pinned outside Texas, #{miles.round.to_fs(:delimited)} miles from #{town[:name]}"
+    end
+    own = a.city.present? && TownCentres.all[a.city.strip.downcase]
+    if own
+      m = TownCentres.miles(own, lat, lon)
+      return m > FAR_MILES ? "#{m.round} miles from the middle of #{own[:name]}" : nil
+    end
+    "#{miles.round} miles from #{town[:name]}, the nearest town we serve" if miles > HOME_MILES
+  end
+
+  # The served town nearest a point, and how far: [town, miles]
+  def self.nearest_served(lat, lon)
+    TownCentres.all.values.select { |t| t[:n] >= TownCentres::SERVED_MIN_ADDRESSES }
+               .map { |t| [t, TownCentres.miles(t, lat, lon)] }.min_by(&:last)
+  end
+
+  # Findings with a pin, for the map on the Address check page: where the pin
+  # is, the nearest town we serve and how far (the page works out which way).
+  MAPPED = %w[out_of_area far_from_town trip_pin_far].freeze
+
+  def self.pins(findings)
+    findings.select { |f| MAPPED.include?(f.kind) }.filter_map do |f|
+      a = f.record_type == "Trip" ? Address.find_by(id: f.key.split(":").last) : Address.find_by(id: f.record_id)
+      next unless a&.latitude
+      town, miles = nearest_served(a.latitude, a.longitude)
+      { kind: f.kind, label: f.label, detail: f.detail, lat: a.latitude, lon: a.longitude, fix: fix_path(f),
+        town: town&.dig(:name), miles: miles&.round }
+    end
+  end
+
+  # The area we serve, for framing the map: around the towns with many addresses
+  def self.served_bounds
+    towns = TownCentres.all.values.select { |t| t[:n] >= TownCentres::SERVED_MIN_ADDRESSES }
+    return nil if towns.empty?
+    [[towns.map { |t| t[:lat] }.min - 0.2, towns.map { |t| t[:lon] }.min - 0.2],
+     [towns.map { |t| t[:lat] }.max + 0.2, towns.map { |t| t[:lon] }.max + 0.2]]
   end
 
   def duplicates

@@ -1,0 +1,135 @@
+-# Pins far from home on a map of the area we serve (Philz, 2026-10-06: "so we
+-# dont have to OpenStreetMap the whole world"). The map stays on our own
+-# tiles; a pin beyond the edge becomes a pointer on the edge, aimed its way and
+-# labelled with how far it is from the nearest town we serve.
+:css
+  #ac-map-wrap { position: relative; margin: 14px 0 6px; }
+  #ac-map { height: 460px; border: 1px solid #d5dae1; border-radius: 6px; }
+  #ac-pointers { position: absolute; inset: 0; pointer-events: none; z-index: 650; overflow: hidden; }
+  .ac-ptr { position: absolute; pointer-events: auto; cursor: pointer; transform: translate(-50%, -50%);
+            display: flex; align-items: center; gap: 6px; white-space: nowrap; max-width: 240px;
+            background: #12264F; color: #fff; font-size: 12px; line-height: 1.2; padding: 4px 9px 4px 5px;
+            border-radius: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
+  .ac-ptr:hover { background: #1d3a73; }
+  .ac-ptr .ac-arrow { display: inline-block; width: 18px; height: 18px; line-height: 18px; text-align: center;
+                      border-radius: 50%; background: #CC9900; color: #12264F; font-weight: bold; flex: none; }
+  .ac-ptr .ac-txt { overflow: hidden; text-overflow: ellipsis; }
+  .ac-ptr b { color: #f2d27a; font-weight: 600; }
+  .ac-narrow .ac-long { display: none; }
+  .ac-legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; color: #5f6b7a; align-items: center; }
+  .ac-legend i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+  .ac-pop h5 { margin: 0 0 4px; font-size: 13px; }
+  .ac-pop p { margin: 0 0 6px; color: #5f6b7a; }
+  .ac-pop .ac-row { padding: 5px 0; border-top: 1px solid #eef0f3; }
+  .ac-pop .ac-row:first-child { border-top: 0; }
+#ac-map-wrap
+  #ac-map
+  #ac-pointers
+.ac-legend
+  %span
+    %i{style: "background:#c0392b"}
+    Outside the service area
+  %span
+    %i{style: "background:#CC9900"}
+    Far from its own town
+  %span
+    %i{style: "background:#12264F"}
+    Trip address far from home
+  %span#ac-summary
+  %a#ac-home{href: "#"} Back to the service area
+:javascript
+  (function () {
+    var pins = #{raw @pins.to_json};
+    var served = L.latLngBounds(#{raw @served_bounds.to_json});
+    var colour = { out_of_area: '#c0392b', far_from_town: '#CC9900', trip_pin_far: '#12264F' };
+    var map = L.map('ac-map', { zoomSnap: 0.25, worldCopyJump: false });
+    L.tileLayer('/tiles/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+    map.fitBounds(served);
+    var box = document.getElementById('ac-pointers');
+
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    function who(p) { return p.label.split(/[:,]/)[0]; }
+    function far(p) { return p.miles == null ? '' : p.miles.toLocaleString() + ' mi'; }
+    function row(p) {
+      return '<div class="ac-row"><h5>' + esc(p.label) + '</h5><p>' + esc(p.detail) +
+        (p.town && String(p.detail).indexOf(p.town) < 0 ? ' &middot; ' + esc(far(p)) + ' from ' + esc(p.town) : '') + '</p>' +
+        (p.fix ? '<a href="' + esc(p.fix) + '" target="_blank">Fix</a>' : '') + '</div>';
+    }
+    pins.forEach(function (p) {
+      L.circleMarker([p.lat, p.lon], { radius: 7, color: '#fff', weight: 2, fillColor: colour[p.kind] || '#12264F', fillOpacity: .95 })
+        .bindPopup('<div class="ac-pop">' + row(p) + '</div>', { maxWidth: 320 }).addTo(map);
+    });
+
+    // Which way, as the map shows it (screen angle; 0 = east, y grows down)
+    function compass(rad) {
+      var deg = (90 + rad * 180 / Math.PI + 360) % 360;   // 0 = north, clockwise
+      return ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.floor(((deg + 22.5) % 360) / 45)];
+    }
+
+    function draw() {
+      box.innerHTML = '';
+      var size = map.getSize(), cx = size.x / 2, cy = size.y / 2, inView = 0, groups = [];
+      document.getElementById('ac-map-wrap').classList.toggle('ac-narrow', size.x < 620);
+      pins.forEach(function (p) {
+        var pt = map.latLngToContainerPoint([p.lat, p.lon]);
+        if (pt.x >= 0 && pt.x <= size.x && pt.y >= 0 && pt.y <= size.y) { inView++; return; }
+        var a = Math.atan2(pt.y - cy, pt.x - cx);
+        var g = groups.find(function (g) { return Math.abs(Math.atan2(Math.sin(a - g.a), Math.cos(a - g.a))) < 8 * Math.PI / 180; });
+        if (g) g.pins.push(p); else groups.push({ a: a, pins: [p] });
+      });
+      // A chip per direction, on the edge that direction leaves by
+      var edges = { top: [], bottom: [], left: [], right: [] };
+      groups.forEach(function (g) {
+        var dx = Math.cos(g.a), dy = Math.sin(g.a);
+        var t = Math.min(Math.abs(cx / (dx || 1e-9)), Math.abs(cy / (dy || 1e-9)));
+        var x = cx + dx * t, y = cy + dy * t;
+        var edge = Math.abs(dy) * cx > Math.abs(dx) * cy ? (dy < 0 ? 'top' : 'bottom') : (dx < 0 ? 'left' : 'right');
+        g.pins.sort(function (p, q) { return (q.miles || 0) - (p.miles || 0); });
+        var p = g.pins[0], dir = compass(g.a);
+        var txt = g.pins.length > 1
+          ? '<b>' + g.pins.length + ' pins</b> <span class="ac-long">up to </span>' + esc(far(p)) + ' ' + dir + '<span class="ac-long"> of ' + esc(p.town) + '</span>'
+          : '<span class="ac-long">' + esc(who(p)) + ' &middot; </span><b>' + esc(far(p)) + '</b> ' + dir + '<span class="ac-long"> of ' + esc(p.town) + '</span>';
+        var el = document.createElement('div');
+        el.className = 'ac-ptr';
+        el.title = g.pins.map(function (q) { return q.label + ' (' + far(q) + ' from ' + q.town + ')'; }).join('\n');
+        el.innerHTML = '<span class="ac-arrow" style="transform: rotate(' + (g.a * 180 / Math.PI) + 'deg)">&#10140;</span><span class="ac-txt">' + txt + '</span>';
+        box.appendChild(el);
+        var c = { el: el, g: g, w: el.offsetWidth, h: el.offsetHeight };
+        c.at = edge === 'top' || edge === 'bottom' ? x : y;
+        edges[edge].push(c);
+        el.addEventListener('click', function (e) {
+          e.stopPropagation();
+          L.popup({ maxWidth: 340 }).setLatLng(map.containerPointToLatLng([c.x, c.y]))
+            .setContent('<div class="ac-pop" style="max-height:260px;overflow:auto">' + g.pins.map(row).join('') + '</div>').openOn(map);
+        });
+      });
+      // Lay each edge out in order along it, clear of each other, the zoom
+      // buttons and the corners; when an edge is full, a row further in
+      var gap = 6, m = 4, H = 26;
+      function lay(list, along, lo, hi, place) {
+        var ends = [];
+        list.sort(function (a, b) { return a.at - b.at; }).forEach(function (c) {
+          var len = along === 'x' ? c.w : c.h, r = 0, pos;
+          for (;; r++) {
+            pos = Math.max(c.at - len / 2, r < ends.length ? ends[r] + gap : lo);
+            pos = Math.min(pos, Math.max(lo, hi - len));
+            if (r >= ends.length || pos >= ends[r] + gap || r > 6) break;
+          }
+          ends[r] = pos + len;
+          place(c, pos + len / 2, r);
+        });
+      }
+      function put(c, x, y) { c.x = x; c.y = y; c.el.style.left = x + 'px'; c.el.style.top = y + 'px'; }
+      lay(edges.top, 'x', 56, size.x - m, function (c, at, r) { put(c, at, m + H / 2 + r * (H + gap)); });
+      lay(edges.bottom, 'x', m, size.x - 70, function (c, at, r) { put(c, at, size.y - m - H / 2 - r * (H + gap)); });
+      lay(edges.left, 'y', 86, size.y - H - 2 * m, function (c, at, r) { put(c, m + c.w / 2 + r * 150, at); });
+      lay(edges.right, 'y', H + 2 * m + gap, size.y - H - 2 * m, function (c, at, r) { put(c, size.x - m - c.w / 2 - r * 150, at); });
+      var out = pins.length - inView;
+      document.getElementById('ac-summary').textContent =
+        inView + ' on the map' + (out ? ', ' + out + ' beyond the edge (follow the pointers)' : '');
+    }
+    map.on('moveend zoomend resize', draw);
+    document.getElementById('ac-home').addEventListener('click', function (e) { e.preventDefault(); map.fitBounds(served); });
+    draw();
+  })();

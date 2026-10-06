@@ -7,5 +7,9 @@ class AddressChecksController < ApplicationController
     ids = current_user.super_admin? ? nil : current_user.roles.pluck(:provider_id)
     @by_kind = AddressScan.new(ids).by_kind
     @providers = Provider.pluck(:id, :name).to_h
+    # Pins far from home on a map of the area we serve; the ones beyond its
+    # edge point the way, with how far (Philz, 2026-10-06)
+    @pins = AddressScan.pins(@by_kind.values.flatten)
+    @served_bounds = AddressScan.served_bounds
   end
 end

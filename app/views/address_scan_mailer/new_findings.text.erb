@@ -1,6 +1,6 @@
 <% if @first_run %>RidePilot's morning address check is running. This first email is the starting list: everything it found today. From now on it emails only what is new since the day before.<% else %>The morning address check found <%= @findings.values.sum(&:size) %> new <%= @findings.values.sum(&:size) == 1 ? 'problem' : 'problems' %> since yesterday.<% end %>
 
-All <%= @total %> open items, with a Fix link for each: <%= @page %>
+All <%= @total %> open items, with a Fix link for each, and the far pins on a map: <%= @page %>
 <% opts = ActionMailer::Base.default_url_options %>
 <% if @pinned.present? %>
 == Placed on the map by the US Census address lookup (<%= @pinned.size %>) -- check each pin

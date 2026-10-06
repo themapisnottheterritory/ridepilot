@@ -3,6 +3,8 @@
   %h2 Address check
   %p.text-muted
     Saved addresses and upcoming trips that would send a driver, or work out a fare, wrong. Checked each morning; GCRPC I.T. gets an email when something new turns up. Fix each one from its link.
+  - if @pins.any? && @served_bounds
+    = render "map"
   - if @by_kind.values.all?(&:empty?)
     %p{style: "color: #0ca30c;"} Nothing to fix: every saved address is on the map, in the service area and near its town, and no upcoming trip is over #{AddressScan::TRIP_MILES} miles.
   - @by_kind.each do |kind, list|
