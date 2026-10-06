@@ -4,7 +4,7 @@
   @runs_with_trips ||= Run.for_provider(current_provider_id).for_date_range(@query.start_date, @query.end_date).joins(:trips).distinct
   @all_runs ||= @runs_with_trips.reorder(:date, :name)
 
-= form_for @query, :url=>url_for(:action=>action_name), :html=>{:method=>:get} do |f| 
+= form_for @query, :url=>url_for(:action=>action_name), :html=>{:method=>:get, :id=>'manifest_query_form'} do |f| 
   %fieldset
     .date-select{style: 'display: inline-block;'}
       = f.date_select  :start_date, :order => [:month,:day,:year], :html => {:class => "date-select"} rescue nil
@@ -25,7 +25,8 @@
 
 :javascript
   $(function() {
-    $('form').submit(function() {
+    // this form only: not the agency switcher in the header
+    $('#manifest_query_form').submit(function() {
       var run_ids = [];
       $('select.run_multipe_dropdown option:selected').each(function() {
         run_ids.push($(this).val());

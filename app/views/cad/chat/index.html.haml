@@ -50,7 +50,7 @@
       - if driver_seen
         = "Seen by the driver #{driver_seen.created_at.in_time_zone.strftime('%-l:%M %p')}"
   .panel-footer{style: 'padding-bottom: 40px;'}
-    = form_for :chat, :method=>:post, url: chat_path, remote: true do |form|
+    = form_for :chat, :method=>:post, url: chat_path, remote: true, html: { id: 'chat_form' } do |form|
       = hidden_field_tag 'run_id', @run.id
       = hidden_field_tag 'driver_id', @driver.id
       %textarea.form-control{name: 'message', placeholder: "Type your message here...", required: true}
@@ -106,13 +106,13 @@
       if($(this).val()) {
         $('textarea[name=message]').val($(this).find("option:selected").text());
         $(this).val('');
-        $('form').submit();
+        $('#chat_form').submit();   // not the agency switcher in the header
       }
     });
 
     $('textarea[name=message]').keypress(function (e) {
       if (e.which == 13) {
-        $('form').submit();
+        $('#chat_form').submit();   // not the agency switcher in the header
         return false;
       }
     });

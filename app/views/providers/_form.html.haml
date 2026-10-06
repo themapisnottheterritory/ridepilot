@@ -106,7 +106,11 @@
 
 :javascript
   $(function() {
+    // The Update button sits outside the form. Submit this form only: a bare
+    // $('form') also takes the agency switcher in the header (people in more
+    // than one agency), which comes first, so Update only reloaded the page
+    // and nothing was saved (Goliad business address, 2026-10-06).
     $('#provider_form_submit').click(function() {
-      $('form').submit();
+      $('form.edit_provider, form.new_provider').first().submit();
     });
   });
