@@ -20,7 +20,7 @@
   title: "New report: Vehicle Summary"
   body: |
     **Reports > Vehicle Summary** shows each bus's revenue and non-revenue hours and miles for a date range: revenue from the first pick-up to the last drop-off, non-revenue for the trips from the garage and back. It uses the odometer readings and the run's start and end on the tablet, so a run counts only once the driver closes it out; runs that aren't closed out are listed with what's missing. Choose Excel, CSV or PDF to download it.
-- added: "2026-10-06 17:00"
+- added: "2026-10-06 11:08"
   title: Fewer "address not recognized" moments
   body: |
     The address box now keeps its suggestions to the town you type (even misspelled, or typed without a comma), so "332 Independence Dr, Port Lavaca" no longer suggests a street in Friendswood. It also reads addresses typed with a business name in front, an apartment number, "803-A", "FM957" or "Private Rd 1032".
