@@ -16,6 +16,17 @@
           = select_tag :garage_choice, options_for_select(garages.map { |g| [g.label, g.id] } + [["Other address (this bus only)", "other"]], current_named ? address.id : "other"), class: "form-control garage-choice", style: "max-width: 480px; display: inline-block;"
           = link_to "Manage garages", garages_path, target: "_blank", style: "margin-left: 10px;"
           %p.help-block Moving the bus moves the start and end of its upcoming runs that use its garage.
+    -# The garage against where this bus's runs start (GarageFit)
+    - misfit = @vehicle.persisted? && GarageFit.for_vehicle(@vehicle)
+    - if misfit
+      .alert.alert-warning.garage-misfit{style: "margin: 0 15px 15px;"}
+        - if misfit.median_miles
+          %strong This garage doesn't fit this bus's runs.
+          They start a median of #{misfit.median_miles.round} miles from it, around #{misfit.town} (#{pluralize(misfit.runs, 'run')} from #{GarageFit::DAYS_BACK} days ago to #{GarageFit::DAYS_AHEAD} days ahead).
+          If the bus lives near #{misfit.town} now, pick that garage; its upcoming runs will follow.
+        - else
+          %strong This garage has no map pin,
+          so its runs can't start from it (#{pluralize(misfit.runs, 'run')}, around #{misfit.town}).
     .own-garage-address{style: (current_named ? "display: none;" : "")}
       = f.fields_for :garage_address, address do |address_form|
         = address_form.hidden_field :provider_id

@@ -35,13 +35,16 @@
   %span
     %i{style: "background:#12264F"}
     Trip address far from home
+  %span
+    %i{style: "background:#7b4fa0"}
+    Garage that doesn't fit its runs
   %span#ac-summary
   %a#ac-home{href: "#"} Back to the service area
 :javascript
   (function () {
     var pins = #{raw @pins.to_json};
     var served = L.latLngBounds(#{raw @served_bounds.to_json});
-    var colour = { out_of_area: '#c0392b', far_from_town: '#CC9900', trip_pin_far: '#12264F' };
+    var colour = { out_of_area: '#c0392b', far_from_town: '#CC9900', trip_pin_far: '#12264F', garage_far: '#7b4fa0', run_start_far: '#7b4fa0' };
     var map = L.map('ac-map', { zoomSnap: 0.25, worldCopyJump: false });
     L.tileLayer('/tiles/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
     map.fitBounds(served);

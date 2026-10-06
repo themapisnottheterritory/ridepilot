@@ -21,8 +21,9 @@ class VehicleSummaryReport
   MAX_RUN_MILES = 1000   # odometer readings further apart than this are a typo
   # Garage legs this large a share of the odometer mean the garage on file is
   # not where the bus starts (bus R9 on the Matagorda runs, garaged on file in
-  # Victoria: 136 miles of garage legs on a 54-mile run, 2026-10-02).
-  MAX_GARAGE_SHARE = 0.75
+  # Victoria: 136 miles of garage legs on a 54-mile run, 2026-10-02). The rule
+  # lives in GarageFit, with the nightly check and the bus's page.
+  MAX_GARAGE_SHARE = GarageFit::MAX_GARAGE_SHARE
 
   RunRow = Struct.new(:run, :vehicle, :driver, :start_at, :first_stop_at, :last_stop_at, :end_at,
                       :odometer_miles, :deadhead_out, :deadhead_in, :trips, :passengers, :missing, keyword_init: true) do
@@ -137,8 +138,7 @@ class VehicleSummaryReport
     missing << "an end on the tablet (not closed out)" unless run.actual_end_time
     missing << "a stop marked done" unless first_at
 
-    from_garage = run.from_garage_address || run.vehicle&.garage_address
-    to_garage = run.to_garage_address || run.vehicle&.garage_address
+    from_garage, to_garage = GarageFit.garages(run)
     missing << "a garage on the run or the bus" unless from_garage && to_garage
 
     out_miles = in_miles = nil
@@ -147,7 +147,7 @@ class VehicleSummaryReport
       in_miles = @distance.call(last.address, to_garage)
       if out_miles.nil? || in_miles.nil?
         missing << "a road distance from the garage (map lookup failed)"
-      elsif (legs = out_miles + in_miles) > MAX_GARAGE_SHARE * (run.end_odometer - run.start_odometer)
+      elsif !GarageFit.legs_fit?(legs = out_miles + in_miles, run.end_odometer - run.start_odometer)
         missing << "a garage that fits this run (from #{from_garage.address_text} to the first stop and back is " \
                    "#{legs.round} miles; the odometer shows #{run.end_odometer - run.start_odometer})"
       end

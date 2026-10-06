@@ -15,6 +15,9 @@
 #                than FAR_MILES from their own town, or -- with no town of
 #                ours -- more than HOME_MILES from every town we serve
 #   duplicate    the same saved place (same name and address) more than once
+#   garage_far   buses whose runs start far from their garage (GarageFit)
+#   run_start_far  runs whose own start is far from their first stop (a copy
+#                of the yard their bus used to live at)
 #
 # AddressScan.new.findings -> [Finding]; each has a stable key, so the nightly
 # email (rake addresses:scan) can send only what is new since the last run.
@@ -32,7 +35,9 @@ class AddressScan
     "no_pin" => "No map pin",
     "trip_far" => "Upcoming trip over #{TRIP_MILES} miles",
     "trip_pin_far" => "Trip address pinned far from home",
-    "duplicate" => "Saved more than once"
+    "duplicate" => "Saved more than once",
+    "garage_far" => "Bus garaged far from its runs",
+    "run_start_far" => "Run starts far from its first stop"
   }.freeze
 
   Finding = Struct.new(:kind, :key, :provider_id, :label, :detail, :record_type, :record_id, keyword_init: true)
@@ -48,6 +53,8 @@ class AddressScan
       vid = Vehicle.find_by(garage_address_id: f.record_id).try(:id)
       vid && routes.edit_vehicle_path(vid, locale: :en)
     when "Trip" then routes.edit_trip_path(f.record_id, locale: :en)
+    when "Vehicle" then routes.edit_vehicle_path(f.record_id, locale: :en)
+    when "Run" then routes.edit_run_path(f.record_id, locale: :en)
     end
   end
 
@@ -60,7 +67,7 @@ class AddressScan
   end
 
   def findings
-    @findings ||= out_of_area + far_from_town + no_pin + trips_far + trip_pins_far + duplicates
+    @findings ||= out_of_area + far_from_town + no_pin + trips_far + trip_pins_far + duplicates + garages_far + run_starts_far
   end
 
   def by_kind
@@ -169,11 +176,16 @@ class AddressScan
 
   # Findings with a pin, for the map on the Address check page: where the pin
   # is, the nearest town we serve and how far (the page works out which way).
-  MAPPED = %w[out_of_area far_from_town trip_pin_far].freeze
+  MAPPED = %w[out_of_area far_from_town trip_pin_far garage_far run_start_far].freeze
 
   def self.pins(findings)
     findings.select { |f| MAPPED.include?(f.kind) }.filter_map do |f|
-      a = f.record_type == "Trip" ? Address.find_by(id: f.key.split(":").last) : Address.find_by(id: f.record_id)
+      a = case f.record_type
+          when "Trip" then Address.find_by(id: f.key.split(":").last)
+          when "Vehicle" then Vehicle.find_by(id: f.record_id)&.garage_address
+          when "Run" then Run.find_by(id: f.record_id)&.from_garage_address
+          else Address.find_by(id: f.record_id)
+          end
       next unless a&.latitude
       town, miles = nearest_served(a.latitude, a.longitude)
       { kind: f.kind, label: f.label, detail: f.detail, lat: a.latitude, lon: a.longitude, fix: fix_path(f),
@@ -187,6 +199,28 @@ class AddressScan
     return nil if towns.empty?
     [[towns.map { |t| t[:lat] }.min - 0.2, towns.map { |t| t[:lon] }.min - 0.2],
      [towns.map { |t| t[:lat] }.max + 0.2, towns.map { |t| t[:lon] }.max + 0.2]]
+  end
+
+  # The key carries the garage, so a bus moved to another wrong yard is new
+  def garages_far
+    GarageFit.buses.map do |b|
+      g = b.garage
+      Finding.new(kind: "garage_far", key: "garage_far:#{b.vehicle.id}:#{g&.id}", provider_id: b.vehicle.provider_id,
+                  label: "Bus #{b.vehicle.name}: #{g ? g.address_text : 'no garage on file'}",
+                  detail: b.median_miles ? "its runs start a median #{b.median_miles.round} miles away, around #{b.town} (#{b.runs} #{b.runs == 1 ? "run" : "runs"})"
+                                         : "its garage has no map pin (#{b.runs} #{b.runs == 1 ? "run" : "runs"}, around #{b.town})",
+                  record_type: "Vehicle", record_id: b.vehicle.id)
+    end
+  end
+
+  def run_starts_far
+    GarageFit.runs.map do |m|
+      r = m.run
+      Finding.new(kind: "run_start_far", key: "run_start_far:#{r.id}:#{m.start.id}", provider_id: r.provider_id,
+                  label: "Run #{r.name} #{r.date.strftime('%a %-m/%-d')} (bus #{r.vehicle&.name}): starts at #{m.start.address_text}",
+                  detail: "#{m.miles.round} miles from its first stop in #{m.first_stop.city.to_s.strip.titleize}",
+                  record_type: "Run", record_id: r.id)
+    end
   end
 
   def duplicates

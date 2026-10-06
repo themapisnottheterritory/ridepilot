@@ -2,7 +2,7 @@
 .address-checks{style: "max-width: 980px;"}
   %h2 Address check
   %p.text-muted
-    Saved addresses and upcoming trips that would send a driver, or work out a fare, wrong. Checked each morning; GCRPC I.T. gets an email when something new turns up. Fix each one from its link.
+    Saved addresses, trips, and buses' garages that would send a driver, or work out a fare or a mileage report, wrong. Checked each morning; GCRPC I.T. gets an email when something new turns up. Fix each one from its link.
   - if @pins.any? && @served_bounds
     = render "map"
   - if @by_kind.values.all?(&:empty?)

@@ -42,6 +42,19 @@ RSpec.describe "Garages", type: :request do
     expect(flash[:notice]).to include("now lives at Port Lavaca yard")
   end
 
+  it "warns on the bus page when its runs start far from its garage" do
+    victoria = garage("Victoria office", 28.8126, -96.9897)
+    vehicle = create(:vehicle, provider: provider, garage_address: victoria, active: true)
+    get "/en/vehicles/#{vehicle.id}/edit"
+    expect(response.body).not_to include("garage-misfit")
+    run = create(:run, provider: provider, vehicle: vehicle, date: Time.zone.today)
+    pick = create(:address, address: "1 First Stop St", city: "Gonzales", state: "TX")
+    pick.update_column(:the_geom, Address.compute_geom(29.50, -97.45))
+    create(:trip, provider: provider, run: run, pickup_address: pick, pickup_time: Time.zone.now.change(hour: 8))
+    get "/en/vehicles/#{vehicle.id}/edit"
+    expect(response.body).to include("garage-misfit", "This garage doesn", "t fit this bus", "around Gonzales")
+  end
+
   it "gives a bus its own address instead of editing the garage it shares" do
     victoria = garage("Victoria office", 28.8126, -96.9897)
     other_bus = create(:vehicle, provider: provider, garage_address: victoria)
