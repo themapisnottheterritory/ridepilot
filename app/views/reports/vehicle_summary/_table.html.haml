@@ -1,0 +1,110 @@
+:ruby
+  s = @summary
+  hrs = ->(h) { number_with_precision(h, precision: 2) }
+  mi = ->(m) { number_with_precision(m, precision: 1, delimiter: ',') }
+  clock = ->(t) { t ? t.in_time_zone.strftime('%-l:%M %p') : '' }
+  right = 'text-align: right;'
+- if s.rows.empty?
+  %h4 No runs with trips in this range
+- else
+  %p{style: 'max-width: 900px;'}
+    Revenue service runs from the first pick-up to the last drop-off, empty driving between riders included;
+    the trips from the garage and back are non-revenue (as NTD counts demand response).
+    Hours come from the run's start and end on the driver's tablet, miles from the odometer readings.
+    Non-revenue miles are the road distance from the garage to the first stop and from the last stop back.
+  %table.table.table-condensed{style: 'margin-bottom: 14px;'}
+    %thead
+      %tr
+        %th Vehicle
+        %th{style: right} Runs
+        %th{style: right} Total hours
+        %th{style: right} Revenue hours
+        %th{style: right} Non-revenue hours
+        %th{style: right} Total miles
+        %th{style: right} Revenue miles
+        %th{style: right} Non-revenue miles
+        %th{style: right} Trips
+        %th{style: right} Passengers
+    %tbody
+      - s.by_vehicle.each do |v|
+        %tr
+          %td= v[:vehicle]
+          %td{style: right}= v[:runs]
+          %td{style: right}= hrs.(v[:total_hours])
+          %td{style: right}= hrs.(v[:revenue_hours])
+          %td{style: right}= hrs.(v[:non_revenue_hours])
+          %td{style: right}= mi.(v[:total_miles])
+          %td{style: right}= mi.(v[:revenue_miles])
+          %td{style: right}= mi.(v[:non_revenue_miles])
+          %td{style: right}= v[:trips]
+          %td{style: right}= v[:passengers]
+      - t = s.totals
+      %tr
+        %th Total
+        %th{style: right}= t[:runs]
+        %th{style: right}= hrs.(t[:total_hours])
+        %th{style: right}= hrs.(t[:revenue_hours])
+        %th{style: right}= hrs.(t[:non_revenue_hours])
+        %th{style: right}= mi.(t[:total_miles])
+        %th{style: right}= mi.(t[:revenue_miles])
+        %th{style: right}= mi.(t[:non_revenue_miles])
+        %th{style: right}= t[:trips]
+        %th{style: right}= t[:passengers]
+
+  - if s.not_counted.any?
+    %h4= "Runs not counted (#{s.not_counted.size} of #{s.rows.size})"
+    %p Close these runs out on the tablet, or enter what is missing on the run, and they will count.
+    %table.table.table-condensed{style: 'margin-bottom: 14px;'}
+      %thead
+        %tr
+          %th Date
+          %th Run
+          %th Vehicle
+          %th Driver
+          %th Missing
+      %tbody
+        - s.not_counted.each do |r|
+          %tr
+            %td= r.run.date.strftime('%a %m/%d/%Y')
+            %td= link_to r.run.name, run_path(r.run)
+            %td= r.vehicle
+            %td= r.driver
+            %td= r.missing.join('; ')
+
+  - if s.counted.any?
+    %h4 Each run counted
+    %table.table.table-condensed
+      %thead
+        %tr
+          %th Date
+          %th Run
+          %th Vehicle
+          %th Driver
+          %th Start
+          %th First stop
+          %th Last stop
+          %th End
+          %th{style: right} Total hours
+          %th{style: right} Revenue hours
+          %th{style: right} Odometer miles
+          %th{style: right} Non-revenue miles
+          %th{style: right} Trips
+      %tbody
+        - s.counted.each do |r|
+          %tr
+            %td= r.run.date.strftime('%a %m/%d/%Y')
+            %td= link_to r.run.name, run_path(r.run)
+            %td= r.vehicle
+            %td= r.driver
+            %td= clock.(r.start_at)
+            %td= clock.(r.first_stop_at)
+            %td= clock.(r.last_stop_at)
+            %td= clock.(r.end_at)
+            %td{style: right}= hrs.(r.total_hours)
+            %td{style: right}= hrs.(r.revenue_hours)
+            %td{style: right}= mi.(r.odometer_miles)
+            %td{style: right}= mi.(r.non_revenue_miles)
+            %td{style: right}= r.trips
+
+  - if s.empty_runs > 0
+    %p.text-muted= "#{pluralize(s.empty_runs, 'run')} with no trips and nothing recorded #{s.empty_runs == 1 ? 'is' : 'are'} left out."

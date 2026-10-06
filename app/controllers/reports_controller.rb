@@ -1446,6 +1446,27 @@ class ReportsController < ApplicationController
     apply_v2_response
   end
 
+  # Vehicle Summary (Goliad, 2026-10-06): revenue and non-revenue hours and
+  # miles by bus, from what drivers record on the tablet; runs not closed out
+  # are listed with what is missing (VehicleSummaryReport).
+  def vehicle_summary
+    authorize! :read, Vehicle
+    query_params = params[:query] || {start_date: Date.today.beginning_of_month, end_date: Date.today + 1}
+    @query = Query.new(query_params)
+    @vehicles_for_select = Vehicle.for_provider(current_provider_id).default_order.pluck(:name, :id)
+
+    if params[:query]
+      @report_params = [["Provider", current_provider.name]]
+      @report_params << ["Date Range", "#{@query.start_date.strftime('%m/%d/%Y')} - #{@query.before_end_date.strftime('%m/%d/%Y')}"]
+      @report_params << ["Vehicle", Vehicle.find_by(id: @query.vehicle_id).try(:name)] if @query.vehicle_id
+      @summary = VehicleSummaryReport.new(provider_ids: [current_provider_id], start_date: @query.start_date,
+                                          end_date: @query.end_date, vehicle_id: @query.vehicle_id).run!
+      @report_data = @summary.rows
+    end
+
+    apply_v2_response
+  end
+
   # Vehicle disposition (Tony, fleet, 2026-10-02): buses moved to disposition and
   # not yet gone, then buses disposed of in the date range with how, when, final
   # odometer and proceeds -- what FTA asks when a grant-funded vehicle leaves the

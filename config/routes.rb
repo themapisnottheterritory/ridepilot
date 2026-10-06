@@ -421,7 +421,7 @@ Rails.application.routes.draw do
       "export_trips_in_range", "fare_card_activity", "fares_collected", "fixed_route_compliance", "fixed_route_ridership", "inactive_driver_status_report", "ineligible_customer_status_report", "manifest", 
       "missing_data_report", "monthlies", "ntd", "pre_run_inspections", "provider_common_location_report", "provider_service_productivity_report", 
       "service_summary", "show_runs_for_verification", "show_trips_for_verification", "update_runs_for_verification", 
-      "update_trips_for_verification", "vehicle_disposition", "vehicle_monthly_service_report", "vehicle_report", "vehicle_5310_report", "vehicles_monthly"].each do |action|
+      "update_trips_for_verification", "vehicle_disposition", "vehicle_monthly_service_report", "vehicle_summary", "vehicle_report", "vehicle_5310_report", "vehicles_monthly"].each do |action|
         #get action, action: action
         get "#{action}/:id", action: action
       end

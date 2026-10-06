@@ -1,0 +1,16 @@
+- # common
+= render 'reports/common_csv_header'
+
+- if @report_data.blank?
+  = CSV.generate_line(["No runs with trips in this range"], row_sep: nil).html_safe
+- else
+  - s = @summary
+  - fmt = ->(x, p) { x.nil? ? nil : x.to_f.round(p) }
+  = CSV.generate_line(["Vehicle", "Runs", "Total hours", "Revenue hours", "Non-revenue hours", "Total miles", "Revenue miles", "Non-revenue miles", "Trips", "Passengers"], row_sep: nil).html_safe
+  - (s.by_vehicle + [s.totals.merge(vehicle: "Total")]).each do |v|
+    = CSV.generate_line([v[:vehicle], v[:runs], fmt.(v[:total_hours], 2), fmt.(v[:revenue_hours], 2), fmt.(v[:non_revenue_hours], 2), fmt.(v[:total_miles], 1), fmt.(v[:revenue_miles], 1), fmt.(v[:non_revenue_miles], 1), v[:trips], v[:passengers]], row_sep: nil).html_safe
+  = CSV.generate_line(["Date", "Run", "Vehicle", "Driver", "Counted", "Missing", "Start", "First stop", "Last stop", "End", "Total hours", "Revenue hours", "Non-revenue hours", "Odometer miles", "Revenue miles", "Non-revenue miles", "Trips", "Passengers"], row_sep: nil).html_safe
+  - t = ->(x) { x ? x.in_time_zone.strftime('%m/%d/%Y %H:%M') : nil }
+  - s.rows.each do |r|
+    - c = r.counted?
+    = CSV.generate_line([r.run.date.strftime('%m/%d/%Y'), r.run.name, r.vehicle, r.driver, c ? "Yes" : "No", r.missing.join('; '), t.(r.start_at), t.(r.first_stop_at), t.(r.last_stop_at), t.(r.end_at), (c ? fmt.(r.total_hours, 2) : nil), (c ? fmt.(r.revenue_hours, 2) : nil), (c ? fmt.(r.non_revenue_hours, 2) : nil), fmt.(r.odometer_miles, 1), (c ? fmt.(r.revenue_miles, 1) : nil), (c ? fmt.(r.non_revenue_miles, 1) : nil), r.trips, r.passengers], row_sep: nil).html_safe
