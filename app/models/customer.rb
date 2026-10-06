@@ -281,7 +281,14 @@ class Customer < ApplicationRecord
 
     # update addresses
     address_attrs = Address.column_names
+    # The same saved address listed twice (an edit in the address dialog
+    # added a second row before 2026-10-06): the last copy is the edit. Saving
+    # both bumped the lock on the first and failed on the second, every retry.
+    last_copy = {}
+    address_objects.each_with_index { |addr_hash, index| last_copy[addr_hash[:id]] = index if addr_hash[:id] }
+    mailing_id = address_objects[mailing_address_index].try(:[], :id)
     address_objects.each_with_index do |addr_hash, index|
+      next if addr_hash[:id] && last_copy[addr_hash[:id]] != index
       if addr_hash[:id]
         addr = Address.find_by_id(addr_hash[:id])
         addr.update addr_hash.select{|r| address_attrs.include?(r.to_s)}
@@ -289,7 +296,7 @@ class Customer < ApplicationRecord
         addr = addresses.new(addr_hash.select{|r| address_attrs.include?(r.to_s)}.merge(customer_id: self.try(:id)))
       end
 
-      self.address = addr if index == mailing_address_index
+      self.address = addr if index == mailing_address_index || (mailing_id && addr_hash[:id] == mailing_id)
     end
   end
 

@@ -37,6 +37,25 @@
     var encodedAddressData = escapeQuotes(JSON.stringify(addressData));
 
     var table = $('#customerCommonAddressTable');
+
+    // An existing address edited in the dialog keeps its own row, found by
+    // id. Matching on the text alone added a second row whenever the street
+    // changed ("510 S Front St" -> "510 South Front Street"), and saving the
+    // customer then wrote that address twice and failed (2026-10-05).
+    var idRow = addressData.id ? table.find("tr[data-address-id='" + addressData.id + "']") : $();
+    if(idRow.length > 0) {
+      if(table.find("tr[data-address-text='" + addressText + "']").not(idRow).length > 0) {
+        show_alert("<%= translate_helper(:same_address_exists_for_customer) %>");
+        return;
+      }
+      idRow.data('address', addressData);
+      idRow.attr('data-address', encodedAddressData);
+      idRow.attr('data-address-text', addressText);
+      idRow.find('td.address_name').replaceWith("<td class='address_name'>" + addressData.name + '&nbsp;<a class="viewAddress" href="#">(Edit details)</a></td>');
+      idRow.find('td.address_text').text(addressText);
+      return;
+    }
+
     var matchRow = table.find("tr[data-address-text='" + addressText+ "']");
     if(matchRow.length > 0) {
       var addressId = matchRow.attr('data-address-id');
