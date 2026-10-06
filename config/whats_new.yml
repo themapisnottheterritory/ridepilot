@@ -20,7 +20,7 @@
   title: "New report: Vehicle Summary"
   body: |
     **Reports > Vehicle Summary** shows each bus's revenue and non-revenue hours and miles for a date range: revenue from the first pick-up to the last drop-off, non-revenue for the trips from the garage and back. It uses the odometer readings and the run's start and end on the tablet, so a run counts only once the driver closes it out; runs that aren't closed out are listed with what's missing. Choose Excel, CSV or PDF to download it.
-- added: "NOW_CT"
+- added: "2026-10-06 13:03"
   title: Pick-up windows and no-shows follow the ADA rules
   apps: [web, tablet]
   body: |
