@@ -160,10 +160,11 @@ class RepeatingRun < ApplicationRecord
           # the provider's garage when the vehicle has none, so the begin/end
           # legs get built on create, then publish so the tablet lists it.
           if run.fixed_route? && !run.vehicle.try(:garage_address)
-            depot = GarageAddress.where(provider_id: run.provider_id).first
+            depot = GarageAddress.named.usable.where(provider_id: run.provider_id).order(:id).first ||
+                    GarageAddress.where(provider_id: run.provider_id).first
             if depot
-              run.from_garage_address = depot.dup
-              run.to_garage_address   = depot.dup
+              run.from_garage_address = depot.for_run
+              run.to_garage_address   = depot.for_run
             end
           end
 

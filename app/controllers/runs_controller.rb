@@ -76,8 +76,8 @@ class RunsController < ApplicationController
     respond_to do |format|
       if @run.is_all_valid?(current_provider_id) && @run.save
         if @run.vehicle && @run.vehicle.garage_address 
-          @run.from_garage_address = @run.vehicle.garage_address.dup
-          @run.to_garage_address = @run.vehicle.garage_address.dup
+          @run.from_garage_address = @run.vehicle.garage_address.for_run
+          @run.to_garage_address = @run.vehicle.garage_address.for_run
           @run.save(validate: false)
         end
 
@@ -109,8 +109,8 @@ class RunsController < ApplicationController
       if @run.is_all_valid?(current_provider_id) && @run.save
         # update start&end location with vehicle garage
         if params[:use_vehicle_garage] == 'true' && @run.vehicle && @run.vehicle.garage_address 
-          @run.from_garage_address = @run.vehicle.garage_address.dup
-          @run.to_garage_address = @run.vehicle.garage_address.dup
+          @run.from_garage_address = @run.vehicle.garage_address.for_run
+          @run.to_garage_address = @run.vehicle.garage_address.for_run
           @run.save(validate: false)
         end
 

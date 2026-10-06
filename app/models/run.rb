@@ -644,10 +644,10 @@ class Run < ApplicationRecord
 
   def set_complete!(user = nil)
     if !self.from_garage_address
-      self.from_garage_address = self.vehicle.try(:garage_address).try(:dup)
+      self.from_garage_address = self.vehicle.try(:garage_address).try(:for_run)
     end
     if !self.to_garage_address
-      self.to_garage_address = self.vehicle.try(:garage_address).try(:dup)
+      self.to_garage_address = self.vehicle.try(:garage_address).try(:for_run)
     end
     self.complete = true
     self.uncomplete_reason = nil

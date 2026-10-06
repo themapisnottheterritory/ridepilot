@@ -18,6 +18,15 @@ class GarageAddress < Address
     name.present?
   end
 
+  # What a run takes as its start or end from this garage: a named garage
+  # itself, so the run follows the yard; a bus's own address as a copy, as
+  # before. Copying a named garage made another garage of the same name each
+  # time a run was created or closed (23 "Victoria office" on the Garages
+  # list by 2026-10-06).
+  def for_run
+    named? ? self : dup
+  end
+
   def label
     named? ? "#{name} (#{[address, city].compact.join(', ')})" : [address, city].compact.join(", ")
   end
