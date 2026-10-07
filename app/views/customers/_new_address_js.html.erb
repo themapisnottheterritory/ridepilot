@@ -34,29 +34,39 @@
   }
 
   function updateAddressRow(addressData, addressText) {
-    var encodedAddressData = escapeQuotes(JSON.stringify(addressData));
+    var encodedAddressData = JSON.stringify(addressData);
 
     var table = $('#customerCommonAddressTable');
+    // Rows are compared by value, never by a quoted selector: an address with
+    // an apostrophe ("Port O'Connor", as the map spells it) broke the selector,
+    // the row was never updated, and the rider was saved with the old, unpinned
+    // address while the dialog looked fine (2026-10-07).
+    var rowsWithText = function() {
+      return table.find('tbody tr').filter(function() { return $(this).attr('data-address-text') === addressText; });
+    };
+    var nameCell = function() {
+      return $("<td class='address_name'></td>").text(addressData.name || '').append('&nbsp;', $('<a class="viewAddress" href="#"></a>').text('(Edit details)'));
+    };
 
     // An existing address edited in the dialog keeps its own row, found by
     // id. Matching on the text alone added a second row whenever the street
     // changed ("510 S Front St" -> "510 South Front Street"), and saving the
     // customer then wrote that address twice and failed (2026-10-05).
-    var idRow = addressData.id ? table.find("tr[data-address-id='" + addressData.id + "']") : $();
+    var idRow = addressData.id ? table.find('tbody tr').filter(function() { return String($(this).attr('data-address-id')) === String(addressData.id); }) : $();
     if(idRow.length > 0) {
-      if(table.find("tr[data-address-text='" + addressText + "']").not(idRow).length > 0) {
+      if(rowsWithText().not(idRow).length > 0) {
         show_alert("<%= translate_helper(:same_address_exists_for_customer) %>");
         return;
       }
       idRow.data('address', addressData);
       idRow.attr('data-address', encodedAddressData);
       idRow.attr('data-address-text', addressText);
-      idRow.find('td.address_name').replaceWith("<td class='address_name'>" + addressData.name + '&nbsp;<a class="viewAddress" href="#">(Edit details)</a></td>');
+      idRow.find('td.address_name').replaceWith(nameCell());
       idRow.find('td.address_text').text(addressText);
       return;
     }
 
-    var matchRow = table.find("tr[data-address-text='" + addressText+ "']");
+    var matchRow = rowsWithText();
     if(matchRow.length > 0) {
       var addressId = matchRow.attr('data-address-id');
       if(addressId && parseInt(addressId) != addressData.id){
@@ -64,16 +74,19 @@
       } else {
         matchRow.data('address', addressData);
         matchRow.attr('data-address', encodedAddressData);
-        matchRow.find('td.address_name').replaceWith("<td class='address_name'>" + addressData.name + '&nbsp;<a class="viewAddress" href="#">(Edit details)</a></td>');
+        matchRow.find('td.address_name').replaceWith(nameCell());
       }
     } else {
-      table.append("<tr data-address-id='" + (addressData.id == null ? "" : addressData.id) + 
-        "' data-address-text='" + addressText + "' data-address='" + encodedAddressData + "'>" +
-        '<td><button class="deleteCustomerAddress btn-danger" name="button" type="button">Delete</button></td>' +
-        "<td class='address_name'>" + addressData.name + '&nbsp;<a class="viewAddress" href="#">(Edit details)</a></td>' +
-        "<td class='address_text'>" + addressText + "</td>" +
-        '<td><input name="mailing" type="radio" value=false></td>' +
-        "</tr>");
+      var row = $('<tr></tr>')
+        .attr('data-address-id', addressData.id == null ? '' : addressData.id)
+        .attr('data-address-text', addressText)
+        .attr('data-address', encodedAddressData)
+        .data('address', addressData);
+      row.append($('<td></td>').append('<button class="deleteCustomerAddress btn-danger" name="button" type="button">Delete</button>'));
+      row.append(nameCell());
+      row.append($("<td class='address_text'></td>").text(addressText));
+      row.append('<td><input name="mailing" type="radio" value=false></td>');
+      table.append(row);
     }
   }
 
