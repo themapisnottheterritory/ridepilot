@@ -86,7 +86,10 @@ log "running build ${running:-unknown}, HEAD $head"
 
 if [ "$PHASED" = 1 ]; then
   [ -n "$running" ] || die "can't read the running build from the footer, so can't tell what changed: use a full restart"
-  needs_full=$(git diff --name-only "$running" HEAD -- config/puma.rb Gemfile Gemfile.lock docker docker-compose.yml config/environments config/initializers config/application.rb 2>/dev/null)
+  # nginx.conf is applied by a reload below, and docker-compose.yml only by
+  # recreating containers (neither kind of restart does that), so neither
+  # needs a full restart
+  needs_full=$(git diff --name-only "$running" HEAD -- config/puma.rb Gemfile Gemfile.lock docker/app config/environments config/initializers config/application.rb 2>/dev/null)
   [ -z "$needs_full" ] || die "these changes need a full restart, not --phased: $(echo $needs_full)"
   started=$(docker inspect -f '{{.State.StartedAt}}' "$APP")
   workers=$(docker logs --since "$started" "$APP" 2>&1 | grep -o 'Process workers: [0-9]*' | tail -1 | grep -o '[0-9]*$')
@@ -95,9 +98,22 @@ fi
 
 log "checking the new code boots (separate process; the live app keeps running)"
 docker exec "$APP" bin/rails runner 'puts "boot-ok"' 2>/dev/null | grep -q boot-ok || die "the new code does not boot: fix it before restarting (try: docker exec $APP bin/rails runner 'puts 1')"
+# nginx must see the repo's nginx.conf (it didn't from 2026-10-05 to 10-07: the
+# file itself was mounted, and git's new copy never reached the container)
+if [ -f docker/web/nginx.conf ] && [ "$WEB" = ridepilot_web_1 ]; then
+  want=$(md5sum < docker/web/nginx.conf | cut -c1-32)
+  seen=$(docker exec "$WEB" sh -c 'md5sum < /etc/nginx/conf.d/nginx.conf' 2>/dev/null | cut -c1-32)
+  [ "$want" = "$seen" ] || die "nginx in $WEB isn't reading docker/web/nginx.conf (recreate it once: docker-compose up -d --no-deps web)"
+fi
 docker exec "$WEB" nginx -t >/dev/null 2>&1 || die "nginx config test failed (docker exec $WEB nginx -t)"
+if [ -n "$running" ] && [ -n "$(git diff --name-only "$running" HEAD -- docker-compose.yml 2>/dev/null)" ]; then
+  log "note: docker-compose.yml changed since $running; a restart doesn't apply it: recreate the service (docker-compose up -d --no-deps <service>)"
+fi
 
 if [ "$DRY" = 1 ]; then log "dry run: all checks passed, nothing posted or restarted"; exit 0; fi
+
+# apply nginx.conf changes: a reload is graceful (open connections finish)
+docker exec "$WEB" nginx -s reload >/dev/null 2>&1 && log "nginx reloaded" || log "nginx reload reported an error (config tested fine): check docker logs $WEB"
 
 wait_back() {   # up to 180 s for the app to answer with a 200/302
   local i code

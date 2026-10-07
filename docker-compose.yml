@@ -51,9 +51,14 @@ services:
       - 80:80
       - 443:443
     volumes:
-      # nginx vhosts mounted directly (RAILS_ROOT hardcoded in the file) so
-      # config changes need only a container recreate, no image rebuild.
-      - ./docker/web/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      # nginx vhosts (RAILS_ROOT hardcoded in the file). The FOLDER is
+      # mounted, not the file: git replaces nginx.conf with a new file on
+      # every change, and a single-file mount keeps showing the container the
+      # old one until it is recreated (the restart banner's nginx block was
+      # never live from 2026-10-05 to 10-07). nginx loads conf.d/*.conf, so
+      # only nginx.conf counts here; the Dockerfile beside it is ignored.
+      # ops/restart/ridepilot-restart.sh checks what nginx sees and reloads it.
+      - ./docker/web:/etc/nginx/conf.d:ro
       # TLS leaf for rp.internal.gcrpc.org (GCRPC Internal Root CA); kept
       # outside the repo.
       - /home/philz/ridepilot-ops/certs:/etc/nginx/certs:ro
