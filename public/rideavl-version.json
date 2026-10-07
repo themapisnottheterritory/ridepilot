@@ -1,9 +1,9 @@
 {
-  "version": "1.0.31",
-  "version_code": 32,
+  "version": "1.0.33",
+  "version_code": 34,
   "url": "/rideavl-pilot.apk",
   "required": false,
-  "notes": "Each stop tap now includes where the tablet was, so dispatch has a location for every stop, including on vans without a bus GPS. Evening runs stay on My Runs after 7 PM.",
-  "published_at": "2026-10-04T02:31:14Z",
-  "sha256": "57a556dd582dee18a12257698281a8b418465a7ac0235d66a07460ee544f47df"
+  "notes": "Finished and removed stops now stay on your manifest, crossed out, colored by why.",
+  "published_at": "2026-10-07T21:14:44Z",
+  "sha256": "0a3c4e06b5f31a85f45213362438b6eb018c238c3410df5683fc2a404fc9004e"
 }

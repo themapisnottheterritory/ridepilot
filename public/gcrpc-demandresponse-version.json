@@ -1,9 +1,9 @@
 {
-  "version": "1.0.32",
-  "version_code": 33,
+  "version": "1.0.33",
+  "version_code": 34,
   "url": "/rideavl-pilot.apk",
   "required": false,
-  "notes": "No Show waits until the rider's pick-up window has opened and you have waited, and says when (FTA rules). If RidePilot doesn't accept a tap, the tablet now says why. Drop-off times no longer show before their pick-up.",
-  "published_at": "2026-10-06T18:19:03Z",
-  "sha256": "12ab5710351540de476eaff9d4087523164151e57fe579960c51e49fd5579b5d"
+  "notes": "Finished and removed stops now stay on your manifest, crossed out, colored by why.",
+  "published_at": "2026-10-07T21:14:44Z",
+  "sha256": "0a3c4e06b5f31a85f45213362438b6eb018c238c3410df5683fc2a404fc9004e"
 }
