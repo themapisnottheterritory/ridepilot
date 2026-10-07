@@ -76,6 +76,11 @@ class ItinerarySerializer
     object.trip.trip_result.try(:name) if object.trip
   end
 
+  # the code too, so the tablet can colour a finished stop by why (1.0.33)
+  attribute :trip_result_code do |object|
+    object.trip.trip_result.try(:code) if object.trip
+  end
+
   attribute :trip_address_notes do |object|
     if object.trip
       if object.is_pickup?

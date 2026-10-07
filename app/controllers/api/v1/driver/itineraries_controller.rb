@@ -13,7 +13,18 @@ class Api::V1::Driver::ItinerariesController < Api::V1::Driver::BaseController
     itins = Itinerary.unscoped.joins(:public_itinerary).where(public_itineraries: {run_id: @run.id}).order("public_itineraries.sequence")
     exclude_leg_ids = itins.dropoff.joins(trip: :trip_result).where(trip_results: {code: TripResult::NON_DISPATCHABLE_CODES}).pluck(:id).uniq
     itins = itins.where.not(id: exclude_leg_ids)
-    render success_response(itins, opts)
+    resp = success_response(itins, opts)
+    # Stops shown earlier today that have left the run (cancelled, no-show
+    # drop-off, moved): the tablet (1.0.33+) crosses them out with why.
+    # Older tablets ignore the key.
+    withdrawn = []
+    if @run.date == Date.current
+      list = itins.includes(:address, :public_itinerary, trip: :customer).to_a
+      ManifestSeenStop.note!(@run, list)
+      withdrawn = ManifestSeenStop.withdrawn(@run, list)
+    end
+    resp[:json][:withdrawn] = withdrawn
+    render resp
   end
 
   def show

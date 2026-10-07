@@ -820,6 +820,18 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.string "description_column_name", limit: 255
   end
 
+  create_table "manifest_seen_stops", force: :cascade do |t|
+    t.integer "run_id", null: false
+    t.integer "trip_id", null: false
+    t.integer "leg_flag", null: false
+    t.integer "itinerary_id"
+    t.string "customer_name"
+    t.string "address_text"
+    t.datetime "time"
+    t.datetime "created_at", null: false
+    t.index ["run_id", "trip_id", "leg_flag"], name: "index_manifest_seen_stops_on_run_trip_leg", unique: true
+  end
+
   create_table "message_templates", force: :cascade do |t|
     t.text "message"
     t.bigint "provider_id"
