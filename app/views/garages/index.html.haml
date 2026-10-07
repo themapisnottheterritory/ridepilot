@@ -6,6 +6,11 @@
       = link_to "Add a garage", new_garage_path, class: "btn btn-primary btn-sm pull-right"
   %p.text-muted
     The yards this agency's buses live at. A bus's runs start and end at its garage, so moving a bus is a pick from this list on the bus's page; fixing a garage here fixes it for every bus and run that uses it.
+  %p.text-muted
+    Buses whose runs start far from their garage, and runs still starting at a yard their bus has left, are listed on the
+    = succeed "," do
+      = link_to "Address check", address_checks_path
+    checked each morning.
   - if @garages.empty?
     %p{style: "color: #0ca30c;"} Garages you add show up here, and in the Garage list on each bus.
   - else

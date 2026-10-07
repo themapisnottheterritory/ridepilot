@@ -22,6 +22,9 @@
       ·
       = link_to "Name busy places", place_names_path
       %span.text-muted (trip destinations with no name)
+      ·
+      = link_to "Address check", address_checks_path
+      %span.text-muted (pins far from home, on a map; garages that don't fit their runs)
     .row.col-sm-12
       = render 'addresses_table'
     

@@ -12,6 +12,17 @@ RSpec.describe "Address check page", type: :request do
     expect(response.body).to include("No map pin", "Unpinned clinic", "/en/provider_common_addresses/#{a.id}/edit")
   end
 
+  it "is linked from Saved places and from Garages (2026-10-07)" do
+    admin = create(:role, level: Role::ADMIN_LEVEL).user
+    sign_in admin
+    get "/en/providers/#{admin.current_provider_id}/addresses"
+    expect(response).to be_successful
+    expect(response.body).to include('href="/en/address_checks"', "Name busy places")
+    get "/en/garages"
+    expect(response).to be_successful
+    expect(response.body).to include('href="/en/address_checks"')
+  end
+
   it "shows pins far from home on a map of the area we serve" do
     g = create(:address_group)
     30.times { |i| ProviderCommonAddress.create!(provider: staff.current_provider, address_group: g, name: "V#{i}", address: "#{i} Elm St", city: "Victoria", state: "TX", zip: "77901", the_geom: Address.compute_geom(28.80 + i * 0.0005, -97.00)) }
