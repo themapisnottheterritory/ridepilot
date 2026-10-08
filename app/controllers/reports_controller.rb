@@ -1467,6 +1467,28 @@ class ReportsController < ApplicationController
     apply_v2_response
   end
 
+  # Vehicle Summary by Run (Shelby, 2026-10-08): her spreadsheet layout, one
+  # row per run by mode, date and driver (RunLogReport). Days are built ahead
+  # of time each night (rake run_log:warm), so it opens without waiting on GPS.
+  def run_log
+    authorize! :read, Vehicle
+    query_params = params[:query] || {start_date: Date.today.beginning_of_month, end_date: Date.today + 1}
+    @query = Query.new(query_params)
+    @my_agencies = current_user.super_admin? ? Provider.order(:id).to_a : Provider.where(id: current_user.roles.pluck(:provider_id)).order(:id).to_a
+    agencies = @query.agencies == 'all' ? @my_agencies : @my_agencies.select { |p| p.id == current_provider_id }
+    agencies = [current_provider] if agencies.empty?
+
+    if params[:query]
+      @report_params = [["Agencies", agencies.map(&:name).join(", ")]]
+      @report_params << ["Date Range", "#{@query.start_date.strftime('%m/%d/%Y')} - #{@query.before_end_date.strftime('%m/%d/%Y')}"]
+      @run_log = RunLogReport.new(provider_ids: agencies.map(&:id), start_date: @query.start_date, end_date: @query.end_date,
+                                  gps: GpsMiles.new(current_provider)).run!
+      @report_data = @run_log.rows
+    end
+
+    apply_v2_response
+  end
+
   # Vehicle disposition (Tony, fleet, 2026-10-02): buses moved to disposition and
   # not yet gone, then buses disposed of in the date range with how, when, final
   # odometer and proceeds -- what FTA asks when a grant-funded vehicle leaves the

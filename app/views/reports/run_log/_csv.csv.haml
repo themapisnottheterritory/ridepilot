@@ -1,0 +1,11 @@
+- # common
+= render 'reports/common_csv_header'
+- r = @run_log
+- if r.nil? || r.rows.empty?
+  = CSV.generate_line(["No runs in this range"], row_sep: nil).html_safe
+- else
+  - t = ->(x) { x ? x.in_time_zone.strftime('%H:%M') : nil }
+  - f = ->(x, p) { x.nil? ? nil : x.to_f.round(p) }
+  = CSV.generate_line(["Mode", "Date", "Driver", "Route", "Bus #", "Login/Start Shift Time", "First Pickup Time", "Last Dropoff Time", "Logout/End Shift Time", "Login/Start Shift Odometer", "First Pickup Odometer", "Last Dropoff Odometer", "Logout/End Shift Odometer", "Lunch In", "Lunch Out", "UPT (Passengers)", "Total Revenue Time", "Total Revenue Miles", "Total Deadhead Time", "Total Deadhead Miles", "Notes"], row_sep: nil).html_safe
+  - r.rows.each do |row|
+    = CSV.generate_line([row.mode, row.date.strftime('%m/%d/%Y'), row.driver, row.route, row.bus, t.(row.start_at), t.(row.first_pickup_at), t.(row.last_dropoff_at), t.(row.end_at), f.(row.start_odo, 1), f.(row.first_pickup_odo, 1), f.(row.last_dropoff_odo, 1), f.(row.end_odo, 1), t.(row.lunch_in), t.(row.lunch_out), row.upt, f.(row.revenue_hours, 2), f.(row.revenue_miles, 1), f.(row.deadhead_hours, 2), f.(row.deadhead_miles, 1), row.notes.join('; ')], row_sep: nil).html_safe

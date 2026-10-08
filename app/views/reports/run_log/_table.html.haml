@@ -1,0 +1,113 @@
+-# Shelby's layout (RunLogReport): totals by mode, then one row per run with
+-# her columns in her order. Download (PDF / Excel / CSV) is on each table.
+:ruby
+  r = @run_log
+  hrs = ->(h) { h.nil? ? "" : number_with_precision(h, precision: 2) }
+  mi = ->(m) { m.nil? ? "" : number_with_precision(m, precision: 1, delimiter: ",") }
+  odo = ->(m) { m.nil? ? "" : number_with_precision(m, precision: (m.to_f % 1).zero? ? 0 : 1, delimiter: ",") }
+  clock = ->(t) { t ? t.in_time_zone.strftime("%-l:%M %p") : "" }
+  num = "text-align: right; white-space: nowrap;"
+:css
+  .rl-note { max-width: 980px; color: #333; }
+  .rl-table { font-size: 12px; }
+  .rl-table th { white-space: normal; vertical-align: bottom !important; }
+  .rl-table td.notes { font-size: 11px; color: #5f6b7a; min-width: 220px; }
+  .rl-mode { display: inline-block; padding: 1px 7px; border-radius: 9px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .rl-mode.udr { background: #12264F; color: #fff; }
+  .rl-mode.rural { background: #dfe6f2; color: #12264F; }
+  .rl-mode.commuter { background: #CC9900; color: #fff; }
+  .rl-mode.fixed { background: #eef1f6; color: #131313; border: 1px solid #cfd6e4; }
+  .rl-table tr.rl-short td { background: #fffaf0; }
+- mode_class = { "UDR" => "udr", "Rural Demand Response" => "rural", "Commuter" => "commuter", "Fixed Route" => "fixed" }
+- if r.rows.empty?
+  %h4 No runs in this range
+- else
+  %p.rl-note
+    Revenue time is the first pick-up to the last drop-off; deadhead is the start of the shift to the first pick-up plus the last drop-off to the end of the shift, the same for miles (as NTD counts demand response).
+    Drivers enter the odometer only at the start and end of the shift, so the odometer at the first pick-up and the last drop-off is worked out from the bus's GPS where it reports one, otherwise from the road distance to the garage; each row's notes say which.
+    Fixed Route times and miles come from GPS. Rows shaded are missing something; the notes say what.
+  %table.table.table-condensed.rl-table{data: {export_title: "Vehicle Summary by Run totals"}}
+    %thead
+      %tr
+        %th Mode
+        %th{style: num} Runs
+        %th{style: num} Complete
+        %th{style: num} UPT (passengers)
+        %th{style: num} Revenue time (hrs)
+        %th{style: num} Revenue miles
+        %th{style: num} Deadhead time (hrs)
+        %th{style: num} Deadhead miles
+    %tbody
+      - (r.by_mode + [["All modes", r.rows]]).each do |mode, rows|
+        - t = r.totals(rows)
+        %tr{style: (mode == "All modes" ? "font-weight: 700;" : nil)}
+          %td
+            - if mode_class[mode]
+              %span.rl-mode{class: mode_class[mode]}= mode
+            - else
+              = mode
+          %td{style: num}= t[:runs]
+          %td{style: num}= t[:complete]
+          %td{style: num}= t[:upt]
+          %td{style: num}= hrs.(t[:revenue_hours])
+          %td{style: num}= mi.(t[:revenue_miles])
+          %td{style: num}= hrs.(t[:deadhead_hours])
+          %td{style: num}= mi.(t[:deadhead_miles])
+  - if r.commuter_without_data.to_i > 0
+    %p.rl-note
+      %b= "#{r.commuter_without_data} commuter #{r.commuter_without_data == 1 ? 'run has' : 'runs have'} nothing recorded"
+      (no driver, bus or times in RidePilot) and are not listed. Commuter times and miles will come from GPS once commuter trips are matched like the city routes.
+
+  %table.table.table-condensed.table-striped.rl-table{data: {export_title: "Vehicle Summary by Run"}}
+    %thead
+      %tr
+        %th Mode
+        %th Date
+        %th Driver
+        %th Route
+        %th Bus #
+        %th Login / Start Shift Time
+        %th First Pickup Time
+        %th Last Dropoff Time
+        %th Logout / End Shift Time
+        %th{style: num} Login / Start Shift Odometer
+        %th{style: num} First Pickup Odometer
+        %th{style: num} Last Dropoff Odometer
+        %th{style: num} Logout / End Shift Odometer
+        %th Lunch In
+        %th Lunch Out
+        %th{style: num} UPT (Passengers)
+        %th{style: num} Total Revenue Time
+        %th{style: num} Total Revenue Miles
+        %th{style: num} Total Deadhead Time
+        %th{style: num} Total Deadhead Miles
+        %th Notes
+    %tbody
+      - r.rows.each do |row|
+        %tr{class: (row.complete? ? nil : "rl-short")}
+          %td
+            %span.rl-mode{class: mode_class[row.mode]}= row.mode
+          %td{style: "white-space: nowrap;"}= row.date.strftime("%m/%d/%Y")
+          %td= row.driver
+          %td
+            - if row.run_id
+              = link_to row.route, run_path(row.run_id)
+            - else
+              = row.route
+          %td= row.bus
+          %td{style: "white-space: nowrap;"}= clock.(row.start_at)
+          %td{style: "white-space: nowrap;"}= clock.(row.first_pickup_at)
+          %td{style: "white-space: nowrap;"}= clock.(row.last_dropoff_at)
+          %td{style: "white-space: nowrap;"}= clock.(row.end_at)
+          %td{style: num}= odo.(row.start_odo)
+          %td{style: num}= odo.(row.first_pickup_odo)
+          %td{style: num}= odo.(row.last_dropoff_odo)
+          %td{style: num}= odo.(row.end_odo)
+          %td= clock.(row.lunch_in)
+          %td= clock.(row.lunch_out)
+          %td{style: num}= row.upt
+          %td{style: num}= hrs.(row.revenue_hours)
+          %td{style: num}= mi.(row.revenue_miles)
+          %td{style: num}= hrs.(row.deadhead_hours)
+          %td{style: num}= mi.(row.deadhead_miles)
+          %td.notes= row.notes.join("; ")
