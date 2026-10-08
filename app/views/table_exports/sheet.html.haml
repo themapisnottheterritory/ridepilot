@@ -47,7 +47,7 @@
           %tr{class: (i.odd? ? "even" : nil)}
             - @columns.each_index do |j|
               - v = row[j].to_s
-              %td{class: (v.match?(TableExportsController::NUMBER) ? "num" : nil)}
+              %td{class: (TableExportsController.numeric?(v) ? "num" : nil)}
                 - v.split("\n").each_with_index do |line, k|
                   - if k > 0
                     %br

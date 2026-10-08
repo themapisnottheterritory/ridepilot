@@ -11,6 +11,13 @@ class TableExportsController < ApplicationController
   MAX_ROWS = 20_000
   NUMBER = /\A-?\$?\d{1,3}(,\d{3})*(\.\d+)?\z|\A-?\$?\d+(\.\d+)?\z/
 
+  # A quantity: money, miles, counts. Phone numbers and ids (7+ bare digits)
+  # and anything with a leading zero (zip codes) stay text.
+  def self.numeric?(value)
+    s = value.to_s.strip
+    s.match?(NUMBER) && !s.match?(/\A0\d/) && !s.match?(/\A\d{7,}\z/)
+  end
+
   def create
     fmt = params[:export_format].to_s
     return head(:unprocessable_entity) unless FORMATS.include?(fmt)
@@ -66,9 +73,8 @@ class TableExportsController < ApplicationController
   end
 
   def number(v)
-    s = v.to_s.strip
-    return v unless s.match?(NUMBER) && !s.match?(/\A0\d/)   # keep zip codes, ids with leading zeros as text
-    n = s.delete("$,")
+    return v unless self.class.numeric?(v)
+    n = v.to_s.strip.delete("$,")
     n.include?(".") ? n.to_f : n.to_i
   end
 end

@@ -6,7 +6,7 @@ RSpec.describe "Table downloads", type: :request do
   let(:staff) { create(:role, level: Role::ADMIN_LEVEL).user }
   let(:table) do
     { title: "Trips: Oct 9", subtitle: "UDR", columns: ["Rider", "Phone", "Miles", "Fare", "Zip"],
-      rows: [["Mary Ramos", "(361) 555-1000", "12.5", "$2.00", "07901"], ["Joe Garza", "", "1,204", "$1,250.75", "77901"]] }.to_json
+      rows: [["Mary Ramos", "(361) 555-1000", "12.5", "$2.00", "07901"], ["Joe Garza", "3615550149", "1,204", "$1,250.75", "77901"]] }.to_json
   end
   before { sign_in staff }
 
@@ -34,7 +34,8 @@ RSpec.describe "Table downloads", type: :request do
     sheet = nil
     Zip::File.open_buffer(StringIO.new(r.body)) { |z| sheet = z.read("xl/worksheets/sheet1.xml") }
     expect(sheet).to include("<v>12.5</v>").and include("<v>1204</v>").and include("<v>1250.75</v>")
-    expect(sheet).to include("07901")
+    expect(sheet).to include("07901").and include("3615550149")
+    expect(sheet).not_to include("<v>3615550149</v>")   # a phone stays text
     expect(sheet).to include("pane")
   end
 
