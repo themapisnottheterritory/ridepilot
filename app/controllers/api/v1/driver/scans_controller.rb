@@ -39,11 +39,19 @@ class Api::V1::Driver::ScansController < Api::V1::Driver::BaseController
     status.success? && out.bytesize > 0 ? [out, "image/jpeg"] : [bytes, type]
   end
 
+  # The bus's most recent reading, not its highest: one typo (bus 1700 has a
+  # start odometer of 500,020 from the April pilot) would otherwise make every
+  # later scan look wrong.
   def last_odometer(vehicle)
     return nil unless vehicle
-    runs = Run.where(vehicle_id: vehicle.id).where("date <= ?", Date.current)
-    [runs.maximum(:end_odometer), runs.maximum(:start_odometer),
-     VehicleInspectionReport.where(vehicle_id: vehicle.id).maximum(:odometer)].compact.max
+    run = Run.where(vehicle_id: vehicle.id).where("date <= ?", Date.current)
+             .where("COALESCE(end_odometer, start_odometer) > 0")
+             .order(date: :desc, actual_end_time: :desc, id: :desc).first
+    report = VehicleInspectionReport.where(vehicle_id: vehicle.id).where("odometer > 0").recent.first
+    seen = []
+    seen << [run.actual_end_time || run.date.end_of_day, run.end_odometer.to_i.positive? ? run.end_odometer : run.start_odometer] if run
+    seen << [report.submitted_at, report.odometer] if report&.submitted_at
+    seen.max_by(&:first)&.last
   end
 
   def warning(kind, value, last)

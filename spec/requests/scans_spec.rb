@@ -32,6 +32,14 @@ RSpec.describe "Odometer and pump scans", type: :request do
     expect(scan("odometer", %q({"miles": 48211}))["warning"]).to include("lower than this bus's last reading (50,100)")
   end
 
+  it "compares with the bus's latest reading, not an old typo" do
+    create(:run, vehicle: run.vehicle, date: Date.current - 20, start_odometer: 500_020, end_odometer: nil)
+    create(:run, vehicle: run.vehicle, date: Date.yesterday, start_odometer: 48_000, end_odometer: 48_100)
+    data = scan("odometer", %q({"miles": 48211}))
+    expect(data["last_known_odometer"]).to eq 48_100
+    expect(data["warning"]).to be_nil
+  end
+
   it "reads a pump" do
     data = scan("pump", '{"gallons": 21.437, "price_per_gallon": "$2.879", "total": 61.72}')
     expect(data).to include("gallons" => 21.437, "price_per_gallon" => 2.879, "total" => 61.72)
