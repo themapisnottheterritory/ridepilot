@@ -30,8 +30,18 @@ RSpec.describe AddressesController, type: :controller do
       expect(body["attributes"]["latitude"]).to be_within(0.0001).of(28.8)
     end
 
-    it "reports the pin dropped when the street changes without a new lat/lon" do
+    # Since 092f1c68 (2026-10-02) a rider's address that would lose its pin is
+    # warned about first: with no pin it never comes up when booking.
+    it "warns before a street change leaves the address without a pin" do
       post :validate_customer_specific, params: {prefix: "customer", address_id: saved.id,
+        customer: fields.merge(address: "200 Other Rd")}, format: :json
+      body = JSON.parse(response.body)
+      expect(body["no_pin_warning"]).to be true
+      expect(body).not_to have_key("success")
+    end
+
+    it "reports the pin dropped when the street changes and staff save without a pin anyway" do
+      post :validate_customer_specific, params: {prefix: "customer", address_id: saved.id, no_pin_ok: "1",
         customer: fields.merge(address: "200 Other Rd")}, format: :json
       body = JSON.parse(response.body)
       expect(body["success"]).to be true
