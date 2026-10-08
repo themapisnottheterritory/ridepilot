@@ -16,6 +16,54 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-08 11:36"
+  title: The town shows on trips, Dispatch, manifests and Saved places
+  body: |
+    Many saved places share a name across towns (Walmart, Dialysis, Pizza Hut), so the town now shows wherever a place does. On the **Trips** list and on **Dispatch**, each pick-up and drop-off has its town as a badge: green for the rider's own town, amber for another town (hover for the rider's town). Printed manifests show the town in bold.
+
+    On a trip, picking a saved place in another town than the rider's now shows a one-line note under the box, for example "This place is in Yoakum, about 16 miles from the rider's home in Hallettsville." It's a reminder, not a block. The colours and miles show once the rider is chosen.
+
+    Typing just a name, like **walmart** or **pizza hut**, now suggests places in our area first instead of Houston. **Saved places** has a **Town** column, a name other towns use too says "also in ...", and **Only names used in more than one town** lists just those.
+- added: "2026-10-08 07:20"
+  title: No beach or boating alerts on the driver tablet
+  apps: [tablet]
+  body: |
+    The weather on the tablet's sign-in screen no longer shows alerts that are only for the beach or the water (rip currents, small craft advisories, marine warnings). Alerts that matter on the road, including coastal flooding, still show.
+- added: "2026-10-08 05:17"
+  title: "New report: Vehicle Summary by Run"
+  body: |
+    **Reports > Vehicle Summary by Run** is one row per run in the layout of the reporting spreadsheet: the bus, driver, times, revenue and non-revenue hours and miles, riders and passenger miles (PMT). Miles come from the odometer where the driver entered it, and otherwise from the bus's GPS; commuter routes are included from GPS. The wide table scrolls sideways, and **Download** gives Excel, CSV or PDF.
+- added: "2026-10-08 04:50"
+  title: Download any table as PDF, CSV or Excel
+  body: |
+    Most tables in RidePilot now have a **Download** button above them, with **PDF**, **CSV** and **Excel**. It downloads what the table is showing, after your filters, and leaves out the View and Edit links. Phone numbers, zip codes and ids stay as text in Excel, so leading zeros aren't lost.
+- added: "2026-10-08 04:24"
+  title: Print the trip list to write on
+  body: |
+    On **Trips**, the **Report** button is now **Print**. It opens a sheet of the trips the page is showing (same dates and filters), grouped by run, by day, or just by time, with a tick box for each trip and lines for notes. Choose **Roomy** for more writing space, print from the browser, or **Download PDF**.
+- added: "2026-10-07 16:17"
+  title: Cancelled and moved stops stay on the tablet, crossed out
+  apps: [tablet]
+  body: |
+    On driver tablet **1.0.33**, a stop that leaves the run no longer just disappears. It stays on the manifest crossed out, with why: cancelled, no-show, missed trip, moved to another run (named), or taken off the run. Finished stops are coloured by how they ended, and a legend explains the colours.
+- added: "2026-10-07 13:21"
+  title: Rider addresses with an apostrophe save again
+  body: |
+    Editing a rider's address and picking one with an apostrophe from the map list (for example **Port O'Connor**) looked like it worked but kept the old address. It now saves the address you picked.
+- added: "2026-10-07 07:55"
+  title: Address check
+  for: admins
+  body: |
+    **Saved places** and **Garages** now link to **Address check**: a map of trip addresses pinned far from their town or outside Texas, buses garaged far from the runs they drive, and runs that start at a yard their bus has left. Pins off the edge of the map point the way with the miles. Each one has a **Fix** link, and the bus's page warns under **Garage** too.
+- added: "2026-10-06 16:17"
+  title: "Fixes: agency Update, lookup tables, garage copies"
+  for: admins
+  body: |
+    **Update** on an agency's page saves again for people in more than one agency (it had been reloading the page without saving). On **Admin > Lookup Tables**, editing a name with an "&" in it (like **Rehab & Nursing**) no longer garbles the "&" when you save. A run now uses its bus's named garage itself instead of making another copy, so **Garages** stops filling with duplicates.
+- added: "2026-10-06 15:27"
+  title: Coordinates without the minus sign
+  body: |
+    A longitude typed without its minus sign (95.9654 instead of -95.9654) is now put right, instead of pinning the stop in Asia. Coordinates that land outside Texas don't get a pin, and the save says the address isn't on the map.
 - added: "2026-10-06 09:45"
   title: "New report: Vehicle Summary"
   body: |
