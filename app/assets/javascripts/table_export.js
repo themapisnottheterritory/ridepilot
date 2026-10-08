@@ -1,12 +1,12 @@
 // Download any table as PDF, CSV or Excel (2026-10-08). A small "Download"
 // menu goes above every data table (Bootstrap .table, .basic-table, or a
-// DataTable) with at least one row. It sends what the table shows, after the
+// DataTable, or any table with headings) with at least one row. It sends what the table shows, after the
 // page's own filters, to TableExportsController, which makes the file.
 //   data-no-export      on a table (or around it): no menu
 //   data-export-title   / data-export-subtitle: name the file and the PDF
 // Columns with no heading and no text (tick boxes, edit icons) are left out.
 (function () {
-  var SELECTOR = 'table.table, table.basic-table, table.dataTable';
+  var SELECTOR = 'table';
 
   function clean(s) {
     return (s || '').replace(/ /g, ' ').split('\n')
@@ -37,8 +37,10 @@
   function heading(table) {
     var t = $(table).data('export-title');
     if (t) return t;
-    var panel = $(table).closest('.panel').find('> .panel-heading').first().text();
-    var page = $('h1:visible, .page-header h2:visible, h2:visible').first().text();
+    // headings without their buttons ("Garages" not "Garages Add a garage")
+    var bare = function (el) { if (!el) return ''; var c = el.cloneNode(true); $(c).find('a, button, .btn, small, .badge, .label').remove(); return c.textContent; };
+    var panel = bare($(table).closest('.panel').find('> .panel-heading').get(0));
+    var page = bare($('h1:visible, .page-header h2:visible, h2:visible').get(0));
     var parts = [clean(page), clean(panel)].filter(function (x) { return x; });
     return parts.join(': ').replace(/\n/g, ' ') || document.title;
   }
@@ -48,7 +50,14 @@
     var rows = bodyRows(table).map(function (tr) {
       return $(tr).children('td, th').toArray().map(cellText);
     }).filter(function (r) { return r.some(function (c) { return c; }); });
-    var keep = heads.map(function (h, i) { return h || rows.some(function (r) { return r[i]; }); });
+    // a column with no heading is kept only if it says different things
+    // per row: tick boxes and View / Edit links are left out
+    var keep = heads.map(function (h, i) {
+      if (h) return true;
+      var seen = {};
+      rows.forEach(function (r) { if (r[i]) seen[r[i]] = 1; });
+      return Object.keys(seen).length > 1;
+    });
     return {
       title: heading(table),
       subtitle: $(table).data('export-subtitle') || '',
@@ -59,7 +68,8 @@
   }
 
   function send(table, format) {
-    var form = $('<form method="post" target="_blank" style="display:none">').attr('action', '/table_exports');
+    // same window: the reply is an attachment, so the page stays put
+    var form = $('<form method="post" style="display:none">').attr('action', '/table_exports');
     form.append($('<input type="hidden" name="authenticity_token">').val($('meta[name=csrf-token]').attr('content')));
     form.append($('<input type="hidden" name="export_format">').val(format));
     form.append($('<input type="hidden" name="table">').val(JSON.stringify(collect(table))));
@@ -68,8 +78,12 @@
 
   function attach(table) {
     if (table.getAttribute('data-export-ready') || $(table).closest('[data-no-export]').length) return;
-    if ($(table).closest('.modal, form, .dataTables_scrollBody').length && !$(table).is('[data-export]')) return;
-    if (!$(table).children('thead').length || bodyRows(table).length < 1) return;
+    if (!$(table).is('[data-export]')) {
+      // not layout tables, pickers, or tables inside forms, dialogs or other tables
+      if ($(table).parents('table, .modal, form, .dataTables_scrollBody, .ui-datepicker, .wc-container, .popover').length) return;
+      if (!$(table).children('thead').find('th').length) return;
+    }
+    if (bodyRows(table).length < 1) return;
     table.setAttribute('data-export-ready', '1');
     var bar = $('<div class="tx-bar"><div class="btn-group">' +
       '<button type="button" class="btn btn-default btn-xs dropdown-toggle tx-btn" data-toggle="dropdown">' +
