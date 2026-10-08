@@ -1,70 +1,198 @@
-:css
-  #trips_report_table, #trips_report_table th, #trips_report_table td {
-    border: 1px solid gray;
-    border-spacing: 0px;
-  }
-%h1= translate_helper("trips")+ ": " + format_time_as_title_for_listing_day(@start_pickup_date) + " - " + format_time_as_title_for_listing_day(@end_pickup_date)
-
-%table#trips_report_table
-  %thead
-    %tr
-      %th Recur?
-      %th= translate_helper("pickup_date_column")
-      %th= translate_helper("customer_column")
-      %th= translate_helper("customer_phone_number_column")
-      %th= translate_helper("trip_direction_column")
-      %th= translate_helper("pickup_address_column")
-      %th= translate_helper("pickup_time_column")
-      %th= translate_helper("dropoff_address_column")
-      %th= translate_helper("appointment_time_column")
-      %th= translate_helper("trip_status_column")
-      %th= translate_helper("trip_called_back_column")
-      %th= translate_helper("trip_result_column")
-  %tbody
-    - @trips.each do |trip|
-      %tr.trip{"data-trip-id" => trip.id }
-        %td
-          - if trip.repeating_trip_id.present?
-            Recur
-        %td
-          = format_time_for_listing_day trip.pickup_time
-        %td
-          = trip.customer.try(:name)
-        %td
-          - if trip.customer.try(:phone_number_1)
-            = format_phone_number(trip.customer.try(:phone_number_1))
-          - if trip.customer.try(:phone_number_2)
-            %br/
-            = format_phone_number(trip.customer.try(:phone_number_2))
-        %td
-          = trip.is_return? ? translate_helper("return_trip") : translate_helper("outbound_trip")
-        %td
-          = trip.pickup_address.try :address_text
-        %td
-          = format_time_for_listing trip.pickup_time
-        %td
-          = trip.dropoff_address.try :address_text
-        %td
-          - if trip.appointment_time
-            - if trip.appointment_time.try(:to_date) != trip.pickup_time.try(:to_date)
-              = format_simple_full_datetime trip.appointment_time
-            - else
-              = format_time_for_listing trip.appointment_time
-            
-        %td.trip-status
-          - if trip.run.present?
-            = trip.run_text
-          - elsif trip.cab
-            Cab
-          - elsif trip.is_stand_by
-            Standby
+-# Trips > Print (2026-10-08, for Michelle, who wanted a list to write on).
+-# The trips the Trips page is showing, grouped by run or day, in the printed
+-# manifest's style: a tick box, the time, the rider, where from and to, and
+-# ruled lines for notes. On screen it has a few choices and Print / Download
+-# PDF; the PDF (wkhtmltopdf) is the same page without the controls.
+- trips = @trips.to_a
+- groups = trip_print_groups(trips, @group)
+- riders = trips.sum { |t| 1 + t.guest_count.to_i + t.attendant_count.to_i }
+- wheelchairs = trips.count { |t| trip_mobility_needs(t).any? { |n| n =~ MobilityIconHelper::WHEELED } }
+- multi_day = trips.map { |t| t.pickup_time.to_date }.uniq.size > 1
+- lines = @roomy ? 3 : 2
+- filters = trip_print_filters
+!!! 5
+%html
+  %head
+    %meta{charset: "utf-8"}
+    %title= "Trips · #{trip_print_dates(trips, @start_pickup_date, @end_pickup_date)}"
+    - unless @is_pdf
+      %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap"}
+    :css
+      @page { size: letter landscape; margin: 0.45in 0.4in 0.5in; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: #eef1f6; font-family: 'Open Sans', 'DejaVu Sans', sans-serif; color: #131313; font-size: 9pt; line-height: 1.35; }
+      .tp-bar { position: sticky; top: 0; z-index: 2; background: #fff; border-bottom: 1px solid #cfd6e4; box-shadow: 0 2px 8px rgba(18,38,79,.08); padding: 10px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; font-size: 13px; }
+      .tp-bar .tp-back { color: #12264F; text-decoration: none; font-weight: 600; }
+      .tp-bar .tp-opt { display: flex; align-items: center; gap: 6px; color: #5f6b7a; }
+      .tp-bar .tp-seg { display: inline-flex; border: 1px solid #12264F; border-radius: 8px; overflow: hidden; }
+      .tp-bar .tp-seg a { padding: 5px 11px; color: #12264F; text-decoration: none; font-weight: 600; }
+      .tp-bar .tp-seg a + a { border-left: 1px solid #12264F; }
+      .tp-bar .tp-seg a.on { background: #12264F; color: #fff; }
+      .tp-bar .tp-go { margin-left: auto; display: flex; gap: 8px; }
+      .tp-bar button, .tp-bar .tp-btn { font: inherit; font-weight: 700; border-radius: 8px; padding: 7px 16px; border: 2px solid #12264F; background: #12264F; color: #fff; cursor: pointer; text-decoration: none; }
+      .tp-bar .tp-btn.ghost { background: #fff; color: #12264F; }
+      .tp-sheet { background: #fff; max-width: 11in; margin: 18px auto 40px; padding: 0.4in; box-shadow: 0 2px 12px rgba(18,38,79,.12); }
+      .tp-head { display: table; width: 100%; border-bottom: 2px solid #CC9900; padding-bottom: 6px; margin-bottom: 10px; }
+      .tp-head > div { display: table-cell; vertical-align: bottom; }
+      .tp-when { width: 46%; }
+      .tp-when .tp-kicker { font-size: 11pt; color: #5f6b7a; text-transform: uppercase; letter-spacing: .08em; }
+      .tp-when .tp-date { font-size: 23.5pt; font-weight: 700; color: #12264F; line-height: 1.05; }
+      .tp-what { width: 30%; padding-left: 12px; border-left: 1px solid #cfd6e4; font-size: 9pt; }
+      .tp-what b { color: #12264F; }
+      .tp-sum { width: 24%; text-align: right; }
+      .tp-chip { display: inline-block; margin: 0 0 3px 4px; padding: 2px 8px; border: 1px solid #12264F; border-radius: 9px; font-size: 9pt; color: #12264F; white-space: nowrap; }
+      .tp-chip b { font-size: 11pt; }
+      .tp-group { margin-top: 12px; }
+      .tp-group:first-of-type { margin-top: 0; }
+      .tp-ghead { font-size: 14.5pt; font-weight: 700; color: #12264F; margin: 0 0 4px; page-break-after: avoid; }
+      .tp-ghead small { font-size: 9pt; font-weight: 400; color: #5f6b7a; margin-left: 8px; }
+      table.tp { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      table.tp thead { display: table-header-group; }
+      table.tp th { background: #12264F; color: #fff; font-weight: 600; font-size: 9pt; text-align: left; padding: 4px 6px; border: 1px solid #12264F; }
+      table.tp td { padding: 5px 6px; border-bottom: 1px solid #cfd6e4; vertical-align: top; font-size: 9pt; word-wrap: break-word; }
+      table.tp tr { page-break-inside: avoid; }
+      table.tp tr.even td { background: #f4f6fa; }
+      .c-box { width: 26px; }
+      .c-box span { display: block; width: 14px; height: 14px; border: 1.5px solid #12264F; border-radius: 2px; margin-top: 2px; }
+      .c-time { width: 92px; white-space: nowrap; }
+      .c-time b { font-size: 11pt; }
+      .c-time small, .c-rider small { display: block; color: #5f6b7a; font-size: 8pt; }
+      .c-rider { width: 21%; padding-left: 8px; }
+      .c-rider b { font-size: 11pt; }
+      .c-trip { width: 30%; }
+      .c-trip .to { color: #5f6b7a; }
+      .c-run { width: 11%; }
+      .c-result { width: 9%; }
+      .c-notes { width: 22%; }
+      .c-notes span { display: block; height: 17px; border-bottom: 1px solid #9aa5b5; }
+      .tag { display: inline-block; padding: 0 5px; border-radius: 3px; font-size: 8pt; font-weight: 700; margin-left: 3px; vertical-align: 1px; }
+      .tag.wc { background: #12264F; color: #fff; }
+      .tag.aid { background: #dfe6f2; color: #12264F; }
+      .tag.willcall { background: #CC9900; color: #fff; }
+      .tag.plus { background: #eef1f6; color: #131313; }
+      .tag.ret { background: #eef1f6; color: #5f6b7a; }
+      .muted { color: #5f6b7a; }
+      .res-cancel { color: #b3261e; font-weight: 600; }
+      .tp-empty { padding: 30px 0; text-align: center; color: #5f6b7a; font-size: 11pt; }
+      .tp-foot { margin-top: 8px; font-size: 8pt; color: #5f6b7a; }
+      @media print {
+        body { background: #fff; }
+        .tp-bar { display: none; }
+        .tp-sheet { margin: 0; padding: 0; max-width: none; box-shadow: none; }
+      }
+      #{@is_pdf ? "body { background: #fff; } .tp-sheet { margin: 0; padding: 0; max-width: none; box-shadow: none; }" : ""}
+  %body
+    - unless @is_pdf
+      .tp-bar
+        = link_to "← Trips", trips_path, class: "tp-back"
+        .tp-opt
+          Group by
+          .tp-seg
+            - TripPrintHelper::GROUPS.each do |key, label|
+              = link_to label, report_trips_path(group: key, space: params[:space]), class: (@group == key ? "on" : nil)
+        .tp-opt
+          Writing space
+          .tp-seg
+            = link_to "Normal", report_trips_path(group: @group), class: (@roomy ? nil : "on")
+            = link_to "Roomy", report_trips_path(group: @group, space: "roomy"), class: (@roomy ? "on" : nil)
+        .tp-go
+          = link_to "Download PDF", report_trips_path(format: :pdf, group: @group, space: params[:space]), class: "tp-btn ghost"
+          %button{type: "button", onclick: "window.print()"} Print
+    .tp-sheet
+      .tp-head
+        .tp-when
+          .tp-kicker Trips
+          .tp-date= trip_print_dates(trips, @start_pickup_date, @end_pickup_date)
+        .tp-what
+          - if filters.any?
+            %div
+              %b Showing:
+              = filters.join(" · ")
           - else
-            Unscheduled
-        %td
-          - if trip.customer_informed?
-            Yes
-        %td.trip_table_result_column
-          = display_trip_result(trip.trip_result)
-
-:javascript
-  print();
+            %div
+              %b Showing:
+              all trips for these dates
+          %div
+            %b Agency:
+            = current_provider.try(:name)
+        .tp-sum
+          %span.tp-chip
+            %b= trips.size
+            = trips.size == 1 ? "trip" : "trips"
+          %span.tp-chip
+            %b= riders
+            = riders == 1 ? "rider" : "riders"
+          - if wheelchairs > 0
+            %span.tp-chip
+              %b= wheelchairs
+              wheelchair
+      - if trips.empty?
+        .tp-empty No trips match the Trips page's filter. Go back and change the dates or filters.
+      - groups.each do |heading, group_trips|
+        .tp-group
+          - if heading.is_a?(Run)
+            .tp-ghead
+              = heading.name
+              %small= ["#{heading.date.strftime('%a %b %-d')}", heading.driver.try(:user_name), (heading.vehicle ? "Bus #{heading.vehicle.name}" : nil), "#{group_trips.size} #{group_trips.size == 1 ? 'trip' : 'trips'}"].compact.join(" · ")
+          - elsif heading.is_a?(Date)
+            .tp-ghead
+              = heading.strftime("%A, %B %-d")
+              %small= "#{group_trips.size} #{group_trips.size == 1 ? 'trip' : 'trips'}"
+          - elsif heading
+            .tp-ghead
+              = heading
+              %small= "#{group_trips.size} #{group_trips.size == 1 ? 'trip' : 'trips'}"
+          %table.tp
+            %thead
+              %tr
+                %th.c-box
+                %th.c-time Pick-up
+                %th.c-rider Rider
+                %th.c-trip From → To
+                - unless @group == "run"
+                  %th.c-run Run
+                %th.c-result Result
+                %th.c-notes Notes
+            %tbody
+              - group_trips.each_with_index do |trip, i|
+                - needs = trip_mobility_needs(trip)
+                - customer = trip.customer
+                %tr{class: (i.odd? ? "even" : nil)}
+                  %td.c-box
+                    %span
+                  %td.c-time
+                    %b= format_time_for_listing(trip.pickup_time)
+                    - if multi_day && @group != "day" && !trip.run
+                      %small= trip.pickup_time.strftime("%a %b %-d")
+                    - if trip.will_call
+                      %small will call
+                    - if trip.appointment_time
+                      %small= "appt #{format_time_for_listing(trip.appointment_time)}"
+                  %td.c-rider
+                    %b= customer.try(:name)
+                    - if trip.will_call
+                      %span.tag.willcall WILL CALL
+                    - needs.each do |need|
+                      %span.tag{class: (need =~ MobilityIconHelper::WHEELED ? "wc" : "aid")}= need
+                    - if trip.guest_count.to_i > 0
+                      %span.tag.plus= "+#{trip.guest_count} #{trip.guest_count == 1 ? 'guest' : 'guests'}"
+                    - if trip.attendant_count.to_i > 0
+                      %span.tag.plus= "+#{trip.attendant_count} #{trip.attendant_count == 1 ? 'attendant' : 'attendants'}"
+                    - if customer.try(:phone_number_1).present?
+                      %small= format_phone_number(customer.phone_number_1)
+                  %td.c-trip
+                    %div
+                      = trip.pickup_address.try(:address_text)
+                      - if trip.is_return?
+                        %span.tag.ret RETURN
+                    %div.to= "→ #{trip.dropoff_address.try(:address_text)}"
+                  - unless @group == "run"
+                    %td.c-run= trip_print_status(trip)
+                  %td.c-result
+                    - if trip.trip_result
+                      %span{class: (TripResult::CANCEL_CODES.include?(trip.trip_result.code) ? "res-cancel" : nil)}= trip.trip_result.name
+                  %td.c-notes
+                    - lines.times do
+                      %span
+      .tp-foot
+        Printed #{Time.current.strftime("%b %-d, %Y %-l:%M %p")} by #{current_user.try(:name).presence || current_user.try(:username)} from RidePilot Trips. Same trips and filter as the Trips page.

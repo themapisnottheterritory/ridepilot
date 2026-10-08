@@ -33,7 +33,9 @@
             %li
               %a{href: '#', 'data-trip-result-id' => tr[1] }
                 =tr[0]
-        = link_to "Report", report_trips_path, class: 'btn action-button'
+        = link_to report_trips_path, class: 'btn action-button', target: '_blank', title: 'A printable list of these trips, with room to write' do
+          %i.fa.fa-print
+          Print
     .col-md-6{style: 'padding: 0px;'}
       %span.pull-right{style: 'font-size: large;'}
         %b= translate_helper(:total_trips_text) % {trips_count: @trips.size}

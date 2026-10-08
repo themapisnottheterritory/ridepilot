@@ -49,12 +49,27 @@ class TripsController < ApplicationController
     end
   end
 
+  # Trips > Print: the trips the Trips page shows, as a sheet to write on
+  # (trips/report, TripPrintHelper). ?group=run|day|none, ?space=roomy; .pdf
+  # downloads the same sheet.
   def report
     @start_pickup_date = Time.zone.at(session[:trips_start].to_i).to_date
     @end_pickup_date = Time.zone.at(session[:trips_end].to_i).to_date
     filter_trips
+    @trips = @trips.includes(:dropoff_address, :trip_result, customer: [], run: [:driver, :vehicle])
+    @group = TripPrintHelper::GROUPS.key?(params[:group]) ? params[:group] : "run"
+    @roomy = params[:space] == "roomy"
 
-    render layout: false
+    respond_to do |format|
+      format.html { render layout: false }
+      format.pdf do
+        @is_pdf = true
+        render pdf: "trips-#{@start_pickup_date}", template: "trips/report", formats: [:html], layout: false,
+               disposition: "attachment", orientation: "Landscape", page_size: "Letter", encoding: "UTF-8",
+               margin: { top: 11, bottom: 13, left: 10, right: 10 },
+               footer: { right: "Page [page] of [topage]", font_size: 7, font_name: "DejaVu Sans" }
+      end
+    end
   end
 
   # list trips for a specific customer within given date range
