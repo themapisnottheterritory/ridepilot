@@ -73,7 +73,10 @@ module ApplicationHelper
 
   def delete_trippable_link(trippable)
     if can? :destroy, trippable
-      link_to trippable.trips.present? ? translate_helper("merge") : translate_helper("delete"), trippable, :class => 'btn btn-danger'
+      # "delete": application.js opens the confirm / merge dialog from it. Restyled
+      # to btn-danger alone in 2018, the click went straight to a GET of the
+      # address, which has no route ("No route matches", Phil 2026-10-08).
+      link_to trippable.trips.present? ? translate_helper("merge") : translate_helper("delete"), trippable, :class => 'btn btn-danger delete'
     end
   end
   

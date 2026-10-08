@@ -16,6 +16,11 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-08 15:00"
+  title: Merge or delete a saved place works again
+  for: admins
+  body: |
+    On a saved place's edit page, the red **Merge** (or **Delete**) button had been going to an error page. It now opens the dialog again: pick the place to merge into and **Confirm**. Merging now moves everything that uses the old place to the new one, including standing trips and stops already on runs, not only trips.
 - added: "2026-10-08 11:36"
   title: The town shows on trips, Dispatch, manifests and Saved places
   body: |

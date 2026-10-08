@@ -109,14 +109,33 @@ class Address < ApplicationRecord
     trips_from + trips_to
   end
   
+  # Merge this address into another: everything that uses it moves over, then
+  # this one is deleted. It used to move only trips, so a merged place's
+  # standing trips and run stops kept pointing at a deleted address and new
+  # trips from those subscriptions booked to it (Gulf Bend Center 106323, a
+  # typo'd "1408 Melrose": 81 trips, 15 standing trips, 28 run stops;
+  # Phil 2026-10-08). Pin checks and cached travel times belong to this pin
+  # and go with it.
+  MERGE_REFERENCES = {
+    Trip => %i[pickup_address_id dropoff_address_id],
+    RepeatingTrip => %i[pickup_address_id dropoff_address_id],
+    Itinerary => %i[address_id],
+    RepeatingItinerary => %i[address_id],
+    Run => %i[from_garage_address_id to_garage_address_id],
+    Vehicle => %i[garage_address_id],
+    Customer => %i[address_id],
+    StopSighting => %i[address_id]
+  }.freeze
+
   def replace_with!(address_id)
-    return false unless address_id.present? && self.class.exists?(address_id)
-    
-    self.trips_from.update_all pickup_address_id: address_id
-    
-    self.trips_to.update_all dropoff_address_id: address_id
-    
-    self.destroy
+    return false if address_id.blank? || address_id.to_i == id || !self.class.exists?(address_id)
+
+    transaction do
+      MERGE_REFERENCES.each do |model, columns|
+        columns.each { |c| model.unscoped.where(c => id).update_all(c => address_id) }
+      end
+      destroy
+    end
     self.class.find address_id
   end
   
