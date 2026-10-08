@@ -15,6 +15,11 @@ class DriverWelcome
   WEATHER_POINT = [28.8053, -97.0036]   # Victoria
   # NWS county zones: Victoria, Calhoun, Jackson, DeWitt, Goliad, Lavaca, Gonzales, Refugio
   ZONES = %w[TXC469 TXC057 TXC239 TXC123 TXC175 TXC285 TXC177 TXC391].freeze
+  # Beach and boating alerts reach us through Calhoun County's coast (a Rip
+  # Current Statement for the Calhoun Islands, 2026-10-08) but say nothing
+  # about the roads. Coastal Flood stays: it closes roads in Port Lavaca and
+  # Seadrift.
+  OFF_ROAD = /\A(rip current|beach hazards|high surf|small craft|gale|storm warning\z|hurricane force wind|marine|hazardous seas|brisk wind|low water)/i
   WEATHER_EVERY = 30.minutes
   AGENT = "GCRPC RidePilot driver tablets (infotech@gcrpc.org)".freeze
 
@@ -82,6 +87,7 @@ class DriverWelcome
     period = Array(get(@forecast_url).dig("properties", "periods")).first
     return nil unless period
     alerts = Array(get("https://api.weather.gov/alerts/active?zone=#{ZONES.join(',')}")["features"]).map { |f| f["properties"] }
+                  .reject { |a| a["event"].to_s.match?(OFF_ROAD) }
     {
       place: "Victoria",
       name: period["name"],                     # "Today", "This Afternoon", "Tonight"

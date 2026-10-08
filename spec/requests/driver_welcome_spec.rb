@@ -29,6 +29,19 @@ RSpec.describe "GET /api/v1/driver_welcome", type: :request do
     expect(DriverWelcome.day_label(friday, monday)).to eq "on Friday"
   end
 
+  it "leaves out beach and boating alerts, keeps the ones about the roads" do
+    allow(DriverWelcome).to receive(:weather).and_call_original
+    DriverWelcome.reset!
+    alert = ->(event) { { "properties" => { "event" => event, "ends" => "2026-10-09T19:00:00-05:00", "severity" => "Moderate" } } }
+    allow(DriverWelcome).to receive(:get) do |url|
+      if url.include?("/points/") then { "properties" => { "forecast" => "https://api.weather.gov/forecast" } }
+      elsif url.include?("/alerts/") then { "features" => [alert.("Rip Current Statement"), alert.("Small Craft Advisory"), alert.("Coastal Flood Advisory"), alert.("Dense Fog Advisory")] }
+      else { "properties" => { "periods" => [{ "name" => "Today", "temperature" => 84, "shortForecast" => "Sunny", "isDaytime" => true }] } }
+      end
+    end
+    expect(DriverWelcome.weather[:alerts].map { |a| a[:event] }).to eq ["Coastal Flood Advisory", "Dense Fog Advisory"]
+  end
+
   it "keeps only the first part of a two-part forecast" do
     expect(DriverWelcome.short_text("Chance Showers And Thunderstorms then Showers And Thunderstorms")).to eq "Chance Showers And Thunderstorms"
     expect(DriverWelcome.short_text("Mostly Sunny")).to eq "Mostly Sunny"
