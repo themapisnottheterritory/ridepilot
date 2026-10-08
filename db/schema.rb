@@ -691,6 +691,26 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.index ["run_id"], name: "index_gps_locations_on_run_id"
   end
 
+  create_table "fuel_logs", force: :cascade do |t|
+    t.bigint "provider_id"
+    t.bigint "vehicle_id", null: false
+    t.bigint "run_id"
+    t.bigint "driver_id"
+    t.bigint "vehicle_inspection_report_id"
+    t.string "source", null: false
+    t.decimal "gallons", precision: 8, scale: 3, null: false
+    t.decimal "price_per_gallon", precision: 8, scale: 3
+    t.decimal "total_cost", precision: 10, scale: 2
+    t.integer "odometer"
+    t.datetime "fueled_at", null: false
+    t.string "client_uuid"
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["client_uuid"], name: "index_fuel_logs_on_client_uuid", unique: true
+    t.index ["vehicle_id", "fueled_at"], name: "index_fuel_logs_on_vehicle_id_and_fueled_at"
+  end
+
   create_table "help_questions", force: :cascade do |t|
     t.integer "user_id"
     t.integer "provider_id"
@@ -1055,6 +1075,7 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.string "error"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "fuel_log_id"
     t.index ["run_id"], name: "index_reading_scans_on_run_id"
     t.index ["vehicle_inspection_report_id"], name: "index_reading_scans_on_vehicle_inspection_report_id"
   end

@@ -1,0 +1,43 @@
+-# Fuel taken by this bus (tablet 1.0.34): "Log fuel" mid-shift and the post-trip's gallons.
+- logs = FuelLog.where(vehicle_id: @vehicle.id).includes(:driver, :run, :reading_scans).recent.limit(15)
+- month = FuelLog.where(vehicle_id: @vehicle.id, fueled_at: 30.days.ago..)
+.panel.panel-primary.fuel-panel
+  .panel-heading
+    Fuel
+    - if month.exists?
+      %span.pull-right{style: "font-weight: normal;"}
+        Last 30 days: #{number_with_precision(month.sum(:gallons), precision: 1, delimiter: ",")} gal
+        - cost = month.sum(:total_cost)
+        - if cost.positive?
+          · #{number_to_currency(cost)} where the pump photo showed it
+  - if logs.empty?
+    .panel-body
+      %p.text-muted{style: "margin: 0;"} No fuel logged yet. Drivers log it from the tablet: Log fuel during a shift, or Gallons Fueled on the post-trip.
+  - else
+    %table.table.table-striped.table-condensed{style: "margin: 0;"}
+      %thead
+        %tr
+          %th When
+          %th Driver
+          %th Run
+          %th.text-right Gallons
+          %th.text-right $/gal
+          %th.text-right Total
+          %th.text-right Odometer
+          %th
+      %tbody
+        - logs.each do |l|
+          %tr
+            %td
+              = l.fueled_at.in_time_zone.strftime("%-m/%-d %-l:%M %p")
+              %span.label{class: l.source == "mid_shift" ? "label-info" : "label-default", style: "margin-left: 4px;"}= l.source == "mid_shift" ? "Mid-shift" : "End of shift"
+            %td= l.driver&.user_name.presence || l.driver&.name
+            %td= l.run&.name
+            %td.text-right= number_with_precision(l.gallons, precision: 3, strip_insignificant_zeros: true)
+            %td.text-right= l.price_per_gallon ? number_to_currency(l.price_per_gallon, precision: 3) : ""
+            %td.text-right= l.total_cost ? number_to_currency(l.total_cost) : ""
+            %td.text-right= l.odometer ? number_with_delimiter(l.odometer) : ""
+            %td
+              - photo = l.pump_scan&.photo
+              - if photo&.attached?
+                = link_to "Pump photo", rails_blob_path(photo, disposition: "inline"), target: "_blank"

@@ -563,6 +563,7 @@ Rails.application.routes.draw do
         resources :inspection_reports, only: [:show, :create]
         post 'inspection_items/:id/photos' => 'inspection_reports#add_photo'
         post 'scans' => 'scans#create'   # odometer / fuel-pump photo -> reading (1.0.34)
+        post 'fuel_logs' => 'fuel_logs#create'   # "Log fuel" mid-shift (1.0.34)
 
         get 'manifest' => 'itineraries#index'
         resources :itineraries, only: [:index, :show, :update] do

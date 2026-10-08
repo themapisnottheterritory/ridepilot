@@ -86,7 +86,8 @@ class Api::V1::Driver::InspectionReportsController < Api::V1::Driver::BaseContro
         )
       end
       report.refresh_defects!
-      link_scans(report)
+      # the post-trip's gallons go in fuel_logs too, beside mid-shift fills
+      FuelLog.record_post_trip!(report, link_scans(report))
       report.push_defects_to_maintenance! if report.has_defects
     end
 
@@ -114,11 +115,11 @@ class Api::V1::Driver::InspectionReportsController < Api::V1::Driver::BaseContro
 
   # The scans (1.0.34) behind this report's odometer and gallons: tie them to
   # the report and keep the number the driver submitted, to see how often a
-  # scan needed correcting.
+  # scan needed correcting. Returns the scans.
   def link_scans(report)
     ids = Array(params[:scan_ids]).map(&:to_i).reject(&:zero?)
-    return if ids.empty?
-    ReadingScan.where(id: ids, driver_id: @driver.id, vehicle_inspection_report_id: nil).find_each do |scan|
+    return [] if ids.empty?
+    ReadingScan.where(id: ids, driver_id: @driver.id, vehicle_inspection_report_id: nil).to_a.each do |scan|
       kept = scan.kind == "odometer" ? report.odometer : report.gallons
       scan.update!(vehicle_inspection_report: report, accepted_value: kept)
     end

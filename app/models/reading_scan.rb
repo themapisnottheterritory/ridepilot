@@ -7,6 +7,7 @@ class ReadingScan < ApplicationRecord
   belongs_to :vehicle, optional: true
   belongs_to :driver, optional: true
   belongs_to :vehicle_inspection_report, optional: true
+  belongs_to :fuel_log, optional: true
   has_one_attached :photo
 
   validates :kind, inclusion: { in: KINDS }
