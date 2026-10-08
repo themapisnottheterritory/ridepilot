@@ -11,7 +11,7 @@
       %p.col-sm-12{style: 'padding: 0px;'}
         %span.pull-left{style:'max-width: 250px;'} 
           = pickup_addr.address
-        %span.pull-right
+        %span.pull-right{style: 'font-weight: 800; text-transform: uppercase;'}
           = pickup_addr.city
       - if pickup_addr.notes
         %br
@@ -96,7 +96,7 @@
       %p.col-sm-12{style: 'padding: 0px;'}
         %span.pull-left{style:'max-width: 250px;'} 
           = dropoff_addr.address
-        %span.pull-right
+        %span.pull-right{style: 'font-weight: 800; text-transform: uppercase;'}
           = dropoff_addr.city
       - if dropoff_addr.notes
         %br

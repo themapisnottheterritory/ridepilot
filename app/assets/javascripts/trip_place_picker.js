@@ -123,7 +123,7 @@ function bind_address_field(type) {
   // The text the box was loaded with, and the binding that belongs to it.
   var bound = {};
   function remember() {
-    bound = {text: $text.val(), id: $id.val(), data: $data.val(), notes: $notes.val()};
+    bound = {text: $text.val(), id: $id.val(), data: $data.val(), notes: $notes.val(), place: bound.place};
   }
   function unbind() {
     $id.val('');
@@ -139,8 +139,10 @@ function bind_address_field(type) {
       $id.val(bound.id);
       $data.val(bound.data);
       $notes.val(bound.notes);
+      town_note($text, bound.place);
     } else {
       unbind();
+      town_note($text, null);
     }
   });
 
@@ -150,6 +152,8 @@ function bind_address_field(type) {
     // Clear first: switching from a saved address to a geocoded one otherwise
     // leaves the old id set, and the server prefers the id over the new data.
     unbind();
+    bound.place = source == 'saved_places' ? addr : null;
+    town_note($text, bound.place);
     if (source == 'saved_places') {
       $id.val(addr.id);
       $notes.val(addr.notes);
@@ -161,6 +165,29 @@ function bind_address_field(type) {
     // writes the box's value around this event, not before it.
     setTimeout(remember, 0);
   });
+}
+
+// After picking a saved place in another town than the rider's, a one-line
+// note under the box: "This place is in Cuero, about 28 miles from the rider's
+// home in Victoria." A reminder, not a block (the approved mockup, Phil
+// 2026-10-06). Gone again when the box is edited.
+function town_note($text, place) {
+  var $box = $text.closest('.address_container');
+  $box.find('.pp-note').remove();
+  if (!place || place.home_town !== false || !place.town) { return; }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function(c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  var text = 'This place is in ' + esc(place.town);
+  if (place.miles_from_home != null) {
+    text += ', about ' + esc(place.miles_from_home) + ' miles from the rider\'s home';
+    if (place.rider_town) { text += ' in ' + esc(place.rider_town); }
+  } else if (place.rider_town) {
+    text += ', not the rider\'s town (' + esc(place.rider_town) + ')';
+  }
+  $box.append('<div class="pp-note" role="status"><span class="town-chip away">' + esc(place.town) + '</span>' + text + '.</div>');
 }
 
 $(function() {

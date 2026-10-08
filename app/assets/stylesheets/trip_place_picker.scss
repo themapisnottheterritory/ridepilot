@@ -41,3 +41,16 @@
 .pp-dist { display: block; font-size: 11.5px; color: #5f6b7a; white-space: nowrap; margin-top: 2px; }
 .tt-suggestion .pp-row { padding: 3px 0; }
 .tt-suggestion + .tt-suggestion { border-top: 1px solid #eef1f5; }
+
+/* A place's town as a badge (TownBadgeHelper#town_badge, the Trips list,
+   Dispatch): green = the rider's town, amber = another town. */
+.town-chip { display: inline-block; margin-top: 3px; font-size: 11px; font-weight: 700; letter-spacing: .05em;
+             text-transform: uppercase; padding: 1px 7px; border-radius: 4px; background: #eef2f8; color: #12264F;
+             white-space: nowrap; vertical-align: middle; }
+.town-chip.home { background: #e3f3ea; color: #19663a; }
+.town-chip.away { background: #fff3dc; color: #8a5a00; }
+/* After picking a saved place in another town, beside the trip form's field. */
+.pp-note { margin-top: 6px; padding: 6px 10px; border-radius: 4px; background: #fff3dc; color: #8a5a00; font-size: 13px; width: 100%; }
+.pp-note .town-chip { margin: 0 6px 0 0; background: #ffe6b3; }
+/* Saved places: a name that other towns use too */
+.same-name-towns { display: block; font-size: 11.5px; color: #8a5a00; }

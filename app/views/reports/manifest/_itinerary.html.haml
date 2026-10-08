@@ -43,7 +43,12 @@
     - if address
       - if address.name.present? && address.name != address.address
         %b= address.name
-      %div= [address.address, address.city].compact.reject(&:blank?).join(", ")
+      -# the town in bold: 30 saved-place names are used in more than one town
+      %div
+        = address.address
+        - if address.city.present?
+          = "," if address.address.present?
+          %strong= address.city
     - if address_notes.present?
       .ms-note= address_notes
     - if is_pickup && trip.notes.present?

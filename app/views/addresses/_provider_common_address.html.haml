@@ -2,13 +2,16 @@
 -# permission checks come in precomputed as row_context rather than being looked up per row --
 -# each translate_helper is several DB-backed lookups. Callers without it still work.
 - ctx = local_assigns[:row_context] || provider_common_address_row_context
-%tr
+- others = (@other_towns || {})[address.name.to_s.strip.downcase].to_a.reject { |t| t.casecmp?(address.city.to_s.strip) }
+%tr{class: ('same-name' if others.any?)}
   %td
     = address.address_group.try(:name)
   %td.name
     = link_to_if ctx[:can_edit_common], address.name || '' , edit_provider_common_address_path(address)
     - if address.the_geom.nil?
       %span.label.label-danger.not-on-map{title: "No map location, so this address won't come up when booking trips"} Not on map
+    - if others.any?
+      %span.same-name-towns.no-export{title: "Other saved places have this name"}= "also in #{others.join(', ')}"
   %td= address.coded_by_lat_lng? ? address.address_text : address.address
   %td= address.city
   %td= address.county

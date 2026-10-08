@@ -42,8 +42,14 @@
         %td= simple_format [trip.customer.phone_number_1, trip.customer.phone_number_2].compact.join('<br>')
         %td= format_time_for_listing(trip.pickup_time)
         %td= format_time_for_listing(trip.appointment_time) if trip.appointment_time
-        %td= trip.pickup_address.try(:one_line_text)
-        %td= trip.dropoff_address.try(:one_line_text)
+        %td
+          = trip.pickup_address.try(:one_line_text)
+          %br
+          = town_badge(trip.pickup_address, trip.customer&.address)
+        %td
+          = trip.dropoff_address.try(:one_line_text)
+          %br
+          = town_badge(trip.dropoff_address, trip.customer&.address)
         %td
           = trip.trip_size
           - if trip.ridership_mobilities.has_capacity.empty?

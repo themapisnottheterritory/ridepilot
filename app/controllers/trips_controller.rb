@@ -623,9 +623,9 @@ class TripsController < ApplicationController
   end
 
   def filter_trips
-    @trips = Trip.for_provider(current_provider_id).includes(:customer, :pickup_address, {:run => [:driver, :vehicle]}).distinct
+    @trips = Trip.for_provider(current_provider_id).includes({customer: :address}, :pickup_address, {:run => [:driver, :vehicle]}).distinct
     .references(:customer, :pickup_address, {:run => [:driver, :vehicle]}).order(:pickup_time)
-    .preload(ridership_mobilities: :mobility)   # mobility icon
+    .preload(:dropoff_address, ridership_mobilities: :mobility)   # town badges; mobility icon
 
     filters_hash = params[:trip_filters] || {}
 

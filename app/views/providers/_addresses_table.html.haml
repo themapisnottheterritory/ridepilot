@@ -1,3 +1,9 @@
+-# Names used by places in more than one town ("Dialysis" in Victoria,
+-# Cuero and Edna): each says which other towns, and the box lists only those.
+%label{style: 'font-weight: normal;'}
+  %input#same-name-only{type: 'checkbox'}
+  Only names used in more than one town
+  %span.text-muted= "(#{@other_towns.size})" if @other_towns
 %table.table.table-bordered#address_results
   %thead
     %tr
@@ -8,7 +14,7 @@
       %th= translate_helper("address_group")
       %th= translate_helper("address_results_name_column")
       %th= translate_helper("address")
-      %th= translate_helper("city")
+      %th Town
       -# State was dropped -- all 2,788 provider addresses are TX, so the column
       -# only ever repeated itself. County took the space once it stopped sharing
       -# a field with the address type and got a column of its own.
@@ -24,5 +30,10 @@
 
 :javascript
   $(function() {
-    $('#address_results').dataTable();
+    $.fn.dataTableExt.afnFiltering.push(function(settings, data, i) {
+      if (settings.nTable.id !== 'address_results' || !$('#same-name-only').is(':checked')) return true;
+      return $(settings.aoData[i].nTr).hasClass('same-name');
+    });
+    var table = $('#address_results').dataTable();
+    $('#same-name-only').on('change', function() { table.fnDraw(); });
   });

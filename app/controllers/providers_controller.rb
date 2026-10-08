@@ -332,6 +332,10 @@ class ProvidersController < ApplicationController
   def addresses
     # Every row reads its address group; load them all in one query rather than one per row.
     @addresses = @provider.addresses.includes(:address_group)
+    # { "dialysis" => ["Cuero", "Edna", "Victoria"] } for names more than one town uses
+    @other_towns = @provider.addresses.where.not(name: [nil, ""]).where.not(city: [nil, ""])
+      .group(Arel.sql("lower(trim(name))")).having("count(distinct lower(trim(city))) > 1")
+      .pluck(Arel.sql("lower(trim(name))"), Arel.sql("array_agg(distinct trim(city) order by trim(city))")).to_h
   end
 
   def customers

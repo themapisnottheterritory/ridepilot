@@ -52,7 +52,10 @@
           %td
             = mobility_icon(trip)
             %span{data: {customer_card: trip.customer_id}}= trip.customer.try(:name)
-          %td= itin.address.try(:one_line_text)
+          %td
+            = itin.address.try(:one_line_text)
+            %br
+            = town_badge(itin.address, trip.customer&.address)
           %td= format_time_for_listing(itin.time)
           - if run_date_today_or_future
             %td.itinerary_eta= format_time_for_listing(itin.eta)

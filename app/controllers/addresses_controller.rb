@@ -195,6 +195,8 @@ class AddressesController < ApplicationController
     # only when free text came back empty -- meant a poor first answer hid the
     # right second one, and the dispatcher saw only the poor one.
     typed_number = term[/\A\s*(\d+)/, 1]
+    # a name with no house number and no town ("walmart"): our own area first
+    @name_search = typed_number.nil? && @town_hint.nil?
     # with a house number typed, an answer's road has to be the street typed
     # ("11840 FM957" answered "11840 James Avenue"; road_matches?)
     @street_words = street_words(without_town(strip_unit(split_town(term).first).sub(/\A\s*\d+[a-z]?\s+/i, ''))) if typed_number
@@ -477,6 +479,7 @@ class AddressesController < ApplicationController
       json = a.json.merge(town: a.city.to_s.strip.presence)
       if home_town
         json[:home_town] = a.city.to_s.strip.downcase == home_town
+        json[:rider_town] = home.city.to_s.strip
         if !json[:home_town] && home.latitude && a.latitude
           json[:miles_from_home] = miles_between(home.latitude, home.longitude, a.latitude, a.longitude).round
         end
@@ -546,16 +549,21 @@ class AddressesController < ApplicationController
   # While an address search runs (@keep_local), map answers far from the town
   # typed are dropped as they arrive, so a wrong-town hit can't end the search
   # early. A town's own lookup (near_town) is never filtered.
+  #
+  # A search by name alone asks inside the towns we serve first, then, when
+  # nothing there matches, the provider's whole box (the VA hospital in
+  # Houston is a real trip).
   def nominatim_suggest(search_params)
-    results = nominatim_fetch(search_params)
+    results = nominatim_fetch(search_params, served_only: @name_search)
+    results = nominatim_fetch(search_params) if results.empty? && @name_search
     @keep_local && (search_params.key?(:q) || search_params.key?(:street)) ? keep_local(results) : results
   end
 
-  def nominatim_fetch(search_params)
+  def nominatim_fetch(search_params, served_only: false)
     base  = ENV['NOMINATIM_URL'] || 'http://10.0.0.18:8088'
-    query = { format: 'json', addressdetails: 1, countrycodes: 'us', limit: 5 }.merge(search_params)
+    query = { format: 'json', addressdetails: 1, countrycodes: 'us', limit: served_only ? 10 : 5 }.merge(search_params)
 
-    bounds = Utility.new.get_provider_bounds(current_provider)
+    bounds = (served_only && TownCentres.served_box) || Utility.new.get_provider_bounds(current_provider)
     if bounds
       query[:viewbox] = "#{bounds[:min_lon]},#{bounds[:max_lat]},#{bounds[:max_lon]},#{bounds[:min_lat]}"
       query[:bounded] = 1

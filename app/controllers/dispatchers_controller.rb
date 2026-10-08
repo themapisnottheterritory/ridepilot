@@ -250,7 +250,7 @@ class DispatchersController < ApplicationController
     @runs = @runs.where(id: filters_hash[:run_id]) unless filters_hash[:run_id].blank?
     filter_runs
 
-    @trips = Trip.has_scheduled_time.for_provider(current_provider_id).includes(:customer, :pickup_address, :run)
+    @trips = Trip.has_scheduled_time.for_provider(current_provider_id).includes({customer: :address}, :pickup_address, :run)
     .references(:customer, :pickup_address, :run).order(:pickup_time)
     .preload(ridership_mobilities: :mobility)   # mobility icon
     # Exclude trips with following result codes from trips-runs page

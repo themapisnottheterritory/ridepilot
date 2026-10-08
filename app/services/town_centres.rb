@@ -71,6 +71,23 @@ module TownCentres
     2 * 3958.8 * Math.asin(Math.sqrt(a))
   end
 
+  # The box around the towns we serve, a few miles wide of the outermost:
+  # { min_lat:, max_lat:, min_lon:, max_lon: }. The provider's own box runs
+  # from San Antonio to Houston, so a search by name alone ("walmart",
+  # "dialysis") got Nominatim's five best in Houston and Conroe, and none of
+  # ours. Name searches ask inside this box first (AddressesController
+  # #nominatim_fetch).
+  SERVED_BOX_PAD = 0.15   # degrees, about 10 miles
+
+  def served_box
+    towns = all.values.select { |t| t[:n] >= SERVED_MIN_ADDRESSES }
+    return nil if towns.empty?
+    lats = towns.map { |t| t[:lat] }
+    lons = towns.map { |t| t[:lon] }
+    { min_lat: lats.min - SERVED_BOX_PAD, max_lat: lats.max + SERVED_BOX_PAD,
+      min_lon: lons.min - SERVED_BOX_PAD, max_lon: lons.max + SERVED_BOX_PAD }
+  end
+
   # Near one of the towns we serve
   def served?(lat, lon)
     all.values.any? { |t| t[:n] >= SERVED_MIN_ADDRESSES && miles(t, lat, lon) <= SERVED_RADIUS_MILES }
