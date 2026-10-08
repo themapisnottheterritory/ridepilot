@@ -21,6 +21,15 @@
   for: admins
   body: |
     On a saved place's edit page, the red **Merge** (or **Delete**) button had been going to an error page. It now opens the dialog again: pick the place to merge into and **Confirm**. Merging now moves everything that uses the old place to the new one, including standing trips and stops already on runs, not only trips.
+- added: "2026-10-08 14:35"
+  title: Gulf Bend Center trips go to 6502 Nursery Dr
+  body: |
+    The saved place **Gulf Bend Center** had a wrong address (1408 Melrose). It's now **6502 Nursery Drive**, pinned on the building, and its trips and standing trips go there, so drivers are sent to Nursery Dr from now on. The other "6502 Nursery Dr" saved places were re-pinned to the same building.
+- added: "2026-10-08 14:30"
+  title: "Purple stops at Gulf Bend Center"
+  apps: [fixed]
+  body: |
+    Purple now has a stop at **Gulf Bend Center** (6502 Nursery Dr, stop 165), just past DeTar North: Northbound arrives about :23 and Southbound leaves about :24 each hour, then serves DeTar North at :24:32 as before. Riders' apps and the trip planner show the new stop.
 - added: "2026-10-08 11:36"
   title: The town shows on trips, Dispatch, manifests and Saved places
   body: |

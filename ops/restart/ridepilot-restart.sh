@@ -15,6 +15,7 @@
 #   ops/restart/ridepilot-restart.sh --in 5
 #   ops/restart/ridepilot-restart.sh --phased
 #   add --dry-run to check everything and post nothing.
+#   add --no-note when the change is one staff won't notice (see What's New below).
 #   --cancel takes a posted notice down; a countdown in progress then stops
 #   without restarting (it checks every 10 s). Only one restart runs at a time.
 #
@@ -23,6 +24,12 @@
 # nginx's config is valid. After the restart it waits up to 3 minutes for RidePilot
 # to answer; if it doesn't, the banner says so, an alert line goes to
 # ~/ridepilot-health-ALERTS.log and the script exits 1. Log: ~/ridepilot-restart.log
+#
+# What's New: when app/ or config/ changed since the running build and
+# config/whats_new.yml did not, it stops and lists the commits, because staff
+# read /whats_new to learn what changed (they noticed when it lagged, Oct 8).
+# Add the note in the same deploy, or pass --no-note for a change nobody will
+# notice (a spec, a log line, a refactor).
 #
 # Environment overrides (used by the staging test on .15): APP, SIDEKIQ, WEB, APPDIR, URL.
 set -uo pipefail
@@ -35,7 +42,7 @@ LOG=${LOG:-$HOME/ridepilot-restart.log}
 ALERTS=${ALERTS:-$HOME/ridepilot-health-ALERTS.log}
 NOTICE_DIR=/var/www/notice
 MESSAGE="RidePilot will restart for updates"
-AT=""; IN=""; PHASED=0; DRY=0; CANCEL=0; FORCE=0
+AT=""; IN=""; PHASED=0; DRY=0; CANCEL=0; FORCE=0; NO_NOTE=0
 
 log() { echo "$(TZ=America/Chicago date '+%F %T %Z') $*" | tee -a "$LOG"; }
 die() { log "STOP: $*"; exit 1; }
@@ -49,6 +56,7 @@ while [ $# -gt 0 ]; do
     --dry-run) DRY=1; shift ;;
     --cancel) CANCEL=1; shift ;;
     --force) FORCE=1; shift ;;   # skip the "everything committed" check
+    --no-note) NO_NOTE=1; shift ;;   # nothing staff will notice: no What's New note needed
     *) die "unknown option $1 (see the top of this file)" ;;
   esac
 done
@@ -108,6 +116,14 @@ fi
 docker exec "$WEB" nginx -t >/dev/null 2>&1 || die "nginx config test failed (docker exec $WEB nginx -t)"
 if [ -n "$running" ] && [ -n "$(git diff --name-only "$running" HEAD -- docker-compose.yml 2>/dev/null)" ]; then
   log "note: docker-compose.yml changed since $running; a restart doesn't apply it: recreate the service (docker-compose up -d --no-deps <service>)"
+fi
+
+# A change staff will notice needs its What's New note in the same deploy.
+if [ -n "$running" ] && [ "$NO_NOTE" = 0 ] &&
+   [ -n "$(git diff --name-only "$running" HEAD -- app config ':(exclude)config/whats_new.yml' 2>/dev/null)" ] &&
+   [ -z "$(git diff --name-only "$running" HEAD -- config/whats_new.yml 2>/dev/null)" ]; then
+  git log --format='    %h %s' "$running..HEAD" -- app config | tee -a "$LOG"
+  die "no What's New note for the commits above: add one to config/whats_new.yml, or pass --no-note if staff won't notice"
 fi
 
 if [ "$DRY" = 1 ]; then log "dry run: all checks passed, nothing posted or restarted"; exit 0; fi
