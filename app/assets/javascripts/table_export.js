@@ -7,6 +7,7 @@
 // Columns with no heading and no text (tick boxes, edit icons) are left out.
 (function () {
   var SELECTOR = 'table';
+  var ACTIONS = /^(view|edit|delete|remove|show|open|details|select|cancel)$/i;
 
   function clean(s) {
     return (s || '').replace(/ /g, ' ').split('\n')
@@ -17,6 +18,8 @@
   function cellText(cell) {
     var copy = cell.cloneNode(true);
     $(copy).find('input, select, button, .no-export, script, style').remove();
+    // plain action links (View, Edit, Delete) aren't data
+    $(copy).find('a').filter(function () { return ACTIONS.test($(this).text().trim()); }).remove();
     // innerText keeps line breaks, but only on attached nodes
     var holder = document.createElement('div');
     holder.style.position = 'absolute'; holder.style.left = '-99999px';
@@ -52,11 +55,12 @@
     }).filter(function (r) { return r.some(function (c) { return c; }); });
     // a column with no heading is kept only if it says different things
     // per row: tick boxes and View / Edit links are left out
+    // and a column that's empty in every row (a form field) says nothing
     var keep = heads.map(function (h, i) {
-      if (h) return true;
       var seen = {};
       rows.forEach(function (r) { if (r[i]) seen[r[i]] = 1; });
-      return Object.keys(seen).length > 1;
+      var n = Object.keys(seen).length;
+      return h ? n > 0 : n > 1;
     });
     return {
       title: heading(table),
@@ -81,7 +85,8 @@
     if (!$(table).is('[data-export]')) {
       // not layout tables, pickers, or tables inside forms, dialogs or other tables
       if ($(table).parents('table, .modal, form, .dataTables_scrollBody, .ui-datepicker, .wc-container, .popover').length) return;
-      if (!$(table).children('thead').find('th').length) return;
+      // no heading text, no data table (the Dispatch run list draws its own)
+      if (!$(table).children('thead').find('th').toArray().some(function (th) { return clean(th.textContent); })) return;
     }
     if (bodyRows(table).length < 1) return;
     table.setAttribute('data-export-ready', '1');
