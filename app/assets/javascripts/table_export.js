@@ -28,6 +28,11 @@
     return clean(t);
   }
 
+  // a heading's text; a sticky-header copy (floatThead) leaves the name in aria-label
+  function headText(th) {
+    return cellText(th) || clean(th.getAttribute('aria-label') || th.getAttribute('title') || '');
+  }
+
   function bodyRows(table) {
     if ($.fn.dataTable && $.fn.dataTable.isDataTable && $.fn.dataTable.isDataTable(table)) {
       return $(table).DataTable().rows({ search: 'applied' }).nodes().toArray();
@@ -49,7 +54,7 @@
   }
 
   function collect(table) {
-    var heads = $(table).children('thead').find('tr').last().children('th, td').toArray().map(cellText);
+    var heads = $(table).children('thead').find('tr').last().children('th, td').toArray().map(headText);
     var rows = bodyRows(table).map(function (tr) {
       return $(tr).children('td, th').toArray().map(cellText);
     }).filter(function (r) { return r.some(function (c) { return c; }); });
@@ -65,7 +70,7 @@
     return {
       title: heading(table),
       subtitle: $(table).data('export-subtitle') || '',
-      columns: heads.filter(function (h, i) { return keep[i]; }).map(function (h, i) { return h || ('Column ' + (i + 1)); }),
+      columns: heads.filter(function (h, i) { return keep[i]; }).map(function (h) { return h || 'Tags'; }),
       rows: rows.map(function (r) { return r.filter(function (c, i) { return keep[i]; }); }),
       page_only: $(table).nextAll('.pagination, div.pagination').length > 0 || $(table).parent().nextAll('.pagination, div.pagination').length > 0
     };
@@ -85,8 +90,8 @@
     if (!$(table).is('[data-export]')) {
       // not layout tables, pickers, or tables inside forms, dialogs or other tables
       if ($(table).parents('table, .modal, form, .dataTables_scrollBody, .ui-datepicker, .wc-container, .popover').length) return;
-      // no heading text, no data table (the Dispatch run list draws its own)
-      if (!$(table).children('thead').find('th').toArray().some(function (th) { return clean(th.textContent); })) return;
+      // no heading text, no data table
+      if (!$(table).children('thead').find('th').toArray().some(function (th) { return headText(th); })) return;
     }
     if (bodyRows(table).length < 1) return;
     table.setAttribute('data-export-ready', '1');
