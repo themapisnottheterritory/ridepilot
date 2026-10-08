@@ -78,13 +78,22 @@ class RunLogReport
       one = self.class.new(provider_ids: [pid], start_date: @start_date, end_date: @end_date, gps: @gps, road: @road, compare: @compare)
       (@start_date...@end_date).each do |day|
         next if day > Date.current
-        built = day < Date.current ? MEMORY.fetch(one.send(:day_key, day), expires_in: 400.days) { one.send(:build_day, day) } : one.send(:build_day, day)
+        # kept only once the day is over and the nightly GPS build has covered it
+        keep = day < Date.current && gps_built_through.to_s >= day.to_s
+        built = keep ? MEMORY.fetch(one.send(:day_key, day), expires_in: 400.days) { one.send(:build_day, day) } : one.send(:build_day, day)
         @rows.concat(built[:rows])
         @commuter_without_data += built[:commuter_without_data]
       end
     end
     @rows.sort_by! { |r| [MODES.index(r.mode) || 9, r.date, r.driver.to_s.downcase, r.route.to_s, r.first_pickup_at || r.start_at || r.date.in_time_zone] }
     self
+  end
+
+  # The last day the published-vs-driven build has GPS trips for (its 07:15 run
+  # covers yesterday). A day after that would be kept without its fixed-route
+  # and commuter rows.
+  def gps_built_through
+    @gps_built_through ||= Array(@compare.call("index.json")).map { |r| r["until"].to_s }.max
   end
 
   def self.build_day!(provider_ids, day, **opts)
