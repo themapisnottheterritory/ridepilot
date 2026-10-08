@@ -54,6 +54,16 @@ RSpec.describe "Odometer and pump scans", type: :request do
     expect(data).not_to have_key("price_worked_out")
   end
 
+  it "moves a misplaced decimal point in the total" do
+    data = scan("pump", '{"gallons": 16.995, "price_per_gallon": null, "total": 6.184}')
+    expect(data).to include("total" => 61.84, "total_fixed" => true, "price_per_gallon" => 3.639, "price_worked_out" => true)
+    data = scan("pump", '{"gallons": 16.995, "price_per_gallon": 3.639, "total": 618.4}')
+    expect(data).to include("total" => 61.84, "price_per_gallon" => 3.639)
+    expect(data).not_to have_key("price_worked_out")
+    data = scan("pump", '{"gallons": 22.151, "price_per_gallon": null, "total": 114.28}')
+    expect(data).not_to have_key("total_fixed")
+  end
+
   it "fails open when the model gives nothing" do
     data = scan("odometer", "")
     expect(data["read"]).to eq false

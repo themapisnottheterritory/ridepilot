@@ -86,12 +86,27 @@ class ScanReader
   # the total is replaced (pumps show the price to a tenth of a cent and the
   # total to the cent, so a real one always lands within that); a missing one
   # is filled in, and the reading says it was worked out.
+  # The model also misplaces the decimal point on seven-segment digits: Sam's
+  # Club showed $61.84 for 16.995 gal and it read 6.184 (tablet-03,
+  # 2026-10-08), $0.364/gal. No pump charges that, so a total whose price
+  # isn't between $1.50 and $8.00 a gallon is moved by tens until it is (or a
+  # read price that does add up decides it), and the reading says so.
+  PRICE_RANGE = (1.5..8.0)
+
   def check_price(out)
     g, t, p = out["gallons"], out["total"], out["price_per_gallon"]
     return out unless g.to_f.positive? && t.to_f.positive?
-    worked = (t / g).round(3)
-    return out if p && (p * g - t).abs <= 0.02 + t * 0.001
-    out.merge("price_per_gallon" => worked, "price_worked_out" => true)
+    return out if adds_up?(p, g, t)
+    shifted = [10, 100, 0.1].map { |f| (t * f).round(2) }
+    fixed = shifted.find { |x| adds_up?(p, g, x) } if p
+    fixed ||= shifted.find { |x| PRICE_RANGE.cover?(x / g) } unless PRICE_RANGE.cover?(t / g)
+    out = out.merge("total" => fixed, "total_fixed" => true) if fixed
+    return out if adds_up?(p, g, out["total"])
+    out.merge("price_per_gallon" => (out["total"] / g).round(3), "price_worked_out" => true)
+  end
+
+  def adds_up?(p, g, t)
+    p && (p * g - t).abs <= 0.02 + t * 0.001
   end
 
   def number(v, whole: false)
