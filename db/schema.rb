@@ -1041,6 +1041,24 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.index ["run_id"], name: "index_public_itineraries_on_run_id"
   end
 
+  create_table "reading_scans", force: :cascade do |t|
+    t.string "kind", null: false
+    t.bigint "run_id"
+    t.bigint "vehicle_id"
+    t.bigint "driver_id"
+    t.bigint "provider_id"
+    t.bigint "vehicle_inspection_report_id"
+    t.jsonb "reading", default: {}, null: false
+    t.decimal "value", precision: 10, scale: 2
+    t.decimal "accepted_value", precision: 10, scale: 2
+    t.integer "ms"
+    t.string "error"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["run_id"], name: "index_reading_scans_on_run_id"
+    t.index ["vehicle_inspection_report_id"], name: "index_reading_scans_on_vehicle_inspection_report_id"
+  end
+
   create_table "recurring_driver_compliances", id: :serial, force: :cascade do |t|
     t.integer "provider_id"
     t.string "event_name", limit: 255

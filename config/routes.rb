@@ -562,6 +562,7 @@ Rails.application.routes.draw do
         get 'inspection_prior_defects' => 'inspection_reports#prior_defects'
         resources :inspection_reports, only: [:show, :create]
         post 'inspection_items/:id/photos' => 'inspection_reports#add_photo'
+        post 'scans' => 'scans#create'   # odometer / fuel-pump photo -> reading (1.0.34)
 
         get 'manifest' => 'itineraries#index'
         resources :itineraries, only: [:index, :show, :update] do

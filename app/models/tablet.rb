@@ -186,6 +186,7 @@ class Tablet < ActiveRecord::Base
     out << [:warn, "Clock is off by #{clock_skew.abs / 60} min"] if clock_skew && clock_skew.abs > 120
     per_app_setup.each do |name, st|
       out << [:warn, "#{name} has no GPS permission"] if st["location"] == false
+      out << [:warn, "#{name} has no camera permission (pre-trip photos and scans)"] if st["camera"] == false
     end
     out
   end

@@ -86,6 +86,7 @@ class Api::V1::Driver::InspectionReportsController < Api::V1::Driver::BaseContro
         )
       end
       report.refresh_defects!
+      link_scans(report)
       report.push_defects_to_maintenance! if report.has_defects
     end
 
@@ -110,6 +111,18 @@ class Api::V1::Driver::InspectionReportsController < Api::V1::Driver::BaseContro
   # same rule on the server. Older apps, which filled in OK for the driver,
   # keep working until they update (a blank status there still means OK).
   NO_DEFAULTS_FROM_CODE = 35
+
+  # The scans (1.0.34) behind this report's odometer and gallons: tie them to
+  # the report and keep the number the driver submitted, to see how often a
+  # scan needed correcting.
+  def link_scans(report)
+    ids = Array(params[:scan_ids]).map(&:to_i).reject(&:zero?)
+    return if ids.empty?
+    ReadingScan.where(id: ids, driver_id: @driver.id, vehicle_inspection_report_id: nil).find_each do |scan|
+      kept = scan.kind == "odometer" ? report.odometer : report.gallons
+      scan.update!(vehicle_inspection_report: report, accepted_value: kept)
+    end
+  end
 
   def unanswered_check
     return nil if request.headers["X-App-Code"].to_i < NO_DEFAULTS_FROM_CODE
