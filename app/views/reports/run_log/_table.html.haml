@@ -58,56 +58,57 @@
       %b= "#{r.commuter_without_data} commuter #{r.commuter_without_data == 1 ? 'run has' : 'runs have'} nothing recorded"
       (no driver, bus or times in RidePilot) and are not listed. Commuter times and miles will come from GPS once commuter trips are matched like the city routes.
 
-  %table.table.table-condensed.table-striped.rl-table{data: {export_title: "Vehicle Summary by Run"}}
-    %thead
-      %tr
-        %th Mode
-        %th Date
-        %th Driver
-        %th Route
-        %th Bus #
-        %th Login / Start Shift Time
-        %th First Pickup Time
-        %th Last Dropoff Time
-        %th Logout / End Shift Time
-        %th{style: num} Login / Start Shift Odometer
-        %th{style: num} First Pickup Odometer
-        %th{style: num} Last Dropoff Odometer
-        %th{style: num} Logout / End Shift Odometer
-        %th Lunch In
-        %th Lunch Out
-        %th{style: num} UPT (Passengers)
-        %th{style: num} Total Revenue Time
-        %th{style: num} Total Revenue Miles
-        %th{style: num} Total Deadhead Time
-        %th{style: num} Total Deadhead Miles
-        %th Notes
-    %tbody
-      - r.rows.each do |row|
-        %tr{class: (row.complete? ? nil : "rl-short")}
-          %td
-            %span.rl-mode{class: mode_class[row.mode]}= row.mode
-          %td{style: "white-space: nowrap;"}= row.date.strftime("%m/%d/%Y")
-          %td= row.driver
-          %td
-            - if row.run_id
-              = link_to row.route, run_path(row.run_id)
-            - else
-              = row.route
-          %td= row.bus
-          %td{style: "white-space: nowrap;"}= clock.(row.start_at)
-          %td{style: "white-space: nowrap;"}= clock.(row.first_pickup_at)
-          %td{style: "white-space: nowrap;"}= clock.(row.last_dropoff_at)
-          %td{style: "white-space: nowrap;"}= clock.(row.end_at)
-          %td{style: num}= odo.(row.start_odo)
-          %td{style: num}= odo.(row.first_pickup_odo)
-          %td{style: num}= odo.(row.last_dropoff_odo)
-          %td{style: num}= odo.(row.end_odo)
-          %td= clock.(row.lunch_in)
-          %td= clock.(row.lunch_out)
-          %td{style: num}= row.upt
-          %td{style: num}= hrs.(row.revenue_hours)
-          %td{style: num}= mi.(row.revenue_miles)
-          %td{style: num}= hrs.(row.deadhead_hours)
-          %td{style: num}= mi.(row.deadhead_miles)
-          %td.notes= row.notes.join("; ")
+  .table-responsive
+    %table.table.table-condensed.table-striped.rl-table{data: {export_title: "Vehicle Summary by Run"}}
+      %thead
+        %tr
+          %th Mode
+          %th Date
+          %th Driver
+          %th Route
+          %th Bus #
+          %th Login / Start Shift Time
+          %th First Pickup Time
+          %th Last Dropoff Time
+          %th Logout / End Shift Time
+          %th{style: num} Login / Start Shift Odometer
+          %th{style: num} First Pickup Odometer
+          %th{style: num} Last Dropoff Odometer
+          %th{style: num} Logout / End Shift Odometer
+          %th Lunch In
+          %th Lunch Out
+          %th{style: num} UPT (Passengers)
+          %th{style: num} Total Revenue Time
+          %th{style: num} Total Revenue Miles
+          %th{style: num} Total Deadhead Time
+          %th{style: num} Total Deadhead Miles
+          %th Notes
+      %tbody
+        - r.rows.each do |row|
+          %tr{class: (row.complete? ? nil : "rl-short")}
+            %td
+              %span.rl-mode{class: mode_class[row.mode]}= row.mode
+            %td{style: "white-space: nowrap;"}= row.date.strftime("%m/%d/%Y")
+            %td= row.driver
+            %td
+              - if row.run_id
+                = link_to row.route, run_path(row.run_id)
+              - else
+                = row.route
+            %td= row.bus
+            %td{style: "white-space: nowrap;"}= clock.(row.start_at)
+            %td{style: "white-space: nowrap;"}= clock.(row.first_pickup_at)
+            %td{style: "white-space: nowrap;"}= clock.(row.last_dropoff_at)
+            %td{style: "white-space: nowrap;"}= clock.(row.end_at)
+            %td{style: num}= odo.(row.start_odo)
+            %td{style: num}= odo.(row.first_pickup_odo)
+            %td{style: num}= odo.(row.last_dropoff_odo)
+            %td{style: num}= odo.(row.end_odo)
+            %td= clock.(row.lunch_in)
+            %td= clock.(row.lunch_out)
+            %td{style: num}= row.upt
+            %td{style: num}= hrs.(row.revenue_hours)
+            %td{style: num}= mi.(row.revenue_miles)
+            %td{style: num}= hrs.(row.deadhead_hours)
+            %td{style: num}= mi.(row.deadhead_miles)
+            %td.notes= row.notes.join("; ")
