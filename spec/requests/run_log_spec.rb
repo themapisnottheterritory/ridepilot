@@ -24,7 +24,7 @@ RSpec.describe "Vehicle Summary by Run", type: :request do
   before do
     RunLogReport::MEMORY.clear
     comp = TripResult.find_by(code: "COMP") || TripResult.create!(code: "COMP", name: "Complete")
-    trip = create(:trip, provider: provider, run: udr, pickup_time: at.(8, 15), trip_result: comp, guest_count: 1)
+    trip = create(:trip, provider: provider, run: udr, pickup_time: at.(8, 15), trip_result: comp, guest_count: 1, drive_distance: 12.5)
     create(:itinerary, run: udr, trip: trip, leg_flag: 1, arrival_time: at.(8, 15), finish_time: at.(8, 17))
     create(:itinerary, run: udr, trip: trip, leg_flag: 2, arrival_time: at.(11, 58), finish_time: at.(12, 0))
     create(:run, provider: provider, date: day, name: "RVIC1")   # nothing recorded, no trips: left out
@@ -44,6 +44,7 @@ RSpec.describe "Vehicle Summary by Run", type: :request do
     expect(row.revenue_hours).to eq 3.75      # 8:15 to 12:00
     expect(row.deadhead_hours).to eq 0.75     # 8:00-8:15 and 12:00-12:30
     expect(row.upt).to eq 2                   # rider + guest
+    expect(row.pmt).to eq 25.0                # 12.5 road miles x 2 riders
     expect(row.notes).to include("Pick-up and drop-off odometers from GPS")
     expect(row).to be_complete
   end
@@ -61,6 +62,27 @@ RSpec.describe "Vehicle Summary by Run", type: :request do
     expect(row.notes).to include("Not closed out on the tablet")
     expect(row.last_dropoff_odo).to eq 50_032.0   # start + GPS to the first pick-up + GPS between
     expect(row).not_to be_complete
+  end
+
+  it "builds a commuter row from the GPS trips and the AM run's driver" do
+    route = FixedRoute.create!(provider: provider, name: "Vic1+Edna", kind: "commuter")
+    am = create(:run, provider: provider, date: day, name: "Victoria 1 AM", service_mode: "fixed_route", fixed_route: route)
+    pm = create(:run, provider: provider, date: day, name: "Victoria 1 PM", service_mode: "fixed_route", fixed_route: route)
+    blank = create(:run, provider: provider, date: day, name: "Edna PM", service_mode: "fixed_route",
+                         fixed_route: FixedRoute.create!(provider: provider, name: "Edna", kind: "commuter"), driver: nil, vehicle: nil)
+    trip = ->(dep, arr) { { "date" => day.to_s, "bus" => "1797", "dep" => dep, "stops" => [{ "arr" => dep }, { "arr" => arr }] } }
+    compare = lambda do |file|
+      { "index.json" => [{ "route_id" => "vic1-edna-inteplast", "name" => "Vic1 + Edna — Inteplast", "short_name" => "Vic1+Edna", "trips" => 2 }],
+        "vic1-edna-inteplast.json" => { "trips" => [trip.(5 * 3600 + 45 * 60, 7 * 3600), trip.(7 * 3600 + 20 * 60, 8 * 3600)] } }[file]
+    end
+    rows = RunLogReport.new(provider_ids: [provider.id], start_date: day, end_date: day + 1, gps: gps, compare: compare).run!
+    gps_row = rows.rows.find { |r| r.mode == "Commuter" && r.bus == "1797" }
+    expect(gps_row.run_id).to eq am.id                 # morning trips -> the AM run and its driver
+    expect(gps_row.first_pickup_at).to eq at.(5, 45)
+    expect(gps_row.last_dropoff_at).to eq at.(8)
+    no_gps = rows.rows.find { |r| r.mode == "Commuter" && r.run_id == pm.id }
+    expect(no_gps.notes.join).to include("No GPS")     # the PM run happened (it has a driver) but no GPS
+    expect(rows.commuter_without_data).to eq 1         # the Edna PM run, nothing recorded
   end
 
   it "keeps a finished day and rebuilds it when a run changes" do

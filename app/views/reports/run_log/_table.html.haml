@@ -25,7 +25,7 @@
   %p.rl-note
     Revenue time is the first pick-up to the last drop-off; deadhead is the start of the shift to the first pick-up plus the last drop-off to the end of the shift, the same for miles (as NTD counts demand response).
     Drivers enter the odometer only at the start and end of the shift, so the odometer at the first pick-up and the last drop-off is worked out from the bus's GPS where it reports one, otherwise from the road distance to the garage; each row's notes say which.
-    Fixed Route times and miles come from GPS. Rows shaded are missing something; the notes say what.
+    Fixed Route and Commuter times and miles come from GPS. PMT (passenger miles) is each completed demand-response trip's road miles times its riders; fixed-route PMT waits on boardings being counted. Rows shaded are missing something; the notes say what.
   %table.table.table-condensed.rl-table{data: {export_title: "Vehicle Summary by Run totals"}}
     %thead
       %tr
@@ -33,6 +33,8 @@
         %th{style: num} Runs
         %th{style: num} Complete
         %th{style: num} UPT (passengers)
+        %th{style: num} PMT (passenger miles)
+        %th{style: num} Avg trip length (mi)
         %th{style: num} Revenue time (hrs)
         %th{style: num} Revenue miles
         %th{style: num} Deadhead time (hrs)
@@ -49,6 +51,8 @@
           %td{style: num}= t[:runs]
           %td{style: num}= t[:complete]
           %td{style: num}= t[:upt]
+          %td{style: num}= mi.(t[:pmt])
+          %td{style: num}= t[:aptl] ? number_with_precision(t[:aptl], precision: 2) : ""
           %td{style: num}= hrs.(t[:revenue_hours])
           %td{style: num}= mi.(t[:revenue_miles])
           %td{style: num}= hrs.(t[:deadhead_hours])
@@ -56,7 +60,7 @@
   - if r.commuter_without_data.to_i > 0
     %p.rl-note
       %b= "#{r.commuter_without_data} commuter #{r.commuter_without_data == 1 ? 'run has' : 'runs have'} nothing recorded"
-      (no driver, bus or times in RidePilot) and are not listed. Commuter times and miles will come from GPS once commuter trips are matched like the city routes.
+      (no driver, bus or times in RidePilot, and no GPS: most commuter buses' modems don't report a position) and are not listed.
 
   .table-responsive
     %table.table.table-condensed.table-striped.rl-table{data: {export_title: "Vehicle Summary by Run"}}
@@ -78,6 +82,7 @@
           %th Lunch In
           %th Lunch Out
           %th{style: num} UPT (Passengers)
+          %th{style: num} PMT (Passenger Miles)
           %th{style: num} Total Revenue Time
           %th{style: num} Total Revenue Miles
           %th{style: num} Total Deadhead Time
@@ -107,6 +112,7 @@
             %td= clock.(row.lunch_in)
             %td= clock.(row.lunch_out)
             %td{style: num}= row.upt
+            %td{style: num}= mi.(row.pmt)
             %td{style: num}= hrs.(row.revenue_hours)
             %td{style: num}= mi.(row.revenue_miles)
             %td{style: num}= hrs.(row.deadhead_hours)

@@ -13,13 +13,19 @@
 # bus's GPS miles from the start of the shift to the first pick-up (and from
 # the last drop-off to the end) when the bus reports GPS, otherwise the road
 # distance from the garage, as the Vehicle Summary does. Each row says which.
+#
+# PMT (passenger miles, Shelby's NTD question): for demand response, each
+# completed trip's road miles pick-up to drop-off (trips.drive_distance) times
+# its riders (the rider, guests and attendants, as NTD counts them). Average
+# trip length = PMT / UPT. Fixed-route PMT needs boardings, which aren't
+# counted yet.
 class RunLogReport
   MODES = ["UDR", "Rural Demand Response", "Commuter", "Fixed Route"].freeze
   MAX_RUN_MILES = VehicleSummaryReport::MAX_RUN_MILES
 
   Row = Struct.new(:mode, :run_id, :date, :driver, :route, :bus, :start_at, :first_pickup_at, :last_dropoff_at, :end_at,
                    :start_odo, :first_pickup_odo, :last_dropoff_odo, :end_odo, :miles_by, :lunch_in, :lunch_out,
-                   :upt, :notes, :revenue_miles_direct, :deadhead_miles_direct, keyword_init: true) do
+                   :upt, :pmt, :notes, :revenue_miles_direct, :deadhead_miles_direct, keyword_init: true) do
     def revenue_hours = hours(first_pickup_at, last_dropoff_at)
 
     def deadhead_hours
@@ -53,7 +59,7 @@ class RunLogReport
   # stops or trips changes. ops cron builds yesterday each night, so the
   # report opens without waiting on GPS.
   MEMORY = ActiveSupport::Cache::FileStore.new(Rails.root.join("tmp", "cache", "run-log"))
-  VERSION = 2   # bump when the rows are worked out differently
+  VERSION = 3   # bump when the rows are worked out differently
 
   # gps: GpsMiles-like (#miles(unit, from, to)); road: ->(from_addr, to_addr) { miles }
   def initialize(provider_ids:, start_date:, end_date:, gps: nil, road: nil, compare: nil)
@@ -123,7 +129,12 @@ class RunLogReport
 
   def totals(rows)
     sum = ->(f) { rows.filter_map(&f).sum.round(2) }
-    { runs: rows.size, complete: rows.count(&:complete?), upt: rows.sum { |r| r.upt.to_i },
+    upt = rows.sum { |r| r.upt.to_i }
+    pmt_rows = rows.select(&:pmt)
+    pmt = pmt_rows.sum(&:pmt).round(1)
+    pmt_upt = pmt_rows.sum { |r| r.upt.to_i }
+    { runs: rows.size, complete: rows.count(&:complete?), upt: upt,
+      pmt: pmt_rows.any? ? pmt : nil, aptl: pmt_upt.positive? ? (pmt / pmt_upt).round(2) : nil,
       revenue_hours: sum.(:revenue_hours), revenue_miles: sum.(:revenue_miles),
       deadhead_hours: sum.(:deadhead_hours), deadhead_miles: sum.(:deadhead_miles) }
   end
@@ -186,7 +197,8 @@ class RunLogReport
     Row.new(mode: self.class.mode_for_run(run), run_id: run.id, date: run.date, driver: run.driver&.user_name,
             route: run.name, bus: unit, start_at: start_at, first_pickup_at: first_at, last_dropoff_at: last_at,
             end_at: end_at, start_odo: start_odo, first_pickup_odo: fp, last_dropoff_odo: ld, end_odo: end_odo,
-            miles_by: by, upt: done.sum(&:human_trip_size), notes: notes.compact.uniq)
+            miles_by: by, upt: done.sum(&:human_trip_size),
+            pmt: done.sum { |t| t.drive_distance.to_f * t.human_trip_size }.round(1), notes: notes.compact.uniq)
   end
 
   def gps_or_road(unit, from, to)
