@@ -1,0 +1,102 @@
+// Download any table as PDF, CSV or Excel (2026-10-08). A small "Download"
+// menu goes above every data table (Bootstrap .table, .basic-table, or a
+// DataTable) with at least one row. It sends what the table shows, after the
+// page's own filters, to TableExportsController, which makes the file.
+//   data-no-export      on a table (or around it): no menu
+//   data-export-title   / data-export-subtitle: name the file and the PDF
+// Columns with no heading and no text (tick boxes, edit icons) are left out.
+(function () {
+  var SELECTOR = 'table.table, table.basic-table, table.dataTable';
+
+  function clean(s) {
+    return (s || '').replace(/ /g, ' ').split('\n')
+      .map(function (l) { return l.replace(/\s+/g, ' ').trim(); })
+      .filter(function (l) { return l.length; }).join('\n');
+  }
+
+  function cellText(cell) {
+    var copy = cell.cloneNode(true);
+    $(copy).find('input, select, button, .no-export, script, style').remove();
+    // innerText keeps line breaks, but only on attached nodes
+    var holder = document.createElement('div');
+    holder.style.position = 'absolute'; holder.style.left = '-99999px';
+    holder.appendChild(copy); document.body.appendChild(holder);
+    var t = copy.innerText; document.body.removeChild(holder);
+    return clean(t);
+  }
+
+  function bodyRows(table) {
+    if ($.fn.dataTable && $.fn.dataTable.isDataTable && $.fn.dataTable.isDataTable(table)) {
+      return $(table).DataTable().rows({ search: 'applied' }).nodes().toArray();
+    }
+    return $(table).children('tbody').children('tr').filter(function () {
+      return this.style.display !== 'none' && !$(this).hasClass('no-export');
+    }).toArray();
+  }
+
+  function heading(table) {
+    var t = $(table).data('export-title');
+    if (t) return t;
+    var panel = $(table).closest('.panel').find('> .panel-heading').first().text();
+    var page = $('h1:visible, .page-header h2:visible, h2:visible').first().text();
+    var parts = [clean(page), clean(panel)].filter(function (x) { return x; });
+    return parts.join(': ').replace(/\n/g, ' ') || document.title;
+  }
+
+  function collect(table) {
+    var heads = $(table).children('thead').find('tr').last().children('th, td').toArray().map(cellText);
+    var rows = bodyRows(table).map(function (tr) {
+      return $(tr).children('td, th').toArray().map(cellText);
+    }).filter(function (r) { return r.some(function (c) { return c; }); });
+    var keep = heads.map(function (h, i) { return h || rows.some(function (r) { return r[i]; }); });
+    return {
+      title: heading(table),
+      subtitle: $(table).data('export-subtitle') || '',
+      columns: heads.filter(function (h, i) { return keep[i]; }).map(function (h, i) { return h || ('Column ' + (i + 1)); }),
+      rows: rows.map(function (r) { return r.filter(function (c, i) { return keep[i]; }); }),
+      page_only: $(table).nextAll('.pagination, div.pagination').length > 0 || $(table).parent().nextAll('.pagination, div.pagination').length > 0
+    };
+  }
+
+  function send(table, format) {
+    var form = $('<form method="post" target="_blank" style="display:none">').attr('action', '/table_exports');
+    form.append($('<input type="hidden" name="authenticity_token">').val($('meta[name=csrf-token]').attr('content')));
+    form.append($('<input type="hidden" name="export_format">').val(format));
+    form.append($('<input type="hidden" name="table">').val(JSON.stringify(collect(table))));
+    $('body').append(form); form.submit(); form.remove();
+  }
+
+  function attach(table) {
+    if (table.getAttribute('data-export-ready') || $(table).closest('[data-no-export]').length) return;
+    if ($(table).closest('.modal, form, .dataTables_scrollBody').length && !$(table).is('[data-export]')) return;
+    if (!$(table).children('thead').length || bodyRows(table).length < 1) return;
+    table.setAttribute('data-export-ready', '1');
+    var bar = $('<div class="tx-bar"><div class="btn-group">' +
+      '<button type="button" class="btn btn-default btn-xs dropdown-toggle tx-btn" data-toggle="dropdown">' +
+      '<i class="fa fa-download"></i> Download <span class="caret"></span></button>' +
+      '<ul class="dropdown-menu dropdown-menu-right">' +
+      '<li><a href="#" data-f="pdf"><i class="fa fa-file-pdf-o"></i> PDF</a></li>' +
+      '<li><a href="#" data-f="xlsx"><i class="fa fa-file-excel-o"></i> Excel</a></li>' +
+      '<li><a href="#" data-f="csv"><i class="fa fa-file-text-o"></i> CSV</a></li></ul></div></div>');
+    bar.on('click', 'a[data-f]', function (e) { e.preventDefault(); send(table, $(this).data('f')); });
+    var anchor = $(table).closest('.dataTables_wrapper');
+    (anchor.length ? anchor : $(table)).before(bar);
+  }
+
+  function scan() { $(SELECTOR).each(function () { attach(this); }); }
+
+  if (!document.getElementById('tx-style')) {
+    $('head').append('<style id="tx-style">' +
+      '.tx-bar { text-align: right; margin: 0 0 4px; }' +
+      '.tx-bar .tx-btn { color: #12264F; border-color: #12264F; font-weight: 600; }' +
+      '.tx-bar .tx-btn:hover, .tx-bar .open .tx-btn { background: #12264F; color: #fff; }' +
+      '@media print { .tx-bar { display: none; } }</style>');
+  }
+  $(scan);
+  // tables that arrive later (ajax lists, DataTables drawing)
+  var pending = null;
+  new MutationObserver(function () {
+    clearTimeout(pending); pending = setTimeout(scan, 400);
+  }).observe(document.documentElement, { childList: true, subtree: true });
+  window.TableExport = { scan: scan, collect: collect };
+})();

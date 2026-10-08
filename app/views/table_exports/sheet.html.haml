@@ -1,0 +1,56 @@
+-# A table as a PDF (TableExportsController), in the printed manifest's style.
+!!! 5
+%html
+  %head
+    %meta{charset: "utf-8"}
+    %title= @title
+    :css
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: 'Open Sans', 'DejaVu Sans', sans-serif; color: #131313; font-size: 8.5pt; line-height: 1.35; }
+      .tx-head { display: table; width: 100%; border-bottom: 2px solid #CC9900; padding-bottom: 6px; margin-bottom: 10px; }
+      .tx-head > div { display: table-cell; vertical-align: bottom; }
+      .tx-kicker { font-size: 9pt; color: #5f6b7a; text-transform: uppercase; letter-spacing: .08em; }
+      .tx-title { font-size: 20pt; font-weight: 700; color: #12264F; line-height: 1.1; }
+      .tx-sub { font-size: 9pt; color: #131313; margin-top: 2px; }
+      .tx-sum { text-align: right; width: 24%; }
+      .tx-chip { display: inline-block; padding: 2px 8px; border: 1px solid #12264F; border-radius: 9px; font-size: 9pt; color: #12264F; white-space: nowrap; }
+      .tx-chip b { font-size: 11pt; }
+      table { width: 100%; border-collapse: collapse; }
+      thead { display: table-header-group; }
+      th { background: #12264F; color: #fff; font-weight: 600; text-align: left; padding: 4px 5px; border: 1px solid #12264F; vertical-align: bottom; }
+      td { padding: 4px 5px; border-bottom: 1px solid #cfd6e4; vertical-align: top; word-wrap: break-word; }
+      tr { page-break-inside: avoid; }
+      tr.even td { background: #f4f6fa; }
+      td.num { text-align: right; white-space: nowrap; }
+      .tx-foot { margin-top: 8px; font-size: 7.5pt; color: #5f6b7a; }
+      .tx-note { margin-bottom: 8px; padding: 4px 8px; border: 1px solid #CC9900; background: #fff8e1; color: #6b4e00; font-weight: 600; }
+  %body
+    .tx-head
+      %div
+        .tx-kicker RidePilot
+        .tx-title= @title
+        - if @subtitle
+          .tx-sub= @subtitle
+      .tx-sum
+        %span.tx-chip
+          %b= @rows.size
+          = @rows.size == 1 ? "row" : "rows"
+    - if @page_only
+      .tx-note This is the page that was on screen; the list has more pages.
+    %table
+      %thead
+        %tr
+          - @columns.each do |c|
+            %th= c
+      %tbody
+        - @rows.each_with_index do |row, i|
+          %tr{class: (i.odd? ? "even" : nil)}
+            - @columns.each_index do |j|
+              - v = row[j].to_s
+              %td{class: (v.match?(TableExportsController::NUMBER) ? "num" : nil)}
+                - v.split("\n").each_with_index do |line, k|
+                  - if k > 0
+                    %br
+                  = line
+    .tx-foot
+      Exported #{Time.current.strftime("%b %-d, %Y %-l:%M %p")}#{@exported_by ? " by #{@exported_by}" : ""} from RidePilot.

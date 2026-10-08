@@ -175,6 +175,11 @@ GEM
       rack-test (>= 0.6.3)
       regexp_parser (>= 1.5, < 3.0)
       xpath (~> 3.2)
+    caxlsx (4.5.0)
+      htmlentities (~> 4.3, >= 4.3.4)
+      marcel (~> 1.0)
+      nokogiri (~> 1.10, >= 1.10.4)
+      rubyzip (>= 2.4, < 4)
     cgi (0.5.1)
     childprocess (5.1.0)
       logger (~> 1.5)
@@ -281,6 +286,7 @@ GEM
     honeybadger (6.3.0)
       logger
       ostruct
+    htmlentities (4.4.2)
     i18n (1.14.8)
       concurrent-ruby (~> 1.0)
     i18n-active_record (1.4.0)
@@ -675,6 +681,7 @@ DEPENDENCIES
   byebug
   cancancan
   capybara
+  caxlsx
   coffee-rails
   concurrent-ruby (= 1.3.5)
   connection_pool (~> 2.5)

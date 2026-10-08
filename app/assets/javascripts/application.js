@@ -45,6 +45,7 @@
 //= require bootstrap-editable
 //= require bootstrap-editable-rails
 //= require jquery.floatThead
+//= require table_export
 //= require jquery.splitter
 //= require jquery.timeago
 //= require bootstrap-toggle

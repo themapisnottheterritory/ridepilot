@@ -9,6 +9,7 @@ Rails.application.routes.draw do
     root :to => "dispatchers#index"
 
     get "admin", to: "home#index"
+    post "table_exports", to: "table_exports#create"   # Download > PDF / CSV / Excel on any table
     get "schedule_recurring", to: "home#schedule_recurring"
 
     devise_for :users, skip: :omniauth_callbacks
