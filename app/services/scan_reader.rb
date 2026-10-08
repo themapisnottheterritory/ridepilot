@@ -12,7 +12,7 @@ class ScanReader
 
   PROMPTS = {
     "odometer" => 'Read the odometer (total miles) on this vehicle dashboard. Ignore the trip meter, clock, speed and temperature. Reply with JSON only: {"miles": <whole number or null>}',
-    "pump" => 'Read this fuel pump display. Reply with JSON only: {"gallons": <number or null>, "price_per_gallon": <number or null>, "total": <number or null>}'
+    "pump" => 'Read the numbers shown on this fuel pump display, every digit after the decimal point. Do not guess or calculate: use null for anything not shown on the display. Reply with JSON only: {"gallons": <number or null>, "price_per_gallon": <number or null>, "total": <number or null>}'
   }.freeze
 
   # -> { reading: {"miles"=>48211} | {"gallons"=>..,...}, value:, ms:, error: }
@@ -75,7 +75,23 @@ class ScanReader
     raw = JSON.parse(json) rescue (return nil)
     keys = @kind == "odometer" ? %w[miles] : %w[gallons price_per_gallon total]
     out = keys.to_h { |k| [k, number(raw[k], whole: k == "miles")] }.compact
+    out = check_price(out) if @kind == "pump"
     out.empty? ? nil : out
+  end
+
+  # The model once gave $5.11/gal for a pump that showed no price at all, only
+  # $114.28 for 22.151 gal (tablet-03, 2026-10-08): it read "prices hit $5"
+  # beside the photo. With the total and the gallons, the price is total /
+  # gallons. A read price whose price x gallons isn't within a few cents of
+  # the total is replaced (pumps show the price to a tenth of a cent and the
+  # total to the cent, so a real one always lands within that); a missing one
+  # is filled in, and the reading says it was worked out.
+  def check_price(out)
+    g, t, p = out["gallons"], out["total"], out["price_per_gallon"]
+    return out unless g.to_f.positive? && t.to_f.positive?
+    worked = (t / g).round(3)
+    return out if p && (p * g - t).abs <= 0.02 + t * 0.001
+    out.merge("price_per_gallon" => worked, "price_worked_out" => true)
   end
 
   def number(v, whole: false)

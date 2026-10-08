@@ -45,6 +45,15 @@ RSpec.describe "Odometer and pump scans", type: :request do
     expect(data).to include("gallons" => 21.437, "price_per_gallon" => 2.879, "total" => 61.72)
   end
 
+  it "works the price out from the total and the gallons, never takes one that doesn't add up" do
+    data = scan("pump", '{"gallons": 22.151, "price_per_gallon": 5.11, "total": 114.28}')
+    expect(data).to include("gallons" => 22.151, "total" => 114.28, "price_per_gallon" => 5.159, "price_worked_out" => true)
+    data = scan("pump", '{"gallons": 22.151, "price_per_gallon": null, "total": 114.28}')
+    expect(data["price_per_gallon"]).to eq 5.159
+    data = scan("pump", '{"gallons": 21.437, "price_per_gallon": 2.879, "total": 61.72}')
+    expect(data).not_to have_key("price_worked_out")
+  end
+
   it "fails open when the model gives nothing" do
     data = scan("odometer", "")
     expect(data["read"]).to eq false
