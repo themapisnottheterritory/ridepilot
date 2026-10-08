@@ -48,8 +48,8 @@ class Api::V1::Driver::ScansController < Api::V1::Driver::BaseController
 
   def warning(kind, value, last)
     return nil unless kind == "odometer" && value && last
-    return "That's lower than this bus's last reading (#{last}). Check the number." if value < last
-    return "That's #{value - last} miles more than this bus's last reading (#{last}). Check the number." if value - last > ODOMETER_JUMP
+    return "That's lower than this bus's last reading (#{last.to_fs(:delimited)}). Check the number." if value < last
+    return "That's #{(value - last).to_fs(:delimited)} miles more than this bus's last reading (#{last.to_fs(:delimited)}). Check the number." if value - last > ODOMETER_JUMP
     nil
   end
 end

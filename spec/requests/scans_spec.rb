@@ -29,7 +29,7 @@ RSpec.describe "Odometer and pump scans", type: :request do
 
   it "warns when the reading is below the last one" do
     create(:run, vehicle: run.vehicle, date: Date.yesterday, start_odometer: 50_000, end_odometer: 50_100)
-    expect(scan("odometer", '{"miles": 48211}')["warning"]).to include("lower than")
+    expect(scan("odometer", %q({"miles": 48211}))["warning"]).to include("lower than this bus's last reading (50,100)")
   end
 
   it "reads a pump" do
