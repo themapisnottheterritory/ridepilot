@@ -62,6 +62,9 @@ class Api::V1::Driver::InspectionReportsController < Api::V1::Driver::BaseContro
   def create
     run = Run.find_by(id: report_params[:run_id])
     return render fail_response(status: 422, run: "A valid run is required.") if run.nil?
+    if (gap = unanswered_check)
+      return render fail_response(status: 422, **gap)
+    end
 
     report = VehicleInspectionReport.new(report_params.except(:run_id))
     report.assign_attributes(
@@ -100,6 +103,24 @@ class Api::V1::Driver::InspectionReportsController < Api::V1::Driver::BaseContro
   end
 
   private
+
+  # Kristie, 2026-10-08: nothing on the checklist is pre-marked OK, so every
+  # item is a deliberate check. The 1.0.34 app (code 35) won't submit until
+  # each item is OK / Defect / N/A and Safe or NOT safe is picked; this is the
+  # same rule on the server. Older apps, which filled in OK for the driver,
+  # keep working until they update (a blank status there still means OK).
+  NO_DEFAULTS_FROM_CODE = 35
+
+  def unanswered_check
+    return nil if request.headers["X-App-Code"].to_i < NO_DEFAULTS_FROM_CODE
+    blank = Array(params[:items]).count { |i| !RunVehicleInspection::STATUSES.include?(i[:status].to_s) }
+    return { items: "#{blank} item#{'s' unless blank == 1} not checked. Mark each one OK, Defect or N/A." } if blank > 0
+    return { items: "The checklist is empty." } if Array(params[:items]).empty?
+    if report_params[:safe_to_operate].nil? || report_params[:safe_to_operate].to_s == ""
+      return { safe_to_operate: "Pick Safe or NOT safe." }
+    end
+    nil
+  end
 
   def report_params
     params.require(:inspection_report).permit(
