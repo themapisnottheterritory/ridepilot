@@ -54,7 +54,7 @@ class RunSplitter
                          scheduled_start_time: @at, scheduled_end_time: old_end,
                          driver_id: @driver_id, vehicle_id: @vehicle_id)
       unless @new_run.is_all_valid?(run.provider_id)
-        @errors = @new_run.errors.full_messages
+        @errors = clash_messages.presence || @new_run.errors.full_messages
         raise ActiveRecord::Rollback
       end
       @new_run.save!
@@ -132,6 +132,20 @@ class RunSplitter
     Trip.where(id: started).each do |t|
       errors << "#{t.customer.try(:name)} (#{fmt(t.pickup_time)}) has already been picked up; split after that trip."
     end
+  end
+
+  # "Allen Mehrtens is on DeWitt1 PM (12:30 PM - 4:00 PM) then." rather than
+  # "Driver has been assigned to another overlapping run".
+  def clash_messages
+    others = Run.other_overlapped_runs(@new_run).not_cancelled
+    msgs = []
+    if @new_run.errors[:driver_id].any? && (clash = others.find_by(driver_id: @new_run.driver_id))
+      msgs << "#{@new_run.driver.name} is on #{clash.name} (#{fmt(clash.scheduled_start_time)} - #{fmt(clash.scheduled_end_time)}) then."
+    end
+    if @new_run.errors[:vehicle_id].any? && (clash = others.find_by(vehicle_id: @new_run.vehicle_id))
+      msgs << "Bus #{@new_run.vehicle.name} is on #{clash.name} (#{fmt(clash.scheduled_start_time)} - #{fmt(clash.scheduled_end_time)}) then."
+    end
+    msgs.any? ? msgs + (@new_run.errors.full_messages.reject { |m| m =~ /overlapping/ }) : []
   end
 
   def parse_time(value)

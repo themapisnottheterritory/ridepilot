@@ -65,7 +65,7 @@ RSpec.describe RunSplitter do
     dewitt
     splitter = RunSplitter.new(udr, at: "12:30", name: "UDR5 PM", driver_id: other.id)
     expect(splitter.call).to be false
-    expect(splitter.errors.join).to include("overlapping run")
+    expect(splitter.errors).to eq ["#{other.name} is on DeWitt1 (7:00 AM - 4:00 PM) then."]
     expect(udr.reload.scheduled_end_time).to eq t["17:00"]
     expect(Run.where(name: "UDR5 PM")).to be_empty
   end
