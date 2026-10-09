@@ -255,9 +255,9 @@ class ReportsController < ApplicationController
   end
 
   def update_trips_for_verification
-    @trips = Trip.update(params[:trips].keys, params[:trips].values).reject {|t| t.errors.empty?}
+    @trips = verification_updates(Trip, :trips, [:group_size, :guest_count, :attendant_count, :trip_result_id])
     if @trips.empty?
-      redirect_to({:action => :show_trips_for_verification}, :notice => "Trips updated successfully" )
+      redirect_to({:action => :show_trips_for_verification, :id => params[:id]}, :notice => "Trips updated successfully" )
     else
       @trip_results = TripResult.by_provider(current_provider).pluck(:name, :id)
       render :action => :show_trips_for_verification
@@ -274,9 +274,9 @@ class ReportsController < ApplicationController
   end
 
   def update_runs_for_verification
-    @runs = Run.update(params[:runs].keys, params[:runs].values).reject {|t| t.errors.empty?}
+    @runs = verification_updates(Run, :runs, [:vehicle_id, :driver_id, :actual_start_time, :actual_end_time, :start_odometer, :end_odometer, :unpaid_driver_break_time, :paid])
     if @runs.empty?
-      redirect_to({:action => :show_runs_for_verification}, :notice => "Runs updated successfully" )
+      redirect_to({:action => :show_runs_for_verification, :id => params[:id]}, :notice => "Runs updated successfully" )
     else
       @drivers  = Driver.active.where(:provider_id=>current_provider_id).default_order
       @vehicles = Vehicle.active.where(:provider_id=>current_provider_id)
@@ -1694,6 +1694,15 @@ class ReportsController < ApplicationController
 
   def set_reports
     @reports = all_report_infos # get all report infos (id, name) both generic and customized reports
+  end
+
+  # Saves the rows of a verification page; returns the records that failed.
+  def verification_updates(model, key, fields)
+    rows = params.require(key).permit!.to_h.transform_values { |row| row.slice(*fields.map(&:to_s)) }
+    model.for_provider(current_provider_id).where(id: rows.keys).map { |record|
+      record.update(rows[record.id.to_s])
+      record
+    }.reject { |record| record.errors.empty? }
   end
 
   def set_custom_report

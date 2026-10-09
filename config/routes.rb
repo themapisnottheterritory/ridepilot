@@ -427,6 +427,9 @@ Rails.application.routes.draw do
         #get action, action: action
         get "#{action}/:id", action: action
       end
+      # the verification pages save with a form POST
+      post "update_runs_for_verification/:id", action: "update_runs_for_verification"
+      post "update_trips_for_verification/:id", action: "update_trips_for_verification"
     end
 
     resources :reports, only: [] do 
