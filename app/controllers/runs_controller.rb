@@ -302,6 +302,29 @@ class RunsController < ApplicationController
 
   # The button runs the optimizer on the spot (a ~10 s solve) so dispatch sees
   # what happened: the new route, or which trips don't fit. JSON callers queue it.
+  # Split run: cut the run at a time of day and give the rest of its hours
+  # and trips to a new run (RunSplitter), e.g. for a driver's split shift.
+  def split
+    authorize! :manage, @run
+    setup_split
+  end
+
+  def perform_split
+    authorize! :manage, @run
+    splitter = RunSplitter.new(@run, at: params[:at], name: params[:name], driver_id: params[:driver_id],
+                               vehicle_id: params[:vehicle_id], user: current_user)
+    if splitter.call
+      new_run = splitter.new_run
+      redirect_to run_path(new_run), notice: "Split: #{@run.name} now ends at #{@run.scheduled_end_time.strftime('%-l:%M %p')}, " \
+        "and #{new_run.name} runs #{new_run.scheduled_start_time.strftime('%-l:%M %p')} - #{new_run.scheduled_end_time.strftime('%-l:%M %p')} " \
+        "with #{view_context.pluralize(splitter.moved_trips.size, 'trip')}."
+    else
+      @errors = splitter.errors
+      setup_split
+      render :split, status: :unprocessable_entity
+    end
+  end
+
   def optimize
     authorize! :update, @run
     respond_to do |format|
@@ -339,6 +362,16 @@ class RunsController < ApplicationController
   
   private
   
+  def setup_split
+    @drivers = Driver.active.where(provider_id: @run.provider_id).active_for_date(@run.date).default_order
+    @vehicles = Vehicle.active.where(provider_id: @run.provider_id).active_for_date(@run.date).default_order
+    @trips = @run.trips.includes(:customer)
+    @at = params[:at]
+    @name = params[:name].presence || "#{@run.name} PM"
+    @driver_id = params[:driver_id]
+    @vehicle_id = params[:vehicle_id].presence || @run.vehicle_id
+  end
+
   def setup_run
     @drivers = Driver.active.where(:provider_id=>@run.provider_id).default_order
     @fixed_routes = FixedRoute.for_provider(@run.provider_id).active.default_order

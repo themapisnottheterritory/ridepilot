@@ -1,0 +1,103 @@
+= render 'shared/highlight_active_tab_js', is_primary_nav: true, tab_class: 'runs'
+- fmt = ->(t) { t&.strftime("%-l:%M %p") }
+
+#page-header
+  %h1.page-title
+    Split run: #{@run.name}
+  .action-buttons
+    = link_to translate_helper(:back), run_path(@run), class: "btn btn-default"
+
+%p.split-intro
+  For a split shift, or a hand-over to another driver. #{@run.name} keeps its driver, bus and the trips picked up before the time you pick, and ends then. A new run takes the rest of its hours (to #{fmt.(@run.scheduled_end_time)}) and its trips.
+  - if @run.name =~ /\AUDR/i
+    %br
+    %strong UDR has to run until #{fmt.(@run.scheduled_end_time)}: give the new run a driver.
+
+- if @errors.present?
+  #error_explanation
+    %h2 The run was not split:
+    %ul
+      - @errors.each do |msg|
+        %li= msg
+
+= form_tag split_run_path(@run), method: :post, class: 'run-split-form' do
+  .row
+    .col-sm-12.col-md-6
+      .panel.panel-primary
+        .panel-heading
+          %h3.panel-title The split
+        .panel-body{style: 'padding: 5px;'}
+          .form-group
+            .form-label
+              = label_tag :at, "Split at"
+            .form-field
+              = time_field_tag :at, @at, class: 'form-control', required: true, step: 300,
+                min: @run.scheduled_start_time&.strftime("%H:%M"), max: @run.scheduled_end_time&.strftime("%H:%M")
+              %small.text-muted
+                #{@run.name} runs #{fmt.(@run.scheduled_start_time)} – #{fmt.(@run.scheduled_end_time)} on #{@run.date&.strftime("%a %b %-d")}
+          .form-group
+            .form-label
+              = label_tag :name, "New run's name"
+            .form-field
+              = text_field_tag :name, @name, class: 'form-control', required: true
+          .form-group
+            .form-label
+              = label_tag :driver_id, "New run's driver"
+            .form-field
+              = select_tag :driver_id, options_from_collection_for_select(@drivers, :id, :user_name, @driver_id), include_blank: true, class: 'form-control'
+              %small.text-muted Leave blank to pick later. Without a driver the new run's trips are on nobody's tablet.
+          .form-group
+            .form-label
+              = label_tag :vehicle_id, "New run's bus"
+            .form-field
+              = select_tag :vehicle_id, options_from_collection_for_select(@vehicles, :id, :name, @vehicle_id), class: 'form-control', required: true
+              %small.text-muted The same bus means the driver changes and the bus carries on.
+          .action-buttons
+            = submit_tag "Split run", class: 'btn action-button', data: { disable_with: "Splitting…" }
+    .col-sm-12.col-md-6
+      .panel.panel-primary
+        .panel-heading
+          %h3.panel-title Trips
+        .panel-body{style: 'padding: 5px;'}
+          - if @trips.empty?
+            %p No trips on this run yet.
+          - else
+            %table.table.table-condensed.split-trips
+              %thead
+                %tr
+                  %th Pick-up
+                  %th Drop-off
+                  %th Rider
+                  %th Goes to
+              %tbody
+                - @trips.each do |t|
+                  %tr{data: { pickup: t.pickup_time.strftime("%H:%M"), dropoff: t.appointment_time&.strftime("%H:%M") }}
+                    %td= fmt.(t.pickup_time)
+                    %td= fmt.(t.appointment_time)
+                    %td= t.customer.try(:name)
+                    %td.split-goes
+
+:css
+  .split-intro { max-width: 60em; margin: 0 0 12px; }
+  .split-trips td.split-goes { font-weight: bold; white-space: nowrap; }
+  .split-trips tr.split-new td.split-goes { color: #1a6e3a; }
+  .split-trips tr.split-straddle td { background: #fdecea; }
+  .split-trips tr.split-straddle td.split-goes { color: #a3231a; }
+
+:javascript
+  $(function() {
+    var runName = #{raw @run.name.to_json};
+    function update() {
+      var at = $('#at').val();
+      var newName = $('#name').val() || 'the new run';
+      $('.split-trips tbody tr').each(function() {
+        var $tr = $(this), p = $tr.data('pickup'), d = $tr.data('dropoff');
+        var label = runName, cls = '';
+        if (at && p >= at) { label = newName; cls = 'split-new'; }
+        else if (at && d && d > at) { label = 'Picked up before, dropped off after: move the time'; cls = 'split-straddle'; }
+        $tr.removeClass('split-new split-straddle').addClass(cls).find('.split-goes').text(label);
+      });
+    }
+    $('#at, #name').on('input change', update);
+    update();
+  });

@@ -325,6 +325,8 @@ Rails.application.routes.draw do
         patch :unassign_driver
         get :update_slack_chart
         post :optimize
+        get :split
+        post :split, action: :perform_split
       end
     end
 

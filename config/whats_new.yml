@@ -16,6 +16,10 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-09 17:00"
+  title: Split a run for a split shift
+  body: |
+    A run's page now has a **Split run** button. Pick a time, and the rest of the run's hours and trips go to a new run (e.g. **UDR5 PM**) with its own driver and bus; the run keeps its trips before that time and ends then. Use it when a driver covers UDR in the morning and DeWitt in the afternoon: split both runs at the hand-over, then put the driver on DeWitt's second half. The page shows which trips move, and published runs update on the tablets.
 - added: "2026-10-09 15:00"
   title: Verify Runs and Verify Trips save again
   body: |

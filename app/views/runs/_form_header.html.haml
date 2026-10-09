@@ -27,6 +27,8 @@
           - if @run.trips.count >= 2 && can?(:update, @run)
             = link_to "Optimize Route", optimize_run_path(@run), method: :post, data: { confirm: "Optimize the stop order for this run? It takes about 15 seconds." }, class: "btn action-button optimize-route", title: "Use route optimizer to reorder trips"
             = render 'runs/optimize_progress'
+          - if @run.demand_response? && !@run.cancelled? && @run.date && @run.date >= Date.current && can?(:update, @run)
+            = link_to "Split run", split_run_path(@run), class: "btn action-button", title: "Cut this run at a time and give the rest of it to another driver (split shift)"
           = link_to(translate_helper("delete"), @run, data: {:confirm => translate_helper("delete_run_confirm")}, :method => :delete, :id => 'run_delete', :class=>'btn action-button btn-danger') if !@run.new_record? && can?(:destroy, @run)
           = link_to translate_helper("edit"), edit_run_path(@run), :class=>'btn action-button' if !@run.new_record? && can?(:edit, @run)
         = link_to translate_helper(:back), (params[:from_dispatch] == 'true' ? dispatchers_path(run_id: params[:run_id]) : runs_path), class: "btn btn-default"
