@@ -16,6 +16,10 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-09 15:00"
+  title: Verify Runs and Verify Trips save again
+  body: |
+    On the **Verify Runs** and **Verify Trips** reports, the button at the bottom that saves your changes had been going to an error page, so nothing was saved. It works now: fix the odometers, times, drivers or trip results, press the button, and the page comes back with "updated successfully". Please redo any changes that didn't save.
 - added: "2026-10-09 12:12"
   title: A bigger clock on the driver tablet
   apps: [tablet]
