@@ -16,6 +16,11 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-09 12:12"
+  title: A bigger clock on the driver tablet
+  apps: [tablet]
+  body: |
+    The tablet now shows the time in large print on the left of the blue bar on **My Runs**, the **Manifest** and each stop, so drivers can read it at a glance. It comes with update **1.0.40**; tablets offer it when the driver opens **My Runs**.
 - added: "2026-10-08 15:00"
   title: Merge or delete a saved place works again
   for: admins
