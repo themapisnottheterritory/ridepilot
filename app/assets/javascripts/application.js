@@ -414,7 +414,7 @@ $(function() {
     minuteGrid: 15,
     showOn: "button",
     timeFormat: 'hh:mm TT',
-    buttonImage: "../../images/calendar-clock.png",
+    buttonImage: "/assets/calendar-clock.png",
     buttonImageOnly: true,
     constrainInput: false
   });
