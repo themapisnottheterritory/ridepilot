@@ -21,6 +21,8 @@
   apps: [tablet]
   body: |
     The tablet now shows the time in large print on the left of the blue bar on **My Runs**, the **Manifest** and each stop, so drivers can read it at a glance. It comes with update **1.0.40**; tablets offer it when the driver opens **My Runs**.
+
+    Thank you, Evie H., for the idea!
 - added: "2026-10-08 15:00"
   title: Merge or delete a saved place works again
   for: admins
