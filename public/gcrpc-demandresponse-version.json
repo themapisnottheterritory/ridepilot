@@ -1,9 +1,9 @@
 {
-  "version": "1.0.33",
-  "version_code": 34,
+  "version": "1.0.40",
+  "version_code": 35,
   "url": "/rideavl-pilot.apk",
   "required": false,
-  "notes": "Finished and removed stops now stay on your manifest, crossed out, colored by why.",
-  "published_at": "2026-10-07T21:14:44Z",
-  "sha256": "0a3c4e06b5f31a85f45213362438b6eb018c238c3410df5683fc2a404fc9004e"
+  "notes": "Bigger clock: the time now shows large on the left of the blue bar.",
+  "published_at": "2026-10-09T17:12:37Z",
+  "sha256": "313f28ee4d2925256fa535f13192527fc428b29bd558b4e82817196010ebc2e8"
 }
