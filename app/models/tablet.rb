@@ -44,7 +44,8 @@ class Tablet < ActiveRecord::Base
     by_app = (tablet.info["by_app"] || {}).merge(fixed ? "fixed" : "dr" => app.merge("at" => now.iso8601, "setup" => report["setup"]))
     attrs = { number: number, manufacturer: dev["manufacturer"], model: dev["model"], android_version: dev["android"],
               sdk: dev["sdk"], username: app["username"].presence || tablet.username,
-              last_ip: ip, info: report.merge("app" => app, "by_app" => by_app, "received_at" => now.iso8601),
+              last_ip: ip, phone_number: normalize_phone(report.dig("network", "phoneNumber")) || tablet.phone_number,
+              info: report.merge("app" => app, "by_app" => by_app, "received_at" => now.iso8601),
               first_seen_at: tablet.first_seen_at || now, last_seen_at: now }
     if fixed
       attrs[:app_version] ||= tablet.app_version || report.dig("apps", OUR_DR, "version")
@@ -116,6 +117,22 @@ class Tablet < ActiveRecord::Base
     number ? format("tablet-%02d", number) : "unnumbered #{android_id.first(6)}"
   end
 
+  # Ten digits, or nil: the SIM gives "13615551234" or "+13615551234", people type "(361) 555-1234".
+  def self.normalize_phone(raw)
+    d = raw.to_s.gsub(/\D/, "")
+    d = d[1..] if d.size == 11 && d.start_with?("1")
+    d.size == 10 ? d : nil
+  end
+
+  def self.format_phone(d)
+    d.present? ? "(#{d[0, 3]}) #{d[3, 3]}-#{d[6, 4]}" : nil
+  end
+
+  # The tablet's own number (Ron, 2026-10-11): the SIM's when it reports one, else the typed one.
+  def phone; phone_number.presence || phone_typed.presence; end
+  def phone_label; self.class.format_phone(phone); end
+  def phone_source; phone_number.present? ? "from the SIM" : (phone_typed.present? ? "typed" : nil); end
+
   def online?
     last_seen_at.present? && last_seen_at > ONLINE_FOR.ago
   end
@@ -184,6 +201,9 @@ class Tablet < ActiveRecord::Base
     out << [:warn, "Battery health: #{battery['health']}"] if battery["health"].present? && !%w[good unknown].include?(battery["health"])
     out << [:warn, "Only #{storage['freeMB']} MB storage free"] if storage["freeMB"].present? && storage["freeMB"].to_i < 1024
     out << [:warn, "Clock is off by #{clock_skew.abs / 60} min"] if clock_skew && clock_skew.abs > 120
+    if phone_number.present? && phone_typed.present? && phone_number != phone_typed
+      out << [:warn, "Phone typed as #{self.class.format_phone(phone_typed)}, but the SIM says #{self.class.format_phone(phone_number)}"]
+    end
     per_app_setup.each do |name, st|
       out << [:warn, "#{name} has no GPS permission"] if st["location"] == false
     end
