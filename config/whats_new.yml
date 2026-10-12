@@ -26,6 +26,13 @@
     **Allow** on the new step in **Finish setting up this tablet**. For any
     tablet that doesn't, type the number under **Notes** on its page (from
     the tablet's **Settings > About tablet > Status**).
+- added: "2026-10-12 23:59"
+  title: Store names find the store
+  body: |
+    Typing a store the usual way now finds it on the map: **heb cuero**,
+    **mcdonalds victoria**, **sams club**, **lowes**, **wal mart**. Before,
+    these found nothing unless typed exactly as the map spells them
+    (**H-E-B**, **McDonald's**).
 
 - added: "2026-10-09 16:00"
   title: Split a run for a split shift
