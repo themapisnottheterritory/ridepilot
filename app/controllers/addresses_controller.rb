@@ -209,6 +209,14 @@ class AddressesController < ApplicationController
       results += nominatim_suggest(street: term, state: NOMINATIM_FALLBACK_STATE)
     end
 
+    # A store typed the way people write it, not the way the map spells it:
+    # "heb cuero" found nothing, the map has "H-E-B" (Michelle, 2026-10-12);
+    # "mcdonalds", "wendys", "sams club", "lowes" need the apostrophe. One more
+    # ask in the map's spelling, only when a name search came back empty.
+    if results.empty? && typed_number.nil? && (spelled = map_name_spelling(term)) != term
+      results = nominatim_suggest(q: spelled)
+    end
+
     # Dispatchers type the apartment, because the apartment is where the rider
     # lives: "1801 Palm Village Blvd #143", "2300 Hamman Rd APT D1", "1408
     # Whitson 6a". Nominatim matches none of those and the unit is not something
@@ -330,6 +338,17 @@ class AddressesController < ApplicationController
   #   "11840 FM957", "8289 FMn 466"                       -> "FM 957", "FM 466"
   GLUED_WORDS = %w[Street St Avenue Ave Road Rd Drive Dr Lane Ln Boulevard Blvd Court Ct Circle Cir Highway Hwy
                    Trail Trl Parkway Pkwy Place Pl Way Loop APT Apt Unit UNIT Lot LOT Ste STE Suite].freeze
+
+  # Store names as the map spells them (map_name_spelling).
+  MAP_NAMES = { /\bh\.?[\s-]*e\.?[\s-]*b\b\.?/i => "H-E-B", /\bwal[\s-]+mart\b/i => "Walmart" }.freeze
+  # A word ending in s that may be a name's 's ("mcdonalds" -> "mcdonald's"), not
+  # one of the many words that just end in s ("dialysis", "glass", "bus").
+  POSSESSIVE_S = /\b([a-z]{2,}?[a-z&&[^'su]])s\b(?!')/i
+
+  def map_name_spelling(term)
+    out = MAP_NAMES.reduce(term) { |t, (pattern, name)| t.gsub(pattern, name) }
+    out.gsub(POSSESSIVE_S) { |word| stem = Regexp.last_match(1); word.end_with?("is", "IS") ? word : "#{stem}'s" }
+  end
 
   def tidy_typed_address(term)
     t = term.dup

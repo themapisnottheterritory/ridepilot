@@ -25,6 +25,25 @@ RSpec.describe AddressesController, type: :controller do
       expect(JSON.parse(response.body)).to eq(hit)
     end
 
+    it "asks again in the map's spelling when a store name finds nothing (Michelle, 2026-10-12)" do
+      heb = [{ "place_id" => 7, "display_name" => "H-E-B, 909, East Broadway Street, Cuero", "lat" => "29.0893", "lon" => "-97.2807",
+               "address" => { "house_number" => "909", "road" => "East Broadway Street", "town" => "Cuero" } }]
+      allow(controller).to receive(:nominatim_suggest).and_return([])
+      expect(controller).to receive(:nominatim_suggest).with(q: "H-E-B cuero").and_return(heb)
+      suggest("heb cuero")
+      expect(JSON.parse(response.body).map { |r| r["place_id"] }).to eq [7]
+    end
+
+    it "spells store names the way the map has them" do
+      {
+        "heb cuero" => "H-E-B cuero", "H.E.B. Victoria" => "H-E-B Victoria", "h e b plus" => "H-E-B plus",
+        "mcdonalds victoria" => "mcdonald's victoria", "Wendys" => "Wendy's", "sams club" => "sam's club",
+        "lowes victoria" => "lowe's victoria", "wal mart cuero" => "Walmart cuero",
+        "davita dialysis cuero" => "davita dialysis cuero", "glass shop" => "glass shop", "McDonald's" => "McDonald's",
+        "hebbronville" => "hebbronville", "the bus barn" => "the bus barn"
+      }.each { |typed, map| expect(controller.send(:map_name_spelling, typed)).to eq(map), typed }
+    end
+
     it "falls back to structured search when free text finds nothing" do
       allow(controller).to receive(:nominatim_suggest).with(hash_including(:q)).and_return([])
       expect(controller).to receive(:nominatim_suggest)
