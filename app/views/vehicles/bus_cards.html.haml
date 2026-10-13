@@ -14,7 +14,7 @@
         %span.bc-tag BUS CARD
       .bc-body
         .bc-qr
-          = RQRCode::QRCode.new(v.bus_card_code, level: :m).as_svg(module_size: 4, standalone: true, use_path: true, viewbox: true).html_safe
+          = RQRCode::QRCode.new(v.bus_card_code, level: :m).as_svg(module_size: 4, offset: 12, standalone: true, use_path: true, viewbox: true).html_safe
           .bc-code= v.bus_card_code
         .bc-text
           .bc-unit UNIT
@@ -32,10 +32,10 @@
   .bc-card { width: 3.375in; height: 2.125in; box-sizing: border-box; border: 1px dashed #c8cfdb; border-radius: 8px; overflow: hidden; font-family: Helvetica, Arial, sans-serif; break-inside: avoid; page-break-inside: avoid; }
   .bc-band { background: #12264F; color: #fff; height: 0.35in; display: flex; align-items: center; justify-content: space-between; padding: 0 0.14in; font-weight: 700; font-size: 9pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .bc-tag { color: #CC9900; font-size: 8pt; }
-  .bc-body { display: flex; align-items: flex-start; padding: 0.06in 0.1in 0; }
+  .bc-body { display: flex; align-items: flex-start; padding: 0.02in 0.06in 0; }
   .bc-qr { width: 1.45in; text-align: center; }
-  .bc-qr svg { width: 1.45in; height: 1.45in; display: block; }
-  .bc-code { font-size: 7pt; color: #5f6b7a; margin-top: -2px; }
+  .bc-qr svg { width: 1.45in; height: 1.45in; display: block; background: #fff; }
+  .bc-code { font-size: 7pt; color: #5f6b7a; margin-top: 0; }
   .bc-text { padding-left: 0.12in; padding-top: 0.08in; min-width: 0; }
   .bc-unit { font-size: 8pt; font-weight: 700; color: #5f6b7a; }
   .bc-name { font-size: 40pt; font-weight: 700; color: #12264F; line-height: 1; white-space: nowrap; }
