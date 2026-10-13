@@ -36,6 +36,9 @@ RSpec.describe "Fix from paper", type: :request do
     expect(response.body).to include("Fix from paper: Hville1", "Pick up", "Drop off", trip.customer.name)
     get "/en/runs/#{run.id}"
     expect(response.body).to include("Fix from paper")
+    run.update_column(:complete, true)   # the usual case: a run already completed
+    get "/en/runs/#{run.id}"
+    expect(response.body).to include("Fix from paper")
   end
 
   it "saves the run's actuals and the stop times, marked as typed, and the result" do

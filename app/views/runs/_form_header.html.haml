@@ -21,6 +21,9 @@
       - else
         - if @run.complete?
           = link_to translate_helper(:set_as_incomplete), request_uncompletion_run_path(@run), :remote => true, :title => "Change the run to be incomplete to allow further changes", :class => "btn action-button run-unlock-button" if can?(:uncomplete, @run)
+          -# a completed run is the usual one to fix from paper (its actuals, like Verify Runs)
+          - if @run.demand_response? && !@run.cancelled? && @run.date && @run.date <= Date.current && can?(:update, @run)
+            = link_to "Fix from paper", paper_run_path(@run), class: "btn action-button", title: "Copy times, odometers and results from the driver's paper manifest"
         - else
           = link_to translate_helper(:change_locations), request_change_locations_run_path(@run), :remote => true, :title => "Change run start and end locations", :class => "btn action-button"
           = link_to translate_helper(:complete), complete_run_path(@run), :disabled => !@run.completable?, :title => !@run.completable? ? "Incomplete trips or missing fields" : "", :class => "btn action-button run-completion-button" if can?(:complete, @run)
