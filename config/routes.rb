@@ -285,6 +285,9 @@ Rails.application.routes.draw do
       member { patch :retire }
     end
     resources :vehicles do
+      collection do
+        get :bus_cards          # every active bus's card, to print and laminate
+      end
       resources :documents, except: [:index, :show]
       resources :vehicle_maintenance_events, except: [:index]
       resources :vehicle_maintenance_compliances
@@ -292,6 +295,7 @@ Rails.application.routes.draw do
       resources :vehicle_compliances
 
       member do 
+        get  :bus_card
         get  :edit_initial_mileage
         post :update_initial_mileage
         post :inactivate

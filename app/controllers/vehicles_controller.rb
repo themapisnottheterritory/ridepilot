@@ -1,5 +1,5 @@
 class VehiclesController < ApplicationController
-  load_and_authorize_resource except: [:update_initial_mileage, :inactivate, :reactivate, :start_disposition, :record_disposal, :cancel_disposition]
+  load_and_authorize_resource except: [:update_initial_mileage, :inactivate, :reactivate, :start_disposition, :record_disposal, :cancel_disposition, :bus_card, :bus_cards]
 
   def index
     @vehicles = @vehicles.default_order.for_provider(current_provider.id)
@@ -9,6 +9,21 @@ class VehiclesController < ApplicationController
 
   def show
     @readonly = true
+  end
+
+  # Bus cards (Vehicle#bus_card_code): a QR the tablet scans at the start of a
+  # run. One bus from its page, or every active bus of the agency, 8 to a page.
+  def bus_card
+    @vehicle = Vehicle.find(params[:id])
+    authorize! :read, @vehicle
+    @cards = [@vehicle]
+    render :bus_cards, layout: "pdf"
+  end
+
+  def bus_cards
+    authorize! :read, Vehicle
+    @cards = Vehicle.for_provider(current_provider.id).where(active: true).default_order.to_a
+    render layout: "pdf"
   end
 
   def new

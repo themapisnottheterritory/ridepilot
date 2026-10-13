@@ -6,6 +6,8 @@
         = link_to "Garages", garages_path, class: "btn action-button", title: "The yards buses live at, where their runs start and end"
       - if Tablet.viewer?(current_user)
         = link_to "Tablets", tablets_path, class: "btn action-button", title: "Every driver tablet: app versions, WireGuard, battery, use (GCRPC I.T.)"
+      - if can? :read, Vehicle
+        = link_to "Print all bus cards", bus_cards_vehicles_path, class: "btn action-button", target: "_blank", title: "A QR card for every active bus, 8 to a page, to laminate"
       - if can? :create, Vehicle
         = link_to translate_helper("new_vehicle_link_text"), new_vehicle_path, class: "btn action-button"
   %h1.page-title= translate_helper("index_vehicle_heading")

@@ -1,4 +1,19 @@
 class Vehicle < ApplicationRecord
+  # The laminated bus card (2026-10-13): a QR the driver's tablet scans at the
+  # start of a run to say which bus it's in. It holds RidePilot's own vehicle id,
+  # which stays the same when a bus is renamed ("2457" -> "2457 (R7)").
+  BUS_CARD_PREFIX = "GCRPC-BUS:".freeze
+
+  def bus_card_code
+    "#{BUS_CARD_PREFIX}#{id}"
+  end
+
+  # The vehicle a scanned bus card names, or nil for anything else.
+  def self.from_bus_card(text)
+    m = text.to_s.strip.match(/\A#{Regexp.escape(BUS_CARD_PREFIX)}(\d+)\z/i)
+    m && find_by(id: m[1].to_i)
+  end
+
   include RequiredFieldValidatorModule 
   include Inactivateable
   include PublicActivity::Common

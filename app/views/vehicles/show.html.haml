@@ -9,6 +9,7 @@
       = link_to translate_helper("vehicle_documents_add_link_title"), new_vehicle_document_path(@vehicle), class: "btn action-button"
       = link_to translate_helper("delete_vehicle_button"), @vehicle, method: :delete, data: { confirm: translate_helper("delete_vehicle_confirmation") }, class: "btn btn-danger action-button" if can?(:delete, @vehicle)
       = link_to translate_helper("edit_vehicle_button"), edit_vehicle_path(@vehicle), class: "btn action-button"
+      = link_to "Print bus card", bus_card_vehicle_path(@vehicle), class: "btn action-button", target: "_blank", title: "The QR card the driver's tablet scans at the start of a run; laminate it and keep it on this bus"
       - unless @vehicle.disposition_status
         = button_tag "Move to disposition", type: "button", "data-target" => "#dispositionDialog", "data-toggle" => "modal", class: "btn action-button", title: "Take this bus out of service for disposal; it stays listed until you record how it left the fleet"
       - if @vehicle.disposition_status
