@@ -16,6 +16,18 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-13 17:07"
+  title: Bus cards to print
+  providers: [1, 107, 143]
+  apps: [web]
+  body: |
+    Each bus has a **bus card**: a QR code the driver's tablet will scan at
+    the start of a run, so the run is always on the right bus. Print one
+    from the bus's page (**Vehicles**, open the bus, **Print bus card**), or
+    every active bus at once with **Print all bus cards** on **Vehicles**.
+    Print at actual size, cut on the dashed lines, laminate, and keep each
+    card on its bus. The tablet scan comes in a later app update.
+
 - added: "2026-10-13 16:18"
   title: Fix a run from the paper manifest
   providers: [1, 107, 143]
