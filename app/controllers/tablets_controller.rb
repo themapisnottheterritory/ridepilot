@@ -17,9 +17,20 @@ class TabletsController < ApplicationController
     @pings = @tablet.pings.where("at >= ?", 24.hours.ago).order(:at).to_a
   end
 
+  # Notes, and the phone number as typed from the tablet's Settings (Ron, 2026-10-11).
   def update
-    @tablet.update!(notes: params.require(:tablet)[:notes].to_s.first(4000))
-    redirect_to tablet_path(@tablet), notice: "Notes saved."
+    form = params.require(:tablet)
+    attrs = {}
+    attrs[:notes] = form[:notes].to_s.first(4000) if form.key?(:notes)
+    if form.key?(:phone_typed)
+      typed = form[:phone_typed].to_s.strip
+      attrs[:phone_typed] = Tablet.normalize_phone(typed)
+      if typed.present? && attrs[:phone_typed].nil?
+        return redirect_to(tablet_path(@tablet), alert: "\"#{typed.first(30)}\" isn't a 10-digit phone number. Nothing was saved.")
+      end
+    end
+    @tablet.update!(attrs)
+    redirect_to tablet_path(@tablet), notice: "Saved."
   end
 
   # The same device reinstalled under a new Android ID leaves an old row behind.

@@ -73,6 +73,7 @@
       %thead
         %tr
           %th Tablet
+          %th Phone
           %th Last seen
           %th Demand Response
           %th Fixed Route
@@ -88,6 +89,12 @@
               %span.dot{class: t.online? ? "on" : (t.last_seen_at && t.last_seen_at > 24.hours.ago ? "day" : "off")}
               = link_to t.label, tablet_path(t), class: "tb-name"
               .tb-sub= t.username ? "last: #{t.username}" : "no one signed in"
+            %td{style: "white-space: nowrap;"}
+              - if t.phone
+                = t.phone_label
+                .tb-sub= t.phone_source
+              - else
+                %span.tb-sub not known
             %td{style: "white-space: nowrap;"}
               = t.last_seen_at ? "#{time_ago_in_words(t.last_seen_at)} ago" : "never"
               .tb-sub= t.last_ip
