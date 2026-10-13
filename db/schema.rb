@@ -1530,6 +1530,8 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.datetime "update_done_at", precision: nil
     t.string "phone_number"
     t.string "phone_typed"
+    t.string "phone_previous"
+    t.datetime "phone_changed_at"
     t.index ["android_id"], name: "index_tablets_on_android_id", unique: true
     t.index ["number"], name: "index_tablets_on_number"
   end

@@ -37,6 +37,11 @@ class Tablet < ActiveRecord::Base
     tablet = find_or_initialize_by(android_id: android_id)
     now = Time.current
     number = number_from_ip(ip) || number_from_tunnel(app["tunnel"]) || tablet.number
+    sim_phone = normalize_phone(report.dig("network", "phoneNumber"))
+    if sim_phone && tablet.phone_number.present? && sim_phone != tablet.phone_number
+      tablet.phone_previous = tablet.phone_number
+      tablet.phone_changed_at = now
+    end
     # Both apps report (Fixed Route 1.16 sends name "fixed"); they share the fleet key, so the
     # same Android ID and one row. app_version/app_code stay Demand Response's; each app's own
     # answer is kept under by_app, and "app" is whichever reported last.
@@ -44,7 +49,7 @@ class Tablet < ActiveRecord::Base
     by_app = (tablet.info["by_app"] || {}).merge(fixed ? "fixed" : "dr" => app.merge("at" => now.iso8601, "setup" => report["setup"]))
     attrs = { number: number, manufacturer: dev["manufacturer"], model: dev["model"], android_version: dev["android"],
               sdk: dev["sdk"], username: app["username"].presence || tablet.username,
-              last_ip: ip, phone_number: normalize_phone(report.dig("network", "phoneNumber")) || tablet.phone_number,
+              last_ip: ip, phone_number: sim_phone || tablet.phone_number,
               info: report.merge("app" => app, "by_app" => by_app, "received_at" => now.iso8601),
               first_seen_at: tablet.first_seen_at || now, last_seen_at: now }
     if fixed
@@ -207,9 +212,83 @@ class Tablet < ActiveRecord::Base
     per_app_setup.each do |name, st|
       out << [:warn, "#{name} has no GPS permission"] if st["location"] == false
     end
+    if phone_changed_at && phone_changed_at > SIM_CHANGE_SHOWN.ago
+      out << [:warn, "SIM changed #{phone_changed_at.in_time_zone.strftime('%b %-d')}: was #{self.class.format_phone(phone_previous)}, now #{self.class.format_phone(phone_number)}"]
+    end
+    if (low = low_shift_start)
+      out << [:warn, "Started #{low[:day]} shift at #{low[:battery]}% battery, not charging"]
+    end
+    if storage["freeMB"].to_i >= 1024 && storage["totalMB"].to_i.positive? && storage["freeMB"].to_f / storage["totalMB"].to_i < 0.10
+      out << [:warn, "Storage nearly full: #{storage['freeMB']} of #{storage['totalMB']} MB free"]
+    end
+    if (age = patch_age_months) && age >= OLD_PATCH_MONTHS
+      years = age / 12
+      out << [:warn, "Security patch #{patch_date.strftime('%b %Y')}, #{years >= 1 ? "#{years} year#{'s' if years > 1}" : "#{age} months"} old"]
+    end
     out
   end
 
+  SIM_CHANGE_SHOWN = 14.days
+  OLD_PATCH_MONTHS = 12
+  LOW_START = 50
+
+  # The Android security patch the tablet reports ("2023-10-01"), as a date, or nil.
+  def patch_date
+    Date.parse(device["securityPatch"].to_s) rescue nil
+  end
+
+  # Whole months since that patch, or nil.
+  def patch_age_months
+    d = patch_date
+    return nil unless d
+    t = Date.current
+    (t.year * 12 + t.month) - (d.year * 12 + d.month)
+  end
+
+  # The newest of the last few days on which the first report with a driver signed in
+  # showed the battery under LOW_START% and not charging: { day: "today's" or "Mon's", battery: }
+  def low_shift_start(days = 3)
+    day_sql = Arel.sql("date(at at time zone 'UTC' at time zone 'America/Chicago')")
+    firsts = pings.where("at >= ?", (days - 1).days.ago.beginning_of_day).where.not(username: nil).group(day_sql).minimum(:at)
+    firsts.sort_by { |d, _| d }.reverse_each do |d, at|
+      p = pings.where(at: at).first
+      next unless p && p.battery && p.battery < LOW_START && !p.charging
+      return { day: d == Date.current ? "today's" : "#{d.strftime('%a')}'s", battery: p.battery }
+    end
+    nil
+  end
+
+  # Where it was last used (Ron's inventory, 2026-10-13): the driver signed in at its
+  # latest report with someone signed in, and that driver's run that day with its bus.
+  # { at:, username:, driver:, run:, bus: } or nil; run and bus are nil when no run matched.
+  def last_use
+    return @last_use if defined?(@last_use)
+    p = pings.where.not(username: nil).order(at: :desc).first
+    return @last_use = nil unless p
+    user = User.find_by(username: p.username)
+    driver = user && Driver.find_by(user_id: user.id)
+    run = driver && self.class.run_at(driver, p.at)
+    @last_use = { at: p.at, username: p.username, driver: driver&.name, run: run&.name, bus: run&.vehicle&.name }
+  end
+
+  # The driver's run on that day: the one under way then (an hour's slack either
+  # side), else the one starting nearest that time.
+  def self.run_at(driver, at)
+    runs = Run.where(driver_id: driver.id, date: at.in_time_zone.to_date).includes(:vehicle).to_a
+    return nil if runs.empty?
+    going = runs.find do |r|
+      from = r.actual_start_time || r.scheduled_start_time
+      to = r.actual_end_time || r.scheduled_end_time
+      from && to && at.between?(from - 1.hour, to + 1.hour)
+    end
+    going || runs.min_by { |r| ((r.actual_start_time || r.scheduled_start_time || at) - at).abs }
+  end
+
+  # "bus 1777 · Richard Strange · UDR3"
+  def last_use_label
+    u = last_use
+    u && [u[:bus] ? "bus #{u[:bus]}" : nil, u[:driver] || u[:username], u[:run]].compact.join(" · ")
+  end
   # Hours the app was open per day (one report about every 10 minutes), newest last.
   def hours_by_day(days = 14)
     since = (days - 1).days.ago.beginning_of_day

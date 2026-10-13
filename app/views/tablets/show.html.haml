@@ -48,7 +48,10 @@
         %dt Android
         %dd= "#{t.android_version} (SDK #{t.sdk})"
         %dt Security patch
-        %dd= dev["securityPatch"]
+        %dd
+          = dev["securityPatch"]
+          - if (age = t.patch_age_months) && age >= Tablet::OLD_PATCH_MONTHS
+            %span.behind= "(#{age} months old)"
         %dt Build
         %dd= dev["build"]
         %dt WebView
@@ -105,6 +108,8 @@
               typed, the SIM hasn't reported it
             - else
               the app reports it from 1.0.41 once the driver allows it, or type it under Notes
+          - if t.phone_previous.present?
+            .tb-sub= "before #{t.phone_changed_at.in_time_zone.strftime('%b %-d')}: #{Tablet.format_phone(t.phone_previous)}"
         %dt Carrier
         %dd= "#{t.network['carrier'].presence || '?'}#{", #{t.network['cellBars']} of 4 bars" if t.network['cellBars']}"
         %dt Tunnel
@@ -181,6 +186,16 @@
             %text{x: i * 21 + 10.5, y: 72 - bh, "text-anchor": "middle"}= h.round
       .tb-sub Hours the app was open each day, last two weeks.
       %dl{style: "margin-top: 10px;"}
+        %dt Last used
+        %dd
+          - if (u = t.last_use)
+            %div= t.last_use_label
+            .tb-sub
+              = u[:at].in_time_zone.strftime('%a %b %-d, %-l:%M %p')
+              - unless u[:bus]
+                = "· no run found for #{u[:driver] || u[:username]} that day"
+          - else
+            %span.tb-sub no driver has signed in on it yet
         %dt Signed in lately
         %dd
           - users = t.recent_users

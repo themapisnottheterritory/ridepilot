@@ -74,6 +74,7 @@
         %tr
           %th Tablet
           %th Phone
+          %th Last used
           %th Last seen
           %th Demand Response
           %th Fixed Route
@@ -95,6 +96,12 @@
                 .tb-sub= t.phone_source
               - else
                 %span.tb-sub not known
+            %td
+              - if (u = t.last_use)
+                = t.last_use_label
+                .tb-sub= u[:at].in_time_zone.to_date == Date.current ? "today #{u[:at].in_time_zone.strftime('%-l:%M %p')}" : u[:at].in_time_zone.strftime('%a %b %-d, %-l:%M %p')
+              - else
+                %span.tb-sub no driver yet
             %td{style: "white-space: nowrap;"}
               = t.last_seen_at ? "#{time_ago_in_words(t.last_seen_at)} ago" : "never"
               .tb-sub= t.last_ip
