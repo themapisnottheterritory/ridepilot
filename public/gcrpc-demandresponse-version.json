@@ -1,9 +1,9 @@
 {
-  "version": "1.0.40",
-  "version_code": 35,
+  "version": "1.0.41",
+  "version_code": 36,
   "url": "/rideavl-pilot.apk",
   "required": false,
-  "notes": "Bigger clock: the time now shows large on the left of the blue bar.",
-  "published_at": "2026-10-11T21:25:39Z",
-  "sha256": "337118b85baee28435c586cda2c975df6df485b0db11bea78b361eff1eaa90c2"
+  "notes": "Asks once to read the tablet's phone number for GCRPC I.T.",
+  "published_at": "2026-10-13T17:00:28Z",
+  "sha256": "83bcccfb997e8fd5443d577e7bc0a6a058a97cb41fdc8254cb9d5d216ddf9d7a"
 }
