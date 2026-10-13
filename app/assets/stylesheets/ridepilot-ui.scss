@@ -693,6 +693,14 @@ fieldset {
 		.date-span {
 			font-weight: 600;
 		}
+		// A status badge beside the title (Run "Completed" / "Cancelled") sat on the
+		// title's baseline and hung 5px low; centre it on the title's capitals.
+		.label {
+			vertical-align: middle;
+			position: relative;
+			top: -0.27em;
+			margin-left: 6px;
+		}
 	}
 	.action-buttons {
 		margin-bottom: $content-pad;
