@@ -327,6 +327,8 @@ Rails.application.routes.draw do
         post :optimize
         get :split
         post :split, action: :perform_split
+        get :paper
+        post :paper, action: :save_paper
       end
     end
 

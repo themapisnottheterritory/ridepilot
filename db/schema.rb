@@ -746,6 +746,8 @@ ActiveRecord::Schema[7.1].define(version: 202103162114206) do
     t.datetime "arrival_time", precision: nil
     t.datetime "finish_time", precision: nil
     t.datetime "deleted_at", precision: nil
+    t.string "times_typed_by"
+    t.datetime "times_typed_at"
     t.index ["address_id"], name: "index_itineraries_on_address_id"
     t.index ["run_id"], name: "index_itineraries_on_run_id"
     t.index ["trip_id"], name: "index_itineraries_on_trip_id"

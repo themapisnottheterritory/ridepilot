@@ -325,6 +325,25 @@ class RunsController < ApplicationController
     end
   end
 
+  # Fix from paper (RunPaperFix): the run's actuals, stop times and trip results
+  # copied from the driver's paper manifest.
+  def paper
+    authorize! :update, @run
+    @fix = RunPaperFix.new(@run, nil, user: current_user)
+    setup_paper
+  end
+
+  def save_paper
+    authorize! :update, @run
+    @fix = RunPaperFix.new(@run, params[:paper]&.permit!, user: current_user)
+    if @fix.save
+      redirect_to run_path(@run), notice: "Saved from paper#{": #{view_context.pluralize(@fix.changed_stops, 'stop time')} typed" if @fix.changed_stops.positive?}."
+    else
+      setup_paper
+      render :paper, status: :unprocessable_entity
+    end
+  end
+
   def optimize
     authorize! :update, @run
     respond_to do |format|
@@ -362,6 +381,11 @@ class RunsController < ApplicationController
   
   private
   
+  def setup_paper
+    @vehicles = Vehicle.active.where(provider_id: @run.provider_id).default_order
+    @results = TripResult.all.order(:id)
+  end
+
   def setup_split
     @drivers = Driver.active.where(provider_id: @run.provider_id).active_for_date(@run.date).default_order
     @vehicles = Vehicle.active.where(provider_id: @run.provider_id).active_for_date(@run.date).default_order

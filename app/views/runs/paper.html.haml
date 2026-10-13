@@ -1,0 +1,107 @@
+= render 'shared/highlight_active_tab_js', is_primary_nav: true, tab_class: 'runs'
+- hm = ->(t) { RunPaperFix.hm(t) }
+- clock = ->(t) { t&.in_time_zone&.strftime("%-l:%M %p") }
+- run = @fix.run
+- form = params[:paper] || {}
+- rform = form[:run] || {}
+- sform = form[:stops] || {}
+- resform = form[:results] || {}
+
+#page-header
+  %h1.page-title
+    Fix from paper: #{run.name}
+  .action-buttons
+    = link_to translate_helper(:back), run_path(run), class: "btn btn-default"
+
+%p.paper-intro
+  #{run.date&.strftime("%A %B %-d, %Y")} · #{run.driver&.user_name || "no driver"} · scheduled #{clock.(run.scheduled_start_time)} – #{clock.(run.scheduled_end_time)}
+  %br
+  Copy the driver's paper manifest here when the tablet missed something. Times are on this run's day, 24-hour or with the clock picker.
+  A stop the tablet recorded shows its time already; change it only if the paper says otherwise.
+  Times typed here are marked as typed, with your name, and reports count them like taps.
+
+- if @fix.errors.any?
+  #error_explanation
+    %h2 Nothing was saved:
+    %ul
+      - @fix.errors.each do |msg|
+        %li= msg
+
+= form_tag paper_run_path(run), method: :post, class: 'paper-form' do
+  .panel.panel-primary
+    .panel-heading
+      %h3.panel-title The run
+    .panel-body
+      .paper-run
+        %label
+          Bus
+          = select_tag "paper[run][vehicle_id]", options_from_collection_for_select(@vehicles, :id, :name, rform[:vehicle_id] || run.vehicle_id), include_blank: true, class: 'form-control'
+        %label
+          Started
+          = time_field_tag "paper[run][start]", rform[:start] || hm.(run.actual_start_time), class: 'form-control'
+        %label
+          Ended
+          = time_field_tag "paper[run][end]", rform[:end] || hm.(run.actual_end_time), class: 'form-control'
+        %label
+          Start odometer
+          = number_field_tag "paper[run][start_odometer]", rform[:start_odometer] || run.start_odometer, class: 'form-control', min: 0
+        %label
+          End odometer
+          = number_field_tag "paper[run][end_odometer]", rform[:end_odometer] || run.end_odometer, class: 'form-control', min: 0
+
+  .panel.panel-primary
+    .panel-heading
+      %h3.panel-title Stops
+    .panel-body{style: 'padding: 5px;'}
+      - if @fix.stops.empty?
+        %p No stops on this run.
+      - else
+        %table.table.table-condensed.paper-stops
+          %thead
+            %tr
+              %th Due
+              %th Stop
+              %th Rider
+              %th Address
+              %th Arrived
+              %th Done
+              %th Result
+              %th
+          %tbody
+            - seen_trips = {}
+            - @fix.stops.each do |s|
+              - row = sform[s.id.to_s] || {}
+              - typed = s.times_typed_by.present?
+              - tapped = !typed && (s.arrival_time || s.finish_time)
+              %tr{class: [("paper-done" if s.finish_time), ("paper-leg-end" if [0, 3].include?(s.leg_flag))]}
+                %td= clock.(s.time || s.eta)
+                %td= { 0 => "Start of run", 1 => "Pick up", 2 => "Drop off", 3 => "End of run" }[s.leg_flag] || "Stop"
+                %td= s.trip&.customer&.name
+                %td.paper-addr= s.address.try(:one_line_text).to_s.first(60)
+                %td= time_field_tag "paper[stops][#{s.id}][arrived]", row[:arrived] || hm.(s.arrival_time), class: 'form-control input-sm'
+                %td= time_field_tag "paper[stops][#{s.id}][done]", row[:done] || hm.(s.finish_time), class: 'form-control input-sm'
+                %td
+                  - if s.trip && s.leg_flag == 1 && !seen_trips[s.trip_id]
+                    - seen_trips[s.trip_id] = true
+                    = select_tag "paper[results][#{s.trip_id}]", options_for_select(@results.map { |r| [r.name, r.code] }, resform[s.trip_id.to_s] || s.trip.trip_result&.code), include_blank: "(none)", class: 'form-control input-sm'
+                %td.paper-src
+                  - if typed
+                    typed by #{s.times_typed_by}
+                  - elsif tapped
+                    tablet
+      .action-buttons
+        = submit_tag "Save", class: 'btn action-button', data: { disable_with: "Saving…" }
+        %small.text-muted
+          A single time on a stop counts as arrived and done then. A no-show still follows the pick-up window rules.
+
+:css
+  .paper-intro { color: #5f6b7a; }
+  .paper-run { display: flex; flex-wrap: wrap; gap: 14px; }
+  .paper-run label { font-weight: 600; display: flex; flex-direction: column; min-width: 150px; }
+  .paper-stops td { vertical-align: middle !important; }
+  .paper-stops input[type=time] { width: 120px; }
+  .paper-stops select { min-width: 130px; }
+  .paper-stops tr.paper-done td:first-child { border-left: 4px solid #0ca30c; }
+  .paper-stops tr.paper-leg-end td { color: #5f6b7a; }
+  .paper-addr { font-size: 12px; color: #5f6b7a; }
+  .paper-src { font-size: 11px; color: #5f6b7a; white-space: nowrap; }

@@ -182,6 +182,7 @@ class RunLogReport
     notes << "No start odometer" unless run.start_odometer
     notes << "No end odometer" if run.end_odometer.nil? && end_at
     notes << "No stop marked done" unless first_at
+    notes << "Stop times typed from paper" if stops.any? { |s| s.times_typed_by.present? }
 
     unit = run.vehicle&.name
     out = gps_or_road(unit, start_at, first_at) { from_garage(run) && first && road(from_garage(run), first.address) }
