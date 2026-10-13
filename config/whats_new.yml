@@ -16,6 +16,19 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-13 16:18"
+  title: Fix a run from the paper manifest
+  providers: [1, 107, 143]
+  apps: [web]
+  body: |
+    When a driver ran on paper, or the tablet missed stops, open the run and
+    click **Fix from paper**. One page takes the bus, the actual start and
+    end, the odometers, every stop's **Arrived** and **Done** times and each
+    trip's result. Nothing saves until it all makes sense (times in order, a
+    drop-off after its pick-up, a no-show inside the pick-up window), and the
+    page says what to fix. Typed times are marked with your name, and the
+    Run Log and Vehicle Summary count the run like a tablet run.
+
 - added: "2026-10-13 13:57"
   title: Where each tablet was last used
   providers: [1]
