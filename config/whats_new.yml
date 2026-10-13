@@ -16,6 +16,17 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-13 10:37"
+  title: Tablet phone numbers
+  providers: [1]
+  apps: [web, tablet]
+  body: |
+    **Vehicles > Tablets** now shows each tablet's phone number. Tablets on
+    Demand Response **1.0.41** send it themselves once the driver taps
+    **Allow** on the new step in **Finish setting up this tablet**. For any
+    tablet that doesn't, type the number under **Notes** on its page (from
+    the tablet's **Settings > About tablet > Status**).
+
 - added: "2026-10-12 13:02"
   title: Store names find the store
   body: |
