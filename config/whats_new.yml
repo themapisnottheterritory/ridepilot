@@ -16,6 +16,18 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-13 13:57"
+  title: Where each tablet was last used
+  providers: [1]
+  apps: [web]
+  body: |
+    **Vehicles > Tablets** has a **Last used** column: the bus, driver and
+    run each tablet was last signed in on, and when. Handy for finding a
+    tablet during an inventory. **Needs** also flags a SIM that was swapped,
+    a shift started on a low battery, storage nearly full, and a tablet
+    behind on its system updates. **Security updates by model** at the top
+    shows which tablet models the maker no longer updates.
+
 - added: "2026-10-13 10:37"
   title: Tablet phone numbers
   providers: [1]
