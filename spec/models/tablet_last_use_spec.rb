@@ -42,11 +42,16 @@ RSpec.describe Tablet, type: :model do
   describe "#issues" do
     def texts = tablet.issues.map(&:last)
 
-    it "warns about a security patch a year or more old" do
-      tablet.update!(info: { "device" => { "securityPatch" => (Date.current << 30).strftime("%Y-%m-01") } })
-      expect(texts.join).to match(/Security patch .*, 2 years old/)
-      tablet.update!(info: { "device" => { "securityPatch" => (Date.current << 3).strftime("%Y-%m-01") } })
-      expect(texts.join).not_to include("Security patch")
+    it "warns about a security patch behind other tablets of its model, not a whole model's age" do
+      old_patch = { "device" => { "securityPatch" => "2023-10-01" } }
+      tablet.update!(model: "SM-T547U", info: old_patch)
+      Tablet.create!(android_id: "peer", model: "SM-T547U", info: old_patch)
+      expect(texts.join).not_to include("Security patch")            # the maker's last update: nothing to do per tablet
+      Tablet.create!(android_id: "newer", model: "SM-T547U", info: { "device" => { "securityPatch" => "2024-02-01" } })
+      Rails.cache.delete("tablets:newest_patches")
+      expect(texts).to include("Security patch Oct 2023; other SM-T547U tablets have Feb 2024: run Software update")
+      levels = Tablet.patch_levels
+      expect(levels.map { |m, n, d, _| [m, n, d.to_s] }).to eq [["SM-T547U", 3, "2024-02-01"]]
     end
 
     it "warns when a shift started on a low battery that wasn't charging" do

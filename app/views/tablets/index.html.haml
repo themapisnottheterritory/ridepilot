@@ -52,6 +52,34 @@
       .n= all.size
       .l Tablets known
 
+  - levels = Tablet.patch_levels(all)
+  - if levels.any?
+    %details.tb-patches
+      %summary
+        Security updates by model:
+        = levels.count { |row| row[3] >= Tablet::OLD_PATCH_MONTHS }
+        of
+        = levels.size
+        models are #{Tablet::OLD_PATCH_MONTHS / 12}+ years behind
+      %table.tb-list{style: "margin-top: 8px; width: auto;"}
+        %thead
+          %tr
+            %th Model
+            %th{style: "text-align: right;"} Tablets
+            %th Newest patch
+            %th Age
+        %tbody
+          - levels.each do |model, n, newest, months|
+            %tr
+              %td= model
+              %td.num= n
+              %td= newest.strftime("%b %Y")
+              %td
+                %span{class: months >= Tablet::OLD_PATCH_MONTHS ? "behind" : nil}= months >= 12 ? "#{months / 12} yr #{months % 12} mo" : "#{months} mo"
+      .tb-sub{style: "margin-top: 6px;"}
+        Every tablet of a model on the same patch means the maker has stopped sending updates for it: replacing the model is the fix.
+        A tablet behind others of its model is listed under Needs: run Settings › Software update on it.
+
   .tb-ask
     %form#tb-ask-form{action: ask_tablets_path}
       %input#tb-q{type: "text", placeholder: "Ask about the tablets: which still have old apps? who hasn't updated? any batteries going bad?", autocomplete: "off"}

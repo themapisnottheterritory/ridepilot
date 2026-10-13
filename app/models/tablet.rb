@@ -221,15 +221,14 @@ class Tablet < ActiveRecord::Base
     if storage["freeMB"].to_i >= 1024 && storage["totalMB"].to_i.positive? && storage["freeMB"].to_f / storage["totalMB"].to_i < 0.10
       out << [:warn, "Storage nearly full: #{storage['freeMB']} of #{storage['totalMB']} MB free"]
     end
-    if (age = patch_age_months) && age >= OLD_PATCH_MONTHS
-      years = age / 12
-      out << [:warn, "Security patch #{patch_date.strftime('%b %Y')}, #{years >= 1 ? "#{years} year#{'s' if years > 1}" : "#{age} months"} old"]
+    if patch_date && (newest = self.class.newest_patches[model]) && newest > patch_date
+      out << [:warn, "Security patch #{patch_date.strftime('%b %Y')}; other #{model} tablets have #{newest.strftime('%b %Y')}: run Software update"]
     end
     out
   end
 
   SIM_CHANGE_SHOWN = 14.days
-  OLD_PATCH_MONTHS = 12
+  OLD_PATCH_MONTHS = 24   # the fleet table marks a model this far behind
   LOW_START = 50
 
   # The Android security patch the tablet reports ("2023-10-01"), as a date, or nil.
@@ -243,6 +242,28 @@ class Tablet < ActiveRecord::Base
     return nil unless d
     t = Date.current
     (t.year * 12 + t.month) - (d.year * 12 + d.month)
+  end
+
+  # Each model's newest patch on any of our tablets: a tablet behind it has an update
+  # waiting. Every tablet of a model on the same old patch is the maker's end of
+  # support, not something to fix per tablet (the fleet table on the list says so).
+  def self.newest_patches
+    Rails.cache.fetch("tablets:newest_patches", expires_in: 10.minutes) do
+      all.each_with_object({}) do |t, h|
+        d = t.patch_date
+        h[t.model] = d if d && t.model && (h[t.model].nil? || d > h[t.model])
+      end
+    end
+  end
+
+  # For the list: [[model, count, newest patch, months old], ...] oldest patch first.
+  def self.patch_levels(tablets = all)
+    tablets.group_by(&:model).filter_map do |model, ts|
+      newest = ts.filter_map(&:patch_date).max
+      next unless model && newest
+      t = Date.current
+      [model, ts.size, newest, (t.year * 12 + t.month) - (newest.year * 12 + newest.month)]
+    end.sort_by { |row| row[2] }
   end
 
   # The newest of the last few days on which the first report with a driver signed in
