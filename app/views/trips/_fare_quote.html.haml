@@ -20,9 +20,11 @@
         (from this trip's passenger tracking)
       - when :elderly_flag
         (customer marked elderly)
+      - when :birth_date
+        (from the customer's birth date)
   - if quote.category_assumed
     %p.text-warning{style: 'margin: 4px 0 0;'}
-      No fare category on the customer, so this is the Adult fare. Seniors, riders with a disability and youth pay less:
+      No fare category or birth date on the customer, so this is the Adult fare. Seniors, riders with a disability and youth pay less:
       set the customer's Fare category, or count the rider under Number of Passengers Tracking.
 - else
   %p.text-muted{style: 'margin: 0;'}

@@ -16,6 +16,17 @@
 #                                 (GCRPC Demand Response), fixed = fixed-route tablet
 #                                 (GCRPC Fixed Route); shown as badges)
 
+- added: "2026-10-14 00:00"
+  title: Fares use the birth date
+  providers: [1, 107, 143]
+  apps: [web, tablet]
+  body: |
+    When a customer has no **Fare category**, RidePilot now prices the trip
+    by their birth date: 60 and over pay the **Senior 60+** fare, 5 to 17
+    the youth fare, under 5 ride free. The fare quote on the trip says
+    "(from the customer's birth date)". A category set on the customer
+    still comes first, so set one for riders with a disability.
+
 - added: "2026-10-13 17:07"
   title: Bus cards to print
   providers: [1, 107, 143]

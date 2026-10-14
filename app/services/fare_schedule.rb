@@ -135,23 +135,54 @@ class FareSchedule
   end
 
   # The category on the customer record, else Senior for a rider marked
-  # elderly, else the first category (Adult).
+  # elderly, else the one their birth date gives, else the first category (Adult).
   def category_for(customer)
-    rider_category_on_file(customer) || (customer&.is_elderly && senior_category) || categories.first
+    rider_category_on_file(customer) || (customer&.is_elderly && senior_category) ||
+      age_category(customer, Date.current) || categories.first
   end
 
   # [category, source] for the rider on this trip. The customer's Fare
   # category wins; without one, the trip's passenger tracking counts
   # (disabled / senior passengers served, which staff fill in per trip for
   # the 5310 report) say the rider is Disabled or Senior; then the customer's
-  # elderly box; then Adult, assumed.
+  # elderly box; then the customer's age on the trip date, from the birth
+  # date (2026-10-14: a 66-year-old with no category was quoted the Adult
+  # fare); then Adult, assumed.
   def rider_category(trip)
     customer = trip.customer
     if (c = rider_category_on_file(customer)) then return [c, :customer] end
     if trip.try(:number_of_disabled_passengers_served).to_i > 0 && disabled_category then return [disabled_category, :trip_tracking] end
     if trip.try(:number_of_senior_passengers_served).to_i > 0 && senior_category then return [senior_category, :trip_tracking] end
     if customer&.is_elderly && senior_category then return [senior_category, :elderly_flag] end
+    if (c = age_category(customer, trip_date(trip))) then return [c, :birth_date] end
     [categories.first, :assumed]
+  end
+
+  # The category the customer's birth date puts them in on a date: under 5,
+  # 5 to 17, 18 to 59 (Adult) or 60 and over. nil with no birth date, or when
+  # the provider has no category for that age.
+  def age_category(customer, on)
+    age = age_on(customer&.birth_date, on)
+    return nil if age.nil? || age < 0
+    if age < 5 then youth_category(0)
+    elsif age < 18 then youth_category(5)
+    elsif age < 60 then adult_category
+    else senior_category
+    end
+  end
+
+  def age_on(born, on)
+    return nil unless born && on
+    on.year - born.year - ((on.month > born.month || (on.month == born.month && on.day >= born.day)) ? 0 : 1)
+  end
+
+  # "Youth 0-5" or "Youth 5-17": the youth category starting at this age.
+  def youth_category(from)
+    categories.find { |c| c.name.to_s.downcase.match?(/\Ayouth\s+#{from}\b/) }
+  end
+
+  def adult_category
+    categories.find { |c| c.name.to_s.downcase.start_with?("adult") }
   end
 
   def senior_category

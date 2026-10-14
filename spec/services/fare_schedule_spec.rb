@@ -265,6 +265,42 @@ RSpec.describe FareSchedule, "rider category from passenger tracking" do
     q = schedule.quote(trip_with)
     expect([q.amount, q.category_source, q.category_assumed]).to eq [2.00, :assumed, true]
   end
+
+  context "by birth date (no category on the customer)" do
+    let(:youth) { RiderCategory.find_or_create_by!(name: "Youth 5-17") { |c| c.default_fare = 0.75 } }
+    let(:child) { RiderCategory.find_or_create_by!(name: "Youth 0-5") { |c| c.default_fare = 0 } }
+    before do
+      schedule.replace!({ "" => { adult.id => "2.00", senior.id => "1.00", disabled.id => "0.75", youth.id => "1.25", child.id => "0" } })
+    end
+
+    def aged(born)
+      t = trip_with({ birth_date: born })
+      t.update_columns(pickup_time: Time.zone.local(2026, 10, 14, 9))
+      t.reload
+    end
+
+    it "prices a 66-year-old at the senior fare" do
+      q = schedule.quote(aged(Date.new(1960, 4, 7)))
+      expect([q.amount, q.category, q.category_source, q.category_assumed]).to eq [1.00, senior, :birth_date, false]
+    end
+
+    it "turns 60 on the birthday, not before" do
+      expect(schedule.quote(aged(Date.new(1966, 10, 14))).category).to eq senior
+      expect(schedule.quote(aged(Date.new(1966, 10, 15))).category).to eq adult
+    end
+
+    it "prices youth and under-5 riders, and knows an adult is an adult" do
+      expect(schedule.quote(aged(Date.new(2012, 1, 1))).amount).to eq 1.25
+      expect(schedule.quote(aged(Date.new(2025, 3, 1))).amount).to eq 0
+      q = schedule.quote(aged(Date.new(1990, 1, 1)))
+      expect([q.amount, q.category_source, q.category_assumed]).to eq [2.00, :birth_date, false]
+    end
+
+    it "keeps a category set on the customer ahead of the birth date" do
+      t = trip_with({ birth_date: Date.new(1950, 1, 1), default_rider_category_id: adult.id })
+      expect(schedule.quote(t).amount).to eq 2.00
+    end
+  end
 end
 
 RSpec.describe FareSchedule, "a county table with an end date" do
